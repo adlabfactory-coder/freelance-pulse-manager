@@ -10,6 +10,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { CalendarPlus, Clock } from "lucide-react";
+import { useSupabase } from "@/hooks/use-supabase";
+import { fr } from "date-fns/locale";
+import { AppointmentStatus } from "@/types";
+
+const APPOINTMENT_TITLE_OPTIONS = [
+  { value: "consultation-initiale", label: "Consultation initiale" },
+  { value: "negociation-devis", label: "Négociation devis" },
+  { value: "relance-paiement", label: "Relance de paiement" },
+  { value: "autre", label: "Autre (personnalisé)" }
+];
 
 interface AddAppointmentDialogProps {
   open: boolean;
@@ -22,7 +32,9 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
   onOpenChange,
   selectedDate
 }) => {
-  const [title, setTitle] = useState("");
+  const supabase = useSupabase();
+  const [titleOption, setTitleOption] = useState("consultation-initiale");
+  const [customTitle, setCustomTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
   const [time, setTime] = useState("09:00");
@@ -31,6 +43,9 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const title = titleOption === "autre" ? customTitle : 
+      APPOINTMENT_TITLE_OPTIONS.find(option => option.value === titleOption)?.label || "";
     
     if (!date || !title) {
       toast({
@@ -44,19 +59,32 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Dans une application réelle, nous sauvegarderions le rendez-vous dans la base de données
-      // C'est simplifié pour la démo
+      // Créer le format de date pour la base de données
       const dateTimeString = format(date, "yyyy-MM-dd") + "T" + time;
       const appointmentDateTime = new Date(dateTimeString);
       
-      // Pour la démo, afficher simplement un message de succès
+      // Simuler l'enregistrement pour la démo (dans une application réelle, nous utiliserions supabase)
+      // const { data, error } = await supabase.from('appointments').insert({
+      //   title,
+      //   description,
+      //   date: appointmentDateTime.toISOString(),
+      //   duration: parseInt(duration),
+      //   status: AppointmentStatus.SCHEDULED,
+      //   freelancerId: '00000000-0000-0000-0000-000000000000', // À remplacer par l'ID réel
+      //   contactId: '00000000-0000-0000-0000-000000000000', // À remplacer par l'ID réel
+      // });
+      
+      // if (error) throw error;
+      
+      // Message de succès
       toast({
         title: "Rendez-vous planifié",
-        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm")}`,
+        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm", { locale: fr })}`,
       });
       
       // Réinitialiser le formulaire et fermer la boîte de dialogue
-      setTitle("");
+      setTitleOption("consultation-initiale");
+      setCustomTitle("");
       setDescription("");
       setTime("09:00");
       setDuration("60");
@@ -85,14 +113,35 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-1 gap-2">
-              <Label htmlFor="title">Titre du rendez-vous*</Label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Consultation initiale"
-                required
-              />
+              <Label htmlFor="titleOption">Type de rendez-vous*</Label>
+              <Select
+                value={titleOption}
+                onValueChange={setTitleOption}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez un type de rendez-vous" />
+                </SelectTrigger>
+                <SelectContent>
+                  {APPOINTMENT_TITLE_OPTIONS.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {titleOption === "autre" && (
+                <div className="mt-2">
+                  <Label htmlFor="customTitle">Titre personnalisé*</Label>
+                  <Input
+                    id="customTitle"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    placeholder="Entrez un titre personnalisé"
+                    required={titleOption === "autre"}
+                  />
+                </div>
+              )}
             </div>
             
             <div className="grid grid-cols-1 gap-2">
@@ -115,6 +164,7 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
                     selected={date}
                     onSelect={setDate}
                     initialFocus
+                    locale={fr}
                     className="mx-auto"
                   />
                 </div>

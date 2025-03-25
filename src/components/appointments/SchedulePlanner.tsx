@@ -11,11 +11,20 @@ import { toast } from "@/components/ui/use-toast";
 import { useSupabase } from "@/hooks/use-supabase";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+
+const APPOINTMENT_TITLE_OPTIONS = [
+  { value: "consultation-initiale", label: "Consultation initiale" },
+  { value: "negociation-devis", label: "Négociation devis" },
+  { value: "relance-paiement", label: "Relance de paiement" },
+  { value: "autre", label: "Autre (personnalisé)" }
+];
 
 const SchedulePlanner: React.FC = () => {
   const supabase = useSupabase();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [appointmentTitle, setAppointmentTitle] = useState("");
+  const [titleOption, setTitleOption] = useState("consultation-initiale");
+  const [customTitle, setCustomTitle] = useState("");
   const [appointmentDescription, setAppointmentDescription] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("09:00");
   const [appointmentDuration, setAppointmentDuration] = useState("60");
@@ -24,7 +33,10 @@ const SchedulePlanner: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedDate || !appointmentTitle) {
+    const title = titleOption === "autre" ? customTitle : 
+      APPOINTMENT_TITLE_OPTIONS.find(option => option.value === titleOption)?.label || "";
+    
+    if (!selectedDate || !title) {
       toast({
         variant: "destructive",
         title: "Informations manquantes",
@@ -36,19 +48,20 @@ const SchedulePlanner: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real application, we would save the appointment to the database
-      // This is simplified for the demo
+      // Créer le format de date pour la base de données
       const dateTimeString = format(selectedDate, "yyyy-MM-dd") + "T" + appointmentTime;
       const appointmentDateTime = new Date(dateTimeString);
       
+      // Simuler l'enregistrement pour la démo
       // For demo, just show a success message
       toast({
         title: "Rendez-vous planifié",
-        description: `${appointmentTitle} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm")}`,
+        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm", { locale: fr })}`,
       });
       
-      // Reset form
-      setAppointmentTitle("");
+      // Réinitialiser le formulaire
+      setTitleOption("consultation-initiale");
+      setCustomTitle("");
       setAppointmentDescription("");
       setAppointmentTime("09:00");
       setAppointmentDuration("60");
@@ -78,14 +91,35 @@ const SchedulePlanner: React.FC = () => {
             <div className="flex flex-col space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Titre du rendez-vous *</Label>
-                  <Input 
-                    id="title"
-                    value={appointmentTitle}
-                    onChange={(e) => setAppointmentTitle(e.target.value)}
-                    placeholder="Consultation initiale"
-                    required
-                  />
+                  <Label htmlFor="titleOption">Type de rendez-vous*</Label>
+                  <Select
+                    value={titleOption}
+                    onValueChange={setTitleOption}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un type de rendez-vous" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {APPOINTMENT_TITLE_OPTIONS.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {titleOption === "autre" && (
+                    <div className="mt-2">
+                      <Label htmlFor="customTitle">Titre personnalisé*</Label>
+                      <Input
+                        id="customTitle"
+                        value={customTitle}
+                        onChange={(e) => setCustomTitle(e.target.value)}
+                        placeholder="Entrez un titre personnalisé"
+                        required={titleOption === "autre"}
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -147,6 +181,7 @@ const SchedulePlanner: React.FC = () => {
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
+              locale={fr}
               className="border rounded-md p-4"
             />
           </div>
