@@ -7,10 +7,12 @@ export interface Commission {
   freelancerName: string;
   amount: number;
   tier: CommissionTier;
-  period: {
+  period?: {
     startDate: Date;
     endDate: Date;
   };
+  periodStart?: Date;
+  periodEnd?: Date;
   status: string;
   paidDate?: Date;
   paymentRequested: boolean;
