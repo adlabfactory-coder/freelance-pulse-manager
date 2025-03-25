@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             >
               {item.icon && (
                 <span className="flex-shrink-0">
-                  {React.createElement(item.icon, { size: 20 })}
+                  <item.icon size={20} />
                 </span>
               )}
               <span
