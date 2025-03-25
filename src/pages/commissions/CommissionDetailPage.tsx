@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSupabase } from "@/hooks/use-supabase";
@@ -132,13 +133,13 @@ const CommissionDetailPage: React.FC = () => {
 
   const getTierLabel = (tier: CommissionTier): string => {
     switch (tier) {
-      case "tier_1":
+      case CommissionTier.TIER_1:
         return "Palier 1";
-      case "tier_2":
+      case CommissionTier.TIER_2:
         return "Palier 2";
-      case "tier_3":
+      case CommissionTier.TIER_3:
         return "Palier 3";
-      case "tier_4":
+      case CommissionTier.TIER_4:
         return "Palier 4";
       default:
         return "";
