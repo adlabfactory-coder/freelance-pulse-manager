@@ -7,15 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/use-toast";
 
 interface UserSelectorProps {
-  currentUser: User;
+  currentUser: string;
+  selectedUserId: string;
   onSelectUser: (userId: string) => void;
 }
 
-const UserSelector: React.FC<UserSelectorProps> = ({ currentUser, onSelectUser }) => {
+const UserSelector: React.FC<UserSelectorProps> = ({ currentUser, selectedUserId, onSelectUser }) => {
   const supabase = useSupabase();
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState(currentUser.id);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUserData, setCurrentUserData] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -23,6 +24,12 @@ const UserSelector: React.FC<UserSelectorProps> = ({ currentUser, onSelectUser }
       try {
         const usersData = await supabase.fetchUsers();
         setUsers(usersData);
+        
+        // Également récupérer les données de l'utilisateur actuel
+        const userData = await supabase.fetchUserById(currentUser);
+        if (userData) {
+          setCurrentUserData(userData);
+        }
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
         toast({
@@ -36,14 +43,13 @@ const UserSelector: React.FC<UserSelectorProps> = ({ currentUser, onSelectUser }
     };
 
     fetchUsers();
-  }, [supabase]);
+  }, [supabase, currentUser]);
 
   const handleUserChange = (userId: string) => {
-    setSelectedUserId(userId);
     onSelectUser(userId);
   };
 
-  const isAdmin = currentUser.role === UserRole.ADMIN;
+  const isAdmin = currentUserData?.role === UserRole.ADMIN;
 
   return (
     <Card>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import UserSelector from "./UserSelector";
 import { useAuth } from "@/hooks/use-auth";
+import { User } from "@/types";
 
 interface SettingsSidebarProps {
   currentUserId: string;
@@ -86,9 +87,9 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         {isAdmin && (
           <div className="px-4 py-4 border-b">
             <UserSelector
-              currentUser={currentUserId}
               selectedUserId={selectedUserId}
               onSelectUser={onSelectUser}
+              currentUser={currentUserId}
             />
           </div>
         )}
