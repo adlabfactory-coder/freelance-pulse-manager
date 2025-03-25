@@ -3,11 +3,11 @@ import { supabase } from './supabase-client';
 import { DatabaseSetupOptions, DatabaseSetupResult, DatabaseSetupStatus, TableSetupStatus } from '@/types/supabase-types';
 import { Database } from '@/types/database';
 
-// Define type-safe table names
+// Définir le type des noms de tables dans la base de données
 type TableName = keyof Database['public']['Tables'];
 
-// Use an array of literal table names instead of string literals
-const tableNames: TableName[] = [
+// Utiliser un tableau de noms de tables littéraux au lieu de chaînes littérales
+const tableNames = [
   'users', 
   'contacts', 
   'appointments', 
@@ -16,15 +16,15 @@ const tableNames: TableName[] = [
   'commissions', 
   'commission_rules', 
   'quote_items'
-];
+] as const;
 
-// Function to check if the database is correctly configured
+// Fonction pour vérifier si la base de données est correctement configurée
 export const checkDatabaseSetup = async (): Promise<DatabaseSetupStatus> => {
   try {
     const results = await Promise.all(
       tableNames.map(async (table) => {
         try {
-          // Use properly typed table name
+          // Utiliser le nom de table correctement typé
           const { error } = await supabase.from(table).select('id').limit(1);
           return { table, exists: !error || error.code !== '42P01' };
         } catch (err) {

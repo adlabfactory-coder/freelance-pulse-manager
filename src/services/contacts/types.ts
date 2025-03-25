@@ -1,16 +1,52 @@
+import { ContactStatus } from '@/types/database/enums';
 
-import { ContactStatus } from "@/types/database/enums";
-import { DatabaseTables } from "@/types/database/base";
-import { ContactsTable } from "@/types/database/contacts";
-import { Database } from "@/types/database";
+export interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt: string;
+  status: ContactStatus;
+  subscriptionPlanId?: string;
+}
 
-// Database table types
-export type ContactTable = ContactsTable['contacts'];
-export type ContactRow = ContactTable['Row'];
-export type ContactInsert = ContactTable['Insert'];
-export type ContactUpdate = ContactTable['Update'];
+export interface NewContact {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  assignedTo?: string;
+  status?: ContactStatus;
+}
 
-// API response type
+export interface ContactUpdate {
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  assignedTo?: string;
+  status?: ContactStatus;
+  subscriptionPlanId?: string;
+}
+
+export interface ContactFilterOptions {
+  search?: string;
+  status?: ContactStatus[];
+  assignedTo?: string;
+}
+
 export interface ContactResponse {
   id: string;
   name: string;
@@ -25,24 +61,6 @@ export interface ContactResponse {
   updatedAt: string;
 }
 
-// Our internal Contact type
-export interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  address?: string;
-  notes?: string;
-  assignedTo?: string;
-  status: ContactStatus;
-  subscriptionPlanId?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Form input type for contact creation/update
 export interface ContactFormInput {
   name: string;
   email: string;
@@ -54,7 +72,6 @@ export interface ContactFormInput {
   status: ContactStatus;
 }
 
-// Import/export types
 export interface ContactImport {
   name: string;
   email: string;

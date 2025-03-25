@@ -1,218 +1,201 @@
+// Importation des types nécessaires pour gérer les contacts
 import { supabase } from '@/lib/supabase';
-import { Contact, ContactFormInput, ContactInsert, ContactUpdate } from './types';
+import { Contact, NewContact, ContactUpdate } from './types';
 import { toast } from '@/components/ui/use-toast';
 import { ContactStatus } from '@/types/database/enums';
-import { normalizeContactStatus } from '@/types/contacts';
 
-// Utility function to convert string status to enum type
-const ensureContactStatus = (status: string | ContactStatus): ContactStatus => {
-  const validStatuses: ContactStatus[] = ['lead', 'prospect', 'negotiation', 'signed', 'lost'];
-  return validStatuses.includes(status as ContactStatus) 
-    ? (status as ContactStatus) 
-    : 'lead';
-};
-
-export const createContact = async (data: ContactFormInput): Promise<Contact | null> => {
-  try {
-    // Ensure status is a valid enum value using our helper function
-    const typedStatus = normalizeContactStatus(data.status);
-    
-    const contactData: ContactInsert = {
-      name: data.name,
-      email: data.email,
-      phone: data.phone || null,
-      company: data.company || null,
-      position: data.position || null,
-      address: data.address || null,
-      notes: data.notes || null,
-      status: typedStatus,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    const { data: insertedContact, error } = await supabase
-      .from('contacts')
-      .insert(contactData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating contact:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create contact. Please try again.",
-      });
-      return null;
-    }
-
-    toast({
-      title: "Contact Created",
-      description: `${data.name} has been added to your contacts.`,
-    });
-
-    return {
-      ...insertedContact,
-      createdAt: new Date(insertedContact.createdAt || Date.now()),
-      updatedAt: new Date(insertedContact.updatedAt || Date.now()),
-      status: insertedContact.status as ContactStatus
-    };
-  } catch (error) {
-    console.error('Unexpected error creating contact:', error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "An unexpected error occurred. Please try again.",
-    });
-    return null;
-  }
-};
-
+/**
+ * Récupère la liste des contacts depuis Supabase
+ */
 export const getContacts = async (): Promise<Contact[]> => {
   try {
     const { data, error } = await supabase
-      .from("contacts")
-      .select("*")
-      .order("createdAt", { ascending: false });
-
+      .from('contacts')
+      .select('*')
+      .order('createdAt', { ascending: false });
+    
     if (error) {
-      console.error("Error fetching contacts:", error);
+      console.error('Erreur lors de la récupération des contacts:', error);
       throw error;
     }
-
-    // Convert database records to our Contact type
-    return data.map((record) => ({
-      id: record.id,
-      name: record.name,
-      email: record.email,
-      phone: record.phone || undefined,
-      company: record.company || undefined,
-      position: record.position || undefined,
-      address: record.address || undefined,
-      notes: record.notes || undefined,
-      assignedTo: record.assignedTo || undefined,
-      status: record.status as ContactStatus,
-      subscriptionPlanId: record.subscription_plan_id || undefined,
-      createdAt: new Date(record.createdAt),
-      updatedAt: new Date(record.updatedAt),
-    }));
+    
+    return data || [];
   } catch (error) {
-    console.error("Error in getContacts:", error);
+    console.error('Erreur lors de la récupération des contacts:', error);
     return [];
   }
 };
 
-export const getContactById = async (id: string): Promise<Contact | null> => {
+/**
+ * Ajoute un nouveau contact dans Supabase
+ */
+export const addContact = async (contactData: NewContact): Promise<Contact | null> => {
   try {
-    const { data, error } = await supabase
-      .from("contacts")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (error || !data) {
-      console.error("Error fetching contact:", error);
-      return null;
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      phone: data.phone || undefined,
-      company: data.company || undefined,
-      position: data.position || undefined,
-      address: data.address || undefined,
-      notes: data.notes || undefined,
-      assignedTo: data.assignedTo || undefined,
-      status: data.status as ContactStatus,
-      subscriptionPlanId: data.subscription_plan_id || undefined,
-      createdAt: new Date(data.createdAt),
-      updatedAt: new Date(data.updatedAt),
+    // Assurez-vous que le statut est du type ContactStatus
+    const contact = {
+      ...contactData,
+      status: (contactData.status || 'lead') as ContactStatus
     };
-  } catch (error) {
-    console.error("Error in getContactById:", error);
+    
+    const { data, error } = await supabase
+      .from('contacts')
+      .insert(contact)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de l\'ajout du contact:', error);
+      throw error;
+    }
+    
+    toast({
+      title: "Contact ajouté",
+      description: `${contact.name} a été ajouté avec succès.`,
+    });
+    
+    return data;
+  } catch (error: any) {
+    console.error('Erreur lors de l\'ajout du contact:', error);
+    
+    toast({
+      variant: "destructive",
+      title: "Erreur",
+      description: `Impossible d'ajouter le contact: ${error.message}`,
+    });
+    
     return null;
   }
 };
 
-export const updateContact = async (id: string, data: Partial<ContactFormInput>): Promise<boolean> => {
+/**
+ * Récupère un contact spécifique par son ID
+ */
+export const getContactById = async (contactId: string): Promise<Contact | null> => {
   try {
-    const updateData: ContactUpdate = {
-      ...data,
-      // Use our helper function to normalize the status if it exists
-      ...(data.status && { status: normalizeContactStatus(data.status) }),
-      updatedAt: new Date().toISOString()
-    };
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('id', contactId)
+      .single();
+    
+    if (error) {
+      console.error(`Erreur lors de la récupération du contact ${contactId}:`, error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`Erreur lors de la récupération du contact ${contactId}:`, error);
+    return null;
+  }
+};
 
+/**
+ * Supprime un contact par son ID
+ */
+export const deleteContact = async (contactId: string): Promise<boolean> => {
+  try {
     const { error } = await supabase
       .from('contacts')
-      .update(updateData)
-      .eq('id', id);
-
+      .delete()
+      .eq('id', contactId);
+    
     if (error) {
-      console.error('Error updating contact:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update contact. Please try again.",
-      });
-      return false;
+      console.error(`Erreur lors de la suppression du contact ${contactId}:`, error);
+      throw error;
     }
-
+    
     toast({
-      title: "Contact Updated",
-      description: "Contact information has been updated.",
+      title: "Contact supprimé",
+      description: "Le contact a été supprimé avec succès.",
     });
-
+    
     return true;
-  } catch (error) {
-    console.error('Unexpected error updating contact:', error);
+  } catch (error: any) {
+    console.error(`Erreur lors de la suppression du contact ${contactId}:`, error);
+    
     toast({
       variant: "destructive",
-      title: "Error",
-      description: "An unexpected error occurred. Please try again.",
+      title: "Erreur",
+      description: `Impossible de supprimer le contact: ${error.message}`,
     });
+    
     return false;
   }
 };
 
-export const deleteContact = async (id: string): Promise<boolean> => {
+/**
+ * Met à jour les informations d'un contact
+ */
+export const updateContact = async (contactId: string, contactData: ContactUpdate): Promise<Contact | null> => {
+  try {
+    // Assurez-vous que le statut est du type ContactStatus si présent
+    const contact = {
+      ...contactData,
+      ...(contactData.status && { status: contactData.status as ContactStatus })
+    };
+    
+    const { data, error } = await supabase
+      .from('contacts')
+      .update(contact)
+      .eq('id', contactId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Erreur lors de la mise à jour du contact ${contactId}:`, error);
+      throw error;
+    }
+    
+    toast({
+      title: "Contact mis à jour",
+      description: "Les informations du contact ont été mises à jour avec succès.",
+    });
+    
+    return data;
+  } catch (error: any) {
+    console.error(`Erreur lors de la mise à jour du contact ${contactId}:`, error);
+    
+    toast({
+      variant: "destructive",
+      title: "Erreur",
+      description: `Impossible de mettre à jour le contact: ${error.message}`,
+    });
+    
+    return null;
+  }
+};
+
+/**
+ * Lie un plan d'abonnement à un contact
+ */
+export const linkSubscriptionPlan = async (contactId: string, subscriptionPlanId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from("contacts")
-      .delete()
-      .eq("id", id);
-
+      .from('contacts')
+      .update({ subscription_plan_id: subscriptionPlanId })
+      .eq('id', contactId);
+    
     if (error) {
-      console.error("Error deleting contact:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete contact. Please try again.",
-      });
-      return false;
+      console.error(`Erreur lors de la liaison du plan d'abonnement au contact ${contactId}:`, error);
+      throw error;
     }
-
+    
     toast({
-      title: "Contact Deleted",
-      description: "Contact has been removed from your contacts.",
+      title: "Plan d'abonnement lié",
+      description: "Le plan d'abonnement a été lié avec succès au contact.",
     });
-
+    
     return true;
-  } catch (error) {
-    console.error("Error in deleteContact:", error);
+  } catch (error: any) {
+    console.error(`Erreur lors de la liaison du plan d'abonnement au contact ${contactId}:`, error);
+    
+    toast({
+      variant: "destructive",
+      title: "Erreur",
+      description: `Impossible de lier le plan d'abonnement au contact: ${error.message}`,
+    });
+    
     return false;
   }
-};
-
-export const fetchContacts = getContacts;
-
-export const contactCrudService = {
-  getContacts,
-  getContactById,
-  createContact,
-  updateContact,
-  deleteContact,
-  fetchContacts,
 };
