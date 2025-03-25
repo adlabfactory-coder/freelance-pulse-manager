@@ -34,7 +34,7 @@ const SettingsTabContent: React.FC<SettingsTabContentProps> = ({
             currentUser={currentUser}
             users={users}
             isLoading={isLoading}
-            onUserSelect={onUserSelect}
+            onSelectUser={onUserSelect}
             selectedUserId={selectedUserId}
           />
         );
