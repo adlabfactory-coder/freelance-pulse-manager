@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import AddContactDialog from "@/components/contacts/AddContactDialog";
 
 const Contacts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,22 +30,16 @@ const Contacts: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
   
+  const fetchContacts = async () => {
+    setLoading(true);
+    const data = await contactService.getContacts();
+    setContacts(data);
+    setLoading(false);
+  };
+  
   useEffect(() => {
-    const fetchContacts = async () => {
-      setLoading(true);
-      const data = await contactService.getContacts();
-      setContacts(data);
-      setLoading(false);
-    };
-    
     fetchContacts();
   }, []);
-
-  const handleAddContact = () => {
-    toast.success("Fonctionnalité à venir", {
-      description: "L'ajout de contacts sera bientôt disponible."
-    });
-  };
 
   const handleExport = () => {
     toast("Export de contacts", {
@@ -93,9 +87,7 @@ const Contacts: React.FC = () => {
             Gérez vos clients et prospects
           </p>
         </div>
-        <Button onClick={handleAddContact}>
-          <Plus className="mr-2 h-4 w-4" /> Ajouter un contact
-        </Button>
+        <AddContactDialog onContactAdded={fetchContacts} />
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">

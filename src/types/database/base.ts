@@ -9,6 +9,11 @@ export type Json =
 
 export interface DatabaseTables {
   Tables: {
+    contacts: {
+      Row: Record<string, any>;
+      Insert: Record<string, any>;
+      Update: Record<string, any>;
+    }
     [key: string]: {
       Row: Record<string, any>;
       Insert: Record<string, any>;
