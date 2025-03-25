@@ -101,23 +101,19 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
       }
     };
     
-    // Activation de l'extension UUID si nécessaire
-    await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
-    
     // Création de la table users si elle n'existe pas
-    if (dbStatus.missingTables.includes('users')) {
-      const { error: usersError } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.users (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          name TEXT NOT NULL,
-          email TEXT UNIQUE NOT NULL,
-          role TEXT NOT NULL,
-          avatar TEXT,
-          calendly_url TEXT,
-          calendly_sync_email TEXT,
-          calendly_enabled BOOLEAN DEFAULT FALSE
-        );
-      `);
+    if (dbStatus.missingTables?.includes('users')) {
+      // Utilisation de la méthode SQL directe avec from au lieu de query
+      const { error: usersError } = await supabase.from('users').insert([
+        {
+          name: "Admin Démo",
+          email: "admin@example.com",
+          role: "admin",
+          calendly_url: "https://calendly.com/admin-demo",
+          calendly_enabled: true,
+          calendly_sync_email: "admin@example.com"
+        }
+      ]);
       
       if (!usersError) {
         notifyTableCreated('users');
@@ -128,22 +124,8 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table contacts si elle n'existe pas
-    if (dbStatus.missingTables.includes('contacts')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.contacts (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          name TEXT NOT NULL,
-          email TEXT NOT NULL,
-          phone TEXT,
-          company TEXT,
-          position TEXT,
-          address TEXT,
-          notes TEXT,
-          "assignedTo" UUID REFERENCES public.users(id),
-          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+    if (dbStatus.missingTables?.includes('contacts')) {
+      const { error } = await supabase.rpc('create_contacts_table');
       
       if (!error) {
         notifyTableCreated('contacts');
@@ -154,23 +136,8 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table appointments si elle n'existe pas
-    if (dbStatus.missingTables.includes('appointments')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.appointments (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          title TEXT NOT NULL,
-          description TEXT,
-          "contactId" UUID NOT NULL REFERENCES public.contacts(id),
-          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
-          date TIMESTAMP WITH TIME ZONE NOT NULL,
-          duration INTEGER NOT NULL,
-          status TEXT NOT NULL,
-          location TEXT,
-          notes TEXT,
-          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+    if (dbStatus.missingTables?.includes('appointments')) {
+      const { error } = await supabase.rpc('create_appointments_table');
       
       if (!error) {
         notifyTableCreated('appointments');
@@ -181,20 +148,8 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table quotes si elle n'existe pas
-    if (dbStatus.missingTables.includes('quotes')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.quotes (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          "contactId" UUID NOT NULL REFERENCES public.contacts(id),
-          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
-          "totalAmount" NUMERIC NOT NULL,
-          status TEXT NOT NULL,
-          "validUntil" TIMESTAMP WITH TIME ZONE NOT NULL,
-          notes TEXT,
-          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+    if (dbStatus.missingTables?.includes('quotes')) {
+      const { error } = await supabase.rpc('create_quotes_table');
       
       if (!error) {
         notifyTableCreated('quotes');
@@ -205,18 +160,8 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table quote_items si elle n'existe pas
-    if (dbStatus.missingTables.includes('quote_items')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.quote_items (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          "quoteId" UUID NOT NULL REFERENCES public.quotes(id),
-          description TEXT NOT NULL,
-          quantity INTEGER NOT NULL,
-          "unitPrice" NUMERIC NOT NULL,
-          discount NUMERIC,
-          tax NUMERIC
-        );
-      `);
+    if (dbStatus.missingTables?.includes('quote_items')) {
+      const { error } = await supabase.rpc('create_quote_items_table');
       
       if (!error) {
         notifyTableCreated('quote_items');
@@ -227,24 +172,8 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table subscriptions si elle n'existe pas
-    if (dbStatus.missingTables.includes('subscriptions')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.subscriptions (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          name TEXT NOT NULL,
-          description TEXT,
-          price NUMERIC NOT NULL,
-          interval TEXT NOT NULL,
-          "clientId" UUID NOT NULL REFERENCES public.users(id),
-          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
-          status TEXT NOT NULL,
-          "startDate" TIMESTAMP WITH TIME ZONE NOT NULL,
-          "endDate" TIMESTAMP WITH TIME ZONE,
-          "renewalDate" TIMESTAMP WITH TIME ZONE,
-          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+    if (dbStatus.missingTables?.includes('subscriptions')) {
+      const { error } = await supabase.rpc('create_subscriptions_table');
       
       if (!error) {
         notifyTableCreated('subscriptions');
@@ -255,22 +184,8 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table commissions si elle n'existe pas
-    if (dbStatus.missingTables.includes('commissions')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.commissions (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
-          amount NUMERIC NOT NULL,
-          tier TEXT NOT NULL,
-          "subscriptionId" UUID REFERENCES public.subscriptions(id),
-          "quoteId" UUID REFERENCES public.quotes(id),
-          "periodStart" TIMESTAMP WITH TIME ZONE NOT NULL,
-          "periodEnd" TIMESTAMP WITH TIME ZONE NOT NULL,
-          status TEXT NOT NULL,
-          "paidDate" TIMESTAMP WITH TIME ZONE,
-          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `);
+    if (dbStatus.missingTables?.includes('commissions')) {
+      const { error } = await supabase.rpc('create_commissions_table');
       
       if (!error) {
         notifyTableCreated('commissions');
@@ -281,68 +196,14 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
     }
     
     // Création de la table commission_rules si elle n'existe pas
-    if (dbStatus.missingTables.includes('commission_rules')) {
-      const { error } = await supabase.query(`
-        CREATE TABLE IF NOT EXISTS public.commission_rules (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          tier TEXT NOT NULL,
-          "minContracts" INTEGER NOT NULL,
-          percentage NUMERIC NOT NULL
-        );
-      `);
+    if (dbStatus.missingTables?.includes('commission_rules')) {
+      const { error } = await supabase.rpc('create_commission_rules_table');
       
       if (!error) {
         notifyTableCreated('commission_rules');
         results.push({ table: 'commission_rules', success: true });
       } else {
         results.push({ table: 'commission_rules', success: false, error: error.message });
-      }
-    }
-    
-    // Insérer des données initiales dans la table users si elle a été créée avec succès
-    if (results.find(r => r.table === 'users')?.success) {
-      // Vérifier si des utilisateurs existent déjà
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('users')
-        .select('id')
-        .limit(1);
-        
-      if (!checkError && (!existingUsers || existingUsers.length === 0)) {
-        // Insérer des utilisateurs de démonstration
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert([
-            {
-              name: "Admin Démo",
-              email: "admin@example.com",
-              role: "admin",
-              calendly_url: "https://calendly.com/admin-demo",
-              calendly_enabled: true,
-              calendly_sync_email: "admin@example.com"
-            },
-            {
-              name: "Commercial Démo",
-              email: "commercial@example.com",
-              role: "freelancer",
-              calendly_url: "https://calendly.com/commercial-demo",
-              calendly_enabled: true,
-              calendly_sync_email: "commercial@example.com"
-            },
-            {
-              name: "Client Démo",
-              email: "client@example.com",
-              role: "client",
-              calendly_url: "",
-              calendly_enabled: false,
-              calendly_sync_email: ""
-            }
-          ]);
-          
-        if (insertError) {
-          console.error('Erreur lors de l\'insertion des utilisateurs de démonstration:', insertError);
-        } else {
-          notifyTableCreated('Utilisateurs de démonstration');
-        }
       }
     }
     
@@ -367,5 +228,41 @@ export const setupDatabase = async (options?: SetupDatabaseOptions) => {
       success: false,
       message: 'Erreur lors de la configuration de la base de données: ' + (error.message || 'Erreur inconnue')
     };
+  }
+};
+
+// Ajout d'une fonction RPC pour la création de fonctions SQL dans Supabase
+export const createDatabaseFunctions = async () => {
+  try {
+    // Créer la fonction check_table_exists qui sera utilisée par le frontend
+    const { error: functionError } = await supabase.rpc('create_check_table_exists_function');
+    
+    if (functionError) {
+      console.error('Erreur lors de la création de la fonction check_table_exists:', functionError);
+      return { success: false, message: 'Erreur lors de la création des fonctions SQL' };
+    }
+    
+    // Créer les fonctions pour la création des tables
+    const tableFunctions = [
+      'create_create_contacts_table_function',
+      'create_create_appointments_table_function',
+      'create_create_quotes_table_function',
+      'create_create_quote_items_table_function',
+      'create_create_subscriptions_table_function',
+      'create_create_commissions_table_function',
+      'create_create_commission_rules_table_function'
+    ];
+    
+    for (const funcName of tableFunctions) {
+      const { error } = await supabase.rpc(funcName);
+      if (error) {
+        console.error(`Erreur lors de la création de la fonction ${funcName}:`, error);
+      }
+    }
+    
+    return { success: true, message: 'Fonctions SQL créées avec succès' };
+  } catch (error: any) {
+    console.error('Erreur lors de la création des fonctions SQL:', error);
+    return { success: false, message: 'Erreur lors de la création des fonctions SQL' };
   }
 };

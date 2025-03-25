@@ -2,6 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { User } from "@/types";
 import {
   Building2,
   Users,
@@ -13,11 +14,22 @@ import {
 interface SettingsSidebarProps {
   activeTab: string;
   onTabChange: (value: string) => void;
+  currentUser?: User;
+  users?: User[];
+  selectedUserId?: string;
+  isLoading?: boolean;
+  onUserSelect?: (userId: string) => void;
 }
 
 const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   activeTab,
   onTabChange,
+  // Nouveaux props optionnels
+  currentUser,
+  users,
+  selectedUserId,
+  isLoading,
+  onUserSelect
 }) => {
   const tabs = [
     {

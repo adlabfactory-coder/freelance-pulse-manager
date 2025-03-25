@@ -31,8 +31,9 @@ const DatabaseStatus: React.FC = () => {
       const results = await Promise.all(
         tables.map(async (table) => {
           try {
-            const { error } = await supabase.from(table).select('id').limit(1);
-            return { table, exists: !error || error.code !== '42P01' };
+            // Utilisation de la méthode select() au lieu de from() directement
+            const { error } = await supabase.rpc('check_table_exists', { table_name: table });
+            return { table, exists: !error || error.code !== 'PGRST116' };
           } catch (error) {
             return { table, exists: false };
           }
