@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,8 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Filter, FileDown, FileUp } from "lucide-react";
+import { toast } from "sonner";
 
 const Contacts: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const contacts = [
     {
       id: "1",
@@ -61,6 +64,42 @@ const Contacts: React.FC = () => {
     },
   ];
 
+  const handleAddContact = () => {
+    toast.success("Fonctionnalité à venir", {
+      description: "L'ajout de contacts sera bientôt disponible."
+    });
+  };
+
+  const handleExport = () => {
+    toast("Export de contacts", {
+      description: "Préparation du fichier d'export..."
+    });
+    // Dans une implémentation complète, cette fonction téléchargerait un fichier CSV/XLSX
+  };
+
+  const handleImport = () => {
+    toast("Import de contacts", {
+      description: "La fonctionnalité d'import sera bientôt disponible."
+    });
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    // Dans une implémentation réelle, filtrer les contacts selon searchTerm
+  };
+
+  const handleFilter = () => {
+    toast("Filtres", {
+      description: "Les options de filtrage seront bientôt disponibles."
+    });
+  };
+
+  const handleViewContact = (contactId: string) => {
+    toast.info(`Affichage du contact ${contactId}`, {
+      description: "Les détails du contact seront bientôt disponibles."
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -70,7 +109,7 @@ const Contacts: React.FC = () => {
             Gérez vos clients et prospects
           </p>
         </div>
-        <Button>
+        <Button onClick={handleAddContact}>
           <Plus className="mr-2 h-4 w-4" /> Ajouter un contact
         </Button>
       </div>
@@ -78,17 +117,22 @@ const Contacts: React.FC = () => {
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
         <div className="flex flex-col md:flex-row gap-4 md:items-center">
           <div className="relative w-full md:w-64">
-            <Input type="text" placeholder="Rechercher..." />
+            <Input 
+              type="text" 
+              placeholder="Rechercher..." 
+              value={searchTerm}
+              onChange={handleSearch}
+            />
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleFilter}>
             <Filter className="mr-2 h-4 w-4" /> Filtrer
           </Button>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <FileDown className="mr-2 h-4 w-4" /> Exporter
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleImport}>
             <FileUp className="mr-2 h-4 w-4" /> Importer
           </Button>
         </div>
@@ -125,7 +169,11 @@ const Contacts: React.FC = () => {
                   {contact.createdAt.toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleViewContact(contact.id)}
+                  >
                     Voir
                   </Button>
                 </TableCell>
