@@ -11,19 +11,21 @@ interface SegmentItem {
   path: string;
 }
 
-interface SegmentButtonsProps {
+export interface SegmentButtonsProps {
   items: SegmentItem[];
   defaultValue?: string;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export const SegmentButtons = ({
   items,
   defaultValue,
   className,
+  children,
 }: SegmentButtonsProps) => {
   const navigate = useNavigate();
-  const [selected, setSelected] = React.useState<string>(defaultValue || items[0].path);
+  const [selected, setSelected] = React.useState<string>(defaultValue || (items && items.length > 0 ? items[0].path : ""));
 
   const handleValueChange = (value: string) => {
     if (value) {
@@ -32,6 +34,12 @@ export const SegmentButtons = ({
     }
   };
 
+  // Si des enfants sont fournis, les rendre directement
+  if (children) {
+    return <div className={cn("w-full rounded-lg border", className)}>{children}</div>;
+  }
+
+  // Sinon, rendre le ToggleGroup avec les éléments
   return (
     <ToggleGroup
       type="single"
@@ -39,7 +47,7 @@ export const SegmentButtons = ({
       onValueChange={handleValueChange}
       className={cn("w-full rounded-lg border", className)}
     >
-      {items.map((item) => (
+      {items && items.map((item) => (
         <ToggleGroupItem
           key={item.path}
           value={item.path}

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { SegmentButtons } from "@/components/ui/segment-buttons";
-import { CalendarDays, Grid, List, Plus, Search, Clock } from "lucide-react";
-import SchedulePlanner from "@/components/appointments/CalendlyIntegration";
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, isToday, isEqual } from "date-fns";
+import { CalendarDays, Grid, List, Plus, Search } from "lucide-react";
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isEqual } from "date-fns";
 import { fr } from "date-fns/locale";
 
 const Appointments: React.FC = () => {
@@ -94,16 +92,18 @@ const Appointments: React.FC = () => {
         </TabsList>
         <TabsContent value="upcoming" className="space-y-4">
           <div className="flex justify-end mb-4">
-            <SegmentButtons>
+            <SegmentButtons className="w-auto">
               <Button
                 variant={timeView === "day" ? "default" : "outline"}
                 onClick={() => setTimeView("day")}
+                className="rounded-l-md rounded-r-none"
               >
                 Jour
               </Button>
               <Button
                 variant={timeView === "week" ? "default" : "outline"}
                 onClick={() => setTimeView("week")}
+                className="rounded-l-none rounded-r-md"
               >
                 Semaine
               </Button>
@@ -228,7 +228,83 @@ const Appointments: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="schedule">
-          <SchedulePlanner />
+          <Card>
+            <CardHeader>
+              <CardTitle>Planification</CardTitle>
+              <CardDescription>
+                Créez et gérez votre planning de rendez-vous
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Créer un rendez-vous</h3>
+                  <div className="space-y-4">
+                    {/* Formulaire simple de création de rendez-vous */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Titre</label>
+                      <Input placeholder="Consultation initiale" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Date</label>
+                      <Calendar 
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        className="border rounded-md"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Heure</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {["9:00", "10:00", "11:00", "14:00"].map((time) => (
+                          <Button 
+                            key={time} 
+                            variant="outline" 
+                            className="text-sm"
+                          >
+                            {time}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <Button className="w-full">
+                      <Plus className="mr-2 h-4 w-4" /> Créer le rendez-vous
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium mb-4">Disponibilités récurrentes</h3>
+                  <div className="border rounded-md p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-medium">Lundi</span>
+                        <div className="text-sm text-muted-foreground">9:00 - 17:00</div>
+                      </div>
+                      <Button variant="ghost" size="sm">Modifier</Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-medium">Mardi</span>
+                        <div className="text-sm text-muted-foreground">9:00 - 17:00</div>
+                      </div>
+                      <Button variant="ghost" size="sm">Modifier</Button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-medium">Mercredi</span>
+                        <div className="text-sm text-muted-foreground">9:00 - 12:00</div>
+                      </div>
+                      <Button variant="ghost" size="sm">Modifier</Button>
+                    </div>
+                    <Button variant="outline" className="w-full">
+                      Configurer les disponibilités
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

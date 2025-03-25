@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import { Quote, QuoteItem, QuoteStatus, Contact, User } from "@/types";
 import { createQuote } from "@/services/quote-service";
 import { fetchServices, Service } from "@/services/services-service";
 import { fetchUsers } from "@/services/supabase-user-service";
-import { fetchContacts } from "@/services/contacts";
+import { contactService } from "@/services/contact-service";
 import { addDays } from "date-fns";
 import { formatCurrency } from "@/utils/format";
 
@@ -50,13 +49,12 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     tax: 0
   });
 
-  // Charger les données nécessaires
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
         const [contactsData, usersData, servicesData] = await Promise.all([
-          fetchContacts(),
+          contactService.getContacts(),
           fetchUsers(),
           fetchServices()
         ]);
@@ -81,7 +79,6 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     }
   }, [open, toast]);
 
-  // Calculer le montant total du devis
   useEffect(() => {
     if (quoteData.items) {
       const total = quoteData.items.reduce((sum, item) => {
@@ -182,7 +179,6 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
         onOpenChange(false);
         onQuoteCreated();
         
-        // Réinitialiser le formulaire
         setQuoteData({
           status: QuoteStatus.DRAFT,
           validUntil: addDays(new Date(), 30),
