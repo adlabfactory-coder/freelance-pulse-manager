@@ -86,7 +86,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         {isAdmin && (
           <div className="px-4 py-4 border-b">
             <UserSelector
-              currentUserId={currentUserId}
+              currentUser={currentUserId}
               selectedUserId={selectedUserId}
               onSelectUser={onSelectUser}
             />
