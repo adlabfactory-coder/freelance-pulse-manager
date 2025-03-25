@@ -65,9 +65,31 @@ export const useSupabase = () => {
     }
   };
   
+  const updateUser = async (userId: string, userData: Partial<User>) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update(userData)
+        .eq('id', userId);
+      
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de mettre à jour les informations de l'utilisateur.",
+      });
+      return false;
+    }
+  };
+  
   return {
     ...supabase,
     fetchUsers,
-    fetchUserById
+    fetchUserById,
+    updateUser
   };
 };

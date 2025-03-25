@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,21 +26,18 @@ const CalendlySettings: React.FC<CalendlySettingsProps> = ({ user, isCurrentUser
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({
-          calendly_url: calendlyUrl,
-          calendly_sync_email: syncEmail,
-          calendly_enabled: enabled
-        })
-        .eq("id", user.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Paramètres Calendly mis à jour",
-        description: "Les paramètres d'intégration Calendly ont été enregistrés avec succès.",
+      const success = await supabase.updateUser(user.id, {
+        calendly_url: calendlyUrl,
+        calendly_sync_email: syncEmail,
+        calendly_enabled: enabled
       });
+
+      if (success) {
+        toast({
+          title: "Paramètres Calendly mis à jour",
+          description: "Les paramètres d'intégration Calendly ont été enregistrés avec succès.",
+        });
+      }
     } catch (error) {
       console.error("Erreur lors de la mise à jour des paramètres Calendly:", error);
       toast({

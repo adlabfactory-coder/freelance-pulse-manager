@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,30 +58,27 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({
-          name,
-          email,
-          role
-        })
-        .eq("id", userId);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Profil mis à jour",
-        description: "Les informations du profil ont été enregistrées avec succès.",
+      const success = await supabase.updateUser(userId, {
+        name,
+        email,
+        role
       });
-      
-      // Update local user data
-      if (user) {
-        setUser({
-          ...user,
-          name,
-          email,
-          role
+
+      if (success) {
+        toast({
+          title: "Profil mis à jour",
+          description: "Les informations du profil ont été enregistrées avec succès.",
         });
+        
+        // Update local user data
+        if (user) {
+          setUser({
+            ...user,
+            name,
+            email,
+            role
+          });
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil:", error);
