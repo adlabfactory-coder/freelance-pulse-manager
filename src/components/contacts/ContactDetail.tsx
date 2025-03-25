@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, Mail, Phone, Building, MapPin, User, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Contact, ContactStatus } from "@/types";
+import { Contact } from "@/services/contacts/types";
+import { ContactStatus } from "@/types/database/enums";
 import { contactService } from "@/services/contacts";
 import ContactStatusSelector from "./ContactStatusSelector";
 import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";

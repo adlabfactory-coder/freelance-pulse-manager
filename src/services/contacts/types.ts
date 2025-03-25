@@ -1,5 +1,5 @@
 
-import { ContactStatus } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 import { DatabaseTables } from "@/types/database/base";
 import { ContactsTable } from "@/types/database/contacts";
 import { Database } from "@/types/database";

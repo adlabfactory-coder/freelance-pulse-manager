@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import { contactService } from "@/services/contacts";
-import { Contact, ContactStatus } from "@/types";
+import { Contact } from "@/services/contacts/types";
+import { ContactStatus } from "@/types/database/enums";
 import ContactsHeader from "./ContactsHeader";
 import ContactsSearchFilter from "./ContactsSearchFilter";
 import ContactsImportExport from "./ContactsImportExport";

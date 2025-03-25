@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase-client";
-import { ContactStatus } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 import { toast } from "@/components/ui/use-toast";
 import { Contact, ContactFormInput, ContactInsert } from "./types";
 

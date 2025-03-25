@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { ContactStatus } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 import ContactStatusBadge from "@/components/contacts/ContactStatusBadge";
 
 interface ContactsSearchFilterProps {
@@ -54,20 +54,20 @@ const ContactsSearchFilter: React.FC<ContactsSearchFilterProps> = ({
             Tous les statuts
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.LEAD)}>
-            <ContactStatusBadge status={ContactStatus.LEAD} />
+          <DropdownMenuItem onClick={() => onStatusFilterChange("lead")}>
+            <ContactStatusBadge status="lead" />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.PROSPECT)}>
-            <ContactStatusBadge status={ContactStatus.PROSPECT} />
+          <DropdownMenuItem onClick={() => onStatusFilterChange("prospect")}>
+            <ContactStatusBadge status="prospect" />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.NEGOTIATION)}>
-            <ContactStatusBadge status={ContactStatus.NEGOTIATION} />
+          <DropdownMenuItem onClick={() => onStatusFilterChange("negotiation")}>
+            <ContactStatusBadge status="negotiation" />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.SIGNED)}>
-            <ContactStatusBadge status={ContactStatus.SIGNED} />
+          <DropdownMenuItem onClick={() => onStatusFilterChange("signed")}>
+            <ContactStatusBadge status="signed" />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.LOST)}>
-            <ContactStatusBadge status={ContactStatus.LOST} />
+          <DropdownMenuItem onClick={() => onStatusFilterChange("lost")}>
+            <ContactStatusBadge status="lost" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
