@@ -1,119 +1,136 @@
 
-import { useState, useEffect } from "react";
-import { useSupabase } from "@/hooks/use-supabase";
-import { toast } from "@/components/ui/use-toast";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Commission, CommissionRule, CommissionTier } from "@/types/commissions";
+import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 export const useCommissions = () => {
-  const { supabaseClient } = useSupabase();
-  const [requestingPayment, setRequestingPayment] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [commissions, setCommissions] = useState<Commission[]>([]);
-  
-  // Commission rules could be fetched from the database in a real app
-  const [commissionRules] = useState<CommissionRule[]>([
-    {
-      tier: CommissionTier.TIER_1,
-      minContracts: 0,
-      maxContracts: 10,
-      amount: 500,
-    },
-    {
-      tier: CommissionTier.TIER_2,
-      minContracts: 11,
-      maxContracts: 20,
-      amount: 1000,
-    },
-    {
-      tier: CommissionTier.TIER_3,
-      minContracts: 21,
-      maxContracts: 30,
-      amount: 1500,
-    },
-    {
-      tier: CommissionTier.TIER_4,
-      minContracts: 31,
-      maxContracts: null,
-      amount: 2000,
-    },
-  ]);
+  const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [requestingPayment, setRequestingPayment] = useState(false);
+  const { user, isAdmin, isFreelancer } = useAuth();
 
-  useEffect(() => {
-    fetchCommissions();
-  }, [supabaseClient]);
-
-  const fetchCommissions = async () => {
+  const fetchCommissions = useCallback(async () => {
     try {
       setLoading(true);
       
-      // Récupérer les commissions
-      const { data: commissionsData, error: commissionsError } = await supabaseClient
+      let query = supabase
         .from("commissions")
-        .select("*")
-        .order("periodStart", { ascending: false });
-
-      if (commissionsError) {
-        throw commissionsError;
-      }
-
-      // Récupérer tous les freelancers concernés
-      const freelancerIds = [...new Set(commissionsData.map(c => c.freelancerId))];
+        .select(`
+          *,
+          freelancer:users(name)
+        `);
       
-      const { data: freelancersData, error: freelancersError } = await supabaseClient
-        .from("users")
-        .select("id, name")
-        .in("id", freelancerIds);
-
-      if (freelancersError) {
-        console.error("Erreur lors de la récupération des freelancers:", freelancersError);
+      // Si c'est un freelancer, filter uniquement ses commissions
+      if (isFreelancer && user) {
+        query = query.eq("freelancerId", user.id);
       }
-
-      // Mapper les données avec conversion de tier string vers CommissionTier enum
-      const mappedCommissions: Commission[] = commissionsData.map(commission => {
-        const freelancer = freelancersData?.find(f => f.id === commission.freelancerId);
-        
-        // Conversion de string à CommissionTier
-        const tierValue = commission.tier as string;
-        const tierEnum: CommissionTier = 
+      
+      const { data, error } = await query.order("createdAt", { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      const mappedCommissions: Commission[] = data.map((item) => {
+        const tierValue = item.tier as string;
+        const tierEnum = 
           tierValue === 'tier_1' ? CommissionTier.TIER_1 :
           tierValue === 'tier_2' ? CommissionTier.TIER_2 :
           tierValue === 'tier_3' ? CommissionTier.TIER_3 :
           tierValue === 'tier_4' ? CommissionTier.TIER_4 :
-          CommissionTier.TIER_1; // Valeur par défaut
-        
+          CommissionTier.TIER_1;
+          
         return {
-          id: commission.id,
-          freelancerId: commission.freelancerId,
-          freelancerName: freelancer?.name || "Freelancer inconnu",
-          amount: commission.amount,
+          id: item.id,
+          freelancerId: item.freelancerId,
+          freelancerName: item.freelancer?.name || "Freelancer inconnu",
+          amount: item.amount,
           tier: tierEnum,
-          period: {
-            startDate: new Date(commission.periodStart),
-            endDate: new Date(commission.periodEnd),
-          },
-          status: commission.status,
-          paidDate: commission.paidDate ? new Date(commission.paidDate) : undefined,
-          paymentRequested: commission.payment_requested || false,
+          periodStart: new Date(item.periodStart),
+          periodEnd: new Date(item.periodEnd),
+          status: item.status,
+          paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
+          paymentRequested: item.payment_requested || false,
         };
       });
-
+      
       setCommissions(mappedCommissions);
     } catch (error) {
-      console.error("Erreur lors de la récupération des commissions:", error);
+      console.error("Erreur lors du chargement des commissions:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de récupérer les commissions.",
+        description: "Impossible de récupérer les commissions",
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, isFreelancer]);
+
+  const fetchCommissionRules = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("commission_rules")
+        .select("*")
+        .order("minContracts", { ascending: true });
+      
+      if (error) {
+        throw error;
+      }
+      
+      const mappedRules: CommissionRule[] = data.map((rule) => {
+        const tierValue = rule.tier as string;
+        const tierEnum = 
+          tierValue === 'tier_1' ? CommissionTier.TIER_1 :
+          tierValue === 'tier_2' ? CommissionTier.TIER_2 :
+          tierValue === 'tier_3' ? CommissionTier.TIER_3 :
+          tierValue === 'tier_4' ? CommissionTier.TIER_4 :
+          CommissionTier.TIER_1;
+          
+        return {
+          tier: tierEnum,
+          minContracts: rule.minContracts,
+          maxContracts: null,
+          amount: rule.percentage,
+        };
+      });
+      
+      setCommissionRules(mappedRules);
+    } catch (error) {
+      console.error("Erreur lors du chargement des règles de commissions:", error);
+    }
+  }, []);
 
   const requestPayment = async (commissionId: string) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Vous devez être connecté pour demander un versement",
+      });
+      return;
+    }
+    
     setRequestingPayment(true);
     try {
-      const { error } = await supabaseClient
+      // Vérifier si la commission appartient au freelancer connecté
+      const { data: commission, error: commissionError } = await supabase
+        .from("commissions")
+        .select("freelancerId")
+        .eq("id", commissionId)
+        .single();
+      
+      if (commissionError) throw commissionError;
+      
+      // Si l'utilisateur n'est pas admin, vérifier qu'il est bien le propriétaire de la commission
+      if (!isAdmin && commission.freelancerId !== user.id) {
+        throw new Error("Vous n'êtes pas autorisé à demander le versement de cette commission");
+      }
+      
+      const { error } = await supabase
         .from("commissions")
         .update({ payment_requested: true })
         .eq("id", commissionId);
@@ -121,31 +138,32 @@ export const useCommissions = () => {
       if (error) {
         throw error;
       }
-      
-      // Mettre à jour l'UI
-      setCommissions(prevCommissions => 
-        prevCommissions.map(commission => 
-          commission.id === commissionId 
-            ? { ...commission, paymentRequested: true } 
-            : commission
-        )
-      );
+
+      // Mettre à jour localement
+      setCommissions(commissions.map(comm => 
+        comm.id === commissionId ? { ...comm, paymentRequested: true } : comm
+      ));
       
       toast({
         title: "Demande envoyée",
-        description: "Votre demande de versement a été envoyée avec succès.",
+        description: "Votre demande de versement a été envoyée avec succès",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la demande de versement:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'envoi de votre demande.",
+        description: error.message || "Une erreur est survenue lors de l'envoi de votre demande",
       });
     } finally {
       setRequestingPayment(false);
     }
   };
+
+  useEffect(() => {
+    fetchCommissions();
+    fetchCommissionRules();
+  }, [fetchCommissions, fetchCommissionRules]);
 
   return {
     commissions,
@@ -155,6 +173,3 @@ export const useCommissions = () => {
     requestPayment,
   };
 };
-
-// Re-export the Commission type for backwards compatibility
-export type { Commission };

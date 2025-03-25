@@ -1,115 +1,127 @@
 
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { User } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Building2,
   Users,
-  CalendarClock,
-  BadgeDollarSign,
+  Building,
+  PackageOpen,
+  DollarSign,
+  Calendar,
   Database,
-  Package
+  UserPlus,
 } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { UserSelector } from "./UserSelector";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SettingsSidebarProps {
-  activeTab: string;
-  onTabChange: (value: string) => void;
-  currentUser?: User;
-  users?: User[];
-  selectedUserId?: string;
-  isLoading?: boolean;
-  onUserSelect?: (userId: string) => void;
+  currentUserId: string;
+  selectedUserId: string;
+  onSelectUser: (userId: string) => void;
 }
 
 const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
-  activeTab,
-  onTabChange,
-  // Nouveaux props optionnels
-  currentUser,
-  users,
+  currentUserId,
   selectedUserId,
-  isLoading,
-  onUserSelect
+  onSelectUser,
 }) => {
-  const isMobile = useIsMobile();
+  const location = useLocation();
+  const { isAdmin } = useAuth();
 
-  const tabs = [
+  const navigation = [
     {
-      value: "company",
-      label: "Entreprise",
-      icon: <Building2 className="h-5 w-5 mr-2" />,
+      name: "Profil",
+      href: "/settings/profile",
+      icon: Users,
+      current: location.pathname === "/settings/profile" || location.pathname === "/settings",
     },
     {
-      value: "users",
-      label: "Utilisateurs",
-      icon: <Users className="h-5 w-5 mr-2" />,
+      name: "Entreprise",
+      href: "/settings/company",
+      icon: Building,
+      current: location.pathname === "/settings/company",
     },
     {
-      value: "services",
-      label: "Services et Packs",
-      icon: <Package className="h-5 w-5 mr-2" />,
+      name: "Services",
+      href: "/settings/services",
+      icon: PackageOpen,
+      current: location.pathname === "/settings/services",
     },
     {
-      value: "commissions",
-      label: "Commissions",
-      icon: <BadgeDollarSign className="h-5 w-5 mr-2" />,
+      name: "Commissions",
+      href: "/settings/commissions",
+      icon: DollarSign,
+      current: location.pathname === "/settings/commissions",
     },
     {
-      value: "schedule",
-      label: "Planification",
-      icon: <CalendarClock className="h-5 w-5 mr-2" />,
+      name: "Calendrier",
+      href: "/settings/schedule",
+      icon: Calendar,
+      current: location.pathname === "/settings/schedule",
     },
     {
-      value: "database",
-      label: "Base de données",
-      icon: <Database className="h-5 w-5 mr-2" />,
-    }
+      name: "Base de données",
+      href: "/settings/database",
+      icon: Database,
+      current: location.pathname === "/settings/database",
+    },
   ];
 
-  if (isMobile) {
-    return (
-      <div className="w-full mb-6">
-        <div className="grid grid-cols-2 gap-2">
-          {tabs.map((tab) => (
-            <Button
-              key={tab.value}
-              variant="ghost"
-              className={cn(
-                "justify-start",
-                activeTab === tab.value && "bg-muted"
-              )}
-              onClick={() => onTabChange(tab.value)}
-            >
-              {tab.icon}
-              <span className="truncate">{tab.label}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
-    );
+  // Ajouter la gestion des freelances pour les admins
+  if (isAdmin) {
+    navigation.push({
+      name: "Commerciaux",
+      href: "/settings/freelancers",
+      icon: UserPlus,
+      current: location.pathname === "/settings/freelancers",
+    });
   }
 
   return (
-    <div className="w-64 flex-shrink-0 border-r">
-      <div className="p-6 space-y-2">
-        {tabs.map((tab) => (
-          <Button
-            key={tab.value}
-            variant="ghost"
-            className={cn(
-              "w-full justify-start",
-              activeTab === tab.value && "bg-muted"
-            )}
-            onClick={() => onTabChange(tab.value)}
-          >
-            {tab.icon}
-            {tab.label}
-          </Button>
-        ))}
+    <aside className="hidden md:block w-64 border-r h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex flex-col h-full">
+        {/* User selector is only visible for admins */}
+        {isAdmin && (
+          <div className="px-4 py-4 border-b">
+            <UserSelector
+              currentUserId={currentUserId}
+              selectedUserId={selectedUserId}
+              onSelectUser={onSelectUser}
+            />
+          </div>
+        )}
+        
+        <ScrollArea className="flex-1 px-2 py-4">
+          <nav className="space-y-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                  item.current
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon
+                  className={cn(
+                    "mr-3 flex-shrink-0 h-5 w-5",
+                    item.current
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground"
+                  )}
+                  aria-hidden="true"
+                />
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+        </ScrollArea>
       </div>
-    </div>
+    </aside>
   );
 };
 

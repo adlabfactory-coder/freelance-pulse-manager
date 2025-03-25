@@ -13,23 +13,46 @@ import {
 } from "lucide-react";
 import { NavItem as NavItemType } from "@/types";
 import NavItem from "./NavItem";
+import { useAuth } from "@/hooks/use-auth";
 
 interface NavigationProps {
   collapsed: boolean;
 }
 
-const navItems: NavItemType[] = [
-  { title: "Tableau de bord", href: "/dashboard", icon: Home },
-  { title: "Contacts", href: "/contacts", icon: Users },
-  { title: "Rendez-vous", href: "/appointments", icon: Calendar },
-  { title: "Devis", href: "/quotes", icon: FileText },
-  { title: "Abonnements", href: "/subscriptions", icon: FileSpreadsheet },
-  { title: "Commissions", href: "/commissions", icon: BarChart },
-  { title: "Rapports", href: "/reports", icon: PieChart },
-  { title: "Paramètres", href: "/settings", icon: Settings },
-];
-
 const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
+  const { isAdmin, isFreelancer } = useAuth();
+  
+  const allNavItems: NavItemType[] = [
+    { title: "Tableau de bord", href: "/dashboard", icon: Home },
+    { title: "Contacts", href: "/contacts", icon: Users },
+    { title: "Rendez-vous", href: "/appointments", icon: Calendar },
+    { title: "Devis", href: "/quotes", icon: FileText },
+    { title: "Abonnements", href: "/subscriptions", icon: FileSpreadsheet },
+    { title: "Commissions", href: "/commissions", icon: BarChart },
+    { title: "Rapports", href: "/reports", icon: PieChart },
+    { title: "Paramètres", href: "/settings", icon: Settings },
+  ];
+  
+  // Filtrage des éléments de navigation en fonction du rôle
+  const navItems = allNavItems.filter(item => {
+    // Les admins ont accès à tout
+    if (isAdmin) return true;
+    
+    // Les freelancers ont accès limité
+    if (isFreelancer) {
+      return [
+        "/dashboard",
+        "/contacts",
+        "/appointments",
+        "/quotes",
+        "/commissions",
+      ].includes(item.href);
+    }
+    
+    // Par défaut, accès restreint
+    return ["/dashboard", "/settings"].includes(item.href);
+  });
+
   const renderIcon = (Icon: React.ElementType) => {
     return <Icon className="h-5 w-5" aria-hidden="true" />;
   };

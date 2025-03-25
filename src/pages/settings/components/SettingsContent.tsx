@@ -1,94 +1,69 @@
 
 import React from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import SettingsSidebar from "@/components/settings/SettingsSidebar";
+import { Routes, Route } from "react-router-dom";
 import UserProfile from "@/components/settings/UserProfile";
-import UsersManagement from "@/components/settings/UsersManagement";
 import CompanySettings from "@/components/settings/CompanySettings";
+import ServicesSettings from "@/components/settings/ServicesSettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
+import ScheduleSettings from "@/components/settings/ScheduleSettings";
+import SettingsError from "./SettingsError";
+import SettingsLoading from "./SettingsLoading";
 import DatabaseTab from "@/components/settings/DatabaseTab";
-import { User } from "@/types";
-import { useIsMobile } from "@/hooks/use-mobile";
+import FreelancerManagement from "@/components/settings/FreelancerManagement";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SettingsContentProps {
-  currentUser: User;
-  users: User[];
-  selectedUserId: string;
-  activeTab: string;
   isLoading: boolean;
-  onUserSelect: (userId: string) => void;
-  onTabChange: (value: string) => void;
+  error: string | null;
+  currentUserId: string;
+  currentUser: any;
+  selectedUserId: string;
 }
 
 const SettingsContent: React.FC<SettingsContentProps> = ({
-  currentUser,
-  users,
-  selectedUserId,
-  activeTab,
   isLoading,
-  onUserSelect,
-  onTabChange
+  error,
+  currentUserId,
+  currentUser,
+  selectedUserId,
 }) => {
-  const isMobile = useIsMobile();
-  
+  const { isAdmin } = useAuth();
+
+  if (isLoading) {
+    return <SettingsLoading />;
+  }
+
+  if (error) {
+    return <SettingsError error={error} />;
+  }
+
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange}>
-      <div className={`grid ${isMobile ? 'grid-cols-1' : 'md:grid-cols-4'} gap-6`}>
-        
-        {isMobile ? (
-          <div className="col-span-1">
-            <SettingsSidebar 
-              currentUser={currentUser}
-              users={users}
-              selectedUserId={selectedUserId}
-              activeTab={activeTab}
-              isLoading={isLoading}
-              onUserSelect={onUserSelect}
-              onTabChange={onTabChange}
-            />
-          </div>
-        ) : (
-          <div className="md:col-span-1">
-            <SettingsSidebar 
-              currentUser={currentUser}
-              users={users}
-              selectedUserId={selectedUserId}
-              activeTab={activeTab}
-              isLoading={isLoading}
-              onUserSelect={onUserSelect}
-              onTabChange={onTabChange}
-            />
-          </div>
-        )}
-
-        <div className={isMobile ? "col-span-1" : "md:col-span-3"}>
-          <TabsContent value="profile" className="mt-0">
-            {selectedUserId && (
-              <UserProfile 
-                userId={selectedUserId} 
-                currentUser={currentUser} 
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="users" className="mt-0">
-            <UsersManagement onSelectUser={onUserSelect} />
-          </TabsContent>
-
-          <TabsContent value="company" className="mt-0">
-            <CompanySettings />
-          </TabsContent>
-
-          <TabsContent value="commissions" className="mt-0">
-            <CommissionSettings />
-          </TabsContent>
-          
-          <TabsContent value="database" className="mt-0">
-            <DatabaseTab />
-          </TabsContent>
-        </div>
-      </div>
-    </Tabs>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <UserProfile
+            userId={selectedUserId || currentUserId}
+            currentUser={currentUser}
+          />
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <UserProfile
+            userId={selectedUserId || currentUserId}
+            currentUser={currentUser}
+          />
+        }
+      />
+      <Route path="/company" element={<CompanySettings />} />
+      <Route path="/services" element={<ServicesSettings />} />
+      <Route path="/commissions" element={<CommissionSettings />} />
+      <Route path="/schedule" element={<ScheduleSettings />} />
+      <Route path="/database" element={<DatabaseTab />} />
+      {isAdmin && <Route path="/freelancers" element={<FreelancerManagement />} />}
+    </Routes>
   );
 };
 
