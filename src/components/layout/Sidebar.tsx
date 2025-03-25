@@ -51,10 +51,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         >
           <div className="h-8 w-8 rounded-md bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold text-lg">
-            F
+            A
           </div>
           <h1 className="font-semibold text-sidebar-foreground">
-            Freelance Pulse
+            AdLab Hub
           </h1>
         </div>
         <Button

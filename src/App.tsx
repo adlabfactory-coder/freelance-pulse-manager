@@ -14,30 +14,36 @@ import Commissions from "@/pages/Commissions";
 import Reports from "@/pages/Reports";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
+import { createContext } from "react";
+import { supabase } from "@/lib/supabase";
+
+export const SupabaseContext = createContext(supabase);
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/appointments" element={<Appointments />} />
-            <Route path="/quotes" element={<Quotes />} />
-            <Route path="/subscriptions" element={<Subscriptions />} />
-            <Route path="/commissions" element={<Commissions />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <SupabaseContext.Provider value={supabase}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/contacts" element={<Contacts />} />
+              <Route path="/appointments" element={<Appointments />} />
+              <Route path="/quotes" element={<Quotes />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/commissions" element={<Commissions />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </SupabaseContext.Provider>
   </QueryClientProvider>
 );
 
