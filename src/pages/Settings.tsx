@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
-import { TabsContent, Tabs } from "@/components/ui/tabs";
 import { UserRole, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import UserProfile from "@/components/settings/UserProfile";
@@ -12,6 +11,7 @@ import CommissionSettings from "@/components/settings/CommissionSettings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 
 const Settings: React.FC = () => {
   const supabase = useSupabase();

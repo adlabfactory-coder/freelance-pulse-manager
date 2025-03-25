@@ -3,7 +3,7 @@ import React from "react";
 import { UserRole, User } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SettingsSidebarProps {
   currentUser: User;
@@ -61,18 +61,12 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
         </CardContent>
       </Card>
       
-      <Tabs 
-        value={activeTab} 
-        onValueChange={onTabChange}
-        orientation="vertical"
-      >
-        <TabsList className="flex flex-col w-full h-auto">
-          <TabsTrigger value="profile" className="justify-start">Profil</TabsTrigger>
-          <TabsTrigger value="users" className="justify-start">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="company" className="justify-start">Entreprise</TabsTrigger>
-          <TabsTrigger value="commissions" className="justify-start">Commissions</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <TabsList className="flex flex-col w-full h-auto">
+        <TabsTrigger value="profile" className="justify-start">Profil</TabsTrigger>
+        <TabsTrigger value="users" className="justify-start">Utilisateurs</TabsTrigger>
+        <TabsTrigger value="company" className="justify-start">Entreprise</TabsTrigger>
+        <TabsTrigger value="commissions" className="justify-start">Commissions</TabsTrigger>
+      </TabsList>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import { SupabaseContext } from '@/App';
 import { toast } from '@/components/ui/use-toast';
 import { User, UserRole } from '@/types';
+import { checkSupabaseConnection } from '@/lib/supabase';
 
 export const useSupabase = () => {
   const supabase = useContext(SupabaseContext);
@@ -20,33 +21,38 @@ export const useSupabase = () => {
   const fetchUsers = async () => {
     try {
       // Vérification de l'état de la connexion Supabase avant d'effectuer la requête
-      const connectionCheck = await supabase.from('users').select('count');
-      if (connectionCheck.error) {
-        console.warn("Erreur lors de la vérification de la connexion:", connectionCheck.error.message);
-        // Utiliser les données de démonstration au lieu de propager l'erreur
+      const connectionStatus = await checkSupabaseConnection();
+      if (!connectionStatus.success) {
+        console.warn("Erreur lors de la vérification de la connexion:", connectionStatus.message);
         return getMockUsers();
       }
       
-      const { data, error } = await supabase
-        .from('users')
-        .select('*');
-      
-      if (error) {
-        console.warn("Erreur lors de la récupération des utilisateurs:", error.message);
+      // La connexion est établie, on tente de récupérer les utilisateurs
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*');
+        
+        if (error) {
+          console.warn("Erreur lors de la récupération des utilisateurs:", error.message);
+          return getMockUsers();
+        }
+        
+        if (!data || data.length === 0) {
+          console.warn("Aucun utilisateur trouvé dans Supabase");
+          return getMockUsers();
+        }
+        
+        return data.map(user => ({
+          ...user,
+          role: user.role as UserRole
+        })) as User[];
+      } catch (error: any) {
+        console.error('Erreur lors de la récupération des utilisateurs:', error);
         return getMockUsers();
       }
-      
-      if (!data || data.length === 0) {
-        console.warn("Aucun utilisateur trouvé dans Supabase");
-        return getMockUsers();
-      }
-      
-      return data.map(user => ({
-        ...user,
-        role: user.role as UserRole
-      })) as User[];
     } catch (error: any) {
-      console.error('Erreur lors de la récupération des utilisateurs:', error);
+      console.error('Erreur lors de la vérification de la connexion:', error);
       return getMockUsers();
     }
   };
