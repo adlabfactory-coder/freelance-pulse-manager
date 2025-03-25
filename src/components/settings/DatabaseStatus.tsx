@@ -28,21 +28,29 @@ const DatabaseStatus: React.FC = () => {
         'commission_rules'
       ];
       
-      const results = await Promise.all(
-        tables.map(async (table) => {
-          try {
-            // Utilisation de la méthode select() au lieu de from() directement
-            const { error } = await supabase.rpc('check_table_exists', { table_name: table });
-            return { table, exists: !error || error.code !== 'PGRST116' };
-          } catch (error) {
-            return { table, exists: false };
-          }
-        })
-      );
+      // Utiliser checkDatabaseSetup au lieu de requêtes RPC
+      const dbStatus = await supabase.checkDatabaseStatus();
       
-      setTablesStatus(results);
+      if (dbStatus.success) {
+        // Toutes les tables existent
+        setTablesStatus(tables.map(table => ({ table, exists: true })));
+      } else if (dbStatus.missingTables) {
+        // Certaines tables sont manquantes
+        setTablesStatus(tables.map(table => ({
+          table, 
+          exists: !dbStatus.missingTables?.includes(table)
+        })));
+      } else {
+        // Échec de la vérification
+        setTablesStatus(tables.map(table => ({ table, exists: false })));
+      }
     } catch (error) {
       console.error("Erreur lors de la vérification des tables:", error);
+      const tables = [
+        'users', 'contacts', 'appointments', 'quotes', 'quote_items',
+        'subscriptions', 'commissions', 'commission_rules'
+      ];
+      setTablesStatus(tables.map(table => ({ table, exists: false })));
     } finally {
       setIsLoading(false);
     }

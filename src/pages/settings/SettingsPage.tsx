@@ -12,6 +12,7 @@ import UserProfile from "@/components/settings/UserProfile";
 import UsersManagement from "@/components/settings/UsersManagement";
 import CompanySettings from "@/components/settings/CompanySettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
+import DatabaseTab from "@/components/settings/DatabaseTab";
 import { checkDatabaseSetup } from "@/lib/supabase";
 
 const SettingsPage: React.FC = () => {
@@ -193,7 +194,7 @@ const SettingsPage: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="users" className="mt-0">
-              <UsersManagement onSelectUser={handleUserSelect} />
+              <UsersManagement />
             </TabsContent>
 
             <TabsContent value="company" className="mt-0">
@@ -202,6 +203,10 @@ const SettingsPage: React.FC = () => {
 
             <TabsContent value="commissions" className="mt-0">
               <CommissionSettings />
+            </TabsContent>
+            
+            <TabsContent value="database" className="mt-0">
+              <DatabaseTab />
             </TabsContent>
           </div>
         </div>

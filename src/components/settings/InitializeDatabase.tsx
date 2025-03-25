@@ -57,7 +57,9 @@ const InitializeDatabase: React.FC = () => {
       if (dbStatus.success) {
         updateStatus("Toutes les tables existent déjà", 30);
       } else {
-        updateStatus(`Tables manquantes: ${dbStatus.missingTables?.join(', ')}`, 10);
+        if (dbStatus.missingTables && dbStatus.missingTables.length > 0) {
+          updateStatus(`Tables manquantes: ${dbStatus.missingTables.join(', ')}`, 10);
+        }
         
         // Création des tables manquantes
         updateStatus("Création des tables manquantes...", 10);
@@ -84,7 +86,7 @@ const InitializeDatabase: React.FC = () => {
     } catch (error: any) {
       console.error("Erreur lors de l'initialisation de la base de données:", error);
       setError(error.message || "Une erreur inconnue est survenue");
-      updateStatus(`Erreur: ${error.message || "Une erreur inconnue est survenue"}`, 0);
+      setStatusMessages(prev => [...prev, `Erreur: ${error.message || "Une erreur inconnue est survenue"}`]);
       
       toast({
         variant: "destructive",
