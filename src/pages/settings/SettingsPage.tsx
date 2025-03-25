@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { UserRole, User } from "@/types";
@@ -13,7 +12,7 @@ import UsersManagement from "@/components/settings/UsersManagement";
 import CompanySettings from "@/components/settings/CompanySettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
 import DatabaseTab from "@/components/settings/DatabaseTab";
-import { checkDatabaseSetup } from "@/lib/supabase";
+import { checkDatabaseSetup } from "@/lib/supabase-setup";
 
 const SettingsPage: React.FC = () => {
   const supabase = useSupabase();
@@ -38,13 +37,11 @@ const SettingsPage: React.FC = () => {
     setHasError(false);
     
     try {
-      // Vérifier d'abord le statut de la connexion Supabase et de la base de données
       const supabaseStatus = await supabase.checkSupabaseStatus();
       
       if (!supabaseStatus.success) {
         console.warn("Problème de connexion à Supabase:", supabaseStatus.message);
         
-        // Vérifier spécifiquement l'état de la base de données
         const dbSetupStatus = await checkDatabaseSetup();
         setDbStatus(dbSetupStatus);
         
@@ -59,7 +56,6 @@ const SettingsPage: React.FC = () => {
           return;
         }
         
-        // Si le problème n'est pas lié aux tables manquantes, on continue avec des données de démo
         toast({
           variant: "default",
           title: "Mode démo activé",
@@ -67,11 +63,9 @@ const SettingsPage: React.FC = () => {
         });
       }
       
-      // Récupérer les utilisateurs (réels ou de démo selon l'état de la connexion)
       let usersData: User[] = [];
       
       try {
-        // On récupère les données des utilisateurs
         usersData = await supabase.fetchUsers();
         console.log("Utilisateurs récupérés:", usersData);
         
@@ -80,17 +74,14 @@ const SettingsPage: React.FC = () => {
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
-        // On ne définit pas hasError ici, car nous avons déjà un fallback avec les données de démo
       }
       
-      // Si nous avons des utilisateurs, on initialise les états
       if (usersData.length > 0) {
         const user = usersData[0];
         setCurrentUser(user);
         setSelectedUserId(user.id);
         setUsers(usersData);
       } else {
-        // Si nous n'avons toujours pas d'utilisateurs, c'est une erreur critique
         setHasError(true);
         setErrorDetails({
           title: "Aucun utilisateur trouvé",
@@ -120,7 +111,6 @@ const SettingsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Assure que la page charge même en cas d'erreur avec Supabase
     const loadData = async () => {
       try {
         await fetchData();
@@ -194,7 +184,7 @@ const SettingsPage: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="users" className="mt-0">
-              <UsersManagement />
+              <UsersManagement onSelectUser={(userId) => handleUserSelect(userId)} />
             </TabsContent>
 
             <TabsContent value="company" className="mt-0">
