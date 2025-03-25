@@ -1,7 +1,7 @@
 
 // Import React and React Router dependencies
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 
 // Import components
 import Layout from "./components/layout/Layout";
@@ -39,8 +39,9 @@ function App() {
             <Route path="/commissions" element={<Commissions />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings/*" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
           </Route>
+          {/* Catch-all route for 404 pages */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </TooltipProvider>

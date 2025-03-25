@@ -19,7 +19,7 @@ interface NavigationProps {
 }
 
 const navItems: NavItemType[] = [
-  { title: "Tableau de bord", href: "/", icon: Home },
+  { title: "Tableau de bord", href: "/dashboard", icon: Home },
   { title: "Contacts", href: "/contacts", icon: Users },
   { title: "Rendez-vous", href: "/appointments", icon: Calendar },
   { title: "Devis", href: "/quotes", icon: FileText },
