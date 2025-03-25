@@ -3,7 +3,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, UserRole } from "@/types";
 import PersonalInfoTab from "./tabs/PersonalInfoTab";
-import CalendlySettings from "./CalendlySettings";
+import ScheduleSettings from "./ScheduleSettings";
 import SecurityTab from "./tabs/SecurityTab";
 
 interface UserProfileTabsProps {
@@ -39,7 +39,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({
     <Tabs defaultValue="personal" className="w-full">
       <TabsList className="grid w-full md:w-auto grid-cols-1 md:grid-cols-3">
         <TabsTrigger value="personal">Informations Personnelles</TabsTrigger>
-        <TabsTrigger value="calendly">Planification</TabsTrigger>
+        <TabsTrigger value="schedule">Planification</TabsTrigger>
         <TabsTrigger value="security">Sécurité</TabsTrigger>
       </TabsList>
 
@@ -59,8 +59,8 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({
         />
       </TabsContent>
 
-      <TabsContent value="calendly" className="mt-6">
-        <CalendlySettings />
+      <TabsContent value="schedule" className="mt-6">
+        <ScheduleSettings />
       </TabsContent>
 
       <TabsContent value="security" className="mt-6">

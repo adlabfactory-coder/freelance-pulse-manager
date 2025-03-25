@@ -48,8 +48,8 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       icon: <BadgeDollarSign className="h-5 w-5 mr-2" />,
     },
     {
-      value: "calendly",
-      label: "Calendly",
+      value: "schedule",
+      label: "Planification",
       icon: <CalendarClock className="h-5 w-5 mr-2" />,
     },
     {

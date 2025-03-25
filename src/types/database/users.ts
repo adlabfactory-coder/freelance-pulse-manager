@@ -9,9 +9,9 @@ export interface UsersTable {
       email: string
       role: string
       avatar: string | null
-      calendly_url: string | null
-      calendly_sync_email: string | null
-      calendly_enabled: boolean
+      schedule_enabled: boolean
+      daily_availability: Json | null
+      weekly_availability: Json | null
     }
     Insert: {
       id?: string
@@ -19,9 +19,9 @@ export interface UsersTable {
       email: string
       role: string
       avatar?: string | null
-      calendly_url?: string | null
-      calendly_sync_email?: string | null
-      calendly_enabled?: boolean
+      schedule_enabled?: boolean
+      daily_availability?: Json | null
+      weekly_availability?: Json | null
     }
     Update: {
       id?: string
@@ -29,9 +29,9 @@ export interface UsersTable {
       email?: string
       role?: string
       avatar?: string | null
-      calendly_url?: string | null
-      calendly_sync_email?: string | null
-      calendly_enabled?: boolean
+      schedule_enabled?: boolean
+      daily_availability?: Json | null
+      weekly_availability?: Json | null
     }
   }
 }
