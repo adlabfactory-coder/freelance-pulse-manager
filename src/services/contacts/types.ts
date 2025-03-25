@@ -1,8 +1,10 @@
 
 import { ContactStatus } from "@/types";
+import { DatabaseTables } from "@/types/database/base";
+import { ContactsTable } from "@/types/database/contacts";
 
 // Database table types
-export type ContactTable = Database['public']['Tables']['contacts'];
+export type ContactTable = ContactsTable['contacts'];
 export type ContactRow = ContactTable['Row'];
 export type ContactInsert = ContactTable['Insert'];
 export type ContactUpdate = ContactTable['Update'];
