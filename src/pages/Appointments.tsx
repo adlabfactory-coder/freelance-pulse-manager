@@ -8,12 +8,15 @@ import { SegmentButtons } from "@/components/ui/segment-buttons";
 import { CalendarDays, Grid, List, Plus, Search } from "lucide-react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isToday, isEqual } from "date-fns";
 import { fr } from "date-fns/locale";
+import AddAppointmentDialog from "@/components/appointments/AddAppointmentDialog";
+import SchedulePlanner from "@/components/appointments/SchedulePlanner";
 
 const Appointments: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [view, setView] = useState<"list" | "grid" | "calendar">("list");
   const [timeView, setTimeView] = useState<"day" | "week">("day");
   const [searchQuery, setSearchQuery] = useState("");
+  const [openNewAppointmentDialog, setOpenNewAppointmentDialog] = useState(false);
 
   // Generate the days for the week view
   const weekStart = date ? startOfWeek(date, { weekStartsOn: 1 }) : startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -65,7 +68,7 @@ const Appointments: React.FC = () => {
               <CalendarDays className="h-4 w-4" />
             </Button>
           </div>
-          <Button>
+          <Button onClick={() => setOpenNewAppointmentDialog(true)}>
             <Plus className="mr-2 h-4 w-4" /> Nouveau rendez-vous
           </Button>
         </div>
@@ -128,7 +131,10 @@ const Appointments: React.FC = () => {
                         <div key={index} className="flex items-start border-b pb-2">
                           <div className="w-16 font-medium text-muted-foreground">{slot.formattedTime}</div>
                           <div className="flex-1 ml-4">
-                            <div className="h-12 rounded-md border border-dashed border-muted hover:bg-accent/50 transition-colors cursor-pointer px-2 py-1">
+                            <div 
+                              className="h-12 rounded-md border border-dashed border-muted hover:bg-accent/50 transition-colors cursor-pointer px-2 py-1"
+                              onClick={() => setOpenNewAppointmentDialog(true)}
+                            >
                               <span className="text-xs text-muted-foreground">+ Ajouter</span>
                             </div>
                           </div>
@@ -173,6 +179,7 @@ const Appointments: React.FC = () => {
                               <div 
                                 key={dayIndex} 
                                 className="h-12 rounded-md border border-dashed border-muted hover:bg-accent/50 transition-colors cursor-pointer"
+                                onClick={() => setOpenNewAppointmentDialog(true)}
                               />
                             ))}
                           </div>
@@ -228,85 +235,15 @@ const Appointments: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="schedule">
-          <Card>
-            <CardHeader>
-              <CardTitle>Planification</CardTitle>
-              <CardDescription>
-                Créez et gérez votre planning de rendez-vous
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Créer un rendez-vous</h3>
-                  <div className="space-y-4">
-                    {/* Formulaire simple de création de rendez-vous */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Titre</label>
-                      <Input placeholder="Consultation initiale" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Date</label>
-                      <Calendar 
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        className="border rounded-md"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Heure</label>
-                      <div className="grid grid-cols-4 gap-2">
-                        {["9:00", "10:00", "11:00", "14:00"].map((time) => (
-                          <Button 
-                            key={time} 
-                            variant="outline" 
-                            className="text-sm"
-                          >
-                            {time}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    <Button className="w-full">
-                      <Plus className="mr-2 h-4 w-4" /> Créer le rendez-vous
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Disponibilités récurrentes</h3>
-                  <div className="border rounded-md p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">Lundi</span>
-                        <div className="text-sm text-muted-foreground">9:00 - 17:00</div>
-                      </div>
-                      <Button variant="ghost" size="sm">Modifier</Button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">Mardi</span>
-                        <div className="text-sm text-muted-foreground">9:00 - 17:00</div>
-                      </div>
-                      <Button variant="ghost" size="sm">Modifier</Button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-medium">Mercredi</span>
-                        <div className="text-sm text-muted-foreground">9:00 - 12:00</div>
-                      </div>
-                      <Button variant="ghost" size="sm">Modifier</Button>
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      Configurer les disponibilités
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <SchedulePlanner />
         </TabsContent>
       </Tabs>
+
+      <AddAppointmentDialog 
+        open={openNewAppointmentDialog} 
+        onOpenChange={setOpenNewAppointmentDialog}
+        selectedDate={date}
+      />
     </div>
   );
 };
