@@ -87,5 +87,50 @@ export const contactExcelService = {
         description: error.message,
       });
     }
+  },
+
+  // Add these methods to make the ImportExport component work
+  exportContactsToExcel: async function() {
+    try {
+      const contacts = await contactCrudService.getContacts();
+      this.exportToExcel(contacts);
+      
+      // Return a blob for download in case it's needed
+      const worksheet = XLSX.utils.json_to_sheet(contacts);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
+      
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      return new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    } catch (error) {
+      console.error("Erreur lors de l'exportation", error);
+      toast.error("Erreur lors de l'exportation");
+      return null;
+    }
+  },
+  
+  importContactsFromExcel: async function(file: File) {
+    try {
+      const result = await this.importFromExcel(file);
+      
+      if (result.success > 0) {
+        toast.success("Import réussi", {
+          description: `${result.success} contacts importés, ${result.errors} erreurs`
+        });
+      } else {
+        toast.error("Import échoué", {
+          description: `Aucun contact importé, ${result.errors} erreurs`
+        });
+      }
+      
+      return {
+        success: result.success > 0,
+        ...result
+      };
+    } catch (error) {
+      console.error("Erreur lors de l'importation", error);
+      toast.error("Erreur lors de l'importation");
+      return { success: false, total: 0, errors: 1, success: 0 };
+    }
   }
 };
