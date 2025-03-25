@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             >
               {item.icon && (
                 <span className="flex-shrink-0">
-                  <item.icon size={20} />
+                  <item.icon className="h-5 w-5" />
                 </span>
               )}
               <span
@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         >
           <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <Users size={16} />
+            <Users className="h-4 w-4" />
           </div>
           <div
             className={cn(
