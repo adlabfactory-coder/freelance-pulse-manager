@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
                 )
               }
             >
-              {item.icon && <item.icon className="h-5 w-5" />}
+              {item.icon && React.createElement(item.icon, { className: "h-5 w-5" })}
               <span
                 className={cn(
                   "transition-opacity",
