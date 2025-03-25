@@ -75,7 +75,7 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] w-[95vw] max-w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarPlus className="h-5 w-5" />
@@ -106,15 +106,16 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date">Date*</Label>
-                <div className="border rounded-md p-2">
+                <div className="border rounded-md p-2 max-w-full overflow-auto">
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
                     initialFocus
+                    className="mx-auto"
                   />
                 </div>
               </div>
@@ -156,11 +157,20 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto"
+            >
               Annuler
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full sm:w-auto"
+            >
               {isSubmitting ? "Planification..." : "Planifier le rendez-vous"}
             </Button>
           </DialogFooter>

@@ -8,6 +8,7 @@ import CompanySettings from "@/components/settings/CompanySettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
 import DatabaseTab from "@/components/settings/DatabaseTab";
 import { User } from "@/types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SettingsContentProps {
   currentUser: User;
@@ -28,22 +29,39 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
   onUserSelect,
   onTabChange
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-1">
-          <SettingsSidebar 
-            currentUser={currentUser}
-            users={users}
-            selectedUserId={selectedUserId}
-            activeTab={activeTab}
-            isLoading={isLoading}
-            onUserSelect={onUserSelect}
-            onTabChange={onTabChange}
-          />
-        </div>
+      <div className={`grid ${isMobile ? 'grid-cols-1' : 'md:grid-cols-4'} gap-6`}>
+        
+        {isMobile ? (
+          <div className="col-span-1">
+            <SettingsSidebar 
+              currentUser={currentUser}
+              users={users}
+              selectedUserId={selectedUserId}
+              activeTab={activeTab}
+              isLoading={isLoading}
+              onUserSelect={onUserSelect}
+              onTabChange={onTabChange}
+            />
+          </div>
+        ) : (
+          <div className="md:col-span-1">
+            <SettingsSidebar 
+              currentUser={currentUser}
+              users={users}
+              selectedUserId={selectedUserId}
+              activeTab={activeTab}
+              isLoading={isLoading}
+              onUserSelect={onUserSelect}
+              onTabChange={onTabChange}
+            />
+          </div>
+        )}
 
-        <div className="md:col-span-3">
+        <div className={isMobile ? "col-span-1" : "md:col-span-3"}>
           <TabsContent value="profile" className="mt-0">
             {selectedUserId && (
               <UserProfile 

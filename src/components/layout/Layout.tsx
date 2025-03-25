@@ -14,6 +14,8 @@ const Layout: React.FC = () => {
   useEffect(() => {
     if (isMobile) {
       setSidebarCollapsed(true);
+    } else {
+      setSidebarCollapsed(false);
     }
   }, [isMobile]);
   
@@ -34,7 +36,7 @@ const Layout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-auto">
-          <div className={`container mx-auto ${isMobile ? 'p-3 pb-20' : 'p-4 md:p-6'} animate-scale-in`}>
+          <div className={`container mx-auto ${isMobile ? 'px-2 py-3 pb-20' : 'p-4 md:p-6'} animate-scale-in`}>
             <Outlet />
           </div>
         </main>

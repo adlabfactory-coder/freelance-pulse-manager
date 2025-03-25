@@ -10,6 +10,7 @@ import {
   BadgeDollarSign,
   Database
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SettingsSidebarProps {
   activeTab: string;
@@ -31,6 +32,8 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   isLoading,
   onUserSelect
 }) => {
+  const isMobile = useIsMobile();
+
   const tabs = [
     {
       value: "company",
@@ -58,6 +61,29 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       icon: <Database className="h-5 w-5 mr-2" />,
     }
   ];
+
+  if (isMobile) {
+    return (
+      <div className="w-full mb-6">
+        <div className="grid grid-cols-2 gap-2">
+          {tabs.map((tab) => (
+            <Button
+              key={tab.value}
+              variant="ghost"
+              className={cn(
+                "justify-start",
+                activeTab === tab.value && "bg-muted"
+              )}
+              onClick={() => onTabChange(tab.value)}
+            >
+              {tab.icon}
+              <span className="truncate">{tab.label}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-64 flex-shrink-0 border-r">
