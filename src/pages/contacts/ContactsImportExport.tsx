@@ -100,7 +100,9 @@ const ContactsImportExport: React.FC<ContactsImportExportProps> = ({ onImportCom
     } finally {
       setImporting(false);
       // Reset file input
-      e.target.value = "";
+      if (e.target) {
+        e.target.value = "";
+      }
     }
   };
 

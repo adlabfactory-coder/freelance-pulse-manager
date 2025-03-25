@@ -127,3 +127,9 @@ export const importContactsFromExcel = async (file: File): Promise<{success: boo
     reader.readAsArrayBuffer(file);
   });
 };
+
+// Create the contactExcelService object and export it
+export const contactExcelService = {
+  exportContactsToExcel,
+  importContactsFromExcel
+};
