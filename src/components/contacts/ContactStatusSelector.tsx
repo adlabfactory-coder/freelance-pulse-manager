@@ -13,15 +13,15 @@ import { ContactStatus } from "@/types";
 import ContactStatusBadge from "./ContactStatusBadge";
 
 interface ContactStatusSelectorProps {
-  contactId: string;
-  currentStatus: ContactStatus;
-  onStatusChange?: (newStatus: ContactStatus) => void;
+  contactId?: string;
+  value: ContactStatus;
+  onChange: (newStatus: ContactStatus) => void;
 }
 
 const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({ 
   contactId, 
-  currentStatus,
-  onStatusChange
+  value,
+  onChange
 }) => {
   const statusItems = [
     { value: ContactStatus.LEAD, label: "Lead" },
@@ -32,9 +32,13 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
   ];
 
   const handleStatusChange = async (status: ContactStatus) => {
-    const result = await contactService.updateContactStatus(contactId, status);
-    if (result && onStatusChange) {
-      onStatusChange(status);
+    if (contactId) {
+      const result = await contactService.updateContactStatus(contactId, status);
+      if (result && onChange) {
+        onChange(status);
+      }
+    } else {
+      onChange(status);
     }
   };
 
@@ -42,7 +46,7 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
-          <ContactStatusBadge status={currentStatus} />
+          <ContactStatusBadge status={value} />
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -53,7 +57,7 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
             onClick={() => handleStatusChange(item.value)}
             className="flex items-center gap-2"
           >
-            {currentStatus === item.value && (
+            {value === item.value && (
               <Check className="h-4 w-4" />
             )}
             <ContactStatusBadge status={item.value} />
