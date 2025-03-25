@@ -131,5 +131,6 @@ INSERT INTO public.users (name, email, role, calendly_url, calendly_enabled, cal
 VALUES 
   ('Admin Démo', 'admin@example.com', 'admin', 'https://calendly.com/admin-demo', true, 'admin@example.com'),
   ('Commercial Démo', 'commercial@example.com', 'freelancer', 'https://calendly.com/commercial-demo', true, 'commercial@example.com'),
-  ('Client Démo', 'client@example.com', 'client', '', false, '')
+  ('Client Démo', 'client@example.com', 'client', '', false, ''),
+  ('Freelance Démo', 'freelance@example.com', 'freelancer', 'https://calendly.com/freelance-demo', true, 'freelance@example.com')
 ON CONFLICT (email) DO NOTHING;
