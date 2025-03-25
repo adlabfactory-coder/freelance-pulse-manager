@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
@@ -22,12 +22,14 @@ export const useSettingsData = () => {
     missingTables?: string[];
     message?: string;
   } | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setHasError(false);
     
     try {
+      console.log("Vérification du statut Supabase...");
       const supabaseStatus = await supabase.checkSupabaseStatus();
       
       if (!supabaseStatus.success) {
@@ -47,6 +49,7 @@ export const useSettingsData = () => {
           return;
         }
         
+        console.log("Utilisation des données de démonstration");
         toast({
           variant: "default",
           title: "Mode démo activé",
@@ -57,6 +60,7 @@ export const useSettingsData = () => {
       let usersData: User[] = [];
       
       try {
+        console.log("Récupération des utilisateurs...");
         usersData = await supabase.fetchUsers();
         console.log("Utilisateurs récupérés:", usersData);
         
@@ -65,10 +69,11 @@ export const useSettingsData = () => {
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
+        throw error; // Propager l'erreur pour le bloc catch suivant
       }
       
       if (usersData.length > 0) {
-        const user = usersData[0];
+        const user = usersData[0]; // Utilisation du premier utilisateur comme utilisateur actuel
         setCurrentUser(user);
         setSelectedUserId(user.id);
         setUsers(usersData);
@@ -99,7 +104,7 @@ export const useSettingsData = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [supabase, retryCount]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -117,7 +122,7 @@ export const useSettingsData = () => {
     };
     
     loadData();
-  }, []);
+  }, [fetchData]);
 
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
@@ -129,6 +134,7 @@ export const useSettingsData = () => {
   };
 
   const handleRetry = () => {
+    setRetryCount(prev => prev + 1); // Forcer la réexécution du useEffect
     fetchData();
   };
 

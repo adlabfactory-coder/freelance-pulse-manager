@@ -1,44 +1,29 @@
 
-import { 
-  checkDatabaseSetup, 
-  setupDatabase 
-} from '@/lib/supabase';
-import { DatabaseSetupOptions } from '@/types/supabase-types';
-import { supabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase';
+import { checkDatabaseSetup, setupDatabase } from '@/lib/supabase';
 
-// Method to check Supabase connection status
+// Exporter les fonctions depuis lib/supabase pour une utilisation directe
 export const checkSupabaseStatus = async () => {
   try {
-    const { data, error } = await supabase.from('users').select('id').limit(1);
+    // Vérification simple de la connexion
+    const { data, error } = await supabase.from('adlab hub freelancer').select('count()', { count: 'exact', head: true });
     
     if (error) {
-      console.error("Erreur de connexion à Supabase:", error);
-      return { 
-        success: false, 
-        message: "Impossible de se connecter à Supabase", 
-        networkError: error.code === 'NETWORK_ERROR' 
-      };
+      console.warn('Erreur lors de la vérification de la connexion à Supabase:', error.message);
+      return { success: false, message: error.message };
     }
     
-    return { success: true, message: "Connexion à Supabase établie avec succès" };
+    return { success: true };
   } catch (error) {
-    console.error("Erreur inattendue lors de la connexion à Supabase:", error);
-    return { 
-      success: false, 
-      message: "Erreur inattendue lors de la connexion à Supabase",
-      networkError: true
-    };
+    console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
+    return { success: false, message: 'Impossible de se connecter à Supabase' };
   }
 };
 
-// Method to check database configuration
 export const checkDatabaseStatus = async () => {
-  const dbStatus = await checkDatabaseSetup();
-  return dbStatus;
+  return await checkDatabaseSetup();
 };
 
-// Method to initialize the database
-export const initializeDatabase = async (options?: DatabaseSetupOptions) => {
-  const setupResult = await setupDatabase(options);
-  return setupResult;
+export const initializeDatabase = async (options: any = {}) => {
+  return await setupDatabase(options);
 };

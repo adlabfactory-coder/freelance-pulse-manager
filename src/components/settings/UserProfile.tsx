@@ -5,6 +5,7 @@ import { UserRole, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import UserProfileHeader from "./UserProfileHeader";
 import UserProfileTabs from "./UserProfileTabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfileProps {
   userId: string;
@@ -19,34 +20,61 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
   const [role, setRole] = useState<UserRole>(UserRole.FREELANCER);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const isCurrentUser = userId === currentUser.id;
   const canEdit = isCurrentUser || currentUser.role === UserRole.ADMIN;
 
   useEffect(() => {
+    let isMounted = true;
     const fetchUser = async () => {
       setIsLoading(true);
+      setError(null);
+      
       try {
+        console.log("Fetching user with ID:", userId);
         const userData = await supabase.fetchUserById(userId);
-        if (userData) {
-          setUser(userData);
-          setName(userData.name);
-          setEmail(userData.email);
-          setRole(userData.role);
+        
+        if (isMounted) {
+          if (userData) {
+            console.log("User data retrieved:", userData);
+            setUser(userData);
+            setName(userData.name);
+            setEmail(userData.email);
+            setRole(userData.role);
+          } else {
+            console.error("Utilisateur non trouvé après tentative de récupération");
+            setError("Impossible de récupérer les informations de l'utilisateur");
+            toast({
+              variant: "destructive",
+              title: "Erreur",
+              description: "Impossible de récupérer les informations de l'utilisateur.",
+            });
+          }
         }
       } catch (error) {
         console.error("Erreur lors de la récupération de l'utilisateur:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de récupérer les informations de l'utilisateur.",
-        });
+        if (isMounted) {
+          setError("Une erreur est survenue lors du chargement des données");
+          toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Impossible de récupérer les informations de l'utilisateur.",
+          });
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchUser();
+    
+    // Cleanup pour éviter les fuites de mémoire
+    return () => {
+      isMounted = false;
+    };
   }, [userId, supabase]);
 
   const handleSubmit = async () => {
@@ -89,11 +117,33 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement du profil...</div>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="space-y-4 mt-6">
+          <Skeleton className="h-10 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+          <Skeleton className="h-24 w-full" />
+        </div>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <div className="text-center py-8">Utilisateur non trouvé</div>;
+  if (error || !user) {
+    return (
+      <div className="text-center py-8 space-y-4">
+        <div className="text-destructive text-lg font-medium">
+          {error || "Utilisateur non trouvé"}
+        </div>
+        <p className="text-muted-foreground">
+          Veuillez rafraîchir la page ou sélectionner un autre utilisateur.
+        </p>
+      </div>
+    );
   }
 
   return (
