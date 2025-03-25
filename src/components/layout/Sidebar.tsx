@@ -36,6 +36,10 @@ const navItems: NavItem[] = [
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const location = useLocation();
 
+  const renderIcon = (Icon: React.ElementType) => {
+    return <Icon className="h-5 w-5" aria-hidden="true" />;
+  };
+
   return (
     <div
       className={cn(
@@ -87,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             >
               {item.icon && (
                 <span className="flex-shrink-0">
-                  <item.icon className="h-5 w-5" aria-hidden="true" />
+                  {renderIcon(item.icon)}
                 </span>
               )}
               <span
@@ -111,7 +115,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         >
           <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <Users className="h-4 w-4" aria-hidden="true" />
+            {renderIcon(Users)}
           </div>
           <div
             className={cn(
