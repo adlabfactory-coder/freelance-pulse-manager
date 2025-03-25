@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -302,7 +303,8 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
                           <SelectValue placeholder="Sélectionner un service ou pack" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Personnalisé</SelectItem>
+                          {/* Modification ici: changer "" en "custom" pour ne pas avoir de valeur vide */}
+                          <SelectItem value="custom">Personnalisé</SelectItem>
                           {services.map(service => (
                             <SelectItem key={service.id} value={service.id}>
                               {service.name} - {formatCurrency(service.price)}

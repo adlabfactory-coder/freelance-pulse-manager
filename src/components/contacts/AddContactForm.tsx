@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,7 +62,18 @@ export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
 
   async function onSubmit(data: ContactFormValues) {
     try {
-      const result = await contactService.createContact(data);
+      const contactData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company || "",
+        position: data.position || "",
+        address: data.address || "",
+        notes: data.notes || "",
+        status: data.status
+      };
+      
+      const result = await contactService.createContact(contactData);
       if (result) {
         toast.success("Contact ajouté avec succès");
         form.reset();

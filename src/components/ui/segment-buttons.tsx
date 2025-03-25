@@ -12,7 +12,7 @@ interface SegmentItem {
 }
 
 export interface SegmentButtonsProps {
-  items: SegmentItem[];
+  items?: SegmentItem[];
   defaultValue?: string;
   className?: string;
   children?: React.ReactNode;
