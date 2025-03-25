@@ -1,15 +1,24 @@
 
 import { supabase } from './supabase-client';
 import { DatabaseSetupOptions, DatabaseSetupResult, DatabaseSetupStatus, TableSetupStatus } from '@/types/supabase-types';
+import { Database } from '@/types/database';
+
+// Type-safe table names
+type TableName = keyof Database['public']['Tables'];
+const tableNames: TableName[] = ['users', 'contacts', 'appointments', 'quotes', 'subscriptions', 'commissions', 'commission_rules', 'quote_items'];
 
 // Function to check if the database is correctly configured
 export const checkDatabaseSetup = async (): Promise<DatabaseSetupStatus> => {
   try {
-    const tables = ['users', 'contacts', 'appointments', 'quotes', 'subscriptions', 'commissions', 'commission_rules', 'quote_items'];
     const results = await Promise.all(
-      tables.map(async (table) => {
-        const { error } = await supabase.from(table).select('id').limit(1);
-        return { table, exists: !error || error.code !== '42P01' };
+      tableNames.map(async (table) => {
+        try {
+          // Now using typed table names
+          const { error } = await supabase.from(table).select('id').limit(1);
+          return { table, exists: !error || error.code !== '42P01' };
+        } catch (err) {
+          return { table, exists: false };
+        }
       })
     );
     
@@ -72,9 +81,28 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
       }
     }
     
+    // For the other tables, we'll use execute_sql instead of the non-existent RPC functions
     // Create contacts table if it doesn't exist
     if (dbStatus.missingTables?.includes('contacts')) {
-      const { error } = await supabase.rpc('create_contacts_table');
+      const createContactsSQL = `
+        CREATE TABLE IF NOT EXISTS contacts (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          phone TEXT,
+          company TEXT,
+          position TEXT,
+          address TEXT,
+          notes TEXT,
+          "assignedTo" UUID REFERENCES users(id),
+          status contact_status NOT NULL DEFAULT 'lead',
+          subscription_plan_id UUID REFERENCES subscription_plans(id),
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createContactsSQL });
       
       if (!error) {
         notifyTableCreated('contacts');
@@ -86,7 +114,24 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
     
     // Create appointments table if it doesn't exist
     if (dbStatus.missingTables?.includes('appointments')) {
-      const { error } = await supabase.rpc('create_appointments_table');
+      const createAppointmentsSQL = `
+        CREATE TABLE IF NOT EXISTS appointments (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          title TEXT NOT NULL,
+          description TEXT,
+          "contactId" UUID NOT NULL REFERENCES contacts(id),
+          "freelancerId" UUID NOT NULL REFERENCES users(id),
+          date TIMESTAMP WITH TIME ZONE NOT NULL,
+          duration INTEGER NOT NULL,
+          status TEXT NOT NULL,
+          location TEXT,
+          notes TEXT,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createAppointmentsSQL });
       
       if (!error) {
         notifyTableCreated('appointments');
@@ -98,7 +143,21 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
     
     // Create quotes table if it doesn't exist
     if (dbStatus.missingTables?.includes('quotes')) {
-      const { error } = await supabase.rpc('create_quotes_table');
+      const createQuotesSQL = `
+        CREATE TABLE IF NOT EXISTS quotes (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "contactId" UUID NOT NULL REFERENCES contacts(id),
+          "freelancerId" UUID NOT NULL REFERENCES users(id),
+          "totalAmount" NUMERIC NOT NULL,
+          status TEXT NOT NULL,
+          "validUntil" TIMESTAMP WITH TIME ZONE NOT NULL,
+          notes TEXT,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createQuotesSQL });
       
       if (!error) {
         notifyTableCreated('quotes');
@@ -110,7 +169,19 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
     
     // Create quote_items table if it doesn't exist
     if (dbStatus.missingTables?.includes('quote_items')) {
-      const { error } = await supabase.rpc('create_quote_items_table');
+      const createQuoteItemsSQL = `
+        CREATE TABLE IF NOT EXISTS quote_items (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "quoteId" UUID NOT NULL REFERENCES quotes(id),
+          description TEXT NOT NULL,
+          quantity INTEGER NOT NULL,
+          "unitPrice" NUMERIC NOT NULL,
+          discount NUMERIC,
+          tax NUMERIC
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createQuoteItemsSQL });
       
       if (!error) {
         notifyTableCreated('quote_items');
@@ -122,7 +193,25 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
     
     // Create subscriptions table if it doesn't exist
     if (dbStatus.missingTables?.includes('subscriptions')) {
-      const { error } = await supabase.rpc('create_subscriptions_table');
+      const createSubscriptionsSQL = `
+        CREATE TABLE IF NOT EXISTS subscriptions (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          name TEXT NOT NULL,
+          description TEXT,
+          price NUMERIC NOT NULL,
+          interval TEXT NOT NULL,
+          "clientId" UUID NOT NULL REFERENCES users(id),
+          "freelancerId" UUID NOT NULL REFERENCES users(id),
+          status TEXT NOT NULL,
+          "startDate" TIMESTAMP WITH TIME ZONE NOT NULL,
+          "endDate" TIMESTAMP WITH TIME ZONE,
+          "renewalDate" TIMESTAMP WITH TIME ZONE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createSubscriptionsSQL });
       
       if (!error) {
         notifyTableCreated('subscriptions');
@@ -134,7 +223,23 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
     
     // Create commissions table if it doesn't exist
     if (dbStatus.missingTables?.includes('commissions')) {
-      const { error } = await supabase.rpc('create_commissions_table');
+      const createCommissionsSQL = `
+        CREATE TABLE IF NOT EXISTS commissions (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "freelancerId" UUID NOT NULL REFERENCES users(id),
+          amount NUMERIC NOT NULL,
+          tier TEXT NOT NULL,
+          "subscriptionId" UUID REFERENCES subscriptions(id),
+          "quoteId" UUID REFERENCES quotes(id),
+          "periodStart" TIMESTAMP WITH TIME ZONE NOT NULL,
+          "periodEnd" TIMESTAMP WITH TIME ZONE NOT NULL,
+          status TEXT NOT NULL,
+          "paidDate" TIMESTAMP WITH TIME ZONE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createCommissionsSQL });
       
       if (!error) {
         notifyTableCreated('commissions');
@@ -146,7 +251,16 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
     
     // Create commission_rules table if it doesn't exist
     if (dbStatus.missingTables?.includes('commission_rules')) {
-      const { error } = await supabase.rpc('create_commission_rules_table');
+      const createCommissionRulesSQL = `
+        CREATE TABLE IF NOT EXISTS commission_rules (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          tier TEXT NOT NULL,
+          "minContracts" INTEGER NOT NULL,
+          percentage NUMERIC NOT NULL
+        );
+      `;
+      
+      const { error } = await supabase.rpc('execute_sql', { sql: createCommissionRulesSQL });
       
       if (!error) {
         notifyTableCreated('commission_rules');

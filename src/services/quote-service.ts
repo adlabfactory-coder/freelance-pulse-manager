@@ -1,7 +1,14 @@
+import { supabase } from '@/lib/supabase';
+import { Quote, QuoteStatus } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
-import { supabase } from "@/lib/supabase-client";
-import { Quote, QuoteItem, QuoteStatus } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+// Utility function to ensure proper enum type
+const ensureQuoteStatus = (status: string): QuoteStatus => {
+  const validStatuses: QuoteStatus[] = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
+  return validStatuses.includes(status as QuoteStatus) 
+    ? (status as QuoteStatus) 
+    : 'draft';
+};
 
 export const fetchQuotes = async (): Promise<Quote[]> => {
   try {
@@ -9,55 +16,43 @@ export const fetchQuotes = async (): Promise<Quote[]> => {
       .from('quotes')
       .select(`
         *,
-        contact:contactId (name, email),
-        freelancer:freelancerId (name, email)
+        contact:contacts(name, email),
+        freelancer:users(name, email),
+        items:quote_items(*)
       `)
       .order('createdAt', { ascending: false });
 
     if (error) {
-      console.error("Erreur lors de la récupération des devis:", error);
+      console.error('Error fetching quotes:', error);
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de récupérer les devis. Veuillez réessayer plus tard.",
+        title: "Error",
+        description: "Failed to load quotes. Please try again.",
       });
       return [];
     }
 
-    const quotes = data || [];
-    
-    // Récupérer les éléments du devis pour chaque devis
-    const quotesWithItems = await Promise.all(
-      quotes.map(async (quote) => {
-        const { data: items, error: itemsError } = await supabase
-          .from('quote_items')
-          .select('*')
-          .eq('quoteId', quote.id);
-        
-        if (itemsError) {
-          console.error("Erreur lors de la récupération des éléments du devis:", itemsError);
-          return { ...quote, items: [] };
-        }
-        
-        return { 
-          ...quote, 
-          items: items || [],
-          contact: quote.contact,
-          freelancer: quote.freelancer,
-          validUntil: new Date(quote.validUntil),
-          createdAt: quote.createdAt ? new Date(quote.createdAt) : undefined,
-          updatedAt: quote.updatedAt ? new Date(quote.updatedAt) : undefined
-        };
-      })
-    );
-
-    return quotesWithItems;
+    // Transform and type-cast the data
+    return data.map(quote => ({
+      id: quote.id,
+      contactId: quote.contactId,
+      freelancerId: quote.freelancerId,
+      totalAmount: quote.totalAmount,
+      status: ensureQuoteStatus(quote.status), // Ensure proper enum type
+      validUntil: new Date(quote.validUntil),
+      notes: quote.notes || '',
+      createdAt: new Date(quote.createdAt || Date.now()),
+      updatedAt: new Date(quote.updatedAt || Date.now()),
+      items: quote.items || [],
+      contact: quote.contact,
+      freelancer: quote.freelancer
+    }));
   } catch (error) {
-    console.error("Erreur lors de la récupération des devis:", error);
+    console.error('Unexpected error fetching quotes:', error);
     toast({
       variant: "destructive",
-      title: "Erreur",
-      description: "Une erreur est survenue lors de la récupération des devis.",
+      title: "Error",
+      description: "An unexpected error occurred. Please try again.",
     });
     return [];
   }

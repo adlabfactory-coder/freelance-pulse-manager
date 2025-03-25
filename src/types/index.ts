@@ -194,3 +194,18 @@ export interface SubscriptionPlan {
   created_at: Date;
   updated_at: Date;
 }
+
+// Update Service type with proper ServiceType enum
+export type ServiceType = 'service' | 'pack';
+
+// Service interface
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  type: ServiceType;
+  price: number;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+}

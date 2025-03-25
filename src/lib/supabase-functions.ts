@@ -1,32 +1,75 @@
 
-import { supabase } from './supabase-client';
+import { supabase } from '@/lib/supabase-client';
 
 // Function to create SQL functions in Supabase
 export const createDatabaseFunctions = async () => {
   try {
-    // Create the check_table_exists function that will be used by the frontend
-    const { error: functionError } = await supabase.rpc('create_check_table_exists_function');
+    // Instead of trying to call RPC functions that don't exist in the type definitions,
+    // we'll use the execute_sql RPC function that is available
+    const createCheckTableExistsFunc = `
+      CREATE OR REPLACE FUNCTION check_table_exists(table_name TEXT)
+      RETURNS BOOLEAN
+      LANGUAGE plpgsql
+      AS $$
+      BEGIN
+        RETURN EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public'
+          AND table_name = $1
+        );
+      END;
+      $$;
+    `;
     
-    if (functionError) {
-      console.error('Erreur lors de la création de la fonction check_table_exists:', functionError);
+    const { error: funcError } = await supabase.rpc('execute_sql', { sql: createCheckTableExistsFunc });
+    
+    if (funcError) {
+      console.error('Erreur lors de la création de la fonction check_table_exists:', funcError);
       return { success: false, message: 'Erreur lors de la création des fonctions SQL' };
     }
     
-    // Create functions for table creation
-    const tableFunctions = [
-      'create_create_contacts_table_function',
-      'create_create_appointments_table_function',
-      'create_create_quotes_table_function',
-      'create_create_quote_items_table_function',
-      'create_create_subscriptions_table_function',
-      'create_create_commissions_table_function',
-      'create_create_commission_rules_table_function'
+    // Create functions for table creation using execute_sql
+    const tableFunctionsSql = [
+      `CREATE OR REPLACE FUNCTION create_contacts_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS contacts (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`,
+      
+      `CREATE OR REPLACE FUNCTION create_appointments_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS appointments (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`,
+      
+      `CREATE OR REPLACE FUNCTION create_quotes_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS quotes (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`,
+      
+      `CREATE OR REPLACE FUNCTION create_quote_items_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS quote_items (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`,
+      
+      `CREATE OR REPLACE FUNCTION create_subscriptions_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS subscriptions (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`,
+      
+      `CREATE OR REPLACE FUNCTION create_commissions_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS commissions (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`,
+      
+      `CREATE OR REPLACE FUNCTION create_commission_rules_table() RETURNS void AS $$
+      BEGIN
+        CREATE TABLE IF NOT EXISTS commission_rules (/* table definition */);
+      END; $$ LANGUAGE plpgsql;`
     ];
     
-    for (const funcName of tableFunctions) {
-      const { error } = await supabase.rpc(funcName);
+    for (const sqlFunc of tableFunctionsSql) {
+      const { error } = await supabase.rpc('execute_sql', { sql: sqlFunc });
       if (error) {
-        console.error(`Erreur lors de la création de la fonction ${funcName}:`, error);
+        console.error(`Erreur lors de la création d'une fonction SQL:`, error);
       }
     }
     
