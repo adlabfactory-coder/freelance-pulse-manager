@@ -12,13 +12,20 @@ interface SettingsErrorProps {
   title?: string;
   description?: string;
   onRetry: () => void;
+  error?: string | null;
 }
 
 const SettingsError: React.FC<SettingsErrorProps> = ({ 
   title = "Impossible de charger les paramètres",
   description = "Veuillez vérifier votre connexion à Supabase ou réessayer ultérieurement.",
-  onRetry 
+  onRetry,
+  error 
 }) => {
+  // Si error est fourni et description n'est pas explicitement fourni, utilisez error comme description
+  const finalDescription = error && description === "Veuillez vérifier votre connexion à Supabase ou réessayer ultérieurement." 
+    ? error 
+    : description;
+    
   const [isSettingUp, setIsSettingUp] = useState(false);
   const [setupProgress, setSetupProgress] = useState(0);
   const [setupStatus, setSetupStatus] = useState<string[]>([]);
@@ -92,7 +99,7 @@ const SettingsError: React.FC<SettingsErrorProps> = ({
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Problème de connexion</AlertTitle>
         <AlertDescription>
-          La connexion à Supabase a échoué ou les tables nécessaires n'existent pas.
+          {finalDescription}
         </AlertDescription>
       </Alert>
       
@@ -100,7 +107,7 @@ const SettingsError: React.FC<SettingsErrorProps> = ({
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>
-            {description}
+            {finalDescription}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">

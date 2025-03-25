@@ -42,12 +42,13 @@ const SettingsPage: React.FC = () => {
       <SettingsHeader />
       <SettingsContent 
         currentUser={currentUser}
-        users={users}
         selectedUserId={selectedUserId || currentUser.id}
         activeTab={activeTab}
         isLoading={isLoading}
         onUserSelect={handleUserSelect}
         onTabChange={handleTabChange}
+        users={users}
+        error={null}
       />
     </div>
   );

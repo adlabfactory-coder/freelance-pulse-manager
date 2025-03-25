@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, WhatsApp } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -16,7 +15,6 @@ const Login: React.FC = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const navigate = useNavigate();
 
-  // Vérifier si l'utilisateur est déjà connecté
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
@@ -134,10 +132,10 @@ const Login: React.FC = () => {
           </p>
           <Button 
             variant="outline" 
-            className="flex items-center justify-center gap-2 w-full" 
+            className="flex items-center justify-center gap-2 w-full text-green-600 hover:text-green-700 border-green-500 hover:border-green-600 hover:bg-green-50" 
             onClick={handleWhatsAppContact}
           >
-            <WhatsApp className="h-5 w-5 text-green-500" />
+            <MessageCircle className="h-5 w-5 fill-green-500" />
             Contacter l'admin via WhatsApp
           </Button>
         </CardFooter>

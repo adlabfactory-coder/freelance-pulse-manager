@@ -13,7 +13,7 @@ import {
   Database,
   UserPlus,
 } from "lucide-react";
-import { UserSelector } from "./UserSelector";
+import UserSelector from "./UserSelector";
 import { useAuth } from "@/hooks/use-auth";
 
 interface SettingsSidebarProps {

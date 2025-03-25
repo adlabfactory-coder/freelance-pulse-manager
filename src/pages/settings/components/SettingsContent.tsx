@@ -11,19 +11,22 @@ import SettingsLoading from "./SettingsLoading";
 import DatabaseTab from "@/components/settings/DatabaseTab";
 import FreelancerManagement from "@/components/settings/FreelancerManagement";
 import { useAuth } from "@/hooks/use-auth";
+import { User } from "@/types";
 
 interface SettingsContentProps {
   isLoading: boolean;
-  error: string | null;
-  currentUserId: string;
-  currentUser: any;
+  currentUser: User;
   selectedUserId: string;
+  activeTab: string;
+  onUserSelect: (userId: string) => void;
+  onTabChange: (value: string) => void;
+  users?: User[];
+  error?: string | null;
 }
 
 const SettingsContent: React.FC<SettingsContentProps> = ({
   isLoading,
   error,
-  currentUserId,
   currentUser,
   selectedUserId,
 }) => {
@@ -34,7 +37,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
   }
 
   if (error) {
-    return <SettingsError error={error} />;
+    return <SettingsError title="Erreur" description={error} onRetry={() => {}} />;
   }
 
   return (
@@ -43,7 +46,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
         path="/"
         element={
           <UserProfile
-            userId={selectedUserId || currentUserId}
+            userId={selectedUserId}
             currentUser={currentUser}
           />
         }
@@ -52,7 +55,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
         path="/profile"
         element={
           <UserProfile
-            userId={selectedUserId || currentUserId}
+            userId={selectedUserId}
             currentUser={currentUser}
           />
         }
