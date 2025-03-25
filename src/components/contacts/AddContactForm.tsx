@@ -70,7 +70,7 @@ export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
         position: data.position || "",
         address: data.address || "",
         notes: data.notes || "",
-        status: data.status
+        status: data.status as ContactStatus
       };
       
       const result = await contactService.createContact(contactData);

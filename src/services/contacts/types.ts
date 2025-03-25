@@ -1,6 +1,5 @@
 
 import { ContactStatus } from "@/types";
-import { Database } from "@/types/database";
 
 // Database table types
 export type ContactTable = Database['public']['Tables']['contacts'];

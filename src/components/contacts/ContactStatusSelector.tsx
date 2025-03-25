@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,16 +34,17 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
   const handleChange = onChange || onStatusChange;
   
   const statusItems = [
-    { value: ContactStatus.LEAD, label: "Lead" },
-    { value: ContactStatus.PROSPECT, label: "Prospect" },
-    { value: ContactStatus.NEGOTIATION, label: "En négociation" },
-    { value: ContactStatus.SIGNED, label: "Signé" },
-    { value: ContactStatus.LOST, label: "Perdu" },
+    { value: "lead" as ContactStatus, label: "Lead" },
+    { value: "prospect" as ContactStatus, label: "Prospect" },
+    { value: "negotiation" as ContactStatus, label: "En négociation" },
+    { value: "signed" as ContactStatus, label: "Signé" },
+    { value: "lost" as ContactStatus, label: "Perdu" },
   ];
 
   const handleStatusChange = async (status: ContactStatus) => {
     if (contactId) {
-      const result = await contactService.updateContactStatus(contactId, status);
+      // Use updateContact instead of updateContactStatus
+      const result = await contactService.updateContact(contactId, { status });
       if (result && handleChange) {
         handleChange(status);
       }
