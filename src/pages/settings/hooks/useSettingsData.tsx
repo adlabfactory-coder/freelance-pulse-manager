@@ -4,6 +4,7 @@ import { useSupabase } from "@/hooks/use-supabase";
 import { User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { checkDatabaseSetup } from "@/lib/supabase";
+import { getMockUsers } from "@/utils/supabase-mock-data";
 
 export const useSettingsData = () => {
   const supabase = useSupabase();
@@ -66,7 +67,7 @@ export const useSettingsData = () => {
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
         // Utiliser les données de démonstration
-        usersData = supabase.getMockUsers ? supabase.getMockUsers() : [];
+        usersData = getMockUsers();
         console.log("Utilisation des données de démonstration pour les utilisateurs");
       }
       

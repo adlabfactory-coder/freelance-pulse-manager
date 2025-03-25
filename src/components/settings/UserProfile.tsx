@@ -6,6 +6,7 @@ import { toast } from "@/components/ui/use-toast";
 import UserProfileHeader from "./UserProfileHeader";
 import UserProfileTabs from "./UserProfileTabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getMockUsers } from "@/utils/supabase-mock-data";
 
 interface UserProfileProps {
   userId: string;
@@ -41,12 +42,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
         } catch (e) {
           console.error("Erreur de récupération depuis Supabase:", e);
           // Si on a une fonction de mock, on l'utilise en fallback
-          if (supabase.getMockUsers) {
-            const mockUsers = supabase.getMockUsers();
-            userData = mockUsers.find(u => u.id === userId) || null;
-            if (userData) {
-              console.log("Utilisateur trouvé dans les données de démonstration:", userData);
-            }
+          const mockUsers = getMockUsers();
+          userData = mockUsers.find(u => u.id === userId) || null;
+          if (userData) {
+            console.log("Utilisateur trouvé dans les données de démonstration:", userData);
           }
         }
         

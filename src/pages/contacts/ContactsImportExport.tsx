@@ -25,7 +25,7 @@ const ContactsImportExport: React.FC<ContactsImportExportProps> = ({ onImportCom
     try {
       const blob = await contactService.exportContactsToExcel();
       
-      if (blob) {
+      if (blob && blob instanceof Blob) {
         // Create download link and trigger download
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -83,8 +83,13 @@ const ContactsImportExport: React.FC<ContactsImportExportProps> = ({ onImportCom
     try {
       const result = await contactService.importContactsFromExcel(file);
       
-      if (result.success) {
-        // Refresh contacts list
+      if (result && typeof result === 'object' && 'success' in result) {
+        if (result.success) {
+          // Refresh contacts list
+          onImportComplete();
+        }
+      } else {
+        // Assume the operation was successful if no specific result format is returned
         onImportComplete();
       }
     } catch (error) {

@@ -3,6 +3,7 @@ import { useContext } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { fetchUsers, fetchUserById, updateUser } from '@/services/supabase-user-service';
 import { checkSupabaseStatus, checkDatabaseStatus, initializeDatabase } from '@/services/supabase-database-service';
+import { getMockUsers } from '@/utils/supabase-mock-data';
 
 // Import the centralized supabase client
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
@@ -32,6 +33,7 @@ export const useSupabase = () => {
     updateUser,
     checkSupabaseStatus: checkSupabaseStatus || checkSupabaseConnection,
     checkDatabaseStatus,
-    initializeDatabase
+    initializeDatabase,
+    getMockUsers
   };
 };
