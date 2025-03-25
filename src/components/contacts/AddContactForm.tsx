@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,7 +27,9 @@ const contactSchema = z.object({
   email: z.string().email({
     message: "Merci de saisir une adresse email valide.",
   }),
-  phone: z.string().optional(),
+  phone: z.string().min(1, {
+    message: "Le numéro de téléphone est obligatoire."
+  }),
   company: z.string().optional(),
   position: z.string().optional(),
   address: z.string().optional(),
@@ -109,7 +112,7 @@ export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Téléphone</FormLabel>
+                <FormLabel>Téléphone *</FormLabel>
                 <FormControl>
                   <Input placeholder="06 12 34 56 78" {...field} />
                 </FormControl>
