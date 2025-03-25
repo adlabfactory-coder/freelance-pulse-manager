@@ -20,10 +20,15 @@ export const useSupabase = () => {
   
   const fetchUsers = async () => {
     try {
-      // Vérification de l'état de la connexion Supabase avant d'effectuer la requête
-      const connectionStatus = await checkSupabaseConnection();
-      if (!connectionStatus.success) {
-        console.warn("Erreur lors de la vérification de la connexion:", connectionStatus.message);
+      // Vérification simplifiée de l'état de la connexion Supabase
+      try {
+        const connectionStatus = await checkSupabaseConnection();
+        if (!connectionStatus.success) {
+          console.warn("Erreur lors de la vérification de la connexion:", connectionStatus.message);
+          return getMockUsers();
+        }
+      } catch (error) {
+        console.warn("Erreur lors de la vérification de la connexion:", error);
         return getMockUsers();
       }
       

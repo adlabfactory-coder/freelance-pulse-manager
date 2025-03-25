@@ -29,18 +29,26 @@ const SettingsPage: React.FC = () => {
       let usersData: User[] = [];
       
       try {
+        // On récupère les données des utilisateurs, et on gère les erreurs potentielles
         usersData = await supabase.fetchUsers();
         console.log("Utilisateurs récupérés:", usersData);
+        
+        if (usersData.length === 0) {
+          throw new Error("Aucun utilisateur trouvé");
+        }
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
+        // Pas de setHasError ici - on laisse le code continuer avec les données de démo
       }
       
+      // Si nous avons des utilisateurs, on initialise les états
       if (usersData.length > 0) {
         const user = usersData[0];
         setCurrentUser(user);
         setSelectedUserId(user.id);
         setUsers(usersData);
       } else {
+        // Si nous n'avons toujours pas d'utilisateurs, c'est une erreur
         setHasError(true);
         toast({
           variant: "destructive",
@@ -62,8 +70,19 @@ const SettingsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [supabase]);
+    // Assure que la page charge même en cas d'erreur avec Supabase
+    const loadData = async () => {
+      try {
+        await fetchData();
+      } catch (e) {
+        console.error("Erreur fatale lors du chargement des données:", e);
+        setIsLoading(false);
+        setHasError(true);
+      }
+    };
+    
+    loadData();
+  }, []);
 
   const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
@@ -82,14 +101,10 @@ const SettingsPage: React.FC = () => {
     return <SettingsLoading />;
   }
 
-  if (hasError) {
-    return <SettingsError onRetry={handleRetry} />;
-  }
-
-  if (!currentUser) {
+  if (hasError || !currentUser) {
     return (
       <SettingsError 
-        title="Aucun utilisateur trouvé"
+        title={!currentUser ? "Aucun utilisateur trouvé" : "Impossible de charger les paramètres"}
         description="Veuillez vérifier votre configuration Supabase ou réessayer ultérieurement."
         onRetry={handleRetry}
       />

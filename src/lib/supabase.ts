@@ -7,15 +7,17 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-// Ces fonctions servent à vérifier l'état de la connexion Supabase
+// Fonction simplifiée pour vérifier l'état de la connexion Supabase
 export const checkSupabaseConnection = async () => {
   try {
-    // On essaie de récupérer les contacts au lieu des utilisateurs qui ne semblent pas exister
-    const { data, error } = await supabase.from('contacts').select('id').limit(1);
+    // Test de connexion simple, sans vérifier une table spécifique
+    const { data, error } = await supabase.auth.getSession();
+    
     if (error) {
       console.error('Erreur de connexion à Supabase:', error.message);
       return { success: false, message: 'Erreur de connexion à Supabase: ' + error.message };
     }
+    
     return { success: true, message: 'Connexion à Supabase réussie' };
   } catch (error: any) {
     console.error('Erreur de connexion à Supabase:', error);
