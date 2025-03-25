@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { CommissionTier } from "@/types";
+import { Commission, CommissionTier } from "@/types/commissions";
 import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,21 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-interface Commission {
-  id: string;
-  freelancerId: string;
-  freelancerName: string;
-  amount: number;
-  tier: CommissionTier;
-  period: {
-    startDate: Date;
-    endDate: Date;
-  };
-  status: string;
-  paidDate?: Date;
-  paymentRequested?: boolean;
-}
 
 interface CommissionsTableProps {
   commissions: Commission[];
@@ -84,8 +69,15 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
     {
       accessorKey: "period",
       header: "Période",
-      cell: ({ row }) =>
-        formatPeriod(row.original.period.startDate, row.original.period.endDate),
+      cell: ({ row }) => {
+        // Handle both period object and separate periodStart/periodEnd properties
+        if (row.original.period) {
+          return formatPeriod(row.original.period.startDate, row.original.period.endDate);
+        } else if (row.original.periodStart && row.original.periodEnd) {
+          return formatPeriod(row.original.periodStart, row.original.periodEnd);
+        }
+        return "";
+      }
     },
     {
       accessorKey: "status",
