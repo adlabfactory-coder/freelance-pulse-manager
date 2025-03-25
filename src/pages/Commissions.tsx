@@ -85,16 +85,25 @@ const Commissions: React.FC = () => {
           console.error("Erreur lors de la récupération des freelancers:", freelancersError);
         }
 
-        // Mapper les données
+        // Mapper les données avec conversion de tier string vers CommissionTier enum
         const mappedCommissions: Commission[] = commissionsData.map(commission => {
           const freelancer = freelancersData?.find(f => f.id === commission.freelancerId);
+          
+          // Conversion de string à CommissionTier
+          const tierValue = commission.tier as string;
+          const tierEnum: CommissionTier = 
+            tierValue === 'tier_1' ? CommissionTier.TIER_1 :
+            tierValue === 'tier_2' ? CommissionTier.TIER_2 :
+            tierValue === 'tier_3' ? CommissionTier.TIER_3 :
+            tierValue === 'tier_4' ? CommissionTier.TIER_4 :
+            CommissionTier.TIER_1; // Valeur par défaut
           
           return {
             id: commission.id,
             freelancerId: commission.freelancerId,
             freelancerName: freelancer?.name || "Freelancer inconnu",
             amount: commission.amount,
-            tier: commission.tier as CommissionTier,
+            tier: tierEnum,
             period: {
               startDate: new Date(commission.periodStart),
               endDate: new Date(commission.periodEnd),

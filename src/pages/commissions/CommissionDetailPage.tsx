@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSupabase } from "@/hooks/use-supabase";
@@ -61,14 +60,25 @@ const CommissionDetailPage: React.FC = () => {
             console.error("Erreur lors de la récupération du freelancer:", freelancerError);
           }
 
+          // Conversion de string à CommissionTier pour la propriété tier
+          const tierValue = commissionData.tier as string;
+          const tierEnum: CommissionTier = 
+            tierValue === 'tier_1' ? CommissionTier.TIER_1 :
+            tierValue === 'tier_2' ? CommissionTier.TIER_2 :
+            tierValue === 'tier_3' ? CommissionTier.TIER_3 :
+            tierValue === 'tier_4' ? CommissionTier.TIER_4 :
+            CommissionTier.TIER_1; // Valeur par défaut
+
           // Conversion des dates
           const commission: Commission = {
             ...commissionData,
             freelancerName: freelancerData?.name || "Freelancer inconnu",
+            tier: tierEnum,
             periodStart: new Date(commissionData.periodStart),
             periodEnd: new Date(commissionData.periodEnd),
             createdAt: new Date(commissionData.createdAt),
             paidDate: commissionData.paidDate ? new Date(commissionData.paidDate) : undefined,
+            payment_requested: commissionData.payment_requested || false,
           };
 
           setCommission(commission);
