@@ -1,3 +1,4 @@
+
 import { ContactStatus } from '@/types/database/enums';
 
 export interface Contact {
@@ -17,6 +18,19 @@ export interface Contact {
 }
 
 export interface NewContact {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  assignedTo?: string;
+  status?: ContactStatus;
+}
+
+// Renamed from NewContact to align with naming conventions
+export interface ContactInsert {
   name: string;
   email: string;
   phone?: string;

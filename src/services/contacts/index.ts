@@ -2,7 +2,7 @@
 import { contactCrudService } from './contact-crud';
 import { contactSubscriptionService } from './contact-subscriptions';
 import { contactExcelService } from './contact-excel';
-import { Contact, ContactFormInput, ContactInsert, ContactUpdate } from './types';
+import { Contact, ContactFormInput, ContactUpdate, ContactInsert } from './types';
 
 // Combine all services into one main service
 export const contactService = {
@@ -12,4 +12,4 @@ export const contactService = {
 };
 
 // Re-export types
-export type { Contact, ContactFormInput, ContactInsert, ContactUpdate };
+export type { Contact, ContactFormInput, ContactUpdate, ContactInsert };
