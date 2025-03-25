@@ -20,6 +20,7 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
     return data.map(plan => ({
       ...plan,
       interval: mapToSubscriptionInterval(plan.interval),
+      features: parseFeatures(plan.features),
       created_at: new Date(plan.created_at),
       updated_at: new Date(plan.updated_at)
     }));
@@ -47,6 +48,7 @@ export const fetchSubscriptionPlanByCode = async (code: string): Promise<Subscri
     return {
       ...data,
       interval: mapToSubscriptionInterval(data.interval),
+      features: parseFeatures(data.features),
       created_at: new Date(data.created_at),
       updated_at: new Date(data.updated_at)
     };
@@ -68,6 +70,34 @@ function mapToSubscriptionInterval(interval: string): SubscriptionInterval {
     default:
       // Par défaut, on utilise l'intervalle mensuel
       return SubscriptionInterval.MONTHLY;
+  }
+}
+
+// Fonction utilitaire pour parser les features JSON
+function parseFeatures(jsonFeatures: any): { website: boolean; social_media: boolean; features: string[] } {
+  if (!jsonFeatures) {
+    return { website: false, social_media: false, features: [] };
+  }
+  
+  let features;
+  
+  try {
+    // Si jsonFeatures est une chaîne, on tente de la parser
+    if (typeof jsonFeatures === 'string') {
+      features = JSON.parse(jsonFeatures);
+    } else {
+      // Sinon on utilise l'objet directement
+      features = jsonFeatures;
+    }
+    
+    return {
+      website: features.website || false,
+      social_media: features.social_media || false,
+      features: Array.isArray(features.features) ? features.features : []
+    };
+  } catch (error) {
+    console.error("Erreur lors du parsing des features:", error);
+    return { website: false, social_media: false, features: [] };
   }
 }
 
