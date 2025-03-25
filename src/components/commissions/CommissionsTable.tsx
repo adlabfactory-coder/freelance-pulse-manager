@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   ColumnDef,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { CommissionTier } from "@/types";
-import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,7 +100,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Ouvrir le menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
