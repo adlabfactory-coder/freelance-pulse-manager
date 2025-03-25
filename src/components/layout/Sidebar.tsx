@@ -12,10 +12,14 @@ import {
   PieChart,
   ChevronLeft,
   ChevronRight,
+  LogOut,
+  Bell,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NavItem } from "@/types";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -78,31 +82,41 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       <div className="flex-1 overflow-auto py-4">
         <nav className="space-y-1 px-2">
           {navItems.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              className={({ isActive }) =>
-                cn(
-                  "sidebar-nav-item",
-                  isActive ? "active" : "",
-                  item.disabled && "opacity-50 pointer-events-none"
-                )
-              }
-            >
-              {item.icon && (
-                <span className="flex-shrink-0">
-                  {renderIcon(item.icon)}
-                </span>
+            <Tooltip key={item.href} delayDuration={collapsed ? 300 : 9999999}>
+              <TooltipTrigger asChild>
+                <NavLink
+                  to={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      "sidebar-nav-item group flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                      isActive 
+                        ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
+                        : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+                      item.disabled && "opacity-50 pointer-events-none"
+                    )
+                  }
+                >
+                  {item.icon && (
+                    <span className="flex-shrink-0">
+                      {renderIcon(item.icon)}
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      "transition-opacity",
+                      collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+                    )}
+                  >
+                    {item.title}
+                  </span>
+                </NavLink>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right" className="ml-1">
+                  {item.title}
+                </TooltipContent>
               )}
-              <span
-                className={cn(
-                  "transition-opacity",
-                  collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-                )}
-              >
-                {item.title}
-              </span>
-            </NavLink>
+            </Tooltip>
           ))}
         </nav>
       </div>
@@ -110,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       <div className="border-t border-sidebar-border p-4">
         <div
           className={cn(
-            "flex items-center gap-3 text-sm text-sidebar-foreground/70",
+            "flex items-center gap-3 text-sm text-sidebar-foreground/70 group",
             collapsed ? "justify-center" : "justify-start"
           )}
         >
@@ -126,6 +140,22 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             <div className="font-medium text-sidebar-foreground">Admin</div>
             <div className="text-xs">admin@example.com</div>
           </div>
+        </div>
+        
+        <div className={cn("mt-4 flex flex-col gap-2", 
+          collapsed ? "items-center" : "items-start")}>
+          <Button variant="ghost" size="sm" className="w-full justify-start">
+            <Bell className="h-4 w-4 mr-2" />
+            {!collapsed && <span>Notifications</span>}
+          </Button>
+          <Button variant="ghost" size="sm" className="w-full justify-start">
+            <HelpCircle className="h-4 w-4 mr-2" />
+            {!collapsed && <span>Aide</span>}
+          </Button>
+          <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:text-destructive">
+            <LogOut className="h-4 w-4 mr-2" />
+            {!collapsed && <span>Déconnexion</span>}
+          </Button>
         </div>
       </div>
     </div>
