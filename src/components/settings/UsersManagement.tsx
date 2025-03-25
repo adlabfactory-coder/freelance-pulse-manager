@@ -12,15 +12,32 @@ import { getMockUsers } from "@/utils/supabase-mock-data";
 
 interface UsersManagementProps {
   onSelectUser: (userId: string) => void;
+  currentUser?: User;
+  users?: User[];
+  selectedUserId?: string;
+  isLoading?: boolean;
 }
 
-const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
+const UsersManagement: React.FC<UsersManagementProps> = ({ 
+  onSelectUser,
+  currentUser,
+  users: externalUsers,
+  selectedUserId,
+  isLoading: externalLoading
+}) => {
   const { fetchUsers } = useSupabase();
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>(externalUsers || []);
+  const [isLoading, setIsLoading] = useState(externalLoading !== undefined ? externalLoading : true);
   const [hasError, setHasError] = useState(false);
 
   const fetchUsersData = async () => {
+    // If external users are provided, use them
+    if (externalUsers && externalUsers.length > 0) {
+      setUsers(externalUsers);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setHasError(false);
     try {
@@ -57,8 +74,21 @@ const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
   };
 
   useEffect(() => {
-    fetchUsersData();
-  }, []);
+    // Only fetch data if no external users provided
+    if (!externalUsers) {
+      fetchUsersData();
+    }
+  }, [externalUsers]);
+
+  // Update local state if external users or loading state changes
+  useEffect(() => {
+    if (externalUsers) {
+      setUsers(externalUsers);
+    }
+    if (externalLoading !== undefined) {
+      setIsLoading(externalLoading);
+    }
+  }, [externalUsers, externalLoading]);
 
   const handleUserClick = (user: User) => {
     onSelectUser(user.id);
@@ -117,7 +147,11 @@ const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
               </TableHeader>
               <TableBody>
                 {users.map((user) => (
-                  <TableRow key={user.id} onClick={() => handleUserClick(user)} className="cursor-pointer hover:bg-muted">
+                  <TableRow 
+                    key={user.id} 
+                    onClick={() => handleUserClick(user)} 
+                    className={`cursor-pointer hover:bg-muted ${selectedUserId === user.id ? 'bg-muted' : ''}`}
+                  >
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
