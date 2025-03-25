@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { User, UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
@@ -7,7 +6,7 @@ import { checkSupabaseConnection } from '@/lib/supabase';
 
 export const fetchUsers = async (): Promise<User[]> => {
   try {
-    // Vérification de l'état de la connexion Supabase avec une gestion robuste des erreurs
+    // Vérification de l'état de la connexion Supabase
     let shouldUseMockData = false;
     
     try {
@@ -34,12 +33,6 @@ export const fetchUsers = async (): Promise<User[]> => {
         .select('*');
       
       if (error) {
-        // Si la table n'existe pas, on utilise les données de démo
-        if (error.code === '42P01') {
-          console.warn("Table 'users' non trouvée dans Supabase, utilisation des données de démo");
-          return getMockUsers();
-        }
-        
         console.warn("Erreur lors de la récupération des utilisateurs:", error.message);
         return getMockUsers();
       }

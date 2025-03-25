@@ -8,31 +8,48 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
+import { getMockUsers } from "@/utils/supabase-mock-data";
 
 interface UsersManagementProps {
   onSelectUser: (userId: string) => void;
 }
 
 const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
-  const supabase = useSupabase();
+  const { fetchUsers } = useSupabase();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsersData = async () => {
     setIsLoading(true);
     setHasError(false);
     try {
-      // Tentative de récupération depuis Supabase, mais utilisation des données de démo en cas d'échec
-      const fetchedUsers = await supabase.fetchUsers();
-      setUsers(fetchedUsers);
+      // Tentative de récupération depuis Supabase
+      const fetchedUsers = await fetchUsers();
+      console.info("Utilisateurs récupérés:", fetchedUsers);
+      
+      if (fetchedUsers && fetchedUsers.length > 0) {
+        setUsers(fetchedUsers);
+      } else {
+        // Utilisation des données de démo en cas d'échec ou pas de données
+        const demoUsers = getMockUsers();
+        setUsers(demoUsers);
+        toast({
+          variant: "default",
+          title: "Mode démo activé",
+          description: "Utilisation des données de démonstration car aucun utilisateur n'a été trouvé.",
+        });
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des utilisateurs:", error);
+      // Fallback vers les données de démo
+      const demoUsers = getMockUsers();
+      setUsers(demoUsers);
       setHasError(true);
       toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de récupérer la liste des utilisateurs.",
+        variant: "default",
+        title: "Mode démo activé",
+        description: "Utilisation des données de démonstration pour les utilisateurs.",
       });
     } finally {
       setIsLoading(false);
@@ -40,15 +57,15 @@ const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [supabase]);
+    fetchUsersData();
+  }, []);
 
   const handleUserClick = (user: User) => {
     onSelectUser(user.id);
   };
 
   const handleRetry = () => {
-    fetchUsers();
+    fetchUsersData();
   };
 
   return (
@@ -78,8 +95,8 @@ const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
           </div>
         ) : hasError ? (
           <div className="text-center py-4 space-y-4">
-            <div className="text-destructive">
-              Erreur lors du chargement des utilisateurs
+            <div className="text-amber-500">
+              Données de démonstration chargées (impossible de se connecter à Supabase)
             </div>
             <Button onClick={handleRetry} variant="outline" size="sm">
               <RefreshCw className="mr-2 h-4 w-4" />
