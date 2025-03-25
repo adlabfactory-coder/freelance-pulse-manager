@@ -41,12 +41,12 @@ const CommissionGeneralInfo: React.FC<CommissionGeneralInfoProps> = ({ commissio
                 className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset
                   ${commission.status === 'paid' 
                     ? 'bg-green-50 text-green-700 ring-green-700/10' 
-                    : commission.payment_requested 
+                    : commission.paymentRequested 
                       ? 'bg-blue-50 text-blue-700 ring-blue-700/10'
                       : 'bg-yellow-50 text-yellow-700 ring-yellow-700/10'
                   }`
                 }>
-                {getStatusLabel(commission.status, commission.payment_requested)}
+                {getStatusLabel(commission.status, commission.paymentRequested)}
               </span>
             </div>
           </div>

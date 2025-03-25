@@ -8,7 +8,7 @@ import { Commission, CommissionTier } from "@/types/commissions";
 export interface CommissionDetail extends Omit<Commission, 'period'> {
   periodStart: Date;
   periodEnd: Date;
-  payment_requested: boolean;
+  paymentRequested: boolean;
   createdAt: Date;
 }
 
@@ -71,7 +71,7 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
         periodEnd: new Date(commissionData.periodEnd),
         status: commissionData.status,
         paidDate: commissionData.paidDate ? new Date(commissionData.paidDate) : undefined,
-        payment_requested: commissionData.payment_requested || false,
+        paymentRequested: commissionData.payment_requested || false, // Map from payment_requested to paymentRequested
         createdAt: new Date(commissionData.createdAt || Date.now()),
       };
 
@@ -103,7 +103,7 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
       }
 
       // Update UI
-      setCommission(prev => prev ? { ...prev, payment_requested: true } : null);
+      setCommission(prev => prev ? { ...prev, paymentRequested: true } : null);
       
       toast({
         title: "Demande envoyée",
