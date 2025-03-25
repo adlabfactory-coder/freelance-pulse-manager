@@ -1,13 +1,14 @@
 
 import * as XLSX from 'xlsx';
-import { contactService } from './contact-crud';
+import { contactCrudService } from './contact-crud';
 import { Tables } from '@/types/database';
+import { Contact } from './types';
 
 export const contactExcelService = {
   exportContactsToExcel: async (): Promise<Blob> => {
     try {
       // Obtenir tous les contacts
-      const contacts = await contactService.getContacts();
+      const contacts = await contactCrudService.getContacts();
       
       // Créer un classeur Excel
       const worksheet = XLSX.utils.json_to_sheet(contacts);
@@ -37,14 +38,14 @@ export const contactExcelService = {
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           
-          const jsonData = XLSX.utils.sheet_to_json(worksheet) as Tables['contacts'][];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet) as Contact[];
           
           let importCount = 0;
           
           // Parcourir les contacts et les importer
           for (const contact of jsonData) {
             try {
-              await contactService.createContact(contact);
+              await contactCrudService.createContact(contact);
               importCount++;
             } catch (importError) {
               console.error("Erreur lors de l'importation d'un contact", importError);
