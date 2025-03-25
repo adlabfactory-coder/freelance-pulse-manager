@@ -12,6 +12,9 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  calendly_url?: string;
+  calendly_sync_email?: string;
+  calendly_enabled?: boolean;
 }
 
 // Contact related types
