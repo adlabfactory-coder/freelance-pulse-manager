@@ -12,7 +12,7 @@ import Quotes from "@/pages/Quotes";
 import Subscriptions from "@/pages/Subscriptions";
 import Commissions from "@/pages/Commissions";
 import Reports from "@/pages/Reports";
-import Settings from "@/pages/Settings";
+import Settings from "@/pages/settings";
 import NotFound from "@/pages/NotFound";
 import { createContext } from "react";
 import { supabase } from "@/lib/supabase";
