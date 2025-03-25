@@ -56,6 +56,7 @@ export interface DatabaseTables {
         subscription_plan_id?: string | null;
       };
     };
+  } & {
     [key: string]: {
       Row: Record<string, any>;
       Insert: Record<string, any>;

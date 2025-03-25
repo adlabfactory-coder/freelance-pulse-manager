@@ -14,15 +14,25 @@ import ContactStatusBadge from "./ContactStatusBadge";
 
 interface ContactStatusSelectorProps {
   contactId?: string;
-  value: ContactStatus;
-  onChange: (newStatus: ContactStatus) => void;
+  value?: ContactStatus;
+  currentStatus?: ContactStatus; // For backward compatibility
+  onChange?: (newStatus: ContactStatus) => void;
+  onStatusChange?: (newStatus: ContactStatus) => void; // For backward compatibility
 }
 
 const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({ 
   contactId, 
   value,
-  onChange
+  currentStatus,
+  onChange,
+  onStatusChange
 }) => {
+  // Use value prop if provided, otherwise use currentStatus for backward compatibility
+  const currentValue = value || currentStatus;
+  
+  // Use onChange if provided, otherwise use onStatusChange for backward compatibility
+  const handleChange = onChange || onStatusChange;
+  
   const statusItems = [
     { value: ContactStatus.LEAD, label: "Lead" },
     { value: ContactStatus.PROSPECT, label: "Prospect" },
@@ -34,11 +44,11 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
   const handleStatusChange = async (status: ContactStatus) => {
     if (contactId) {
       const result = await contactService.updateContactStatus(contactId, status);
-      if (result && onChange) {
-        onChange(status);
+      if (result && handleChange) {
+        handleChange(status);
       }
-    } else {
-      onChange(status);
+    } else if (handleChange) {
+      handleChange(status);
     }
   };
 
@@ -46,7 +56,7 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
-          <ContactStatusBadge status={value} />
+          <ContactStatusBadge status={currentValue as ContactStatus} />
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -57,7 +67,7 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
             onClick={() => handleStatusChange(item.value)}
             className="flex items-center gap-2"
           >
-            {value === item.value && (
+            {currentValue === item.value && (
               <Check className="h-4 w-4" />
             )}
             <ContactStatusBadge status={item.value} />

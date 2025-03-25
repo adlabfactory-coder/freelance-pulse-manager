@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,8 +108,8 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) =>
           </div>
           <ContactStatusSelector 
             contactId={contact.id} 
-            currentStatus={contact.status as ContactStatus}
-            onStatusChange={handleStatusChange} 
+            value={contact.status as ContactStatus}
+            onChange={handleStatusChange} 
           />
         </div>
       </CardHeader>
