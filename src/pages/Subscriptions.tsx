@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Filter, Plus } from "lucide-react";
 import { SubscriptionInterval, SubscriptionStatus } from "@/types";
+import { formatCurrency } from "@/utils/format";
 
 const Subscriptions: React.FC = () => {
   const subscriptions = [

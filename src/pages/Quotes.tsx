@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Filter, Plus, FileDown, FileUp } from "lucide-react";
 import { QuoteStatus } from "@/types";
+import { formatCurrency } from "@/utils/format";
 
 const Quotes: React.FC = () => {
   const quotes = [
