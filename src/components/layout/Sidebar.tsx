@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   BarChart,
@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             >
               {item.icon && (
                 <span className="flex-shrink-0">
-                  <item.icon className="h-5 w-5" />
+                  {React.createElement(item.icon, { "aria-hidden": true })}
                 </span>
               )}
               <span
@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         >
           <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <Users className="h-4 w-4" />
+            <Users aria-hidden="true" />
           </div>
           <div
             className={cn(
