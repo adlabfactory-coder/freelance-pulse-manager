@@ -56,23 +56,23 @@ const SettingsError: React.FC<SettingsErrorProps> = ({
         // Attendre un peu avant de recharger pour que l'utilisateur puisse voir le toast et le statut
         setTimeout(() => {
           onRetry();
-        }, 3000);
+        }, 2000);
       } else {
         updateStatus(`Erreur: ${result.message}`, 0);
         toast({
           variant: "destructive",
           title: "Erreur de configuration",
-          description: result.message,
+          description: result.message || "Une erreur est survenue lors de la configuration",
         });
         console.error('Détails de l\'erreur:', result.details);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la configuration de la base de données:', error);
       setSetupStatus(prev => [...prev, "Une erreur inattendue s'est produite"]);
       toast({
         variant: "destructive",
         title: "Erreur inattendue",
-        description: "Une erreur s'est produite lors de la configuration de la base de données.",
+        description: error?.message || "Une erreur s'est produite lors de la configuration de la base de données.",
       });
     } finally {
       setIsSettingUp(false);

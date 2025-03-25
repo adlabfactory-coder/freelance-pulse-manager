@@ -63,13 +63,11 @@ export const useSettingsData = () => {
         console.log("Récupération des utilisateurs...");
         usersData = await supabase.fetchUsers();
         console.log("Utilisateurs récupérés:", usersData);
-        
-        if (usersData.length === 0) {
-          throw new Error("Aucun utilisateur trouvé");
-        }
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
-        throw error; // Propager l'erreur pour le bloc catch suivant
+        // Utiliser les données de démonstration
+        usersData = supabase.getMockUsers ? supabase.getMockUsers() : [];
+        console.log("Utilisation des données de démonstration pour les utilisateurs");
       }
       
       if (usersData.length > 0) {

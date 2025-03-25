@@ -33,7 +33,22 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
       
       try {
         console.log("Fetching user with ID:", userId);
-        const userData = await supabase.fetchUserById(userId);
+        let userData: User | null = null;
+        
+        // Tentative de récupération depuis Supabase
+        try {
+          userData = await supabase.fetchUserById(userId);
+        } catch (e) {
+          console.error("Erreur de récupération depuis Supabase:", e);
+          // Si on a une fonction de mock, on l'utilise en fallback
+          if (supabase.getMockUsers) {
+            const mockUsers = supabase.getMockUsers();
+            userData = mockUsers.find(u => u.id === userId) || null;
+            if (userData) {
+              console.log("Utilisateur trouvé dans les données de démonstration:", userData);
+            }
+          }
+        }
         
         if (isMounted) {
           if (userData) {

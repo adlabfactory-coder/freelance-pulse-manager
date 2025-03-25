@@ -20,10 +20,12 @@ const SettingsPage: React.FC = () => {
     handleRetry
   } = useSettingsData();
 
+  // Afficher l'état de chargement
   if (isLoading) {
     return <SettingsLoading />;
   }
 
+  // Afficher l'erreur si présente ou si aucun utilisateur n'est chargé
   if (hasError || !currentUser) {
     return (
       <SettingsError 
@@ -34,6 +36,7 @@ const SettingsPage: React.FC = () => {
     );
   }
 
+  // Afficher le contenu principal une fois les données chargées
   return (
     <div className="space-y-6">
       <SettingsHeader />
