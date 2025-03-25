@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase-client';
 import { toast } from 'sonner';
-import { ContactInsert, ContactUpdate } from './types';
+import { ContactInsert, ContactUpdate, ContactFormInput } from './types';
 import { ContactStatus } from '@/types';
 import * as XLSX from 'xlsx';
 import { contactCrudService } from './contact-crud';
@@ -104,15 +104,23 @@ export const contactExcelService = {
             
             for (const row of jsonData) {
               // Handle different possible column names from Excel
-              const contact: ContactInsert = {
+              const contactStatus = (row['Statut'] || row['Status'] || row['status'] || 'lead') as string;
+              
+              // Make sure we convert the string status to a valid ContactStatus
+              const validStatus: ContactStatus = 
+                ['lead', 'prospect', 'negotiation', 'signed', 'lost'].includes(contactStatus) 
+                  ? contactStatus as ContactStatus 
+                  : 'lead';
+              
+              const contact: ContactFormInput = {
                 name: row['Nom'] || row['Name'] || row['name'] || '',
                 email: row['Email'] || row['email'] || '',
-                phone: row['Téléphone'] || row['Phone'] || row['phone'] || null,
-                company: row['Entreprise'] || row['Company'] || row['company'] || null,
-                position: row['Position'] || row['position'] || null,
-                address: row['Adresse'] || row['Address'] || row['address'] || null,
-                notes: row['Notes'] || row['notes'] || null,
-                status: (row['Statut'] || row['Status'] || row['status'] || 'lead') as ContactStatus,
+                phone: row['Téléphone'] || row['Phone'] || row['phone'] || undefined,
+                company: row['Entreprise'] || row['Company'] || row['company'] || undefined,
+                position: row['Position'] || row['position'] || undefined,
+                address: row['Adresse'] || row['Address'] || row['address'] || undefined,
+                notes: row['Notes'] || row['notes'] || undefined,
+                status: validStatus,
               };
               
               // Validate required fields
