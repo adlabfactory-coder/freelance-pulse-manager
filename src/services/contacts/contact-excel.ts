@@ -2,7 +2,7 @@
 import { supabase } from '@/lib/supabase-client';
 import { toast } from 'sonner';
 import { ContactInsert, ContactUpdate, ContactFormInput } from './types';
-import { ContactStatus } from '@/types';
+import { ContactStatus } from '@/types/database/enums';
 import * as XLSX from 'xlsx';
 import { contactCrudService } from './contact-crud';
 
@@ -104,13 +104,13 @@ export const contactExcelService = {
             
             for (const row of jsonData) {
               // Handle different possible column names from Excel
-              const contactStatus = (row['Statut'] || row['Status'] || row['status'] || 'lead') as string;
+              const contactStatusValue = (row['Statut'] || row['Status'] || row['status'] || 'lead') as string;
               
               // Make sure we convert the string status to a valid ContactStatus
-              const validStatus: ContactStatus = 
-                ['lead', 'prospect', 'negotiation', 'signed', 'lost'].includes(contactStatus) 
-                  ? contactStatus as ContactStatus 
-                  : 'lead';
+              const validStatus = 
+                ['lead', 'prospect', 'negotiation', 'signed', 'lost'].includes(contactStatusValue) 
+                  ? contactStatusValue as ContactStatus 
+                  : 'lead' as ContactStatus;
               
               const contact: ContactFormInput = {
                 name: row['Nom'] || row['Name'] || row['name'] || '',

@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { ContactStatus } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 
 export const contactSchema = z.object({
   name: z.string().min(2, {

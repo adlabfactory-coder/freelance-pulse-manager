@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { contactService } from "@/services/contacts";
-import { ContactStatus } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 import ContactStatusBadge from "./ContactStatusBadge";
 
 interface ContactStatusSelectorProps {
