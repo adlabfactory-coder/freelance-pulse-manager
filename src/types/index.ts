@@ -17,6 +17,14 @@ export interface User {
 }
 
 // Contact related types
+export enum ContactStatus {
+  LEAD = "lead",
+  PROSPECT = "prospect",
+  NEGOTIATION = "negotiation",
+  SIGNED = "signed",
+  LOST = "lost"
+}
+
 export interface Contact {
   id: string;
   name: string;
@@ -27,6 +35,8 @@ export interface Contact {
   address?: string;
   notes?: string;
   assignedTo?: string;
+  status: ContactStatus;
+  subscriptionPlanId?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -181,6 +181,8 @@ export type Database = {
           notes: string | null
           phone: string | null
           position: string | null
+          status: Database["public"]["Enums"]["contact_status"]
+          subscription_plan_id: string | null
           updatedAt: string | null
         }
         Insert: {
@@ -194,6 +196,8 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           position?: string | null
+          status?: Database["public"]["Enums"]["contact_status"]
+          subscription_plan_id?: string | null
           updatedAt?: string | null
         }
         Update: {
@@ -207,6 +211,8 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           position?: string | null
+          status?: Database["public"]["Enums"]["contact_status"]
+          subscription_plan_id?: string | null
           updatedAt?: string | null
         }
         Relationships: [
@@ -215,6 +221,13 @@ export type Database = {
             columns: ["assignedTo"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_subscription_plan_id_fkey"
+            columns: ["subscription_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -462,7 +475,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      contact_status: "lead" | "prospect" | "negotiation" | "signed" | "lost"
     }
     CompositeTypes: {
       [_ in never]: never

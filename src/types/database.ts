@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -23,6 +22,8 @@ export interface Database {
           assignedTo: string | null
           createdAt: string
           updatedAt: string
+          status: string
+          subscription_plan_id: string | null
         }
         Insert: {
           id?: string
@@ -36,6 +37,8 @@ export interface Database {
           assignedTo?: string | null
           createdAt?: string
           updatedAt?: string
+          status?: string
+          subscription_plan_id?: string | null
         }
         Update: {
           id?: string
@@ -49,6 +52,8 @@ export interface Database {
           assignedTo?: string | null
           createdAt?: string
           updatedAt?: string
+          status?: string
+          subscription_plan_id?: string | null
         }
       }
       appointments: {

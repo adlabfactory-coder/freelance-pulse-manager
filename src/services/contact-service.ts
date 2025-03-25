@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { Database } from '@/types/database';
+import { ContactStatus } from '@/types';
 
 export type Contact = Database['public']['Tables']['contacts']['Row'];
 export type ContactInsert = Database['public']['Tables']['contacts']['Insert'];
@@ -56,6 +57,7 @@ export const contactService = {
       const now = new Date().toISOString();
       const newContact = {
         ...contact,
+        status: contact.status || 'lead', // Par défaut, le statut est "lead"
         createdAt: now,
         updatedAt: now,
       };
@@ -113,6 +115,68 @@ export const contactService = {
         variant: "destructive",
         title: "Erreur",
         description: "Impossible de mettre à jour le contact",
+      });
+      return null;
+    }
+  },
+  
+  async updateContactStatus(id: string, status: ContactStatus) {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .update({
+          status,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Statut mis à jour",
+        description: `Le contact est maintenant en statut "${status}"`,
+      });
+      
+      return data;
+    } catch (error) {
+      console.error(`Erreur lors de la mise à jour du statut du contact ${id}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut du contact",
+      });
+      return null;
+    }
+  },
+  
+  async linkSubscriptionPlan(contactId: string, subscriptionPlanId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .update({
+          subscription_plan_id: subscriptionPlanId,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', contactId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Plan d'abonnement lié",
+        description: "Le plan d'abonnement a été associé au contact",
+      });
+      
+      return data;
+    } catch (error) {
+      console.error(`Erreur lors de la liaison du plan d'abonnement au contact ${contactId}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de lier le plan d'abonnement",
       });
       return null;
     }
