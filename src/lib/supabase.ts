@@ -78,8 +78,12 @@ export const checkDatabaseSetup = async () => {
   }
 };
 
-// Nouvelle fonction pour créer les tables manquantes dans Supabase
-export const setupDatabase = async () => {
+interface SetupDatabaseOptions {
+  onTableCreated?: (tableName: string) => void;
+}
+
+// Fonction pour créer les tables manquantes dans Supabase
+export const setupDatabase = async (options?: SetupDatabaseOptions) => {
   try {
     // Vérifier d'abord quelles tables sont manquantes
     const dbStatus = await checkDatabaseSetup();
@@ -90,34 +94,36 @@ export const setupDatabase = async () => {
     
     const results = [];
     
+    // Fonction d'aide pour notifier de la création d'une table
+    const notifyTableCreated = (tableName: string) => {
+      if (options?.onTableCreated) {
+        options.onTableCreated(tableName);
+      }
+    };
+    
+    // Activation de l'extension UUID si nécessaire
+    await supabase.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    
     // Création de la table users si elle n'existe pas
     if (dbStatus.missingTables.includes('users')) {
-      const { error: usersError } = await supabase.rpc('create_users_table', {});
+      const { error: usersError } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.users (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          name TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          role TEXT NOT NULL,
+          avatar TEXT,
+          calendly_url TEXT,
+          calendly_sync_email TEXT,
+          calendly_enabled BOOLEAN DEFAULT FALSE
+        );
+      `);
       
-      if (usersError) {
-        console.error('Erreur lors de la création de la table users:', usersError);
-        
-        // Créer la table manuellement si la procédure RPC échoue
-        const { error: manualError } = await supabase.query(`
-          CREATE TABLE IF NOT EXISTS public.users (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            role TEXT NOT NULL,
-            avatar TEXT,
-            calendly_url TEXT,
-            calendly_sync_email TEXT,
-            calendly_enabled BOOLEAN DEFAULT FALSE
-          );
-        `);
-        
-        if (manualError) {
-          results.push({ table: 'users', success: false, error: manualError.message });
-        } else {
-          results.push({ table: 'users', success: true });
-        }
-      } else {
+      if (!usersError) {
+        notifyTableCreated('users');
         results.push({ table: 'users', success: true });
+      } else {
+        results.push({ table: 'users', success: false, error: usersError.message });
       }
     }
     
@@ -139,7 +145,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'contacts', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('contacts');
+        results.push({ table: 'contacts', success: true });
+      } else {
+        results.push({ table: 'contacts', success: false, error: error.message });
+      }
     }
     
     // Création de la table appointments si elle n'existe pas
@@ -161,7 +172,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'appointments', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('appointments');
+        results.push({ table: 'appointments', success: true });
+      } else {
+        results.push({ table: 'appointments', success: false, error: error.message });
+      }
     }
     
     // Création de la table quotes si elle n'existe pas
@@ -180,7 +196,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'quotes', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('quotes');
+        results.push({ table: 'quotes', success: true });
+      } else {
+        results.push({ table: 'quotes', success: false, error: error.message });
+      }
     }
     
     // Création de la table quote_items si elle n'existe pas
@@ -197,7 +218,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'quote_items', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('quote_items');
+        results.push({ table: 'quote_items', success: true });
+      } else {
+        results.push({ table: 'quote_items', success: false, error: error.message });
+      }
     }
     
     // Création de la table subscriptions si elle n'existe pas
@@ -220,7 +246,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'subscriptions', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('subscriptions');
+        results.push({ table: 'subscriptions', success: true });
+      } else {
+        results.push({ table: 'subscriptions', success: false, error: error.message });
+      }
     }
     
     // Création de la table commissions si elle n'existe pas
@@ -241,7 +272,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'commissions', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('commissions');
+        results.push({ table: 'commissions', success: true });
+      } else {
+        results.push({ table: 'commissions', success: false, error: error.message });
+      }
     }
     
     // Création de la table commission_rules si elle n'existe pas
@@ -255,7 +291,12 @@ export const setupDatabase = async () => {
         );
       `);
       
-      results.push({ table: 'commission_rules', success: !error, error: error?.message });
+      if (!error) {
+        notifyTableCreated('commission_rules');
+        results.push({ table: 'commission_rules', success: true });
+      } else {
+        results.push({ table: 'commission_rules', success: false, error: error.message });
+      }
     }
     
     // Insérer des données initiales dans la table users si elle a été créée avec succès
@@ -299,6 +340,8 @@ export const setupDatabase = async () => {
           
         if (insertError) {
           console.error('Erreur lors de l\'insertion des utilisateurs de démonstration:', insertError);
+        } else {
+          notifyTableCreated('Utilisateurs de démonstration');
         }
       }
     }

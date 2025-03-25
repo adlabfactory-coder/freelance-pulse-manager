@@ -198,9 +198,15 @@ export const useSupabase = () => {
     return connectionStatus;
   };
   
+  // Ajout d'une méthode pour vérifier la configuration de la base de données
+  const checkDatabaseStatus = async () => {
+    const dbStatus = await checkDatabaseSetup();
+    return dbStatus;
+  };
+  
   // Ajout d'une méthode pour initialiser la base de données
-  const initializeDatabase = async () => {
-    const setupResult = await setupDatabase();
+  const initializeDatabase = async (options?: { onTableCreated?: (tableName: string) => void }) => {
+    const setupResult = await setupDatabase(options);
     return setupResult;
   };
   
@@ -210,6 +216,7 @@ export const useSupabase = () => {
     fetchUserById,
     updateUser,
     checkSupabaseStatus,
+    checkDatabaseStatus,
     initializeDatabase
   };
 };

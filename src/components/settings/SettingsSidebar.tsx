@@ -1,72 +1,70 @@
 
 import React from "react";
-import { UserRole, User } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Building2,
+  Users,
+  CalendarClock,
+  BadgeDollarSign,
+  Database
+} from "lucide-react";
 
 interface SettingsSidebarProps {
-  currentUser: User;
-  users: User[];
-  selectedUserId: string;
   activeTab: string;
-  isLoading: boolean;
-  onUserSelect: (userId: string) => void;
-  onTabChange: (tab: string) => void;
+  onTabChange: (value: string) => void;
 }
 
 const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
-  currentUser,
-  users,
-  selectedUserId,
   activeTab,
-  isLoading,
-  onUserSelect,
   onTabChange,
 }) => {
-  const isAdmin = currentUser.role === UserRole.ADMIN;
+  const tabs = [
+    {
+      value: "company",
+      label: "Entreprise",
+      icon: <Building2 className="h-5 w-5 mr-2" />,
+    },
+    {
+      value: "users",
+      label: "Utilisateurs",
+      icon: <Users className="h-5 w-5 mr-2" />,
+    },
+    {
+      value: "commissions",
+      label: "Commissions",
+      icon: <BadgeDollarSign className="h-5 w-5 mr-2" />,
+    },
+    {
+      value: "calendly",
+      label: "Calendly",
+      icon: <CalendarClock className="h-5 w-5 mr-2" />,
+    },
+    {
+      value: "database",
+      label: "Base de données",
+      icon: <Database className="h-5 w-5 mr-2" />,
+    }
+  ];
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Utilisateurs</CardTitle>
-          <CardDescription>
-            {isAdmin 
-              ? "Sélectionnez un utilisateur pour voir ou modifier son profil" 
-              : "Gérer votre profil utilisateur"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isAdmin ? (
-            <Select 
-              value={selectedUserId} 
-              onValueChange={onUserSelect}
-              disabled={isLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un utilisateur" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map(user => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name} ({user.role === UserRole.ADMIN ? "Admin" : user.role === UserRole.FREELANCER ? "Commercial" : "Client"})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <p>Vous visualisez votre profil personnel</p>
-          )}
-        </CardContent>
-      </Card>
-      
-      <TabsList className="flex flex-col w-full h-auto">
-        <TabsTrigger value="profile" className="justify-start">Profil</TabsTrigger>
-        <TabsTrigger value="users" className="justify-start">Utilisateurs</TabsTrigger>
-        <TabsTrigger value="company" className="justify-start">Entreprise</TabsTrigger>
-        <TabsTrigger value="commissions" className="justify-start">Commissions</TabsTrigger>
-      </TabsList>
+    <div className="w-64 flex-shrink-0 border-r">
+      <div className="p-6 space-y-2">
+        {tabs.map((tab) => (
+          <Button
+            key={tab.value}
+            variant="ghost"
+            className={cn(
+              "w-full justify-start",
+              activeTab === tab.value && "bg-muted"
+            )}
+            onClick={() => onTabChange(tab.value)}
+          >
+            {tab.icon}
+            {tab.label}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 };
