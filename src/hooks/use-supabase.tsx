@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { SupabaseContext } from '@/App';
 import { toast } from '@/components/ui/use-toast';
 import { User, UserRole } from '@/types';
-import { checkSupabaseConnection } from '@/lib/supabase';
+import { checkSupabaseConnection, checkDatabaseSetup, setupDatabase } from '@/lib/supabase';
 
 export const useSupabase = () => {
   const supabase = useContext(SupabaseContext);
@@ -198,11 +198,18 @@ export const useSupabase = () => {
     return connectionStatus;
   };
   
+  // Ajout d'une méthode pour initialiser la base de données
+  const initializeDatabase = async () => {
+    const setupResult = await setupDatabase();
+    return setupResult;
+  };
+  
   return {
     ...supabase,
     fetchUsers,
     fetchUserById,
     updateUser,
-    checkSupabaseStatus
+    checkSupabaseStatus,
+    initializeDatabase
   };
 };

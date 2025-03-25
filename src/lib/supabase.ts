@@ -52,7 +52,7 @@ export const checkSupabaseConnection = async () => {
 // Fonction pour vérifier si la base de données est correctement configurée
 export const checkDatabaseSetup = async () => {
   try {
-    const tables = ['users', 'contacts', 'appointments', 'quotes', 'subscriptions', 'commissions'];
+    const tables = ['users', 'contacts', 'appointments', 'quotes', 'subscriptions', 'commissions', 'commission_rules', 'quote_items'];
     const results = await Promise.all(
       tables.map(async (table) => {
         const { error } = await supabase.from(table).select('id').limit(1);
@@ -74,6 +74,255 @@ export const checkDatabaseSetup = async () => {
     return {
       success: false,
       message: 'Impossible de vérifier la configuration de la base de données: ' + (error.message || 'Erreur inconnue')
+    };
+  }
+};
+
+// Nouvelle fonction pour créer les tables manquantes dans Supabase
+export const setupDatabase = async () => {
+  try {
+    // Vérifier d'abord quelles tables sont manquantes
+    const dbStatus = await checkDatabaseSetup();
+    
+    if (dbStatus.success) {
+      return { success: true, message: 'La base de données est déjà correctement configurée' };
+    }
+    
+    const results = [];
+    
+    // Création de la table users si elle n'existe pas
+    if (dbStatus.missingTables.includes('users')) {
+      const { error: usersError } = await supabase.rpc('create_users_table', {});
+      
+      if (usersError) {
+        console.error('Erreur lors de la création de la table users:', usersError);
+        
+        // Créer la table manuellement si la procédure RPC échoue
+        const { error: manualError } = await supabase.query(`
+          CREATE TABLE IF NOT EXISTS public.users (
+            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            role TEXT NOT NULL,
+            avatar TEXT,
+            calendly_url TEXT,
+            calendly_sync_email TEXT,
+            calendly_enabled BOOLEAN DEFAULT FALSE
+          );
+        `);
+        
+        if (manualError) {
+          results.push({ table: 'users', success: false, error: manualError.message });
+        } else {
+          results.push({ table: 'users', success: true });
+        }
+      } else {
+        results.push({ table: 'users', success: true });
+      }
+    }
+    
+    // Création de la table contacts si elle n'existe pas
+    if (dbStatus.missingTables.includes('contacts')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.contacts (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          phone TEXT,
+          company TEXT,
+          position TEXT,
+          address TEXT,
+          notes TEXT,
+          "assignedTo" UUID REFERENCES public.users(id),
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      
+      results.push({ table: 'contacts', success: !error, error: error?.message });
+    }
+    
+    // Création de la table appointments si elle n'existe pas
+    if (dbStatus.missingTables.includes('appointments')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.appointments (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          title TEXT NOT NULL,
+          description TEXT,
+          "contactId" UUID NOT NULL REFERENCES public.contacts(id),
+          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
+          date TIMESTAMP WITH TIME ZONE NOT NULL,
+          duration INTEGER NOT NULL,
+          status TEXT NOT NULL,
+          location TEXT,
+          notes TEXT,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      
+      results.push({ table: 'appointments', success: !error, error: error?.message });
+    }
+    
+    // Création de la table quotes si elle n'existe pas
+    if (dbStatus.missingTables.includes('quotes')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.quotes (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "contactId" UUID NOT NULL REFERENCES public.contacts(id),
+          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
+          "totalAmount" NUMERIC NOT NULL,
+          status TEXT NOT NULL,
+          "validUntil" TIMESTAMP WITH TIME ZONE NOT NULL,
+          notes TEXT,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      
+      results.push({ table: 'quotes', success: !error, error: error?.message });
+    }
+    
+    // Création de la table quote_items si elle n'existe pas
+    if (dbStatus.missingTables.includes('quote_items')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.quote_items (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "quoteId" UUID NOT NULL REFERENCES public.quotes(id),
+          description TEXT NOT NULL,
+          quantity INTEGER NOT NULL,
+          "unitPrice" NUMERIC NOT NULL,
+          discount NUMERIC,
+          tax NUMERIC
+        );
+      `);
+      
+      results.push({ table: 'quote_items', success: !error, error: error?.message });
+    }
+    
+    // Création de la table subscriptions si elle n'existe pas
+    if (dbStatus.missingTables.includes('subscriptions')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.subscriptions (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          name TEXT NOT NULL,
+          description TEXT,
+          price NUMERIC NOT NULL,
+          interval TEXT NOT NULL,
+          "clientId" UUID NOT NULL REFERENCES public.users(id),
+          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
+          status TEXT NOT NULL,
+          "startDate" TIMESTAMP WITH TIME ZONE NOT NULL,
+          "endDate" TIMESTAMP WITH TIME ZONE,
+          "renewalDate" TIMESTAMP WITH TIME ZONE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      
+      results.push({ table: 'subscriptions', success: !error, error: error?.message });
+    }
+    
+    // Création de la table commissions si elle n'existe pas
+    if (dbStatus.missingTables.includes('commissions')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.commissions (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "freelancerId" UUID NOT NULL REFERENCES public.users(id),
+          amount NUMERIC NOT NULL,
+          tier TEXT NOT NULL,
+          "subscriptionId" UUID REFERENCES public.subscriptions(id),
+          "quoteId" UUID REFERENCES public.quotes(id),
+          "periodStart" TIMESTAMP WITH TIME ZONE NOT NULL,
+          "periodEnd" TIMESTAMP WITH TIME ZONE NOT NULL,
+          status TEXT NOT NULL,
+          "paidDate" TIMESTAMP WITH TIME ZONE,
+          "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `);
+      
+      results.push({ table: 'commissions', success: !error, error: error?.message });
+    }
+    
+    // Création de la table commission_rules si elle n'existe pas
+    if (dbStatus.missingTables.includes('commission_rules')) {
+      const { error } = await supabase.query(`
+        CREATE TABLE IF NOT EXISTS public.commission_rules (
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          tier TEXT NOT NULL,
+          "minContracts" INTEGER NOT NULL,
+          percentage NUMERIC NOT NULL
+        );
+      `);
+      
+      results.push({ table: 'commission_rules', success: !error, error: error?.message });
+    }
+    
+    // Insérer des données initiales dans la table users si elle a été créée avec succès
+    if (results.find(r => r.table === 'users')?.success) {
+      // Vérifier si des utilisateurs existent déjà
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .limit(1);
+        
+      if (!checkError && (!existingUsers || existingUsers.length === 0)) {
+        // Insérer des utilisateurs de démonstration
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([
+            {
+              name: "Admin Démo",
+              email: "admin@example.com",
+              role: "admin",
+              calendly_url: "https://calendly.com/admin-demo",
+              calendly_enabled: true,
+              calendly_sync_email: "admin@example.com"
+            },
+            {
+              name: "Commercial Démo",
+              email: "commercial@example.com",
+              role: "freelancer",
+              calendly_url: "https://calendly.com/commercial-demo",
+              calendly_enabled: true,
+              calendly_sync_email: "commercial@example.com"
+            },
+            {
+              name: "Client Démo",
+              email: "client@example.com",
+              role: "client",
+              calendly_url: "",
+              calendly_enabled: false,
+              calendly_sync_email: ""
+            }
+          ]);
+          
+        if (insertError) {
+          console.error('Erreur lors de l\'insertion des utilisateurs de démonstration:', insertError);
+        }
+      }
+    }
+    
+    // Vérifier si l'installation a réussi
+    const failures = results.filter(r => !r.success);
+    if (failures.length > 0) {
+      return {
+        success: false,
+        message: `Certaines tables n'ont pas pu être créées: ${failures.map(f => f.table).join(', ')}`,
+        details: failures
+      };
+    }
+    
+    return {
+      success: true,
+      message: 'Base de données configurée avec succès',
+      details: results
+    };
+  } catch (error: any) {
+    console.error('Erreur lors de la configuration de la base de données:', error);
+    return {
+      success: false,
+      message: 'Erreur lors de la configuration de la base de données: ' + (error.message || 'Erreur inconnue')
     };
   }
 };

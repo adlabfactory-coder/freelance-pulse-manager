@@ -12,6 +12,7 @@ import UserProfile from "@/components/settings/UserProfile";
 import UsersManagement from "@/components/settings/UsersManagement";
 import CompanySettings from "@/components/settings/CompanySettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
+import { checkDatabaseSetup } from "@/lib/supabase";
 
 const SettingsPage: React.FC = () => {
   const supabase = useSupabase();
@@ -25,18 +26,39 @@ const SettingsPage: React.FC = () => {
     title: "Impossible de charger les paramètres",
     description: "Veuillez vérifier votre configuration Supabase ou réessayer ultérieurement."
   });
+  const [dbStatus, setDbStatus] = useState<{
+    success: boolean;
+    missingTables?: string[];
+    message?: string;
+  } | null>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
     setHasError(false);
     
     try {
-      // Vérifier d'abord le statut de la connexion Supabase
+      // Vérifier d'abord le statut de la connexion Supabase et de la base de données
       const supabaseStatus = await supabase.checkSupabaseStatus();
       
       if (!supabaseStatus.success) {
         console.warn("Problème de connexion à Supabase:", supabaseStatus.message);
-        // On continue avec les données de démo, mais on affiche un toast d'avertissement
+        
+        // Vérifier spécifiquement l'état de la base de données
+        const dbSetupStatus = await checkDatabaseSetup();
+        setDbStatus(dbSetupStatus);
+        
+        if (!dbSetupStatus.success && dbSetupStatus.missingTables && dbSetupStatus.missingTables.length > 0) {
+          console.warn("Tables manquantes dans la base de données:", dbSetupStatus.missingTables);
+          setErrorDetails({
+            title: "Base de données non configurée",
+            description: `Les tables nécessaires n'existent pas: ${dbSetupStatus.missingTables.join(', ')}`
+          });
+          setHasError(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Si le problème n'est pas lié aux tables manquantes, on continue avec des données de démo
         toast({
           variant: "default",
           title: "Mode démo activé",
