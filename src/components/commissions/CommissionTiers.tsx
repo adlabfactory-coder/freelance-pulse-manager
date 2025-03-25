@@ -7,17 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CommissionTier } from "@/types";
-
-interface CommissionRuleProps {
-  tier: CommissionTier;
-  minContracts: number;
-  maxContracts: number | null;
-  amount: number;
-}
+import { CommissionTier, CommissionRule } from "@/types/commissions";
 
 interface CommissionTiersProps {
-  commissionRules: CommissionRuleProps[];
+  commissionRules: CommissionRule[];
   formatCurrency: (amount: number) => string;
   getTierLabel: (tier: CommissionTier) => string;
 }

@@ -2,22 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { toast } from "@/components/ui/use-toast";
-import { CommissionTier } from "@/types";
-
-interface Commission {
-  id: string;
-  freelancerId: string;
-  freelancerName: string;
-  amount: number;
-  tier: CommissionTier;
-  period: {
-    startDate: Date;
-    endDate: Date;
-  };
-  status: string;
-  paidDate?: Date;
-  paymentRequested?: boolean;
-}
+import { Commission, CommissionRule, CommissionTier } from "@/types/commissions";
 
 export const useCommissions = () => {
   const { supabaseClient } = useSupabase();
@@ -26,7 +11,7 @@ export const useCommissions = () => {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   
   // Commission rules could be fetched from the database in a real app
-  const [commissionRules] = useState([
+  const [commissionRules] = useState<CommissionRule[]>([
     {
       tier: CommissionTier.TIER_1,
       minContracts: 0,
@@ -170,4 +155,5 @@ export const useCommissions = () => {
   };
 };
 
+// Re-export the Commission type for backwards compatibility
 export type { Commission };

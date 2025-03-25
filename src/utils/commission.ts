@@ -1,5 +1,5 @@
 
-import { CommissionTier } from "@/types";
+import { CommissionTier } from "@/types/commissions";
 import { formatCurrency as formatCurrencyUtil } from "@/utils/format";
 
 export const getTierLabel = (tier: CommissionTier): string => {

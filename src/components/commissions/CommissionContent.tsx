@@ -1,8 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Commission } from "@/hooks/use-commissions";
-import { CommissionTier } from "@/types";
+import { Commission, CommissionRule } from "@/types/commissions";
 import CommissionTiers from "@/components/commissions/CommissionTiers";
 import CommissionsTable from "@/components/commissions/CommissionsTable";
 import CommissionToolbar from "@/components/commissions/CommissionToolbar";
@@ -11,12 +10,7 @@ import { getTierLabel, formatCurrency, formatPeriod } from "@/utils/commission";
 
 interface CommissionContentProps {
   commissions: Commission[];
-  commissionRules: {
-    tier: CommissionTier;
-    minContracts: number;
-    maxContracts: number | null;
-    amount: number;
-  }[];
+  commissionRules: CommissionRule[];
   loading: boolean;
   requestingPayment: boolean;
   requestPayment: (commissionId: string) => void;

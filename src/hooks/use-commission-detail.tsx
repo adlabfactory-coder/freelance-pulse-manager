@@ -1,86 +1,83 @@
 
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
-import { CommissionTier } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { Commission, CommissionTier } from "@/types/commissions";
 
-export interface CommissionDetail {
-  id: string;
-  freelancerId: string;
-  freelancerName?: string;
-  amount: number;
-  tier: CommissionTier;
+// Define an extended type for commission detail which includes additional fields
+export interface CommissionDetail extends Omit<Commission, 'period'> {
   periodStart: Date;
   periodEnd: Date;
-  status: string;
-  paidDate?: Date;
   payment_requested: boolean;
   createdAt: Date;
 }
 
 export const useCommissionDetail = (commissionId: string | undefined) => {
   const { supabaseClient } = useSupabase();
-  const [commission, setCommission] = useState<CommissionDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [commission, setCommission] = useState<CommissionDetail | null>(null);
   const [requestingPayment, setRequestingPayment] = useState(false);
 
   useEffect(() => {
-    fetchCommissionDetails();
+    if (commissionId) {
+      fetchCommissionDetail(commissionId);
+    } else {
+      setLoading(false);
+    }
   }, [commissionId, supabaseClient]);
 
-  const fetchCommissionDetails = async () => {
+  const fetchCommissionDetail = async (id: string) => {
     try {
       setLoading(true);
-      
-      if (!commissionId) return;
 
+      // Fetch the commission
       const { data: commissionData, error: commissionError } = await supabaseClient
         .from("commissions")
         .select("*")
-        .eq("id", commissionId)
+        .eq("id", id)
         .single();
 
       if (commissionError) {
         throw commissionError;
       }
 
-      if (commissionData) {
-        // Récupérer les informations du freelancer
-        const { data: freelancerData, error: freelancerError } = await supabaseClient
-          .from("users")
-          .select("name")
-          .eq("id", commissionData.freelancerId)
-          .single();
+      // Fetch the freelancer
+      const { data: freelancer, error: freelancerError } = await supabaseClient
+        .from("users")
+        .select("name")
+        .eq("id", commissionData.freelancerId)
+        .single();
 
-        if (freelancerError) {
-          console.error("Erreur lors de la récupération du freelancer:", freelancerError);
-        }
-
-        // Conversion de string à CommissionTier pour la propriété tier
-        const tierValue = commissionData.tier as string;
-        const tierEnum: CommissionTier = 
-          tierValue === 'tier_1' ? CommissionTier.TIER_1 :
-          tierValue === 'tier_2' ? CommissionTier.TIER_2 :
-          tierValue === 'tier_3' ? CommissionTier.TIER_3 :
-          tierValue === 'tier_4' ? CommissionTier.TIER_4 :
-          CommissionTier.TIER_1; // Valeur par défaut
-
-        // Conversion des dates
-        const commission: CommissionDetail = {
-          ...commissionData,
-          freelancerName: freelancerData?.name || "Freelancer inconnu",
-          tier: tierEnum,
-          periodStart: new Date(commissionData.periodStart),
-          periodEnd: new Date(commissionData.periodEnd),
-          createdAt: new Date(commissionData.createdAt),
-          paidDate: commissionData.paidDate ? new Date(commissionData.paidDate) : undefined,
-          payment_requested: commissionData.payment_requested || false,
-        };
-
-        setCommission(commission);
+      if (freelancerError) {
+        console.error("Error fetching freelancer:", freelancerError);
       }
+
+      // Map the data
+      const tierValue = commissionData.tier as string;
+      const tierEnum: CommissionTier = 
+        tierValue === 'tier_1' ? CommissionTier.TIER_1 :
+        tierValue === 'tier_2' ? CommissionTier.TIER_2 :
+        tierValue === 'tier_3' ? CommissionTier.TIER_3 :
+        tierValue === 'tier_4' ? CommissionTier.TIER_4 :
+        CommissionTier.TIER_1;
+
+      const mappedCommission: CommissionDetail = {
+        id: commissionData.id,
+        freelancerId: commissionData.freelancerId,
+        freelancerName: freelancer?.name || "Freelancer inconnu",
+        amount: commissionData.amount,
+        tier: tierEnum,
+        periodStart: new Date(commissionData.periodStart),
+        periodEnd: new Date(commissionData.periodEnd),
+        status: commissionData.status,
+        paidDate: commissionData.paidDate ? new Date(commissionData.paidDate) : undefined,
+        payment_requested: commissionData.payment_requested || false,
+        createdAt: new Date(commissionData.createdAt || Date.now()),
+      };
+
+      setCommission(mappedCommission);
     } catch (error) {
-      console.error("Erreur lors de la récupération des détails de la commission:", error);
+      console.error("Error fetching commission detail:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -92,8 +89,8 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
   };
 
   const requestPayment = async () => {
-    if (!commission || !commissionId) return;
-
+    if (!commissionId) return;
+    
     setRequestingPayment(true);
     try {
       const { error } = await supabaseClient
@@ -105,14 +102,14 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
         throw error;
       }
 
+      // Update UI
       setCommission(prev => prev ? { ...prev, payment_requested: true } : null);
-
+      
       toast({
         title: "Demande envoyée",
         description: "Votre demande de versement a été envoyée avec succès.",
       });
     } catch (error) {
-      console.error("Erreur lors de la demande de versement:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -127,6 +124,8 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
     commission,
     loading,
     requestingPayment,
-    requestPayment
+    requestPayment,
   };
 };
+
+export type { Commission };
