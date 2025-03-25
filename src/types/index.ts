@@ -1,4 +1,3 @@
-
 // User related types
 export enum UserRole {
   ADMIN = "admin",
@@ -163,4 +162,22 @@ export interface NavItem {
   href: string;
   icon?: React.ComponentType;
   disabled?: boolean;
+}
+
+// Subscription plan related types
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  price: number;
+  interval: SubscriptionInterval;
+  features: {
+    website: boolean;
+    social_media: boolean;
+    features: string[];
+  };
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
