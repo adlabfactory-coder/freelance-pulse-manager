@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useSupabase } from "@/hooks/use-supabase";
 import { CommissionTier } from "@/types";
+import { useNavigate } from "react-router-dom";
 import CommissionTiers from "@/components/commissions/CommissionTiers";
 import CommissionsTable from "@/components/commissions/CommissionsTable";
 import CommissionToolbar from "@/components/commissions/CommissionToolbar";
@@ -11,6 +11,7 @@ import { getTierLabel, formatCurrency, formatPeriod } from "@/utils/commission";
 
 const Commissions: React.FC = () => {
   const supabase = useSupabase();
+  const navigate = useNavigate();
   const [requestingPayment, setRequestingPayment] = useState(false);
   
   const commissions = [
@@ -131,6 +132,16 @@ const Commissions: React.FC = () => {
       setRequestingPayment(false);
     }
   };
+  
+  const handleViewCommission = (commissionId: string) => {
+    console.log(`Viewing commission details for: ${commissionId}`);
+    // Dans une implémentation future, nous pourrions naviguer vers une page de détails
+    // navigate(`/commissions/detail/${commissionId}`);
+    toast({
+      title: "Information",
+      description: `Détails de la commission ${commissionId} (fonctionnalité à venir)`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -157,6 +168,7 @@ const Commissions: React.FC = () => {
         getStatusBadge={getStatusBadge}
         formatCurrency={formatCurrency}
         formatPeriod={formatPeriod}
+        onViewCommission={handleViewCommission}
       />
     </div>
   );

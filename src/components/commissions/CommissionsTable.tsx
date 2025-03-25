@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { BadgeDollarSign } from "lucide-react";
+import { BadgeDollarSign, Eye } from "lucide-react";
 import { CommissionTier } from "@/types";
 
 interface Commission {
@@ -34,6 +34,7 @@ interface CommissionsTableProps {
   getStatusBadge: (status: string, paymentRequested?: boolean) => React.ReactNode;
   formatCurrency: (amount: number) => string;
   formatPeriod: (startDate: Date, endDate: Date) => string;
+  onViewCommission: (commissionId: string) => void;
 }
 
 const CommissionsTable: React.FC<CommissionsTableProps> = ({
@@ -44,6 +45,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
   getStatusBadge,
   formatCurrency,
   formatPeriod,
+  onViewCommission,
 }) => {
   return (
     <div className="rounded-md border shadow-sm">
@@ -93,7 +95,12 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
                     Demander versement
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onViewCommission(commission.id)}
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
                     Voir
                   </Button>
                 )}
