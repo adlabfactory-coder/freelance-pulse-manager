@@ -1,7 +1,7 @@
 
 // Importation des types nécessaires pour gérer les contacts
 import { supabase } from '@/lib/supabase';
-import { Contact, NewContact, ContactUpdate, ContactFormInput } from './types';
+import { Contact, ContactUpdate, ContactFormInput, ContactInsert } from './types';
 import { toast } from '@/components/ui/use-toast';
 import { ContactStatus } from '@/types/database/enums';
 
@@ -34,7 +34,7 @@ export const contactCrudService = {
   /**
    * Ajoute un nouveau contact dans Supabase
    */
-  async addContact(contactData: NewContact): Promise<Contact | null> {
+  async addContact(contactData: ContactInsert): Promise<Contact | null> {
     try {
       // Assurez-vous que le statut est du type ContactStatus
       const contact = {

@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase-client';
 import { toast } from 'sonner';
-import { ContactFormInput } from './types';
+import { ContactFormInput, ContactInsert } from './types';
 import { ContactStatus } from '@/types/database/enums';
 import * as XLSX from 'xlsx';
 import { contactCrudService } from './contact-crud';
