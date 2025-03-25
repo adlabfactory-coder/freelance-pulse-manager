@@ -93,7 +93,7 @@ export const useCommissions = () => {
           },
           status: commission.status,
           paidDate: commission.paidDate ? new Date(commission.paidDate) : undefined,
-          paymentRequested: commission.payment_requested,
+          paymentRequested: commission.payment_requested || false,
         };
       });
 
@@ -136,6 +136,7 @@ export const useCommissions = () => {
         description: "Votre demande de versement a été envoyée avec succès.",
       });
     } catch (error) {
+      console.error("Erreur lors de la demande de versement:", error);
       toast({
         variant: "destructive",
         title: "Erreur",

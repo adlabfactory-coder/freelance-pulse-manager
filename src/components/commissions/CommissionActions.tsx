@@ -31,8 +31,12 @@ const CommissionActions: React.FC<CommissionActionsProps> = ({
             onClick={onRequestPayment}
             disabled={requestingPayment}
           >
-            Demander le versement
+            {requestingPayment ? "Envoi en cours..." : "Demander le versement"}
           </Button>
+        ) : paymentRequested ? (
+          <div className="text-sm text-muted-foreground p-3 bg-muted rounded-md">
+            Demande de versement en attente
+          </div>
         ) : null}
         <Button 
           variant="outline" 

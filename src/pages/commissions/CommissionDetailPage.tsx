@@ -31,7 +31,7 @@ const CommissionDetailPage: React.FC = () => {
           
           <CommissionActions 
             status={commission.status}
-            paymentRequested={commission.payment_requested}
+            paymentRequested={commission.paymentRequested}
             requestingPayment={requestingPayment}
             onRequestPayment={requestPayment}
           />

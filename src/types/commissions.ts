@@ -13,7 +13,7 @@ export interface Commission {
   };
   status: string;
   paidDate?: Date;
-  paymentRequested?: boolean;
+  paymentRequested: boolean;
 }
 
 export interface CommissionRule {
