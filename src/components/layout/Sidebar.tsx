@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         >
           <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <Users className="h-4 w-4" />
+            <Users size={16} />
           </div>
           <div
             className={cn(
