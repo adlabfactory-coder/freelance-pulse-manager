@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Check, Trash2, Plus } from "lucide-react";
 import { QuoteItem, QuoteStatus, User } from "@/types";
+import { Quote } from "@/types";
 import { Contact } from "@/services/contacts/types";
 import { createQuote } from "@/services/quote-service";
 import { fetchServices, Service } from "@/services/services-service";

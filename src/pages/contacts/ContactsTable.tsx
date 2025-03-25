@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -35,10 +36,10 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
   searchTerm,
   statusFilter
 }) => {
+  const navigate = useNavigate();
+
   const handleViewContact = (contactId: string) => {
-    toast.info(`Affichage du contact ${contactId}`, {
-      description: "Les détails du contact seront bientôt disponibles."
-    });
+    navigate(`/contacts/detail/${contactId}`);
   };
 
   const filteredContacts = contacts
