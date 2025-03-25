@@ -12,9 +12,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { SegmentButtons } from "@/components/ui/segment-buttons";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const features = [
     {
@@ -61,36 +64,48 @@ const Index = () => {
     }
   ];
 
+  // Sélectionner uniquement les 4 fonctionnalités principales pour les boutons segmentés
+  const mainFeatures = features.slice(0, 4);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 animate-fade-in">
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="text-center mb-8 md:mb-16">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Bienvenue sur AdLab Hub
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Votre plateforme complète pour gérer vos clients, devis, commissions et plus encore.
           </p>
           
-          <div className="mt-8 flex justify-center gap-4">
-            <Button size="lg" onClick={() => navigate("/dashboard")}>
-              Accéder au tableau de bord
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/contacts")}>
-              Gérer les contacts
-            </Button>
-          </div>
+          {isMobile ? (
+            <div className="mt-6">
+              <SegmentButtons 
+                items={mainFeatures} 
+                className="bg-card shadow-sm"
+              />
+            </div>
+          ) : (
+            <div className="mt-8 flex justify-center gap-4">
+              <Button size="lg" onClick={() => navigate("/dashboard")}>
+                Accéder au tableau de bord
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => navigate("/contacts")}>
+                Gérer les contacts
+              </Button>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {features.map((feature, index) => (
             <Card key={index} className="border hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-              <CardContent className="p-6">
-                <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-4`}>
-                  <feature.icon className="h-6 w-6" />
+              <CardContent className="p-4 md:p-6">
+                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg ${feature.color} flex items-center justify-center mb-4`}>
+                  <feature.icon className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground mb-4">{feature.description}</p>
+                <h3 className="text-lg md:text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-sm md:text-base text-muted-foreground mb-4">{feature.description}</p>
                 <Button 
                   variant="ghost" 
                   className="group"
@@ -104,13 +119,26 @@ const Index = () => {
           ))}
         </div>
         
-        <div className="mt-16 bg-card rounded-lg border p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Besoin d'aide pour démarrer ?</h2>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-            Découvrez notre guide complet pour tirer le meilleur parti d'AdLab Hub et optimiser votre gestion commerciale.
-          </p>
-          <Button variant="outline">Consulter le guide</Button>
-        </div>
+        {!isMobile && (
+          <div className="mt-16 bg-card rounded-lg border p-8 text-center">
+            <h2 className="text-2xl font-bold mb-4">Besoin d'aide pour démarrer ?</h2>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Découvrez notre guide complet pour tirer le meilleur parti d'AdLab Hub et optimiser votre gestion commerciale.
+            </p>
+            <Button variant="outline">Consulter le guide</Button>
+          </div>
+        )}
+        
+        {isMobile && (
+          <div className="fixed bottom-4 left-4 right-4 bg-card rounded-lg border shadow-lg animate-fade-in z-10">
+            <div className="p-4">
+              <SegmentButtons 
+                items={features} 
+                className="bg-background"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
