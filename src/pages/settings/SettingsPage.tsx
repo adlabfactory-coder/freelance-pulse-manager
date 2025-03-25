@@ -3,17 +3,17 @@ import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { UserRole, User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import UserProfile from "@/components/settings/UserProfile";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import SettingsHeader from "./components/SettingsHeader";
+import SettingsLoading from "./components/SettingsLoading";
+import SettingsError from "./components/SettingsError";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
+import UserProfile from "@/components/settings/UserProfile";
 import UsersManagement from "@/components/settings/UsersManagement";
 import CompanySettings from "@/components/settings/CompanySettings";
 import CommissionSettings from "@/components/settings/CommissionSettings";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 
-const Settings: React.FC = () => {
+const SettingsPage: React.FC = () => {
   const supabase = useSupabase();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -29,7 +29,6 @@ const Settings: React.FC = () => {
       let usersData: User[] = [];
       
       try {
-        // Tenter de récupérer les utilisateurs depuis Supabase
         usersData = await supabase.fetchUsers();
         console.log("Utilisateurs récupérés:", usersData);
       } catch (error) {
@@ -37,7 +36,6 @@ const Settings: React.FC = () => {
       }
       
       if (usersData.length > 0) {
-        // Utiliser le premier utilisateur comme utilisateur actuel
         const user = usersData[0];
         setCurrentUser(user);
         setSelectedUserId(user.id);
@@ -81,88 +79,26 @@ const Settings: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
-          <p className="text-muted-foreground mt-1">
-            Chargement des paramètres...
-          </p>
-        </div>
-        <Card>
-          <CardContent className="flex items-center justify-center h-32">
-            <div className="flex flex-col items-center gap-2">
-              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p>Chargement des paramètres...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <SettingsLoading />;
   }
 
   if (hasError) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
-          <p className="text-muted-foreground mt-1">
-            Une erreur est survenue
-          </p>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Impossible de charger les paramètres</CardTitle>
-            <CardDescription>
-              Veuillez vérifier votre connexion à Supabase ou réessayer ultérieurement.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button onClick={handleRetry}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Réessayer
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <SettingsError onRetry={handleRetry} />;
   }
 
   if (!currentUser) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
-          <p className="text-muted-foreground mt-1">
-            Impossible de charger les paramètres
-          </p>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Aucun utilisateur trouvé</CardTitle>
-            <CardDescription>
-              Veuillez vérifier votre configuration Supabase ou réessayer ultérieurement.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Button onClick={handleRetry}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Réessayer
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SettingsError 
+        title="Aucun utilisateur trouvé"
+        description="Veuillez vérifier votre configuration Supabase ou réessayer ultérieurement."
+        onRetry={handleRetry}
+      />
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Paramètres</h1>
-        <p className="text-muted-foreground mt-1">
-          Gérez les paramètres de votre compte et de l'application
-        </p>
-      </div>
+      <SettingsHeader />
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -206,4 +142,4 @@ const Settings: React.FC = () => {
   );
 };
 
-export default Settings;
+export default SettingsPage;
