@@ -21,15 +21,34 @@ const SettingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
   const [hasError, setHasError] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<{title: string, description: string}>({
+    title: "Impossible de charger les paramètres",
+    description: "Veuillez vérifier votre configuration Supabase ou réessayer ultérieurement."
+  });
 
   const fetchData = async () => {
     setIsLoading(true);
     setHasError(false);
+    
     try {
+      // Vérifier d'abord le statut de la connexion Supabase
+      const supabaseStatus = await supabase.checkSupabaseStatus();
+      
+      if (!supabaseStatus.success) {
+        console.warn("Problème de connexion à Supabase:", supabaseStatus.message);
+        // On continue avec les données de démo, mais on affiche un toast d'avertissement
+        toast({
+          variant: "warning",
+          title: "Mode démo activé",
+          description: "Utilisation des données de démonstration car Supabase n'est pas accessible.",
+        });
+      }
+      
+      // Récupérer les utilisateurs (réels ou de démo selon l'état de la connexion)
       let usersData: User[] = [];
       
       try {
-        // On récupère les données des utilisateurs, et on gère les erreurs potentielles
+        // On récupère les données des utilisateurs
         usersData = await supabase.fetchUsers();
         console.log("Utilisateurs récupérés:", usersData);
         
@@ -38,7 +57,7 @@ const SettingsPage: React.FC = () => {
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des utilisateurs:", error);
-        // Pas de setHasError ici - on laisse le code continuer avec les données de démo
+        // On ne définit pas hasError ici, car nous avons déjà un fallback avec les données de démo
       }
       
       // Si nous avons des utilisateurs, on initialise les états
@@ -48,20 +67,28 @@ const SettingsPage: React.FC = () => {
         setSelectedUserId(user.id);
         setUsers(usersData);
       } else {
-        // Si nous n'avons toujours pas d'utilisateurs, c'est une erreur
+        // Si nous n'avons toujours pas d'utilisateurs, c'est une erreur critique
         setHasError(true);
+        setErrorDetails({
+          title: "Aucun utilisateur trouvé",
+          description: "Impossible de récupérer les données utilisateurs, même en mode démo."
+        });
         toast({
           variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de récupérer les informations utilisateur.",
+          title: "Erreur critique",
+          description: "Impossible de récupérer les informations utilisateur, même en mode démo.",
         });
       }
     } catch (error) {
-      console.error("Erreur lors de la récupération des données:", error);
+      console.error("Erreur fatale lors de la récupération des données:", error);
       setHasError(true);
+      setErrorDetails({
+        title: "Erreur système",
+        description: "Une erreur système est survenue lors du chargement des paramètres."
+      });
       toast({
         variant: "destructive",
-        title: "Erreur",
+        title: "Erreur système",
         description: "Impossible de récupérer les informations utilisateur.",
       });
     } finally {
@@ -78,6 +105,10 @@ const SettingsPage: React.FC = () => {
         console.error("Erreur fatale lors du chargement des données:", e);
         setIsLoading(false);
         setHasError(true);
+        setErrorDetails({
+          title: "Erreur inattendue",
+          description: "Une erreur inattendue est survenue lors du chargement des données."
+        });
       }
     };
     
@@ -104,8 +135,8 @@ const SettingsPage: React.FC = () => {
   if (hasError || !currentUser) {
     return (
       <SettingsError 
-        title={!currentUser ? "Aucun utilisateur trouvé" : "Impossible de charger les paramètres"}
-        description="Veuillez vérifier votre configuration Supabase ou réessayer ultérieurement."
+        title={!currentUser ? "Aucun utilisateur trouvé" : errorDetails.title}
+        description={errorDetails.description}
         onRetry={handleRetry}
       />
     );

@@ -20,15 +20,23 @@ export const useSupabase = () => {
   
   const fetchUsers = async () => {
     try {
-      // Vérification simplifiée de l'état de la connexion Supabase
+      // Vérification de l'état de la connexion Supabase avec une gestion robuste des erreurs
+      let shouldUseMockData = false;
+      
       try {
         const connectionStatus = await checkSupabaseConnection();
         if (!connectionStatus.success) {
           console.warn("Erreur lors de la vérification de la connexion:", connectionStatus.message);
-          return getMockUsers();
+          shouldUseMockData = true;
         }
       } catch (error) {
         console.warn("Erreur lors de la vérification de la connexion:", error);
+        shouldUseMockData = true;
+      }
+      
+      // Utiliser des données de démo si la connexion a échoué
+      if (shouldUseMockData) {
+        console.info("Utilisation des données de démo pour les utilisateurs");
         return getMockUsers();
       }
       
@@ -39,12 +47,18 @@ export const useSupabase = () => {
           .select('*');
         
         if (error) {
+          // Si la table n'existe pas, on utilise les données de démo
+          if (error.code === '42P01') {
+            console.warn("Table 'users' non trouvée dans Supabase, utilisation des données de démo");
+            return getMockUsers();
+          }
+          
           console.warn("Erreur lors de la récupération des utilisateurs:", error.message);
           return getMockUsers();
         }
         
         if (!data || data.length === 0) {
-          console.warn("Aucun utilisateur trouvé dans Supabase");
+          console.warn("Aucun utilisateur trouvé dans Supabase, utilisation des données de démo");
           return getMockUsers();
         }
         
@@ -178,10 +192,17 @@ export const useSupabase = () => {
     return foundUser || null;
   };
   
+  // Ajout d'une méthode pour vérifier l'état de la configuration Supabase
+  const checkSupabaseStatus = async () => {
+    const connectionStatus = await checkSupabaseConnection();
+    return connectionStatus;
+  };
+  
   return {
     ...supabase,
     fetchUsers,
     fetchUserById,
-    updateUser
+    updateUser,
+    checkSupabaseStatus
   };
 };
