@@ -1,5 +1,6 @@
 
 import { CommissionTier } from "@/types";
+import { formatCurrency as formatCurrencyUtil } from "@/utils/format";
 
 export const getTierLabel = (tier: CommissionTier): string => {
   switch (tier) {
@@ -16,12 +17,7 @@ export const getTierLabel = (tier: CommissionTier): string => {
   }
 };
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("fr-MA", {
-    style: "currency",
-    currency: "MAD",
-  }).format(amount);
-};
+export const formatCurrency = formatCurrencyUtil;
 
 export const formatPeriod = (startDate: Date, endDate: Date): string => {
   const startMonth = startDate.toLocaleDateString("fr-FR", { month: "long" });
