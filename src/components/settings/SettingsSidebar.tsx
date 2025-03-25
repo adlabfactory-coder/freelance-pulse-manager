@@ -8,7 +8,8 @@ import {
   Users,
   CalendarClock,
   BadgeDollarSign,
-  Database
+  Database,
+  Package
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -44,6 +45,11 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
       value: "users",
       label: "Utilisateurs",
       icon: <Users className="h-5 w-5 mr-2" />,
+    },
+    {
+      value: "services",
+      label: "Services et Packs",
+      icon: <Package className="h-5 w-5 mr-2" />,
     },
     {
       value: "commissions",

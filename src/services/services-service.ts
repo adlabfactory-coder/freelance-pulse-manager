@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { Service, ServiceType } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 // Ensure we're using the correct type
 const ensureServiceType = (type: string): ServiceType => {
@@ -20,11 +20,6 @@ export const fetchServices = async (): Promise<Service[]> => {
 
     if (error) {
       console.error('Error fetching services:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load services. Please try again.",
-      });
       return [];
     }
 
@@ -41,11 +36,6 @@ export const fetchServices = async (): Promise<Service[]> => {
     }));
   } catch (error) {
     console.error('Unexpected error fetching services:', error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "An unexpected error occurred. Please try again.",
-    });
     return [];
   }
 };
@@ -100,11 +90,6 @@ export const createService = async (service: Omit<Service, 'id' | 'created_at' |
 
     if (error) {
       console.error('Error creating service:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create service. Please try again.",
-      });
       return null;
     }
 
@@ -120,12 +105,54 @@ export const createService = async (service: Omit<Service, 'id' | 'created_at' |
     };
   } catch (error) {
     console.error('Error in createService:', error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "An unexpected error occurred. Please try again.",
-    });
     return null;
+  }
+};
+
+export const updateService = async (service: Service): Promise<boolean> => {
+  try {
+    const { id, name, description, type, price, is_active } = service;
+    
+    const { error } = await supabase
+      .from('services')
+      .update({
+        name,
+        description,
+        type,
+        price,
+        is_active,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating service:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in updateService:', error);
+    return false;
+  }
+};
+
+export const deleteService = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('services')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting service:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteService:', error);
+    return false;
   }
 };
 
