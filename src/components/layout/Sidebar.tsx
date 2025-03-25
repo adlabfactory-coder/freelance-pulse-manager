@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
             >
               {item.icon && (
                 <span className="flex-shrink-0">
-                  {React.createElement(item.icon, { "aria-hidden": true })}
+                  {React.createElement(item.icon, { "aria-hidden": true, className: "h-5 w-5" })}
                 </span>
               )}
               <span
@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           )}
         >
           <div className="h-8 w-8 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <Users aria-hidden="true" />
+            {React.createElement(Users, { "aria-hidden": true, className: "h-4 w-4" })}
           </div>
           <div
             className={cn(
