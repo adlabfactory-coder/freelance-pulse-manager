@@ -74,25 +74,28 @@ export enum QuoteStatus {
 }
 
 export interface QuoteItem {
-  id: string;
+  id?: string;
   description: string;
   quantity: number;
   unitPrice: number;
-  discount?: number;
-  tax?: number;
+  discount?: number | null;
+  tax?: number | null;
+  serviceId?: string | null;
 }
 
 export interface Quote {
-  id: string;
+  id?: string;
   contactId: string;
   freelancerId: string;
-  items: QuoteItem[];
-  status: QuoteStatus;
   totalAmount: number;
+  status: QuoteStatus;
   validUntil: Date;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  items: QuoteItem[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  contact?: Contact;
+  freelancer?: User;
 }
 
 // Subscription related types

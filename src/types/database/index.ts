@@ -6,6 +6,7 @@ import { AppointmentsTable } from './appointments';
 import { QuotesTable } from './quotes';
 import { SubscriptionsTable } from './subscriptions';
 import { CommissionsTable } from './commissions';
+import { ServicesTable } from './services';
 import { DatabaseEnums } from './enums';
 import { DatabaseFunctions } from './functions';
 
@@ -17,6 +18,7 @@ export type Database = {
     QuotesTable & 
     SubscriptionsTable & 
     CommissionsTable & 
+    ServicesTable &
     DatabaseEnums & 
     DatabaseFunctions
 }

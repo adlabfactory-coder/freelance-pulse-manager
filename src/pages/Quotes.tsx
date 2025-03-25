@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,59 +10,42 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Filter, Plus, FileDown, FileUp } from "lucide-react";
-import { QuoteStatus } from "@/types";
+import { Filter, Plus, FileDown, FileUp, Eye, Check, X } from "lucide-react";
+import { Quote, QuoteStatus } from "@/types";
 import { formatCurrency } from "@/utils/format";
+import { fetchQuotes, updateQuoteStatus } from "@/services/quote-service";
+import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
+import { useToast } from "@/components/ui/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const Quotes: React.FC = () => {
-  const quotes = [
-    {
-      id: "Q-2023-001",
-      contactName: "Alice Martin",
-      freelancerName: "John Doe",
-      totalAmount: 3500,
-      status: QuoteStatus.SENT,
-      createdAt: new Date(2023, 4, 10),
-      validUntil: new Date(2023, 5, 10),
-    },
-    {
-      id: "Q-2023-002",
-      contactName: "Bob Johnson",
-      freelancerName: "Jane Smith",
-      totalAmount: 1200,
-      status: QuoteStatus.ACCEPTED,
-      createdAt: new Date(2023, 4, 15),
-      validUntil: new Date(2023, 5, 15),
-    },
-    {
-      id: "Q-2023-003",
-      contactName: "Charlie Brown",
-      freelancerName: "John Doe",
-      totalAmount: 5000,
-      status: QuoteStatus.REJECTED,
-      createdAt: new Date(2023, 4, 20),
-      validUntil: new Date(2023, 5, 20),
-    },
-    {
-      id: "Q-2023-004",
-      contactName: "Diana Prince",
-      freelancerName: "Jane Smith",
-      totalAmount: 2300,
-      status: QuoteStatus.DRAFT,
-      createdAt: new Date(2023, 4, 25),
-      validUntil: new Date(2023, 5, 25),
-    },
-    {
-      id: "Q-2023-005",
-      contactName: "Ethan Hunt",
-      freelancerName: "John Doe",
-      totalAmount: 4500,
-      status: QuoteStatus.EXPIRED,
-      createdAt: new Date(2023, 4, 30),
-      validUntil: new Date(2023, 5, 30),
-    },
-  ];
-
+  const { toast } = useToast();
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  
+  const loadQuotes = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchQuotes();
+      setQuotes(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des devis:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger les devis. Veuillez réessayer plus tard.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadQuotes();
+  }, []);
+  
   const getStatusBadge = (status: QuoteStatus) => {
     switch (status) {
       case QuoteStatus.DRAFT:
@@ -98,6 +82,24 @@ const Quotes: React.FC = () => {
         return null;
     }
   };
+  
+  const handleStatusChange = async (id: string, newStatus: QuoteStatus) => {
+    const success = await updateQuoteStatus(id, newStatus);
+    if (success) {
+      loadQuotes(); // Recharger les devis après la mise à jour
+    }
+  };
+  
+  const filteredQuotes = quotes.filter(quote => {
+    if (!searchTerm) return true;
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      (quote.contact?.name?.toLowerCase().includes(searchTermLower)) ||
+      (quote.freelancer?.name?.toLowerCase().includes(searchTermLower)) ||
+      (quote.status.toLowerCase().includes(searchTermLower))
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -108,7 +110,7 @@ const Quotes: React.FC = () => {
             Gérez vos devis et propositions
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Créer un devis
         </Button>
       </div>
@@ -116,7 +118,12 @@ const Quotes: React.FC = () => {
       <div className="flex flex-col md:flex-row gap-4 md:items-center justify-between">
         <div className="flex flex-col md:flex-row gap-4 md:items-center">
           <div className="relative w-full md:w-64">
-            <Input type="text" placeholder="Rechercher..." />
+            <Input 
+              type="text" 
+              placeholder="Rechercher..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
           <Button variant="outline" size="sm">
             <Filter className="mr-2 h-4 w-4" /> Filtrer
@@ -151,31 +158,73 @@ const Quotes: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {quotes.map((quote) => (
-              <TableRow key={quote.id}>
-                <TableCell className="font-medium">{quote.id}</TableCell>
-                <TableCell>{quote.contactName}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {quote.freelancerName}
-                </TableCell>
-                <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
-                <TableCell>{getStatusBadge(quote.status)}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {quote.createdAt.toLocaleDateString()}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {quote.validUntil.toLocaleDateString()}
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="sm">
-                    Voir
-                  </Button>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8">
+                  Chargement des devis...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filteredQuotes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8">
+                  Aucun devis trouvé
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredQuotes.map((quote) => (
+                <TableRow key={quote.id}>
+                  <TableCell className="font-medium">{quote.id?.substring(0, 8)}</TableCell>
+                  <TableCell>{quote.contact?.name || "Client inconnu"}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {quote.freelancer?.name || "Commercial inconnu"}
+                  </TableCell>
+                  <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
+                  <TableCell>{getStatusBadge(quote.status)}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {quote.createdAt?.toLocaleDateString() || "-"}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {quote.validUntil?.toLocaleDateString() || "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end items-center gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      
+                      {quote.status === QuoteStatus.SENT && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleStatusChange(quote.id!, QuoteStatus.ACCEPTED)}>
+                              <Check className="mr-2 h-4 w-4 text-green-500" />
+                              Marquer comme accepté
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(quote.id!, QuoteStatus.REJECTED)}>
+                              <X className="mr-2 h-4 w-4 text-red-500" />
+                              Marquer comme refusé
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
+      
+      <AddQuoteDialog 
+        open={addDialogOpen} 
+        onOpenChange={setAddDialogOpen} 
+        onQuoteCreated={loadQuotes}
+      />
     </div>
   );
 };
