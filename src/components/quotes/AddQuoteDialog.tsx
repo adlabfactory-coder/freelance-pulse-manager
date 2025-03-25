@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Check, Trash2, Plus } from "lucide-react";
-import { Quote, QuoteItem, QuoteStatus, Contact, User } from "@/types";
+import { QuoteItem, QuoteStatus, User } from "@/types";
+import { Contact } from "@/services/contacts/types";
 import { createQuote } from "@/services/quote-service";
 import { fetchServices, Service } from "@/services/services-service";
 import { fetchUsers } from "@/services/supabase-user-service";
-import { contactService } from "@/services/contact-service";
+import { contactService } from "@/services/contacts";
 import { addDays } from "date-fns";
 import { formatCurrency } from "@/utils/format";
 

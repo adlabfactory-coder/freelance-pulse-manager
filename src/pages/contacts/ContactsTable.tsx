@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { User, Calendar, Building, Phone } from "lucide-react";
-import { Contact, ContactStatus } from "@/types";
+import { Contact } from "@/services/contacts/types";
+import { ContactStatus } from "@/types/database/enums";
 import ContactStatusBadge from "@/components/contacts/ContactStatusBadge";
 import { toast } from "sonner";
 

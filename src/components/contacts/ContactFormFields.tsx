@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import ContactStatusSelector from "./ContactStatusSelector";
 import { ContactFormValues } from "./schema/contactFormSchema";
-import { ContactStatus } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 
 interface ContactFormFieldsProps {
   form: UseFormReturn<ContactFormValues>;
