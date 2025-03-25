@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -19,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { NavItem } from "@/types";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -82,41 +81,43 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       <div className="flex-1 overflow-auto py-4">
         <nav className="space-y-1 px-2">
           {navItems.map((item) => (
-            <Tooltip key={item.href} delayDuration={collapsed ? 300 : 9999999}>
-              <TooltipTrigger asChild>
-                <NavLink
-                  to={item.href}
-                  className={({ isActive }) =>
-                    cn(
-                      "sidebar-nav-item group flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                      isActive 
-                        ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
-                        : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
-                      item.disabled && "opacity-50 pointer-events-none"
-                    )
-                  }
-                >
-                  {item.icon && (
-                    <span className="flex-shrink-0">
-                      {renderIcon(item.icon)}
-                    </span>
-                  )}
-                  <span
-                    className={cn(
-                      "transition-opacity",
-                      collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-                    )}
+            <TooltipProvider key={item.href}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={item.href}
+                    className={({ isActive }) =>
+                      cn(
+                        "sidebar-nav-item group flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200",
+                        isActive 
+                          ? "bg-sidebar-accent text-sidebar-foreground font-medium" 
+                          : "text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+                        item.disabled && "opacity-50 pointer-events-none"
+                      )
+                    }
                   >
+                    {item.icon && (
+                      <span className="flex-shrink-0">
+                        {renderIcon(item.icon)}
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "transition-opacity",
+                        collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+                      )}
+                    >
+                      {item.title}
+                    </span>
+                  </NavLink>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent side="right" className="ml-1">
                     {item.title}
-                  </span>
-                </NavLink>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right" className="ml-1">
-                  {item.title}
-                </TooltipContent>
-              )}
-            </Tooltip>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           ))}
         </nav>
       </div>

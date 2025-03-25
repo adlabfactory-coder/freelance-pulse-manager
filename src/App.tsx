@@ -17,28 +17,33 @@ import SettingsPage from "./pages/settings";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
+// Import TooltipProvider
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 // Import styles
 import "./App.css";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/contacts/detail/:contactId" element={<ContactDetailPage />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/quotes" element={<Quotes />} />
-          <Route path="/subscriptions" element={<Subscriptions />} />
-          <Route path="/commissions" element={<Commissions />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings/*" element={<SettingsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Router>
+    <TooltipProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/contacts/detail/:contactId" element={<ContactDetailPage />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/commissions" element={<Commissions />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings/*" element={<SettingsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+      </Router>
+    </TooltipProvider>
   );
 }
 
