@@ -112,6 +112,7 @@ export type Database = {
           freelancerId: string
           id: string
           paidDate: string | null
+          payment_requested: boolean | null
           periodEnd: string
           periodStart: string
           quoteId: string | null
@@ -125,6 +126,7 @@ export type Database = {
           freelancerId: string
           id?: string
           paidDate?: string | null
+          payment_requested?: boolean | null
           periodEnd: string
           periodStart: string
           quoteId?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           freelancerId?: string
           id?: string
           paidDate?: string | null
+          payment_requested?: boolean | null
           periodEnd?: string
           periodStart?: string
           quoteId?: string | null

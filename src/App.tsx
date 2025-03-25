@@ -1,4 +1,3 @@
-
 // Import React and React Router dependencies
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
@@ -23,6 +22,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // Import styles
 import "./App.css";
 
+import CommissionDetailPage from "./pages/commissions/CommissionDetailPage";
+
 function App() {
   return (
     <TooltipProvider>
@@ -37,6 +38,7 @@ function App() {
             <Route path="/quotes" element={<Quotes />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/commissions" element={<Commissions />} />
+            <Route path="/commissions/detail/:commissionId" element={<CommissionDetailPage />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings/*" element={<SettingsPage />} />
           </Route>

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { useSupabase } from "@/hooks/use-supabase";
 import { CommissionTier } from "@/types";
@@ -9,75 +10,28 @@ import CommissionToolbar from "@/components/commissions/CommissionToolbar";
 import CommissionStatusBadge from "@/components/commissions/CommissionStatusBadge";
 import { getTierLabel, formatCurrency, formatPeriod } from "@/utils/commission";
 
+interface Commission {
+  id: string;
+  freelancerId: string;
+  freelancerName: string;
+  amount: number;
+  tier: CommissionTier;
+  period: {
+    startDate: Date;
+    endDate: Date;
+  };
+  status: string;
+  paidDate?: Date;
+  paymentRequested?: boolean;
+}
+
 const Commissions: React.FC = () => {
-  const supabase = useSupabase();
+  const { supabaseClient } = useSupabase();
   const navigate = useNavigate();
   const [requestingPayment, setRequestingPayment] = useState(false);
-  
-  const commissions = [
-    {
-      id: "C-2023-001",
-      freelancerName: "John Doe",
-      amount: 500,
-      tier: CommissionTier.TIER_1,
-      period: {
-        startDate: new Date(2023, 4, 1),
-        endDate: new Date(2023, 4, 31),
-      },
-      status: "paid",
-      paidDate: new Date(2023, 5, 5),
-    },
-    {
-      id: "C-2023-002",
-      freelancerName: "Jane Smith",
-      amount: 1000,
-      tier: CommissionTier.TIER_2,
-      period: {
-        startDate: new Date(2023, 4, 1),
-        endDate: new Date(2023, 4, 31),
-      },
-      status: "paid",
-      paidDate: new Date(2023, 5, 5),
-    },
-    {
-      id: "C-2023-003",
-      freelancerName: "Mike Johnson",
-      amount: 1500,
-      tier: CommissionTier.TIER_3,
-      period: {
-        startDate: new Date(2023, 4, 1),
-        endDate: new Date(2023, 4, 31),
-      },
-      status: "pending",
-      paymentRequested: true,
-    },
-    {
-      id: "C-2023-004",
-      freelancerName: "Sarah Wilson",
-      amount: 2000,
-      tier: CommissionTier.TIER_4,
-      period: {
-        startDate: new Date(2023, 4, 1),
-        endDate: new Date(2023, 4, 31),
-      },
-      status: "pending",
-      paymentRequested: false,
-    },
-    {
-      id: "C-2023-005",
-      freelancerName: "John Doe",
-      amount: 500,
-      tier: CommissionTier.TIER_1,
-      period: {
-        startDate: new Date(2023, 3, 1),
-        endDate: new Date(2023, 3, 30),
-      },
-      status: "paid",
-      paidDate: new Date(2023, 4, 5),
-    },
-  ];
-
-  const commissionRules = [
+  const [loading, setLoading] = useState(true);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [commissionRules, setCommissionRules] = useState([
     {
       tier: CommissionTier.TIER_1,
       minContracts: 0,
@@ -102,7 +56,70 @@ const Commissions: React.FC = () => {
       maxContracts: null,
       amount: 2000,
     },
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchCommissions = async () => {
+      try {
+        setLoading(true);
+        
+        // Récupérer les commissions
+        const { data: commissionsData, error: commissionsError } = await supabaseClient
+          .from("commissions")
+          .select("*")
+          .order("periodStart", { ascending: false });
+
+        if (commissionsError) {
+          throw commissionsError;
+        }
+
+        // Récupérer tous les freelancers concernés
+        const freelancerIds = [...new Set(commissionsData.map(c => c.freelancerId))];
+        
+        const { data: freelancersData, error: freelancersError } = await supabaseClient
+          .from("users")
+          .select("id, name")
+          .in("id", freelancerIds);
+
+        if (freelancersError) {
+          console.error("Erreur lors de la récupération des freelancers:", freelancersError);
+        }
+
+        // Mapper les données
+        const mappedCommissions: Commission[] = commissionsData.map(commission => {
+          const freelancer = freelancersData?.find(f => f.id === commission.freelancerId);
+          
+          return {
+            id: commission.id,
+            freelancerId: commission.freelancerId,
+            freelancerName: freelancer?.name || "Freelancer inconnu",
+            amount: commission.amount,
+            tier: commission.tier as CommissionTier,
+            period: {
+              startDate: new Date(commission.periodStart),
+              endDate: new Date(commission.periodEnd),
+            },
+            status: commission.status,
+            paidDate: commission.paidDate ? new Date(commission.paidDate) : undefined,
+            paymentRequested: commission.payment_requested,
+          };
+        });
+
+        setCommissions(mappedCommissions);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des commissions:", error);
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de récupérer les commissions.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommissions();
+  }, [supabaseClient]);
 
   const getStatusBadge = (status: string, paymentRequested: boolean = false) => {
     return <CommissionStatusBadge status={status} paymentRequested={paymentRequested} />;
@@ -111,17 +128,28 @@ const Commissions: React.FC = () => {
   const requestPayment = async (commissionId: string) => {
     setRequestingPayment(true);
     try {
-      // Simulation d'une requête vers Supabase pour demander le paiement
-      // Dans un cas réel, nous mettrions à jour la base de données
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabaseClient
+        .from("commissions")
+        .update({ payment_requested: true })
+        .eq("id", commissionId);
+
+      if (error) {
+        throw error;
+      }
+      
+      // Mettre à jour l'UI
+      setCommissions(prevCommissions => 
+        prevCommissions.map(commission => 
+          commission.id === commissionId 
+            ? { ...commission, paymentRequested: true } 
+            : commission
+        )
+      );
       
       toast({
         title: "Demande envoyée",
         description: "Votre demande de versement a été envoyée avec succès.",
       });
-      
-      // Mise à jour de l'UI en attendant une vraie implémentation
-      // Dans une implémentation réelle, nous ferions un refetch des données
     } catch (error) {
       toast({
         variant: "destructive",
@@ -134,13 +162,7 @@ const Commissions: React.FC = () => {
   };
   
   const handleViewCommission = (commissionId: string) => {
-    console.log(`Viewing commission details for: ${commissionId}`);
-    // Dans une implémentation future, nous pourrions naviguer vers une page de détails
-    // navigate(`/commissions/detail/${commissionId}`);
-    toast({
-      title: "Information",
-      description: `Détails de la commission ${commissionId} (fonctionnalité à venir)`,
-    });
+    navigate(`/commissions/detail/${commissionId}`);
   };
 
   return (
@@ -160,16 +182,26 @@ const Commissions: React.FC = () => {
 
       <CommissionToolbar />
 
-      <CommissionsTable 
-        commissions={commissions}
-        requestingPayment={requestingPayment}
-        requestPayment={requestPayment}
-        getTierLabel={getTierLabel}
-        getStatusBadge={getStatusBadge}
-        formatCurrency={formatCurrency}
-        formatPeriod={formatPeriod}
-        onViewCommission={handleViewCommission}
-      />
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      ) : commissions.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Aucune commission disponible</p>
+        </div>
+      ) : (
+        <CommissionsTable 
+          commissions={commissions}
+          requestingPayment={requestingPayment}
+          requestPayment={requestPayment}
+          getTierLabel={getTierLabel}
+          getStatusBadge={getStatusBadge}
+          formatCurrency={formatCurrency}
+          formatPeriod={formatPeriod}
+          onViewCommission={handleViewCommission}
+        />
+      )}
     </div>
   );
 };
