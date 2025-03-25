@@ -13,7 +13,8 @@ import { QuoteItem, QuoteStatus, User } from "@/types";
 import { Quote } from "@/types";
 import { Contact } from "@/services/contacts/types";
 import { createQuote } from "@/services/quote-service";
-import { fetchServices, Service } from "@/services/services-service";
+import { fetchServices } from "@/services/services-service";
+import { Service } from "@/types/services"; // Import from the proper types file
 import { fetchUsers } from "@/services/supabase-user-service";
 import { contactService } from "@/services/contacts";
 import { addDays } from "date-fns";

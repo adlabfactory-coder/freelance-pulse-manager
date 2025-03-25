@@ -4,8 +4,7 @@ import { supabase } from '@/lib/supabase-client';
 // Function to create SQL functions in Supabase
 export const createDatabaseFunctions = async () => {
   try {
-    // Instead of trying to call RPC functions that don't exist in the type definitions,
-    // we'll use the execute_sql RPC function that is available
+    // Use execute_sql RPC for all operations
     const createCheckTableExistsFunc = `
       CREATE OR REPLACE FUNCTION check_table_exists(table_name TEXT)
       RETURNS BOOLEAN

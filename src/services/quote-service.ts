@@ -1,13 +1,18 @@
+
 import { supabase } from '@/lib/supabase';
 import { Quote, QuoteStatus } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 
 // Utility function to ensure proper enum type
 const ensureQuoteStatus = (status: string): QuoteStatus => {
-  const validStatuses: QuoteStatus[] = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
-  return validStatuses.includes(status as QuoteStatus) 
-    ? (status as QuoteStatus) 
-    : 'draft';
+  switch(status) {
+    case 'draft': return QuoteStatus.DRAFT;
+    case 'sent': return QuoteStatus.SENT;
+    case 'accepted': return QuoteStatus.ACCEPTED;
+    case 'rejected': return QuoteStatus.REJECTED;
+    case 'expired': return QuoteStatus.EXPIRED;
+    default: return QuoteStatus.DRAFT; // Default value
+  }
 };
 
 export const fetchQuotes = async (): Promise<Quote[]> => {
@@ -33,20 +38,26 @@ export const fetchQuotes = async (): Promise<Quote[]> => {
     }
 
     // Transform and type-cast the data
-    return data.map(quote => ({
-      id: quote.id,
-      contactId: quote.contactId,
-      freelancerId: quote.freelancerId,
-      totalAmount: quote.totalAmount,
-      status: ensureQuoteStatus(quote.status), // Ensure proper enum type
-      validUntil: new Date(quote.validUntil),
-      notes: quote.notes || '',
-      createdAt: new Date(quote.createdAt || Date.now()),
-      updatedAt: new Date(quote.updatedAt || Date.now()),
-      items: quote.items || [],
-      contact: quote.contact,
-      freelancer: quote.freelancer
-    }));
+    return data.map(quote => {
+      // Create a properly-typed Quote object
+      const typedQuote: Quote = {
+        id: quote.id,
+        contactId: quote.contactId,
+        freelancerId: quote.freelancerId,
+        totalAmount: quote.totalAmount,
+        status: ensureQuoteStatus(quote.status),
+        validUntil: new Date(quote.validUntil),
+        notes: quote.notes || '',
+        createdAt: new Date(quote.createdAt || Date.now()),
+        updatedAt: new Date(quote.updatedAt || Date.now()),
+        items: quote.items || [],
+        // Cast partial contact/freelancer objects as needed
+        contact: quote.contact as any,
+        freelancer: quote.freelancer as any
+      };
+      
+      return typedQuote;
+    });
   } catch (error) {
     console.error('Unexpected error fetching quotes:', error);
     toast({
@@ -60,6 +71,17 @@ export const fetchQuotes = async (): Promise<Quote[]> => {
 
 export const createQuote = async (quote: Quote): Promise<{ success: boolean, quoteId?: string }> => {
   try {
+    // Map the Quote enum to string for database storage
+    let statusString: string;
+    switch(quote.status) {
+      case QuoteStatus.DRAFT: statusString = 'draft'; break;
+      case QuoteStatus.SENT: statusString = 'sent'; break;
+      case QuoteStatus.ACCEPTED: statusString = 'accepted'; break;
+      case QuoteStatus.REJECTED: statusString = 'rejected'; break;
+      case QuoteStatus.EXPIRED: statusString = 'expired'; break;
+      default: statusString = 'draft';
+    }
+    
     // Insérer le devis
     const { data, error } = await supabase
       .from('quotes')
@@ -67,7 +89,7 @@ export const createQuote = async (quote: Quote): Promise<{ success: boolean, quo
         contactId: quote.contactId,
         freelancerId: quote.freelancerId,
         totalAmount: quote.totalAmount,
-        status: quote.status,
+        status: statusString,
         validUntil: quote.validUntil.toISOString(),
         notes: quote.notes
       })
@@ -127,9 +149,20 @@ export const createQuote = async (quote: Quote): Promise<{ success: boolean, quo
 
 export const updateQuoteStatus = async (id: string, status: QuoteStatus): Promise<boolean> => {
   try {
+    // Convert enum to string for database storage
+    let statusString: string;
+    switch(status) {
+      case QuoteStatus.DRAFT: statusString = 'draft'; break;
+      case QuoteStatus.SENT: statusString = 'sent'; break;
+      case QuoteStatus.ACCEPTED: statusString = 'accepted'; break;
+      case QuoteStatus.REJECTED: statusString = 'rejected'; break;
+      case QuoteStatus.EXPIRED: statusString = 'expired'; break;
+      default: statusString = 'draft';
+    }
+    
     const { error } = await supabase
       .from('quotes')
-      .update({ status, updatedAt: new Date().toISOString() })
+      .update({ status: statusString, updatedAt: new Date().toISOString() })
       .eq('id', id);
     
     if (error) {
@@ -144,7 +177,7 @@ export const updateQuoteStatus = async (id: string, status: QuoteStatus): Promis
     
     toast({
       title: "Succès",
-      description: `Le statut du devis a été mis à jour en "${status}".`,
+      description: `Le statut du devis a été mis à jour en "${statusString}".`,
     });
     
     return true;

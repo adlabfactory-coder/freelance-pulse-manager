@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { Contact, ContactFormInput, ContactInsert, ContactUpdate } from './types';
 import { toast } from '@/components/ui/use-toast';
 import { ContactStatus } from '@/types/database/enums';
+import { normalizeContactStatus } from '@/types/contacts';
 
 // Utility function to convert string status to enum type
 const ensureContactStatus = (status: string | ContactStatus): ContactStatus => {
@@ -13,8 +14,8 @@ const ensureContactStatus = (status: string | ContactStatus): ContactStatus => {
 
 export const createContact = async (data: ContactFormInput): Promise<Contact | null> => {
   try {
-    // Ensure status is a valid enum value
-    const typedStatus = ensureContactStatus(data.status);
+    // Ensure status is a valid enum value using our helper function
+    const typedStatus = normalizeContactStatus(data.status);
     
     const contactData: ContactInsert = {
       name: data.name,
@@ -139,8 +140,8 @@ export const updateContact = async (id: string, data: Partial<ContactFormInput>)
   try {
     const updateData: ContactUpdate = {
       ...data,
-      // Ensure status is typed correctly if it exists
-      ...(data.status && { status: ensureContactStatus(data.status) }),
+      // Use our helper function to normalize the status if it exists
+      ...(data.status && { status: normalizeContactStatus(data.status) }),
       updatedAt: new Date().toISOString()
     };
 

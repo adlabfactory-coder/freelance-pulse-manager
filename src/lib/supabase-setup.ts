@@ -3,9 +3,20 @@ import { supabase } from './supabase-client';
 import { DatabaseSetupOptions, DatabaseSetupResult, DatabaseSetupStatus, TableSetupStatus } from '@/types/supabase-types';
 import { Database } from '@/types/database';
 
-// Type-safe table names
+// Define type-safe table names
 type TableName = keyof Database['public']['Tables'];
-const tableNames: TableName[] = ['users', 'contacts', 'appointments', 'quotes', 'subscriptions', 'commissions', 'commission_rules', 'quote_items'];
+
+// Use an array of literal table names instead of string literals
+const tableNames: TableName[] = [
+  'users', 
+  'contacts', 
+  'appointments', 
+  'quotes', 
+  'subscriptions', 
+  'commissions', 
+  'commission_rules', 
+  'quote_items'
+];
 
 // Function to check if the database is correctly configured
 export const checkDatabaseSetup = async (): Promise<DatabaseSetupStatus> => {
@@ -13,7 +24,7 @@ export const checkDatabaseSetup = async (): Promise<DatabaseSetupStatus> => {
     const results = await Promise.all(
       tableNames.map(async (table) => {
         try {
-          // Now using typed table names
+          // Use properly typed table name
           const { error } = await supabase.from(table).select('id').limit(1);
           return { table, exists: !error || error.code !== '42P01' };
         } catch (err) {
@@ -81,7 +92,7 @@ export const setupDatabase = async (options?: DatabaseSetupOptions): Promise<Dat
       }
     }
     
-    // For the other tables, we'll use execute_sql instead of the non-existent RPC functions
+    // For the other tables, we'll use execute_sql instead of trying to call non-existent RPC functions
     // Create contacts table if it doesn't exist
     if (dbStatus.missingTables?.includes('contacts')) {
       const createContactsSQL = `
