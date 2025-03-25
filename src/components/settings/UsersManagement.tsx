@@ -1,18 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { Plus, Trash, UserCog } from "lucide-react";
 import { User, UserRole } from "@/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/components/ui/use-toast";
 
 interface UsersManagementProps {
   onSelectUser: (userId: string) => void;
@@ -44,93 +36,48 @@ const UsersManagement: React.FC<UsersManagementProps> = ({ onSelectUser }) => {
     fetchUsers();
   }, [supabase]);
 
-  const getRoleBadge = (role: UserRole) => {
-    switch (role) {
-      case UserRole.ADMIN:
-        return (
-          <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
-            Administrateur
-          </span>
-        );
-      case UserRole.FREELANCER:
-        return (
-          <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-            Commercial
-          </span>
-        );
-      case UserRole.CLIENT:
-        return (
-          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-700/10">
-            Client
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const handleAddUser = () => {
-    toast({
-      title: "Fonctionnalité à venir",
-      description: "L'ajout d'utilisateur sera disponible prochainement.",
-    });
+  const handleUserClick = (user: User) => {
+    onSelectUser(user.id);
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">Gestion des utilisateurs</h2>
-        <Button onClick={handleAddUser}>
-          <Plus className="mr-2 h-4 w-4" /> Ajouter un utilisateur
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="text-center py-8">Chargement des utilisateurs...</div>
-      ) : (
-        <div className="rounded-md border shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Rôle</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  Date de création
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {user.created_at && new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => onSelectUser(user.id)}
-                      >
-                        <UserCog className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Trash className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+    <Card>
+      <CardHeader>
+        <CardTitle>Gestion des utilisateurs</CardTitle>
+        <CardDescription>
+          Liste de tous les utilisateurs de l'application
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="text-center py-4">Chargement des utilisateurs...</div>
+        ) : (
+          <ScrollArea>
+            <Table>
+              <TableCaption>Tous les utilisateurs de votre application.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">Nom</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Rôle</TableHead>
+                  <TableHead>Date de création</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </div>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id} onClick={() => handleUserClick(user)} className="cursor-pointer hover:bg-muted">
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>N/A</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

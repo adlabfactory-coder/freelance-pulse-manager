@@ -16,16 +16,11 @@ const CalendlyIntegration: React.FC = () => {
       setIsLoading(true);
       try {
         // In a real application, you would get the current user ID from an auth context
-        // For this demo, we'll use a hardcoded ID or get the first user from the database
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .limit(1)
-          .single();
-        
-        if (error) throw error;
-        
-        setCurrentUser(data as User);
+        // For this demo, we'll get the first user from the database
+        const users = await supabase.fetchUsers();
+        if (users && users.length > 0) {
+          setCurrentUser(users[0]);
+        }
       } catch (error) {
         console.error("Erreur lors de la récupération de l'utilisateur:", error);
         toast({

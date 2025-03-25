@@ -22,26 +22,13 @@ const Settings: React.FC = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch current user
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .limit(1)
-          .single();
-        
-        if (error) throw error;
-        
-        const user = {
-          ...data,
-          role: data.role as UserRole
-        } as User;
-        
-        setCurrentUser(user);
-        setSelectedUserId(user.id);
-        
-        // Fetch all users if admin
-        if (user.role === UserRole.ADMIN) {
-          const usersData = await supabase.fetchUsers();
+        // Fetch all users
+        const usersData = await supabase.fetchUsers();
+        if (usersData.length > 0) {
+          // Use the first user as current user for demo purposes
+          const user = usersData[0];
+          setCurrentUser(user);
+          setSelectedUserId(user.id);
           setUsers(usersData);
         }
       } catch (error) {
