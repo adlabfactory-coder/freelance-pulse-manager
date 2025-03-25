@@ -38,7 +38,7 @@ const SettingsPage: React.FC = () => {
         console.warn("Problème de connexion à Supabase:", supabaseStatus.message);
         // On continue avec les données de démo, mais on affiche un toast d'avertissement
         toast({
-          variant: "warning",
+          variant: "default",
           title: "Mode démo activé",
           description: "Utilisation des données de démonstration car Supabase n'est pas accessible.",
         });
