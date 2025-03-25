@@ -150,6 +150,11 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
       const result = await createQuote(completeQuote);
       
       if (result.success) {
+        toast({
+          title: "Succès",
+          description: "Le devis a été créé avec succès.",
+        });
+        
         onCloseDialog(false);
         onQuoteCreated();
         

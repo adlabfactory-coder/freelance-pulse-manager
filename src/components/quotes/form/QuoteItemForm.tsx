@@ -27,6 +27,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
   const handleSelectService = (serviceId: string) => {
     if (serviceId === "custom") {
       onItemChange({
+        ...currentItem,
         description: "",
         quantity: 1,
         unitPrice: 0,
@@ -41,6 +42,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
     
     if (selectedService) {
       onItemChange({
+        ...currentItem,
         description: selectedService.name,
         quantity: 1,
         unitPrice: selectedService.price,

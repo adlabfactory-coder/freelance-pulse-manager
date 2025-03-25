@@ -132,7 +132,7 @@ export const createQuote = async (quote: Quote): Promise<{ success: boolean, quo
         unitPrice: item.unitPrice,
         discount: item.discount || 0,
         tax: item.tax || 0,
-        serviceId: item.serviceId
+        serviceId: item.serviceId || null // S'assurer que serviceId est null si non défini
       }));
       
       console.log("Ajout des éléments au devis:", quoteItemsWithQuoteId);
@@ -207,9 +207,9 @@ export const updateQuoteStatus = async (id: string, status: QuoteStatus): Promis
     console.error("Erreur lors de la mise à jour du statut du devis:", error);
     toast({
       variant: "destructive",
-      title: "Erreur",
-      description: "Une erreur est survenue lors de la mise à jour du statut du devis.",
-    });
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du statut du devis.",
+      });
     return false;
   }
 };
