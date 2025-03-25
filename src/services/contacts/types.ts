@@ -1,7 +1,55 @@
 
-import { Database } from '@/types/database';
+import { ContactStatus } from "@/types";
+import { Database } from "@/types/database";
 
-// Define contact types using Database types
-export type Contact = Database['public']['Tables']['contacts']['Row'];
-export type ContactInsert = Database['public']['Tables']['contacts']['Insert'];
-export type ContactUpdate = Database['public']['Tables']['contacts']['Update'];
+// Database table types
+export type ContactTable = Database['public']['Tables']['contacts'];
+export type ContactRow = ContactTable['Row'];
+export type ContactInsert = ContactTable['Insert'];
+export type ContactUpdate = ContactTable['Update'];
+
+// API response type
+export interface ContactResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  status: ContactStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Form input type for contact creation/update
+export interface ContactFormInput {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  status: ContactStatus;
+}
+
+// Import/export types
+export interface ContactImport {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  status?: string;
+}
+
+export interface ImportResult {
+  success: number;
+  errors: number;
+  total: number;
+  errorDetails?: string[];
+}

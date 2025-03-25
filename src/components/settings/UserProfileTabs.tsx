@@ -39,7 +39,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({
     <Tabs defaultValue="personal" className="w-full">
       <TabsList className="grid w-full md:w-auto grid-cols-1 md:grid-cols-3">
         <TabsTrigger value="personal">Informations Personnelles</TabsTrigger>
-        <TabsTrigger value="calendly">Intégration Calendly</TabsTrigger>
+        <TabsTrigger value="calendly">Planification</TabsTrigger>
         <TabsTrigger value="security">Sécurité</TabsTrigger>
       </TabsList>
 
@@ -60,11 +60,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({
       </TabsContent>
 
       <TabsContent value="calendly" className="mt-6">
-        <CalendlySettings 
-          user={user}
-          isCurrentUser={isCurrentUser}
-          canEdit={canEdit}
-        />
+        <CalendlySettings />
       </TabsContent>
 
       <TabsContent value="security" className="mt-6">
