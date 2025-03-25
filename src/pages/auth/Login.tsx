@@ -1,18 +1,16 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2, MessageCircle, Moon, Sun } from "lucide-react";
+import { Loader2, MessageCircle, Moon, Sun, Key } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { Card as LogoCard } from "@/components/ui/card";
 
 const Login: React.FC = () => {
-  // États pour la connexion
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -153,14 +151,25 @@ const Login: React.FC = () => {
           <p className="text-sm text-center text-muted-foreground">
             Contactez l'administrateur pour obtenir vos identifiants de connexion.
           </p>
-          <Button 
-            variant="outline" 
-            className="flex items-center justify-center gap-2 w-full text-green-600 hover:text-green-700 border-green-500 hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-950" 
-            onClick={handleWhatsAppContact}
-          >
-            <MessageCircle className="h-5 w-5" />
-            Contacter l'admin via WhatsApp
-          </Button>
+          <div className="flex flex-col gap-2 w-full">
+            <Button 
+              variant="outline" 
+              className="flex items-center justify-center gap-2 w-full text-green-600 hover:text-green-700 border-green-500 hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-950" 
+              onClick={handleWhatsAppContact}
+            >
+              <MessageCircle className="h-5 w-5" />
+              Contacter l'admin via WhatsApp
+            </Button>
+            <Link to="/auth/reset-demo-passwords">
+              <Button 
+                variant="outline" 
+                className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 border-blue-500 hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+              >
+                <Key className="h-5 w-5" />
+                Réinitialiser les mots de passe démo
+              </Button>
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </div>
