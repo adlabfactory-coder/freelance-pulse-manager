@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@/components/ui/use-toast';
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -23,8 +24,20 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, toggleSideb
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth/login');
+    try {
+      await signOut();
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès",
+      });
+      navigate('/auth/login');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de déconnexion",
+        description: "Une erreur est survenue lors de la déconnexion",
+      });
+    }
   };
 
   const getInitials = (name: string) => {

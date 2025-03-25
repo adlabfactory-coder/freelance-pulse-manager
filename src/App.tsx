@@ -20,36 +20,41 @@ import CommissionDetailPage from "./pages/commissions/CommissionDetailPage";
 import Login from "./pages/auth/Login";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { AuthProvider } from "./hooks/use-auth";
+import { ThemeProvider } from "./hooks/use-theme";
+import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth/login" element={<Login />} />
-          
-          {/* Routes protégées */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/contacts/detail/:contactId" element={<ContactDetailPage />} />
-              <Route path="/appointments" element={<Appointments />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
-              <Route path="/commissions" element={<Commissions />} />
-              <Route path="/commissions/detail/:commissionId" element={<CommissionDetailPage />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings/*" element={<SettingsPage />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth/login" element={<Login />} />
+            
+            {/* Routes protégées */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/contacts" element={<Contacts />} />
+                <Route path="/contacts/detail/:contactId" element={<ContactDetailPage />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
+                <Route path="/commissions" element={<Commissions />} />
+                <Route path="/commissions/detail/:commissionId" element={<CommissionDetailPage />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/settings/*" element={<SettingsPage />} />
+              </Route>
             </Route>
-          </Route>
-          
-          {/* Catch-all route for 404 pages */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            
+            {/* Catch-all route for 404 pages */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

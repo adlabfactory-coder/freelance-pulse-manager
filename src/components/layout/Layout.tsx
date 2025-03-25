@@ -4,10 +4,11 @@ import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/hooks/use-theme";
 
 const Layout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const location = useLocation();
   
@@ -32,7 +33,7 @@ const Layout: React.FC = () => {
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode((prev) => !prev);
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
@@ -41,7 +42,7 @@ const Layout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header 
           toggleSidebar={toggleSidebar} 
-          isDarkMode={isDarkMode} 
+          isDarkMode={theme === 'dark'} 
           toggleDarkMode={toggleDarkMode} 
         />
         <main className="flex-1 overflow-auto">
