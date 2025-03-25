@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SubscriptionPlan } from '@/types';
+import { SubscriptionPlan, SubscriptionInterval } from '@/types';
 
 // Récupérer tous les plans d'abonnement actifs
 export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
@@ -16,9 +16,10 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
       throw error;
     }
     
-    // Transformer les dates en objets Date
+    // Transformer les données et convertir l'intervalle en SubscriptionInterval
     return data.map(plan => ({
       ...plan,
+      interval: mapToSubscriptionInterval(plan.interval),
       created_at: new Date(plan.created_at),
       updated_at: new Date(plan.updated_at)
     }));
@@ -45,6 +46,7 @@ export const fetchSubscriptionPlanByCode = async (code: string): Promise<Subscri
     
     return {
       ...data,
+      interval: mapToSubscriptionInterval(data.interval),
       created_at: new Date(data.created_at),
       updated_at: new Date(data.updated_at)
     };
@@ -53,6 +55,21 @@ export const fetchSubscriptionPlanByCode = async (code: string): Promise<Subscri
     return null;
   }
 };
+
+// Fonction utilitaire pour mapper une chaîne d'intervalle à SubscriptionInterval
+function mapToSubscriptionInterval(interval: string): SubscriptionInterval {
+  switch (interval.toLowerCase()) {
+    case 'monthly':
+      return SubscriptionInterval.MONTHLY;
+    case 'quarterly':
+      return SubscriptionInterval.QUARTERLY;
+    case 'yearly':
+      return SubscriptionInterval.YEARLY;
+    default:
+      // Par défaut, on utilise l'intervalle mensuel
+      return SubscriptionInterval.MONTHLY;
+  }
+}
 
 // Abonner un client à un plan
 export const createSubscription = async (clientId: string, freelancerId: string, planId: string, startDate: Date) => {

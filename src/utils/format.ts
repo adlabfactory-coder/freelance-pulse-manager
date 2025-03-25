@@ -10,3 +10,15 @@ export const formatCurrency = (amount: number): string => {
     currency: "MAD",
   }).format(amount);
 };
+
+/**
+ * Formats a number as a money value without currency symbol
+ * @param amount - The amount to format
+ * @returns Formatted money string
+ */
+export const formatMoney = (amount: number): string => {
+  return new Intl.NumberFormat("fr-MA", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+};

@@ -42,8 +42,6 @@ const SettingsTabContent: React.FC<SettingsTabContentProps> = ({
 
       <TabsContent value="users" className="mt-0">
         <UsersManagement 
-          users={users} 
-          currentUser={currentUser} 
           onSelectUser={onUserSelected} 
         />
       </TabsContent>
