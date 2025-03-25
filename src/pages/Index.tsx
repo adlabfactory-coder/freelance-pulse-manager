@@ -8,7 +8,8 @@ import {
   FileSpreadsheet, 
   BarChart, 
   Settings,
-  ArrowRight
+  ArrowRight,
+  Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,13 @@ const Index = () => {
   const isMobile = useIsMobile();
   
   const features = [
+    {
+      title: "Tableau de bord",
+      description: "Visualisez vos données et suivez votre activité",
+      icon: Home,
+      path: "/dashboard",
+      color: "bg-indigo-100 text-indigo-700"
+    },
     {
       title: "Contacts",
       description: "Gérez vos clients et prospects en un seul endroit",
