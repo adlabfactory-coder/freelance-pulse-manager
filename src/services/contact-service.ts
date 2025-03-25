@@ -1,9 +1,10 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 import { toast } from '@/components/ui/use-toast';
 import { Database } from '@/types/database';
 import { ContactStatus } from '@/types';
 
+// Define types from the Database type
 export type Contact = Database['public']['Tables']['contacts']['Row'];
 export type ContactInsert = Database['public']['Tables']['contacts']['Insert'];
 export type ContactUpdate = Database['public']['Tables']['contacts']['Update'];
