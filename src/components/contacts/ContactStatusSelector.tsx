@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { contactService } from "@/services/contact-service";
+import { contactService } from "@/services/contacts";
 import { ContactStatus } from "@/types";
 import ContactStatusBadge from "./ContactStatusBadge";
 

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar, Mail, Phone, Building, MapPin, User, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Contact, ContactStatus } from "@/types";
-import { contactService } from "@/services/contact-service";
+import { contactService } from "@/services/contacts";
 import ContactStatusSelector from "./ContactStatusSelector";
 import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

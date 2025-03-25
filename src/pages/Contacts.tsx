@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Filter, FileDown, FileUp, User, Building, Phone, Calendar } from "lucide-react";
 import { toast } from "sonner";
-import { contactService } from "@/services/contact-service";
+import { contactService } from "@/services/contacts";
 import { Contact, ContactStatus } from "@/types";
 import ContactStatusBadge from "@/components/contacts/ContactStatusBadge";
 import {

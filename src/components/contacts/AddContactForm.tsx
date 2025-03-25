@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { contactService } from "@/services/contact-service";
+import { contactService } from "@/services/contacts";
 import { ContactStatus } from "@/types";
 import ContactStatusSelector from "./ContactStatusSelector";
 
