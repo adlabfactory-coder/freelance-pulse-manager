@@ -142,14 +142,28 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     }
     
     setIsSubmitting(true);
+    console.log("Soumission du devis:", quoteData);
     
     try {
-      const result = await createQuote(quoteData as Quote);
+      // Assurez-vous que tous les champs requis sont présents
+      const completeQuote: Quote = {
+        ...quoteData as Quote,
+        totalAmount: quoteData.totalAmount || 0,
+        status: quoteData.status || QuoteStatus.DRAFT,
+        validUntil: quoteData.validUntil || addDays(new Date(), 30),
+        notes: quoteData.notes || "",
+        items: quoteData.items || [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const result = await createQuote(completeQuote);
       
       if (result.success) {
         onOpenChange(false);
         onQuoteCreated();
         
+        // Réinitialiser le formulaire
         setQuoteData({
           status: QuoteStatus.DRAFT,
           validUntil: addDays(new Date(), 30),

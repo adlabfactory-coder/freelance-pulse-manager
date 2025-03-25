@@ -82,6 +82,20 @@ export const createQuote = async (quote: Quote): Promise<{ success: boolean, quo
       default: statusString = 'draft';
     }
     
+    // Conversion de la date en format ISO string
+    const validUntilStr = quote.validUntil instanceof Date 
+      ? quote.validUntil.toISOString() 
+      : new Date(quote.validUntil).toISOString();
+    
+    console.log("Création de devis avec les données:", {
+      contactId: quote.contactId,
+      freelancerId: quote.freelancerId,
+      totalAmount: quote.totalAmount,
+      status: statusString,
+      validUntil: validUntilStr,
+      notes: quote.notes
+    });
+    
     // Insérer le devis
     const { data, error } = await supabase
       .from('quotes')
@@ -90,7 +104,7 @@ export const createQuote = async (quote: Quote): Promise<{ success: boolean, quo
         freelancerId: quote.freelancerId,
         totalAmount: quote.totalAmount,
         status: statusString,
-        validUntil: quote.validUntil.toISOString(),
+        validUntil: validUntilStr,
         notes: quote.notes
       })
       .select()
@@ -107,13 +121,21 @@ export const createQuote = async (quote: Quote): Promise<{ success: boolean, quo
     }
 
     const quoteId = data.id;
+    console.log("Devis créé avec ID:", quoteId);
     
     // Insérer les éléments du devis
     if (quote.items && quote.items.length > 0) {
       const quoteItemsWithQuoteId = quote.items.map(item => ({
-        ...item,
-        quoteId
+        quoteId,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount || 0,
+        tax: item.tax || 0,
+        serviceId: item.serviceId
       }));
+      
+      console.log("Ajout des éléments au devis:", quoteItemsWithQuoteId);
       
       const { error: itemsError } = await supabase
         .from('quote_items')

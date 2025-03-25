@@ -31,7 +31,8 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
         quantity: 1,
         unitPrice: 0,
         discount: 0,
-        tax: 20
+        tax: 20,
+        serviceId: undefined
       });
       return;
     }

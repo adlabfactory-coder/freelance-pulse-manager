@@ -46,6 +46,7 @@ export interface QuotesTable {
       unitPrice: number
       discount: number | null
       tax: number | null
+      serviceId?: string | null
     }
     Insert: {
       id?: string
@@ -55,6 +56,7 @@ export interface QuotesTable {
       unitPrice: number
       discount?: number | null
       tax?: number | null
+      serviceId?: string | null
     }
     Update: {
       id?: string
@@ -64,6 +66,7 @@ export interface QuotesTable {
       unitPrice?: number
       discount?: number | null
       tax?: number | null
+      serviceId?: string | null
     }
   }
 }
