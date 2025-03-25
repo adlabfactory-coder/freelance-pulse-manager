@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export const contactSubscriptionService = {
