@@ -15,9 +15,10 @@ import { useAuth } from '@/hooks/use-auth';
 interface HeaderProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  toggleSidebar: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode }) => {
+const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, toggleSidebar }) => {
   const { user, role, signOut } = useAuth();
   const navigate = useNavigate();
 

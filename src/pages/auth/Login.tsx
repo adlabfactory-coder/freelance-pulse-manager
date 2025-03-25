@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, WhatsApp } from "lucide-react";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -72,6 +72,10 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleWhatsAppContact = () => {
+    window.open(`https://wa.me/212663529031`, '_blank');
+  };
+
   if (checkingSession) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -124,10 +128,18 @@ const Login: React.FC = () => {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col">
-          <p className="text-sm text-center text-muted-foreground mt-2">
+        <CardFooter className="flex flex-col space-y-4">
+          <p className="text-sm text-center text-muted-foreground">
             Contactez l'administrateur si vous n'avez pas encore vos identifiants de connexion.
           </p>
+          <Button 
+            variant="outline" 
+            className="flex items-center justify-center gap-2 w-full" 
+            onClick={handleWhatsAppContact}
+          >
+            <WhatsApp className="h-5 w-5 text-green-500" />
+            Contacter l'admin via WhatsApp
+          </Button>
         </CardFooter>
       </Card>
     </div>
