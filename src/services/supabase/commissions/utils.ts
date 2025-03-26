@@ -23,7 +23,10 @@ export const mapTierToDb = (tier: CommissionTier): string => {
  * @returns - Valeur de l'énumération CommissionTier
  */
 export const mapTierFromDb = (dbTier: string): CommissionTier => {
-  switch (dbTier) {
+  // Normaliser en minuscules pour éviter les problèmes de casse
+  const normalizedTier = dbTier.toLowerCase();
+  
+  switch (normalizedTier) {
     case 'bronze': return CommissionTier.TIER_1;
     case 'silver': return CommissionTier.TIER_2;
     case 'gold': return CommissionTier.TIER_3;
@@ -57,13 +60,16 @@ export const mapCommissionFromDb = (dbCommission: any): Commission => {
  * Mappe une règle de commission depuis la base de données vers le format de l'application
  */
 export const mapCommissionRuleFromDb = (dbRule: any): CommissionRule => {
+  // Log pour débogage
+  console.log("Mapping commission rule from DB:", dbRule);
+  
   return {
     id: dbRule.id,
     tier: mapTierFromDb(dbRule.tier),
     minContracts: dbRule.minContracts,
     maxContracts: dbRule.maxContracts || null,
     percentage: dbRule.percentage,
-    unitAmount: dbRule.unit_amount || dbRule.amount || 0
+    unitAmount: dbRule.unit_amount || 0 // Assurer qu'on a toujours une valeur
   };
 };
 

@@ -5,7 +5,7 @@ import { CommissionTier } from "@/types/commissions";
  * Convertit une chaîne de tier de la base de données vers l'énumération
  */
 export const mapTierToEnum = (tierString: string): string => {
-  switch(tierString) {
+  switch(tierString.toLowerCase()) {
     case 'bronze':
       return CommissionTier.TIER_1;
     case 'silver':

@@ -30,6 +30,8 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  console.log("Commission rules in CommissionContent:", commissionRules);
+
   const getStatusBadge = (status: string, paymentRequested: boolean = false) => {
     return <CommissionStatusBadge status={status} paymentRequested={paymentRequested} />;
   };
@@ -38,12 +40,23 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
     navigate(`/commissions/detail/${commissionId}`);
   };
 
+  // Fonction d'aide pour traduire les valeurs de tier en libellés lisibles
+  const getTierLabel = (tier: string) => {
+    switch(tier) {
+      case 'bronze': return 'Bronze';
+      case 'silver': return 'Silver';
+      case 'gold': return 'Gold';
+      case 'platinum': return 'Platinum';
+      default: return tier;
+    }
+  };
+
   return (
     <>
       <CommissionTiers 
         commissionRules={commissionRules} 
         formatCurrency={formatCurrency} 
-        getTierLabel={(tier) => tier} 
+        getTierLabel={getTierLabel} 
       />
 
       <CommissionToolbar />
@@ -63,7 +76,7 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
           requestPayment={requestPayment}
           approvePayment={approvePayment}
           isAdmin={isAdmin}
-          getTierLabel={(tier) => tier}
+          getTierLabel={getTierLabel}
           getStatusBadge={getStatusBadge}
           formatCurrency={formatCurrency}
           formatPeriod={formatPeriod}

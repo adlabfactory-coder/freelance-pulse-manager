@@ -55,6 +55,7 @@ export const useCommissionRules = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
+        console.log("Commission rules from DB:", data);
         const mappedRules = data.map(mapRuleFromDatabase);
         setState(prev => ({ 
           ...prev, 
@@ -84,12 +85,16 @@ export const useCommissionRules = () => {
    * Maps a database rule to the application model
    */
   const mapRuleFromDatabase = (dbRule: any): CommissionRule => {
+    // Debug logging
+    console.log("Mapping DB rule:", dbRule);
+    
     return {
       id: dbRule.id,
       tier: mapTierFromDb(dbRule.tier),
       minContracts: dbRule.minContracts || 0,
       maxContracts: dbRule.maxContracts || null,
       percentage: dbRule.percentage || 0,
+      // Prioritize unit_amount from DB or 0 as fallback
       unitAmount: dbRule.unit_amount || 0
     };
   };

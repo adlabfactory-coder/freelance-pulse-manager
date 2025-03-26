@@ -53,6 +53,8 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
     }
   ];
 
+  console.log("Commission rules in display component:", rules);
+
   return (
     <Card className="mb-6">
       <CardHeader>

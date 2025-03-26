@@ -34,10 +34,14 @@ export const useCommissionTiers = () => {
       }
 
       if (data && data.length > 0) {
+        console.log("Data received from DB:", data);
+        
         setTiers(data.map(rule => ({
           ...rule,
+          id: rule.id,
           minContracts: rule.minContracts || 0,
           unitAmount: rule.unit_amount || 0,
+          maxContracts: rule.maxContracts || null,
           tier: mapTierToEnum(rule.tier)
         })));
       }
@@ -80,6 +84,8 @@ export const useCommissionTiers = () => {
         maxContracts: tier.maxContracts && !isNaN(tier.maxContracts) ? tier.maxContracts : null,
         percentage: 0 // Non utilisé dans la nouvelle logique
       }));
+
+      console.log("Saving to DB:", validTiers);
 
       // Supprimer les anciennes règles
       const { error: deleteError } = await supabaseClient
