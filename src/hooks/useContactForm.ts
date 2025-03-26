@@ -67,7 +67,16 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
 
       if (isEditing && initialData?.id) {
         console.log("Mise à jour du contact existant avec ID:", initialData.id);
-        createdOrUpdatedContact = await updateContact(initialData.id, contactData);
+        await updateContact(initialData.id, contactData);
+        
+        // Créer un objet Contact avec les données mises à jour
+        createdOrUpdatedContact = {
+          id: initialData.id,
+          ...contactData,
+          createdAt: initialData.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
         toast.success("Contact mis à jour avec succès");
       } else {
         console.log("Création d'un nouveau contact");
@@ -76,8 +85,7 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
           id: contactId,
           ...contactData,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          deleted_at: null
+          updatedAt: new Date().toISOString()
         };
         toast.success("Contact ajouté avec succès");
       }
