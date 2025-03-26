@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [demoMode, setDemoMode] = useState(true); // Utilisation du mode démo par défaut
+  const [demoMode, setDemoMode] = useState(true);
   const [supabaseStatus, setSupabaseStatus] = useState<{success: boolean, message?: string}>({success: true});
   
   const navigate = useNavigate();
@@ -49,7 +48,6 @@ const Login: React.FC = () => {
 
     const checkSession = async () => {
       try {
-        // Vérifier d'abord si un utilisateur de démo est stocké
         const demoUser = localStorage.getItem('demoUser');
         
         if (demoUser) {
@@ -57,7 +55,6 @@ const Login: React.FC = () => {
           return;
         }
         
-        // Sinon, vérifier la session Supabase
         const { data } = await supabase.auth.getSession();
         if (data.session) {
           navigate("/dashboard");
@@ -90,7 +87,6 @@ const Login: React.FC = () => {
     
     try {
       if (demoMode) {
-        // Utilisation de l'authentification simulée en mode démo
         const { user, error } = mockSignIn(email, password);
         
         if (error) {
@@ -99,7 +95,6 @@ const Login: React.FC = () => {
         }
         
         if (user) {
-          // Simulation de la connexion réussie en mode démo
           toast({
             title: "Connexion réussie (Mode Démo)",
             description: `Connecté en tant que ${user.name} (${user.role})`,
@@ -109,7 +104,6 @@ const Login: React.FC = () => {
           navigate("/dashboard");
         }
       } else {
-        // Authentification réelle avec Supabase
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password
@@ -131,7 +125,6 @@ const Login: React.FC = () => {
       
       setErrorMessage(error.message || "Veuillez vérifier vos identifiants");
       
-      // Si l'authentification Supabase échoue mais que le mode démo est disponible, suggérer d'utiliser le mode démo
       if (!demoMode) {
         setDemoMode(true);
         toast({
@@ -182,7 +175,7 @@ const Login: React.FC = () => {
           </CardDescription>
           
           {!supabaseStatus.success && (
-            <Alert variant="warning" className="mt-2">
+            <Alert variant="default" className="mt-2 border-amber-500 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Connexion à Supabase indisponible. Mode démo activé automatiquement.
