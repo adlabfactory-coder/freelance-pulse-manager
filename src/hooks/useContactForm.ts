@@ -7,7 +7,6 @@ import { addContact, updateContact } from "@/services/contacts/contact-create-up
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Contact } from "@/services/contacts/types";
-import { supabase } from "@/lib/supabase-client";
 
 interface UseContactFormProps {
   initialData?: Partial<Contact>;
@@ -42,16 +41,6 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       if (!user || !user.id) {
         toast.error("Erreur", {
           description: "Vous devez être connecté pour effectuer cette action"
-        });
-        return;
-      }
-
-      // Vérifier la session Supabase
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        console.warn("Pas de session Supabase active, mais un utilisateur est trouvé dans le contexte React");
-        toast.error("Problème d'authentification", {
-          description: "Veuillez vous reconnecter pour continuer"
         });
         return;
       }

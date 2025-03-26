@@ -9,7 +9,7 @@ export const addContact = async (data: ContactFormValues): Promise<string> => {
   console.log("Insertion d'un nouveau contact avec les données:", data);
   
   if (!data.assignedTo) {
-    console.error("AssignedTo est obligatoire pour les règles RLS");
+    console.error("AssignedTo est requis pour établir la propriété du contact");
     throw new Error("Erreur: L'attribution du contact est obligatoire");
   }
 
@@ -20,22 +20,6 @@ export const addContact = async (data: ContactFormValues): Promise<string> => {
     if (!uuidRegex.test(data.assignedTo)) {
       console.error("L'ID assignedTo n'est pas un UUID valide:", data.assignedTo);
       throw new Error("Erreur: L'identifiant d'utilisateur n'est pas valide");
-    }
-
-    // Vérifier la session actuelle pour confirmer l'authentification
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) {
-      console.error("Erreur de session:", sessionError || "Aucune session active");
-      throw new Error("Erreur: Vous devez être connecté pour effectuer cette action");
-    }
-    
-    console.log("Session utilisateur active:", sessionData.session.user.id);
-    console.log("Contact assigné à:", data.assignedTo);
-    
-    // S'assurer que l'utilisateur assigne le contact à lui-même (pour RLS)
-    if (sessionData.session.user.id !== data.assignedTo) {
-      console.warn("Réattribution du contact à l'utilisateur actuel pour RLS");
-      data.assignedTo = sessionData.session.user.id;
     }
 
     const { data: newContact, error } = await supabase
@@ -75,7 +59,7 @@ export const updateContact = async (id: string, data: ContactFormValues): Promis
   console.log("Mise à jour du contact avec ID:", id, "et données:", data);
   
   if (!data.assignedTo) {
-    console.error("AssignedTo est obligatoire pour les règles RLS");
+    console.error("AssignedTo est requis pour établir la propriété du contact");
     throw new Error("Erreur: L'attribution du contact est obligatoire");
   }
 
@@ -87,21 +71,6 @@ export const updateContact = async (id: string, data: ContactFormValues): Promis
   }
 
   try {
-    // Vérifier la session actuelle pour confirmer l'authentification
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) {
-      console.error("Erreur de session:", sessionError || "Aucune session active");
-      throw new Error("Erreur: Vous devez être connecté pour effectuer cette action");
-    }
-    
-    console.log("Session utilisateur active:", sessionData.session.user.id);
-    
-    // S'assurer que l'utilisateur assigne le contact à lui-même (pour RLS)
-    if (sessionData.session.user.id !== data.assignedTo) {
-      console.warn("Réattribution du contact à l'utilisateur actuel pour RLS");
-      data.assignedTo = sessionData.session.user.id;
-    }
-
     const { error } = await supabase
       .from('contacts')
       .update({
