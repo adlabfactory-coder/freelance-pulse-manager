@@ -11,8 +11,8 @@ import { Copy, Plus, Trash2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { fetchApiKeysByUserId, createApiKey, deleteApiKey } from "@/services/api-key-service";
-import { ApiKey } from "@/types";
-import { formatDate } from "@/utils/date-utils";
+import { ApiKey } from "@/types/api-keys";
+import { formatDate } from "@/utils/format";
 
 const ApiKeysTab: React.FC = () => {
   const { user } = useAuth();
@@ -56,18 +56,21 @@ const ApiKeysTab: React.FC = () => {
     if (!user || !user.id || !newKeyName.trim()) return;
     
     try {
-      const result = await createApiKey(user.id, newKeyName);
+      const result = await createApiKey({
+        userId: user.id,
+        keyName: newKeyName
+      });
       
-      if (result.success && result.apiKey) {
+      if (result) {
         setNewApiKey(result.apiKey);
-        setApiKeys([...apiKeys, result.keyData]);
+        setApiKeys([...apiKeys, result]);
         setNewKeyName("");
         toast({
           title: "Clé API créée",
           description: "Votre nouvelle clé API a été créée avec succès.",
         });
       } else {
-        throw new Error(result.error || "Impossible de créer la clé API");
+        throw new Error("Impossible de créer la clé API");
       }
     } catch (err: any) {
       console.error("Erreur lors de la création de la clé API:", err);
@@ -83,16 +86,16 @@ const ApiKeysTab: React.FC = () => {
     if (!user || !user.id) return;
     
     try {
-      const result = await deleteApiKey(keyId, user.id);
+      const success = await deleteApiKey(keyId);
       
-      if (result.success) {
+      if (success) {
         setApiKeys(apiKeys.filter(key => key.id !== keyId));
         toast({
           title: "Clé API supprimée",
           description: "La clé API a été supprimée avec succès.",
         });
       } else {
-        throw new Error(result.error || "Impossible de supprimer la clé API");
+        throw new Error("Impossible de supprimer la clé API");
       }
     } catch (err: any) {
       console.error("Erreur lors de la suppression de la clé API:", err);
@@ -166,9 +169,9 @@ const ApiKeysTab: React.FC = () => {
               <TableBody>
                 {apiKeys.map((key) => (
                   <TableRow key={key.id}>
-                    <TableCell className="font-medium">{key.key_name}</TableCell>
-                    <TableCell>{formatDate(key.created_at)}</TableCell>
-                    <TableCell>{key.last_used ? formatDate(key.last_used) : "Jamais"}</TableCell>
+                    <TableCell className="font-medium">{key.keyName}</TableCell>
+                    <TableCell>{formatDate(key.createdAt)}</TableCell>
+                    <TableCell>{key.lastUsed ? formatDate(key.lastUsed) : "Jamais"}</TableCell>
                     <TableCell>
                       <Button
                         variant="destructive"

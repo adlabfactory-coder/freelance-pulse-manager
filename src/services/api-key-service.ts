@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ApiKey, ApiKeyCreateParams, ApiKeyUpdateParams } from "@/types/api-keys";
+import { ApiKey, ApiKeyCreateParams } from "@/types/api-keys";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -81,34 +81,6 @@ export const createApiKey = async (params: ApiKeyCreateParams): Promise<ApiKey |
   } catch (error) {
     console.error("Erreur lors de la création de la clé API:", error);
     return null;
-  }
-};
-
-/**
- * Met à jour une clé API
- */
-export const updateApiKey = async (id: string, params: ApiKeyUpdateParams): Promise<boolean> => {
-  try {
-    const updateData: Record<string, any> = {};
-    
-    if (params.keyName !== undefined) updateData.key_name = params.keyName;
-    if (params.expiresAt !== undefined) updateData.expires_at = params.expiresAt?.toISOString();
-    if (params.isActive !== undefined) updateData.is_active = params.isActive;
-    
-    const { error } = await supabase
-      .from("api_keys")
-      .update(updateData)
-      .eq("id", id);
-
-    if (error) {
-      console.error(`Erreur lors de la mise à jour de la clé API ${id}:`, error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error(`Erreur lors de la mise à jour de la clé API ${id}:`, error);
-    return false;
   }
 };
 
