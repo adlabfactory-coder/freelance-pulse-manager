@@ -22,6 +22,22 @@ export const addContact = async (data: ContactFormValues): Promise<string> => {
       throw new Error("Erreur: L'identifiant d'utilisateur n'est pas valide");
     }
 
+    // Vérifier la session actuelle pour confirmer l'authentification
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      console.error("Erreur de session:", sessionError || "Aucune session active");
+      throw new Error("Erreur: Vous devez être connecté pour effectuer cette action");
+    }
+    
+    console.log("Session utilisateur active:", sessionData.session.user.id);
+    console.log("Contact assigné à:", data.assignedTo);
+    
+    // S'assurer que l'utilisateur assigne le contact à lui-même (pour RLS)
+    if (sessionData.session.user.id !== data.assignedTo) {
+      console.warn("Réattribution du contact à l'utilisateur actuel pour RLS");
+      data.assignedTo = sessionData.session.user.id;
+    }
+
     const { data: newContact, error } = await supabase
       .from('contacts')
       .insert([{
@@ -71,6 +87,21 @@ export const updateContact = async (id: string, data: ContactFormValues): Promis
   }
 
   try {
+    // Vérifier la session actuelle pour confirmer l'authentification
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session) {
+      console.error("Erreur de session:", sessionError || "Aucune session active");
+      throw new Error("Erreur: Vous devez être connecté pour effectuer cette action");
+    }
+    
+    console.log("Session utilisateur active:", sessionData.session.user.id);
+    
+    // S'assurer que l'utilisateur assigne le contact à lui-même (pour RLS)
+    if (sessionData.session.user.id !== data.assignedTo) {
+      console.warn("Réattribution du contact à l'utilisateur actuel pour RLS");
+      data.assignedTo = sessionData.session.user.id;
+    }
+
     const { error } = await supabase
       .from('contacts')
       .update({
