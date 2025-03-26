@@ -5,13 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Contact } from "@/services/contacts/types";
 
 interface ClientSelectorProps {
-  contactId?: string;
+  selectedContactId?: string;
   contacts: Contact[];
   onSelect: (contactId: string) => void;
 }
 
 const ClientSelector: React.FC<ClientSelectorProps> = ({
-  contactId,
+  selectedContactId,
   contacts,
   onSelect
 }) => {
@@ -19,7 +19,7 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({
     <div>
       <Label htmlFor="contact">Client</Label>
       <Select
-        value={contactId}
+        value={selectedContactId}
         onValueChange={onSelect}
       >
         <SelectTrigger id="contact">

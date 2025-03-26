@@ -13,21 +13,21 @@ import { formatCurrency } from "@/utils/format";
 interface QuoteItemFormProps {
   currentItem: Partial<QuoteItem>;
   services: Service[];
-  onItemChange: (item: Partial<QuoteItem>) => void;
+  onChange: (item: Partial<QuoteItem>) => void;
   onAddItem: () => void;
 }
 
 const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
   currentItem,
   services,
-  onItemChange,
+  onChange,
   onAddItem
 }) => {
   const { toast } = useToast();
 
   const handleSelectService = (serviceId: string) => {
     if (serviceId === "custom") {
-      onItemChange({
+      onChange({
         ...currentItem,
         description: "",
         quantity: 1,
@@ -42,7 +42,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
     const selectedService = services.find(service => service.id === serviceId);
     
     if (selectedService) {
-      onItemChange({
+      onChange({
         ...currentItem,
         description: selectedService.name,
         quantity: 1,
@@ -97,7 +97,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
             id="description"
             placeholder="Description de l'article"
             value={currentItem.description || ""}
-            onChange={e => onItemChange({ ...currentItem, description: e.target.value })}
+            onChange={e => onChange({ ...currentItem, description: e.target.value })}
           />
         </div>
         
@@ -110,7 +110,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
               min={1}
               placeholder="Quantité"
               value={currentItem.quantity || ""}
-              onChange={e => onItemChange({ ...currentItem, quantity: parseInt(e.target.value) || 0 })}
+              onChange={e => onChange({ ...currentItem, quantity: parseInt(e.target.value) || 0 })}
             />
           </div>
           
@@ -123,7 +123,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
               step={0.01}
               placeholder="Prix unitaire"
               value={currentItem.unitPrice || ""}
-              onChange={e => onItemChange({ ...currentItem, unitPrice: parseFloat(e.target.value) || 0 })}
+              onChange={e => onChange({ ...currentItem, unitPrice: parseFloat(e.target.value) || 0 })}
             />
           </div>
         </div>
@@ -138,7 +138,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
               max={100}
               placeholder="Remise en %"
               value={currentItem.discount || ""}
-              onChange={e => onItemChange({ ...currentItem, discount: parseFloat(e.target.value) || 0 })}
+              onChange={e => onChange({ ...currentItem, discount: parseFloat(e.target.value) || 0 })}
             />
           </div>
           
@@ -150,7 +150,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
               min={0}
               placeholder="TVA en %"
               value={currentItem.tax || ""}
-              onChange={e => onItemChange({ ...currentItem, tax: parseFloat(e.target.value) || 0 })}
+              onChange={e => onChange({ ...currentItem, tax: parseFloat(e.target.value) || 0 })}
             />
           </div>
         </div>

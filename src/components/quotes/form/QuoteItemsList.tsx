@@ -7,13 +7,13 @@ import { formatCurrency } from "@/utils/format";
 
 interface QuoteItemsListProps {
   items?: QuoteItem[];
-  totalAmount: number;
+  totalAmount?: number;
   onRemoveItem: (index: number) => void;
 }
 
 const QuoteItemsList: React.FC<QuoteItemsListProps> = ({
   items = [],
-  totalAmount,
+  totalAmount = 0,
   onRemoveItem
 }) => {
   const calculateItemTotal = (item: Partial<QuoteItem>) => {

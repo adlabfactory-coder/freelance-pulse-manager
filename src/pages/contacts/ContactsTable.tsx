@@ -121,9 +121,9 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
                 <TableCell>{contact.company || "—"}</TableCell>
                 <TableCell>
                   <Badge variant="outline">
-                    {contact.status === ContactStatus.LEAD && "Prospect"}
-                    {contact.status === ContactStatus.CUSTOMER && "Client"}
-                    {contact.status === ContactStatus.LOST && "Perdu"}
+                    {contact.status === "lead" && "Prospect"}
+                    {contact.status === "prospect" && "Client"}
+                    {contact.status === "lost" && "Perdu"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

@@ -92,13 +92,14 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
         
         <QuoteItemsList 
           items={quoteData.items || []} 
+          totalAmount={quoteData.totalAmount}
           onRemoveItem={onRemoveItem}
         />
         
         <div className="mt-4 border-t pt-4">
           <h4 className="font-medium mb-2">Ajouter un article</h4>
           <QuoteItemForm
-            item={currentItem}
+            currentItem={currentItem}
             services={services}
             onChange={onCurrentItemChange}
             onAddItem={onAddItem}

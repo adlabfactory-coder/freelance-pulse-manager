@@ -5,13 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User } from "@/types";
 
 interface FreelancerSelectorProps {
-  freelancerId?: string;
+  selectedFreelancerId?: string;
   freelancers: User[];
   onSelect: (freelancerId: string) => void;
 }
 
 const FreelancerSelector: React.FC<FreelancerSelectorProps> = ({
-  freelancerId,
+  selectedFreelancerId,
   freelancers,
   onSelect
 }) => {
@@ -19,7 +19,7 @@ const FreelancerSelector: React.FC<FreelancerSelectorProps> = ({
     <div>
       <Label htmlFor="freelancer">Commercial</Label>
       <Select
-        value={freelancerId}
+        value={selectedFreelancerId}
         onValueChange={onSelect}
       >
         <SelectTrigger id="freelancer">
