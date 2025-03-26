@@ -89,3 +89,6 @@ export const contactCreateUpdateService = {
     }
   }
 };
+
+// Export both methods for use elsewhere
+export const { createContact, addContact, updateContact } = contactCreateUpdateService;

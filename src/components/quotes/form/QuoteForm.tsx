@@ -7,13 +7,22 @@ import QuoteFormSections from './QuoteFormSections';
 interface QuoteFormProps {
   form: ReturnType<typeof useQuoteForm>;
   onDiscard?: () => void;
+  onCloseDialog?: (open: boolean) => void;
+  isSubmitting?: boolean;
+  onSubmit?: () => void;
 }
 
-const QuoteForm: React.FC<QuoteFormProps> = ({ form, onDiscard }) => {
+const QuoteForm: React.FC<QuoteFormProps> = ({ 
+  form, 
+  onDiscard,
+  isSubmitting = form.isSubmitting, 
+  onSubmit = form.handleSubmit,
+  onCloseDialog
+}) => {
   return (
     <form onSubmit={(e) => {
       e.preventDefault();
-      form.handleSubmit();
+      onSubmit();
     }} className="space-y-6">
       <QuoteFormSections
         contacts={form.contacts || []}
@@ -44,8 +53,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({ form, onDiscard }) => {
             Annuler
           </Button>
         )}
-        <Button type="submit" disabled={form.isSubmitting}>
-          {form.isSubmitting ? "Enregistrement..." : "Enregistrer le devis"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Enregistrement..." : "Enregistrer le devis"}
         </Button>
       </div>
     </form>

@@ -20,6 +20,13 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
   quoteId,
   initialQuote
 }) => {
+  const quoteForm = useQuoteForm({
+    onSuccess: onQuoteUpdated,
+    onCloseDialog: onOpenChange,
+    isEditing: true,
+    quoteId
+  });
+
   const {
     contacts,
     freelancers,
@@ -35,12 +42,7 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
     handleSubmitEdit,
     loadData,
     loadQuoteData
-  } = useQuoteForm({
-    onCloseDialog: onOpenChange,
-    onQuoteCreated: onQuoteUpdated,
-    isEditing: true,
-    quoteId
-  });
+  } = quoteForm;
 
   useEffect(() => {
     if (open) {
@@ -51,7 +53,7 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
         loadQuoteData(quoteId);
       }
     }
-  }, [open, quoteId, initialQuote, loadData, loadQuoteData, setQuoteData]);
+  }, [open, quoteId, initialQuote]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

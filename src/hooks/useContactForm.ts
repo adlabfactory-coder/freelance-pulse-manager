@@ -62,9 +62,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
 
   const handleCreateContact = async () => {
     if (!name || !email) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
+      toast.error("Erreur", {
         description: 'Le nom et l\'email sont requis.'
       });
       return;
@@ -88,8 +86,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       const contactId = await contactCreateUpdateService.createContact(contactData);
 
       if (contactId) {
-        toast({
-          title: 'Succès',
+        toast.success("Succès", {
           description: 'Contact créé avec succès.'
         });
         resetForm();
@@ -97,9 +94,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       }
     } catch (error) {
       console.error('Erreur lors de la création du contact:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
+      toast.error("Erreur", {
         description: 'Une erreur est survenue lors de la création du contact.'
       });
     } finally {
@@ -109,9 +104,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
 
   const handleUpdateContact = async (contactId: string) => {
     if (!name || !email) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
+      toast.error("Erreur", {
         description: 'Le nom et l\'email sont requis.'
       });
       return;
@@ -135,17 +128,14 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       const success = await contactCreateUpdateService.updateContact(contactId, contactData);
 
       if (success) {
-        toast({
-          title: 'Succès',
+        toast.success("Succès", {
           description: 'Contact mis à jour avec succès.'
         });
         if (onSuccess) onSuccess({id: contactId, name});
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du contact:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
+      toast.error("Erreur", {
         description: 'Une erreur est survenue lors de la mise à jour du contact.'
       });
     } finally {
