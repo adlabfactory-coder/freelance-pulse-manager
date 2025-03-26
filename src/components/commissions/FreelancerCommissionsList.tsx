@@ -59,6 +59,7 @@ const FreelancerCommissionsList: React.FC = () => {
         const transformedData = data.map(item => ({
           id: item.id,
           freelancerId: item.freelancerId,
+          freelancerName: user?.name || "Freelancer inconnu", // Add the missing freelancerName property
           amount: item.amount,
           tier: item.tier,
           periodStart: new Date(item.periodStart),

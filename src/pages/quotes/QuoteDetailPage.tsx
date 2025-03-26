@@ -1,9 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Quote, QuoteStatus } from '@/types';
+import { Quote, QuoteStatus, Contact, User } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Loader2, Check, X, Send, FileText } from 'lucide-react';
@@ -31,8 +32,8 @@ const QuoteDetailPage: React.FC = () => {
           .from('quotes')
           .select(`
             *,
-            contact:contacts(name, email, phone, company),
-            freelancer:users(name, email),
+            contact:contacts(*),
+            freelancer:users(*),
             items:quote_items(*)
           `)
           .eq('id', quoteId)
@@ -53,8 +54,8 @@ const QuoteDetailPage: React.FC = () => {
           items: data.items,
           createdAt: new Date(data.createdAt),
           updatedAt: new Date(data.updatedAt),
-          contact: data.contact,
-          freelancer: data.freelancer
+          contact: data.contact as Contact, // This ensures all properties from Contact type are included
+          freelancer: data.freelancer as User // This ensures all properties from User type are included
         };
 
         setQuote(quoteData);
