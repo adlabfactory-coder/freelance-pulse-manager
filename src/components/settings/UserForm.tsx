@@ -17,9 +17,6 @@ interface UserFormProps {
     email: string;
     role: UserRole;
     avatar?: string;
-    calendly_enabled?: boolean;
-    calendly_url?: string;
-    calendly_sync_email?: string;
   };
   isEditing?: boolean;
 }
@@ -89,10 +86,7 @@ const UserForm: React.FC<UserFormProps> = ({
           name,
           email,
           role,
-          avatar: null,
-          calendly_enabled: false,
-          calendly_url: "",
-          calendly_sync_email: ""
+          avatar: null
         });
       }
       

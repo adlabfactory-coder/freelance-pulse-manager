@@ -8,50 +8,35 @@ export const MOCK_USERS: User[] = [
     name: 'Super Admin Démo',
     email: 'superadmin@example.com',
     role: UserRole.SUPER_ADMIN,
-    avatar: null,
-    calendly_enabled: true,
-    calendly_url: 'https://calendly.com/superadmin-demo',
-    calendly_sync_email: 'superadmin@example.com'
+    avatar: null
   },
   {
     id: '6a94bd3d-7f5c-49ae-b09e-e570cb01a978',
     name: 'Admin Démo',
     email: 'admin@example.com',
     role: UserRole.ADMIN,
-    avatar: null,
-    calendly_enabled: true,
-    calendly_url: 'https://calendly.com/admin-demo',
-    calendly_sync_email: 'admin@example.com'
+    avatar: null
   },
   {
     id: '487fb1af-4396-49d1-ba36-8711facbb03c',
     name: 'Commercial Démo',
     email: 'commercial@example.com',
     role: UserRole.FREELANCER,
-    avatar: null,
-    calendly_enabled: true,
-    calendly_url: 'https://calendly.com/commercial-demo',
-    calendly_sync_email: 'commercial@example.com'
+    avatar: null
   },
   {
     id: '3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c',
     name: 'Chargé de Compte Démo',
     email: 'account@example.com',
     role: UserRole.ACCOUNT_MANAGER,
-    avatar: null,
-    calendly_enabled: true,
-    calendly_url: 'https://calendly.com/account-demo',
-    calendly_sync_email: 'account@example.com'
+    avatar: null
   },
   {
     id: '2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda',
     name: 'Client Démo',
     email: 'client@example.com',
     role: UserRole.CLIENT,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: '',
-    calendly_sync_email: ''
+    avatar: null
   }
 ];
 

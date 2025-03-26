@@ -61,10 +61,7 @@ const AdminPage: React.FC = () => {
       name: "",
       email: "",
       role: UserRole.FREELANCER,
-      avatar: null,
-      calendly_enabled: false,
-      calendly_url: "",
-      calendly_sync_email: ""
+      avatar: null
     });
     setIsEditing(false);
     setIsDialogOpen(true);
@@ -306,4 +303,3 @@ const formatRole = (role: UserRole | string): string => {
 };
 
 export default AdminPage;
-
