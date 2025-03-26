@@ -64,6 +64,12 @@ export const useAuth = () => {
     }
   };
 
+  // Vérifier si l'utilisateur est un super admin
+  const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
+  
+  // Vérifier si l'utilisateur est un admin ou super admin
+  const isAdminOrSuperAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
+  
   // Vérifier si l'utilisateur est un admin
   const isAdmin = user?.role === UserRole.ADMIN;
   
@@ -81,6 +87,8 @@ export const useAuth = () => {
     session,
     isLoading,
     isAdmin,
+    isSuperAdmin,
+    isAdminOrSuperAdmin,
     isFreelancer,
     isAccountManager,
     isClient,

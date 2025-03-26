@@ -10,6 +10,8 @@ import SettingsError from "./SettingsError";
 import SettingsLoading from "./SettingsLoading";
 import DatabaseTab from "@/components/settings/DatabaseTab";
 import FreelancerManagement from "@/components/settings/FreelancerManagement";
+import UserTabs from "@/components/settings/tabs/UserTabs";
+import UserForm from "@/components/settings/UserForm";
 import { useAuth } from "@/hooks/use-auth";
 import { User } from "@/types";
 
@@ -29,8 +31,9 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
   error,
   currentUser,
   selectedUserId,
+  onUserSelect
 }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin, isAdminOrSuperAdmin } = useAuth();
 
   if (isLoading) {
     return <SettingsLoading />;
@@ -57,7 +60,19 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
       <Route path="/commissions" element={<CommissionSettings />} />
       <Route path="/schedule" element={<ScheduleSettings />} />
       <Route path="/database" element={<DatabaseTab />} />
+      
+      {/* Routes de gestion des utilisateurs pour Admin et SuperAdmin */}
+      {isAdminOrSuperAdmin && (
+        <>
+          <Route path="/users" element={<UserTabs onSelectUser={onUserSelect} />} />
+          <Route path="/add-user" element={<UserForm />} />
+          <Route path="/edit-user/:id" element={<UserForm isEditing />} />
+        </>
+      )}
+      
+      {/* Route spécifique pour gestion des freelances */}
       {isAdmin && <Route path="/freelancers" element={<FreelancerManagement />} />}
+      
       {/* Redirection par défaut sur la première route si aucune ne correspond */}
       <Route path="*" element={<Navigate to="profile" replace />} />
     </Routes>

@@ -1,6 +1,7 @@
 
 // User related types
 export enum UserRole {
+  SUPER_ADMIN = "super_admin",
   ADMIN = "admin",
   FREELANCER = "freelancer",
   ACCOUNT_MANAGER = "account_manager",

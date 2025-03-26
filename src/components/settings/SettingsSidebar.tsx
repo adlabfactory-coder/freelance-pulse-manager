@@ -12,10 +12,12 @@ import {
   Calendar,
   Database,
   UserPlus,
+  Shield,
+  User,
+  UserCog,
 } from "lucide-react";
 import UserSelector from "./UserSelector";
 import { useAuth } from "@/hooks/use-auth";
-import { User } from "@/types";
 
 interface SettingsSidebarProps {
   currentUserId: string;
@@ -29,15 +31,20 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   onSelectUser,
 }) => {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin, isAdminOrSuperAdmin } = useAuth();
 
-  const navigation = [
+  // Base navigation items for all users
+  const baseNavigation = [
     {
       name: "Profil",
       href: "/settings/profile",
-      icon: Users,
+      icon: User,
       current: location.pathname === "/settings/profile" || location.pathname === "/settings",
     },
+  ];
+
+  // Navigation items for admins and super admins
+  const adminNavigation = [
     {
       name: "Entreprise",
       href: "/settings/company",
@@ -70,21 +77,58 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     },
   ];
 
-  // Ajouter la gestion des freelances pour les admins
-  if (isAdmin) {
-    navigation.push({
-      name: "Commerciaux",
+  // Special routes for user management
+  const userManagementNavigation = [
+    {
+      name: "Gestion des utilisateurs",
+      href: "/settings/users",
+      icon: UserCog,
+      current: location.pathname === "/settings/users" || 
+              location.pathname === "/settings/add-user" || 
+              location.pathname.includes("/settings/edit-user/"),
+    },
+  ];
+
+  // Additional routes for admins
+  const adminOnlyNavigation = [
+    {
+      name: "Chargé(e)s d'affaires",
       href: "/settings/freelancers",
       icon: UserPlus,
       current: location.pathname === "/settings/freelancers",
-    });
+    },
+  ];
+
+  // Super admin exclusive routes
+  const superAdminNavigation = [
+    {
+      name: "Administration",
+      href: "/settings/admin",
+      icon: Shield,
+      current: location.pathname === "/settings/admin",
+    },
+  ];
+
+  // Construct navigation based on user role
+  let navigation = [...baseNavigation];
+
+  if (isAdminOrSuperAdmin) {
+    navigation = [...navigation, ...adminNavigation, ...userManagementNavigation];
+  }
+
+  if (isAdmin) {
+    navigation = [...navigation, ...adminOnlyNavigation];
+  }
+
+  if (isSuperAdmin) {
+    navigation = [...navigation, ...superAdminNavigation];
   }
 
   return (
     <aside className="hidden md:block w-64 border-r h-[calc(100vh-4rem)] overflow-hidden">
       <div className="flex flex-col h-full">
-        {/* User selector is only visible for admins */}
-        {isAdmin && (
+        {/* User selector is only visible for admins and super admins */}
+        {isAdminOrSuperAdmin && (
           <div className="px-4 py-4 border-b">
             <UserSelector
               selectedUserId={selectedUserId}

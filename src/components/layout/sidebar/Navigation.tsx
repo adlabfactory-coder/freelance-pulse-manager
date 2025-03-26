@@ -8,7 +8,8 @@ import {
   Settings,
   Users,
   FileSpreadsheet,
-  PieChart
+  PieChart,
+  Shield
 } from "lucide-react";
 import { NavItem as NavItemType } from "@/types";
 import NavItem from "./NavItem";
@@ -19,7 +20,7 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
-  const { isAdmin, isFreelancer, isAccountManager, role } = useAuth();
+  const { isAdmin, isSuperAdmin, isFreelancer, isAccountManager, role } = useAuth();
   
   const allNavItems: NavItemType[] = [
     { title: "Tableau de bord", href: "/dashboard", icon: Home },
@@ -31,6 +32,13 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     { title: "Rapports", href: "/reports", icon: PieChart },
     { title: "Paramètres", href: "/settings", icon: Settings },
   ];
+  
+  // Ajouter des éléments spécifiques pour les Super Admins
+  if (isSuperAdmin) {
+    allNavItems.push(
+      { title: "Administration", href: "/admin", icon: Shield }
+    );
+  }
   
   // Déterminer les éléments à afficher en fonction du rôle
   let visibleItems = allNavItems;
@@ -57,7 +65,7 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     ];
     
     visibleItems = allNavItems.filter(item => accountManagerItems.includes(item.href));
-  } else if (!isAdmin) {
+  } else if (!isAdmin && !isSuperAdmin) {
     // Accès de base pour les autres rôles
     visibleItems = allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
   }
