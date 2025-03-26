@@ -82,10 +82,12 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
           description: "Les informations ont été enregistrées avec succès.",
         });
       } else {
+        // Fix: Access the error message with safe type checking
+        const errorMessage = result.error || "Impossible de mettre à jour le profil.";
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: result.error || "Impossible de mettre à jour le profil.",
+          description: errorMessage,
         });
       }
     } catch (error) {
