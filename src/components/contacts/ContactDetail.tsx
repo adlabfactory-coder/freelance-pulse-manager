@@ -1,138 +1,106 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Contact } from "@/services/contacts/types";
-import { ContactStatus } from "@/types/database/enums";
-import { contactService } from "@/services/contacts";
-import ContactStatusSelector from "./ContactStatusSelector";
-import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";
+import { CalendarClock, FileText, UserCog } from "lucide-react";
 import ContactInfoDisplay from "./ContactInfoDisplay";
-import ContactEditForm from "./ContactEditForm";
-import ContactSubscriptionSelector from "./ContactSubscriptionSelector";
+import ContactAppointmentDialog from "./ContactAppointmentDialog";
+import { Contact } from "@/types";
+import ContactEditDialog from "./ContactEditForm";
+import { formatDateToFrench } from "@/utils/format";
+import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
+import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 
 interface ContactDetailProps {
-  contactId: string;
-  onUpdate?: () => void;
+  contact: Contact;
+  onUpdate: (updatedContact: Contact) => void;
 }
 
-const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) => {
-  const [contact, setContact] = useState<Contact | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  
-  const { plans, isLoading: plansLoading } = useSubscriptionPlans();
-
-  useEffect(() => {
-    const fetchContact = async () => {
-      setLoading(true);
-      const data = await contactService.getContactById(contactId);
-      if (data) {
-        setContact(data);
-      }
-      setLoading(false);
-    };
-    
-    fetchContact();
-  }, [contactId]);
-
-  const handleStatusChange = (newStatus: ContactStatus) => {
-    if (contact) {
-      setContact({ ...contact, status: newStatus });
-      if (onUpdate) onUpdate();
-    }
-  };
-
-  const handleSubscriptionPlanChange = async (planId: string) => {
-    if (contact) {
-      const result = await contactService.linkSubscriptionPlan(contact.id, planId);
-      if (result) {
-        setContact({ ...contact, subscriptionPlanId: planId });
-        if (onUpdate) onUpdate();
-      }
-    }
-  };
-
-  const handleUpdateSuccess = () => {
-    // Refetch contact data after successful update
-    const refreshContact = async () => {
-      const updatedContact = await contactService.getContactById(contactId);
-      if (updatedContact) {
-        setContact(updatedContact);
-      }
-      setEditing(false);
-      if (onUpdate) onUpdate();
-    };
-    
-    refreshContact();
-  };
-
-  if (loading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex justify-center">
-            <p>Chargement...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!contact) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex justify-center">
-            <p>Contact non trouvé</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
+  const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{contact.name}</CardTitle>
-            <CardDescription>{contact.position} {contact.company ? `chez ${contact.company}` : ""}</CardDescription>
-          </div>
-          <ContactStatusSelector 
-            contactId={contact.id} 
-            value={contact.status as ContactStatus}
-            onChange={handleStatusChange} 
-          />
+    <div className="space-y-6">
+      {/* En-tête avec les informations principales */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold">{contact.name}</h1>
+          <p className="text-muted-foreground">
+            Client créé le {formatDateToFrench(new Date(contact.createdAt))}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {editing ? (
-          <ContactEditForm 
-            contact={contact}
-            onSuccess={handleUpdateSuccess}
-            onCancel={() => setEditing(false)}
-          />
-        ) : (
-          <ContactInfoDisplay contact={contact} />
-        )}
-
-        <ContactSubscriptionSelector 
-          contactId={contact.id}
-          subscriptionPlanId={contact.subscriptionPlanId}
-          plans={plans}
-          isLoading={plansLoading}
-          onSubscriptionPlanChange={handleSubscriptionPlanChange}
-        />
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        {!editing && (
-          <Button variant="outline" onClick={() => setEditing(true)}>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+            <UserCog className="h-4 w-4 mr-2" />
             Modifier
           </Button>
-        )}
-      </CardFooter>
-    </Card>
+        </div>
+      </div>
+
+      {/* Contenu principal */}
+      <Card>
+        <CardContent className="pt-6">
+          <ContactInfoDisplay contact={contact} />
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          variant="outline" 
+          onClick={() => setAppointmentDialogOpen(true)}
+        >
+          <CalendarClock className="h-4 w-4 mr-2" />
+          Planifier un rendez-vous
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setInitialConsultationDialogOpen(true)}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Devis consultation initiale
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setQuoteDialogOpen(true)}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Créer un devis
+        </Button>
+      </div>
+
+      {/* Dialogues */}
+      <ContactAppointmentDialog 
+        open={appointmentDialogOpen}
+        onOpenChange={setAppointmentDialogOpen}
+        contactId={contact.id}
+        contactName={contact.name}
+      />
+      
+      <ContactEditDialog 
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        contact={contact}
+        onSave={onUpdate}
+      />
+      
+      <InitialConsultationTemplate
+        open={initialConsultationDialogOpen}
+        onOpenChange={setInitialConsultationDialogOpen}
+        initialContactId={contact.id}
+      />
+      
+      <AddQuoteDialog
+        open={quoteDialogOpen}
+        onOpenChange={setQuoteDialogOpen}
+        initialContactId={contact.id}
+      />
+    </div>
   );
 };
 

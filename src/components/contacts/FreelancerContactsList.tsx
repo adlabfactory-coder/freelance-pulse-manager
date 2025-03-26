@@ -1,77 +1,78 @@
 
-import React, { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Contact } from "@/services/contacts/types";
-import { contactService } from "@/services/contacts";
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2, UserPlus, Mail, Phone } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
-import ContactStatusBadge from "@/components/contacts/ContactStatusBadge";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { Plus, CalendarClock, Filter, FileText } from "lucide-react";
+import { Contact, ContactStatus } from "@/types";
+import ContactStatusBadge from "./ContactStatusBadge";
+import { formatDateToFrench } from "@/utils/format";
+import ContactAppointmentDialog from "./ContactAppointmentDialog";
+import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
+import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 
-const FreelancerContactsList: React.FC = () => {
-  const { user } = useAuth();
+interface FreelancerContactsListProps {
+  contacts: Contact[];
+  loading: boolean;
+}
+
+const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
+  contacts,
+  loading
+}) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
+  const [selectedContactId, setSelectedContactId] = useState<string>("");
+  const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
+  const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [selectedContactName, setSelectedContactName] = useState<string>("");
 
-  useEffect(() => {
-    const loadContacts = async () => {
-      setLoading(true);
-      try {
-        const allContacts = await contactService.getContacts();
-        // Filtrer les contacts pour ce freelancer uniquement
-        const filteredContacts = allContacts.filter(contact => 
-          contact.assignedTo === user?.id
-        );
-        setContacts(filteredContacts);
-      } catch (error) {
-        console.error("Erreur lors du chargement des contacts:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger vos contacts. Veuillez réessayer plus tard.",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadContacts();
-  }, [user?.id, toast]);
-
-  const handleViewContact = (contactId: string) => {
-    navigate(`/contacts/${contactId}`);
+  const handleScheduleAppointment = (contactId: string, contactName: string) => {
+    setSelectedContactId(contactId);
+    setSelectedContactName(contactName);
+    setAppointmentDialogOpen(true);
   };
 
-  const filteredContacts = contacts.filter(contact => {
-    if (!searchTerm) return true;
-    
-    const searchTermLower = searchTerm.toLowerCase();
-    return (
-      contact.name.toLowerCase().includes(searchTermLower) ||
-      (contact.email && contact.email.toLowerCase().includes(searchTermLower)) ||
-      (contact.phone && contact.phone.toLowerCase().includes(searchTermLower)) ||
-      (contact.company && contact.company.toLowerCase().includes(searchTermLower))
-    );
-  });
+  const handleCreateInitialConsultation = (contactId: string) => {
+    setSelectedContactId(contactId);
+    setInitialConsultationDialogOpen(true);
+  };
+
+  const handleCreateQuote = (contactId: string) => {
+    setSelectedContactId(contactId);
+    setQuoteDialogOpen(true);
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="ml-2">Chargement des contacts...</span>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Mes contacts</h2>
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm" disabled>
+              <Filter className="h-4 w-4 mr-2" />
+              Filtrer
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid gap-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="h-5 bg-muted rounded w-1/3"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -79,67 +80,100 @@ const FreelancerContactsList: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="relative w-full max-w-sm">
-          <Input
-            placeholder="Rechercher un contact..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-          <div className="absolute left-3 top-1/2 -translate-y-1/2">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-          </div>
+        <h2 className="text-lg font-semibold">Mes contacts</h2>
+        <div className="flex space-x-2">
+          <Button variant="outline" size="sm">
+            <Filter className="h-4 w-4 mr-2" />
+            Filtrer
+          </Button>
         </div>
-        <Button onClick={() => navigate("/contacts/new")}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Nouveau contact
-        </Button>
       </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nom</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Téléphone</TableHead>
-              <TableHead>Entreprise</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredContacts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-6">
-                  Vous n'avez pas encore de contacts. Ajoutez votre premier contact.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredContacts.map((contact) => (
-                <TableRow key={contact.id}>
-                  <TableCell className="font-medium">{contact.name}</TableCell>
-                  <TableCell>{contact.email}</TableCell>
-                  <TableCell>{contact.phone || "—"}</TableCell>
-                  <TableCell>{contact.company || "—"}</TableCell>
-                  <TableCell>
-                    <ContactStatusBadge status={contact.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
+      
+      {contacts.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <p className="text-center text-muted-foreground mb-4">
+              Vous n'avez pas encore de contacts assignés.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {contacts.map((contact) => (
+            <Card key={contact.id}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{contact.name}</CardTitle>
+                  <ContactStatusBadge status={contact.status as ContactStatus} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex flex-col text-sm">
+                    <span className="text-muted-foreground">Email: {contact.email}</span>
+                    {contact.phone && (
+                      <span className="text-muted-foreground">Téléphone: {contact.phone}</span>
+                    )}
+                    {contact.company && (
+                      <span className="text-muted-foreground">Entreprise: {contact.company}</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Créé le {formatDateToFrench(new Date(contact.createdAt))}
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
                       size="sm"
-                      onClick={() => handleViewContact(contact.id)}
+                      onClick={() => handleScheduleAppointment(contact.id, contact.name)}
                     >
-                      Voir
+                      <CalendarClock className="h-3 w-3 mr-1" />
+                      Rendez-vous
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCreateInitialConsultation(contact.id)}
+                    >
+                      <FileText className="h-3 w-3 mr-1" />
+                      Consultation initiale
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCreateQuote(contact.id)}
+                    >
+                      <FileText className="h-3 w-3 mr-1" />
+                      Devis
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Dialogues */}
+      <ContactAppointmentDialog 
+        open={appointmentDialogOpen}
+        onOpenChange={setAppointmentDialogOpen}
+        contactId={selectedContactId}
+        contactName={selectedContactName}
+        initialType="consultation-initiale"
+      />
+      
+      <InitialConsultationTemplate
+        open={initialConsultationDialogOpen}
+        onOpenChange={setInitialConsultationDialogOpen}
+        initialContactId={selectedContactId}
+      />
+      
+      <AddQuoteDialog
+        open={quoteDialogOpen}
+        onOpenChange={setQuoteDialogOpen}
+        initialContactId={selectedContactId}
+      />
     </div>
   );
 };
