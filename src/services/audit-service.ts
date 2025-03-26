@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { UserRole } from '@/types';
+import { UserRole } from '@/types/roles';
 
 // Types pour les entrées d'audit
 export enum AuditAction {
@@ -17,7 +17,7 @@ export enum AuditAction {
 export interface AuditEntry {
   id?: string;
   userId: string;
-  userRole: UserRole;
+  userRole: UserRole | string;
   action: AuditAction;
   resource: string;
   resourceId?: string;
@@ -57,7 +57,7 @@ export const logAuditEntry = async (entry: AuditEntry): Promise<boolean> => {
 };
 
 // Méthodes utilitaires pour simplifier la journalisation
-export const auditCreate = (userId: string, userRole: UserRole, resource: string, resourceId: string, details?: any): Promise<boolean> => {
+export const auditCreate = (userId: string, userRole: UserRole | string, resource: string, resourceId: string, details?: any): Promise<boolean> => {
   return logAuditEntry({
     userId,
     userRole,
@@ -68,7 +68,7 @@ export const auditCreate = (userId: string, userRole: UserRole, resource: string
   });
 };
 
-export const auditUpdate = (userId: string, userRole: UserRole, resource: string, resourceId: string, details?: any): Promise<boolean> => {
+export const auditUpdate = (userId: string, userRole: UserRole | string, resource: string, resourceId: string, details?: any): Promise<boolean> => {
   return logAuditEntry({
     userId,
     userRole,
@@ -79,7 +79,7 @@ export const auditUpdate = (userId: string, userRole: UserRole, resource: string
   });
 };
 
-export const auditDelete = (userId: string, userRole: UserRole, resource: string, resourceId: string, details?: any): Promise<boolean> => {
+export const auditDelete = (userId: string, userRole: UserRole | string, resource: string, resourceId: string, details?: any): Promise<boolean> => {
   return logAuditEntry({
     userId,
     userRole,
@@ -90,7 +90,7 @@ export const auditDelete = (userId: string, userRole: UserRole, resource: string
   });
 };
 
-export const auditPermissionsChange = (userId: string, userRole: UserRole, targetUserId: string, details: any): Promise<boolean> => {
+export const auditPermissionsChange = (userId: string, userRole: UserRole | string, targetUserId: string, details: any): Promise<boolean> => {
   return logAuditEntry({
     userId,
     userRole,

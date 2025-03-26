@@ -1,33 +1,30 @@
+import { UserRole } from './roles';
 
-// User related types
-export enum UserRole {
-  SUPER_ADMIN = "super_admin",
-  ADMIN = "admin",
-  FREELANCER = "freelancer",
-  ACCOUNT_MANAGER = "account_manager",
-  CLIENT = "client"
-}
-
+// Définition du type User
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
-  avatar?: string;
-  calendly_url?: string;
-  calendly_sync_email?: string;
-  calendly_enabled?: boolean;
+  role: UserRole | string;
+  avatar: string | null;
+  calendly_enabled: boolean;
+  calendly_url: string;
+  calendly_sync_email: string;
 }
 
-// Contact related types
-export enum ContactStatus {
-  LEAD = "lead",
-  PROSPECT = "prospect",
-  NEGOTIATION = "negotiation",
-  SIGNED = "signed",
-  LOST = "lost"
+// Export de UserRole depuis roles.ts
+export { UserRole, hasMinimumRole } from './roles';
+
+// Item de navigation
+export interface NavItem {
+  title: string;
+  href: string;
+  icon: any;
+  badge?: string;
+  disabled?: boolean;
 }
 
+// Contact
 export interface Contact {
   id: string;
   name: string;
@@ -38,177 +35,138 @@ export interface Contact {
   address?: string;
   notes?: string;
   assignedTo?: string;
-  status: ContactStatus;
-  subscriptionPlanId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
+  status: 'lead' | 'prospect' | 'negotiation' | 'signed' | 'lost';
+  subscription_plan_id?: string;
 }
 
-// Appointment related types
-export enum AppointmentStatus {
-  SCHEDULED = "scheduled",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled",
-  RESCHEDULED = "rescheduled"
-}
-
+// Appointment (Rendez-vous)
 export interface Appointment {
   id: string;
   title: string;
   description?: string;
   contactId: string;
   freelancerId: string;
-  date: Date;
-  duration: number; // in minutes
-  status: AppointmentStatus;
+  date: string;
+  duration: number;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
   location?: string;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Quote related types
-export enum QuoteStatus {
-  DRAFT = "draft",
-  SENT = "sent",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  EXPIRED = "expired"
-}
-
-export interface QuoteItem {
-  id?: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  discount?: number | null;
-  tax?: number | null;
-  serviceId?: string | null;
-}
-
+// Quote (Devis)
 export interface Quote {
-  id?: string;
+  id: string;
   contactId: string;
   freelancerId: string;
   totalAmount: number;
-  status: QuoteStatus;
-  validUntil: Date;
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  validUntil: string;
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
   items: QuoteItem[];
-  createdAt?: Date;
-  updatedAt?: Date;
-  contact?: Contact;
-  freelancer?: User;
 }
 
-// Subscription related types
-export enum SubscriptionInterval {
-  MONTHLY = "monthly",
-  QUARTERLY = "quarterly",
-  YEARLY = "yearly"
+// Quote Item (Élément de devis)
+export interface QuoteItem {
+  id: string;
+  quoteId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  tax?: number;
 }
 
-export enum SubscriptionStatus {
-  ACTIVE = "active",
-  CANCELED = "canceled",
-  EXPIRED = "expired",
-  PENDING = "pending",
-  TRIAL = "trial"
-}
-
+// Subscription (Abonnement)
 export interface Subscription {
   id: string;
   name: string;
   description?: string;
   price: number;
-  interval: SubscriptionInterval;
+  interval: 'monthly' | 'quarterly' | 'biannual' | 'annual';
   clientId: string;
   freelancerId: string;
-  status: SubscriptionStatus;
-  startDate: Date;
-  endDate?: Date;
-  renewalDate?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  status: 'active' | 'pending' | 'cancelled' | 'expired';
+  startDate: string;
+  endDate?: string;
+  renewalDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Commission related types
-export enum CommissionTier {
-  TIER_1 = "tier_1",
-  TIER_2 = "tier_2",
-  TIER_3 = "tier_3",
-  TIER_4 = "tier_4"
-}
-
-export interface CommissionRule {
-  tier: CommissionTier;
-  minContracts: number;
-  percentage: number;
-}
-
+// Commission
 export interface Commission {
   id: string;
   freelancerId: string;
   amount: number;
-  tier: CommissionTier;
+  tier: string;
   subscriptionId?: string;
   quoteId?: string;
-  period: {
-    startDate: Date;
-    endDate: Date;
-  };
-  status: "pending" | "paid";
-  paidDate?: Date;
-  createdAt: Date;
+  periodStart: string;
+  periodEnd: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  paidDate?: string;
+  createdAt: string;
 }
 
-// Dashboard related types
-export interface DashboardStats {
-  totalContractsSigned: number;
-  totalCommissions: number;
-  pendingAppointments: number;
-  activeSubscriptions: number;
-  revenueThisMonth: number;
-  revenueLastMonth: number;
-}
-
-// Navigation types
-export interface NavItem {
-  title: string;
-  href: string;
-  icon?: React.ComponentType;
-  disabled?: boolean;
-}
-
-// Subscription plan related types
-export interface SubscriptionPlan {
+// Commission Rule
+export interface CommissionRule {
   id: string;
-  name: string;
-  code: string;
-  description: string;
-  price: number;
-  interval: SubscriptionInterval;
-  features: {
-    website: boolean;
-    social_media: boolean;
-    features: string[];
-  };
-  is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
+  tier: string;
+  minContracts: number;
+  percentage: number;
 }
 
-// Update Service type with proper ServiceType enum
-export type ServiceType = 'service' | 'pack';
-
-// Service interface
+// Service
 export interface Service {
   id: string;
   name: string;
-  description: string;
-  type: ServiceType;
+  description?: string;
+  type: 'service' | 'pack';
   price: number;
-  is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
+  isActive: boolean;
+}
+
+// API Response
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// Pagination
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+// Filter
+export interface Filter {
+  field: string;
+  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'ilike' | 'in';
+  value: any;
+}
+
+// Sort
+export interface Sort {
+  field: string;
+  direction: 'asc' | 'desc';
+}
+
+// Query Params
+export interface QueryParams {
+  page?: number;
+  limit?: number;
+  filters?: Filter[];
+  sort?: Sort[];
+  search?: string;
 }

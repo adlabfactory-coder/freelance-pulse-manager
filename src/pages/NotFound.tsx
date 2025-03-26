@@ -2,11 +2,17 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Home, ArrowLeft } from "lucide-react";
+import { Home, ArrowLeft, AlertTriangle } from "lucide-react";
 
 const NotFound: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
+      <div className="relative w-32 h-32 mb-4">
+        <div className="absolute inset-0 bg-red-100 rounded-full flex items-center justify-center">
+          <AlertTriangle className="h-16 w-16 text-red-500" />
+        </div>
+      </div>
+      
       <h1 className="text-9xl font-bold text-gray-200">404</h1>
       <div className="max-w-md">
         <h2 className="mb-4 text-xl font-bold text-primary">

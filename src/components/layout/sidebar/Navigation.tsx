@@ -9,19 +9,22 @@ import {
   Users,
   FileSpreadsheet,
   PieChart,
-  Shield
+  Shield,
+  Layers
 } from "lucide-react";
 import { NavItem as NavItemType } from "@/types";
 import NavItem from "./NavItem";
 import { useAuth } from "@/hooks/use-auth";
+import { UserRole } from "@/types/roles";
 
 interface NavigationProps {
   collapsed: boolean;
 }
 
 const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
-  const { isAdmin, isSuperAdmin, isFreelancer, isAccountManager, role } = useAuth();
+  const { role, isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
   
+  // Définition de tous les éléments de navigation possibles
   const allNavItems: NavItemType[] = [
     { title: "Tableau de bord", href: "/dashboard", icon: Home },
     { title: "Contacts", href: "/contacts", icon: Users },
@@ -33,40 +36,56 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     { title: "Paramètres", href: "/settings", icon: Settings },
   ];
   
-  // Ajouter des éléments spécifiques pour les Super Admins
+  // Éléments spécifiques pour les Super Admins
   if (isSuperAdmin) {
     allNavItems.push(
-      { title: "Administration", href: "/admin", icon: Shield }
+      { title: "Administration", href: "/admin", icon: Shield },
+      { title: "Audit", href: "/audit", icon: Layers }
     );
   }
   
-  // Déterminer les éléments à afficher en fonction du rôle
-  let visibleItems = allNavItems;
-  
-  if (isFreelancer) {
-    // Pour les freelancers, tous ces éléments doivent être visibles
-    const freelancerItems = [
+  // Configuration des accès par rôle
+  const roleAccess: Record<UserRole, string[]> = {
+    [UserRole.SUPER_ADMIN]: allNavItems.map(item => item.href), // Accès complet
+    [UserRole.ADMIN]: [
+      "/dashboard", 
+      "/contacts", 
+      "/appointments", 
+      "/quotes", 
+      "/subscriptions", 
+      "/commissions", 
+      "/reports", 
+      "/settings"
+    ],
+    [UserRole.FREELANCER]: [
       "/dashboard",
       "/contacts",
       "/appointments", 
       "/quotes",
       "/commissions",
       "/settings"
-    ];
-    
-    visibleItems = allNavItems.filter(item => freelancerItems.includes(item.href));
-  } else if (isAccountManager) {
-    const accountManagerItems = [
+    ],
+    [UserRole.ACCOUNT_MANAGER]: [
       "/dashboard",
       "/contacts",
       "/appointments",
       "/quotes",
       "/settings"
-    ];
-    
-    visibleItems = allNavItems.filter(item => accountManagerItems.includes(item.href));
-  } else if (!isAdmin && !isSuperAdmin) {
-    // Accès de base pour les autres rôles
+    ],
+    [UserRole.CLIENT]: [
+      "/dashboard", 
+      "/settings"
+    ]
+  };
+  
+  // Déterminer les éléments de navigation visibles en fonction du rôle
+  let visibleItems: NavItemType[] = [];
+  
+  if (role) {
+    const allowedPaths = roleAccess[role] || ["/dashboard", "/settings"];
+    visibleItems = allNavItems.filter(item => allowedPaths.includes(item.href));
+  } else {
+    // Fallback - accès minimum
     visibleItems = allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
   }
   
