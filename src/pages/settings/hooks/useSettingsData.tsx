@@ -5,7 +5,7 @@ import { User, UserRole } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 import { useDatabaseStatus } from "./useDatabaseStatus";
 import { useSupabaseStatus } from "./useSupabaseStatus";
-import { useUsersDataLoader } from "./useUsersDataLoader";
+import useUsersDataLoader from "./useUsersDataLoader";
 
 export const useSettingsData = () => {
   const { user: currentUser, isAdmin, isSuperAdmin, role, loading: authLoading } = useAuth();

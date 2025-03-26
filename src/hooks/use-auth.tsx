@@ -1,11 +1,7 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, UserRole } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { hasMinimumRole } from "@/types/roles";
-
-// Helper function to check if one role is at least as high as another
-// Moved to types/roles.ts
 
 interface AuthContextType {
   user: User | null;
@@ -35,14 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // En mode développement, auto-connecter l'utilisateur
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté
     const currentUser = localStorage.getItem("currentUser");
     if (currentUser) {
       setUser(JSON.parse(currentUser));
     } else {
-      // Auto-connecter comme admin
       const adminUser = MOCK_USERS[0];
       setUser(adminUser);
       localStorage.setItem("currentUser", JSON.stringify(adminUser));
@@ -51,7 +44,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string): Promise<User> => {
-    // Logique de connexion mockée
     const matchedUser = MOCK_USERS.find(u => u.email === email);
     
     if (matchedUser) {
@@ -59,21 +51,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("currentUser", JSON.stringify(matchedUser));
       return matchedUser;
     } else {
-      // Simulation d'échec de connexion
       throw new Error("Identifiants invalides");
     }
   };
 
   const signOut = async () => {
-    // Logique de déconnexion
     setUser(null);
     localStorage.removeItem("currentUser");
   };
 
-  // Alias for signOut for backwards compatibility
   const logout = signOut;
 
-  // Vérifier les rôles de l'utilisateur
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
   const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
   const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
@@ -100,7 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Mock authentication pour le développement
 const MOCK_USERS = [
   {
     id: "1",

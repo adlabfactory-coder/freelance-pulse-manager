@@ -81,3 +81,5 @@ const useUsersDataLoader = () => {
 };
 
 export default useUsersDataLoader;
+// Add a named export as well for compatibility
+export { useUsersDataLoader };

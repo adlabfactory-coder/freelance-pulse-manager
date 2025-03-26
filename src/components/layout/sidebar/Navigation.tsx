@@ -13,9 +13,9 @@ import {
   Layers
 } from "lucide-react";
 import { NavItem as NavItemType } from "@/types";
+import { UserRole } from "@/types";
 import NavItem from "./NavItem";
 import { useAuth } from "@/hooks/use-auth";
-import { UserRole } from "@/types/roles";
 
 interface NavigationProps {
   collapsed: boolean;

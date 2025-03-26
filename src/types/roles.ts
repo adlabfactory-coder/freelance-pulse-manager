@@ -1,6 +1,9 @@
 
 import { UserRole } from './index';
 
+// Export UserRole for direct imports from this file
+export { UserRole };
+
 // Définition des étiquettes des rôles pour l'affichage
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   'super_admin': 'Super Admin',
@@ -18,6 +21,15 @@ export const ROLE_HIERARCHY: UserRole[] = [
   UserRole.FREELANCER,
   UserRole.CLIENT
 ];
+
+// Helper function to check if one role is at least as high as another
+export const hasMinimumRole = (userRole: UserRole, requiredRole: UserRole): boolean => {
+  const userRoleIndex = ROLE_HIERARCHY.indexOf(userRole);
+  const requiredRoleIndex = ROLE_HIERARCHY.indexOf(requiredRole);
+  
+  // Lower index means higher role in the hierarchy
+  return userRoleIndex !== -1 && requiredRoleIndex !== -1 && userRoleIndex <= requiredRoleIndex;
+};
 
 // Interface pour les permissions par rôle
 export interface RolePermission {
