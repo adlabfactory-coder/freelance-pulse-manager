@@ -24,6 +24,47 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          api_key: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_name: string
+          last_used: string | null
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_name: string
+          last_used?: string | null
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_name?: string
+          last_used?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           contactId: string
@@ -240,6 +281,47 @@ export type Database = {
             columns: ["subscription_plan_id"]
             isOneToOne: false
             referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modification_history: {
+        Row: {
+          changes: Json
+          entity_id: string
+          entity_type: string
+          id: string
+          modification_date: string | null
+          modified_by: string
+          new_state: Json
+          previous_state: Json
+        }
+        Insert: {
+          changes: Json
+          entity_id: string
+          entity_type: string
+          id?: string
+          modification_date?: string | null
+          modified_by: string
+          new_state: Json
+          previous_state: Json
+        }
+        Update: {
+          changes?: Json
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          modification_date?: string | null
+          modified_by?: string
+          new_state?: Json
+          previous_state?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modification_history_modified_by_fkey"
+            columns: ["modified_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

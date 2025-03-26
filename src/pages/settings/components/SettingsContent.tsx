@@ -1,81 +1,44 @@
 
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import UserProfile from "@/components/settings/UserProfile";
-import CompanySettings from "@/components/settings/CompanySettings";
-import ServicesSettings from "@/components/settings/ServicesSettings";
-import CommissionSettings from "@/components/settings/CommissionSettings";
-import ScheduleSettings from "@/components/settings/ScheduleSettings";
-import SettingsError from "./SettingsError";
-import SettingsLoading from "./SettingsLoading";
-import DatabaseTab from "@/components/settings/DatabaseTab";
+import UserProfileTabs from "@/components/settings/tabs/UserTabs";
+import SecurityTab from "@/components/settings/tabs/SecurityTab";
+import UsersManagement from "@/components/settings/UsersManagement";
 import FreelancerManagement from "@/components/settings/FreelancerManagement";
-import UserTabs from "@/components/settings/tabs/UserTabs";
-import UserForm from "@/components/settings/UserForm";
+import ServicesSettings from "@/components/settings/ServicesSettings";
+import DatabaseTab from "@/components/settings/DatabaseTab";
+import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 import { useAuth } from "@/hooks/use-auth";
-import { User } from "@/types";
 
-interface SettingsContentProps {
-  isLoading: boolean;
-  currentUser: User;
-  selectedUserId: string;
-  activeTab: string;
-  onUserSelect: (userId: string) => void;
-  onTabChange: (value: string) => void;
-  users?: User[];
-  error?: string | null;
-}
-
-const SettingsContent: React.FC<SettingsContentProps> = ({
-  isLoading,
-  error,
-  currentUser,
-  selectedUserId,
-  onUserSelect
-}) => {
-  const { isAdmin, isSuperAdmin, isAdminOrSuperAdmin } = useAuth();
-
-  if (isLoading) {
-    return <SettingsLoading />;
-  }
-
-  if (error) {
-    return <SettingsError title="Erreur" description={error} onRetry={() => {}} />;
-  }
-
+const SettingsContent: React.FC = () => {
+  const { isSuperAdmin, isAdminOrSuperAdmin } = useAuth();
+  
   return (
-    <Routes>
-      <Route index element={<Navigate to="profile" replace />} />
-      <Route
-        path="/profile"
-        element={
-          <UserProfile
-            userId={selectedUserId}
-            currentUser={currentUser}
-          />
-        }
-      />
-      <Route path="/company" element={<CompanySettings />} />
-      <Route path="/services" element={<ServicesSettings />} />
-      <Route path="/commissions" element={<CommissionSettings />} />
-      <Route path="/schedule" element={<ScheduleSettings />} />
-      <Route path="/database" element={<DatabaseTab />} />
-      
-      {/* Routes de gestion des utilisateurs pour Admin et SuperAdmin */}
-      {isAdminOrSuperAdmin && (
-        <>
-          <Route path="/users" element={<UserTabs onSelectUser={onUserSelect} />} />
-          <Route path="/add-user" element={<UserForm />} />
-          <Route path="/edit-user/:id" element={<UserForm isEditing />} />
-        </>
-      )}
-      
-      {/* Route spécifique pour gestion des freelances */}
-      {isAdmin && <Route path="/freelancers" element={<FreelancerManagement />} />}
-      
-      {/* Redirection par défaut sur la première route si aucune ne correspond */}
-      <Route path="*" element={<Navigate to="profile" replace />} />
-    </Routes>
+    <div className="flex-1 space-y-4">
+      <Routes>
+        {/* Base routes for all users */}
+        <Route path="" element={<UserProfileTabs />} />
+        <Route path="security" element={<SecurityTab />} />
+        <Route path="api-keys" element={<ApiKeysTab />} />
+        
+        {/* Admin & Super Admin routes */}
+        {isAdminOrSuperAdmin && (
+          <>
+            <Route path="users" element={<UsersManagement />} />
+            <Route path="freelancers" element={<FreelancerManagement />} />
+            <Route path="services" element={<ServicesSettings />} />
+          </>
+        )}
+        
+        {/* Super Admin only routes */}
+        {isSuperAdmin && (
+          <Route path="database" element={<DatabaseTab />} />
+        )}
+        
+        {/* Fallback redirect for invalid routes */}
+        <Route path="*" element={<Navigate to="/settings" replace />} />
+      </Routes>
+    </div>
   );
 };
 
