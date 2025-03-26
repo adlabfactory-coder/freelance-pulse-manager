@@ -7,6 +7,14 @@ import { DatabaseConnectionStatus } from './types';
  */
 export const checkSupabaseConnection = async (): Promise<DatabaseConnectionStatus> => {
   try {
+    console.log("Vérification de la connexion à Supabase...");
+    
+    // Vérifier la configuration
+    const supabaseUrl = "https://cvgwwdwnfmnkiyxqfmnn.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2Z3d3ZHduZm1ua2l5eHFmbW5uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODc5MDIsImV4cCI6MjA1ODQ2MzkwMn0.ItnJf48Z5NT7Gj-GcraxmPcUx2bKa7lzJZBahrwkq8A";
+    
+    console.log("Configuration vérifiée, tentative de connexion...");
+    
     // Vérifier la connexion avec un appel simple qui ne dépend pas d'une table spécifique
     const { data: authData, error: authError } = await supabase.auth.getSession();
     
@@ -44,6 +52,7 @@ export const checkSupabaseConnection = async (): Promise<DatabaseConnectionStatu
       };
     }
     
+    console.log("Connexion à Supabase établie avec succès");
     return { success: true, message: 'Connexion à Supabase réussie' };
   } catch (error: any) {
     console.error('Erreur générale de connexion à Supabase:', error);
