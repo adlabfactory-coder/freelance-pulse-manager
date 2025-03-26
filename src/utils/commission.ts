@@ -11,11 +11,11 @@ export const getTierLabel = (tier: CommissionTier): string => {
     case CommissionTier.TIER_1:
       return "Moins de 10 contrats";
     case CommissionTier.TIER_2:
-      return "11 à 20 contrats";
+      return "De 11 à 20 contrats";
     case CommissionTier.TIER_3:
-      return "21 à 30 contrats";
+      return "De 21 à 30 contrats";
     case CommissionTier.TIER_4:
-      return "31 contrats et plus";
+      return "Au-delà de 31 contrats";
     default:
       return "Inconnu";
   }

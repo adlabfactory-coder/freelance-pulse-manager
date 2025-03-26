@@ -35,7 +35,10 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
                   "bg-green-100 text-green-800 hover:bg-green-200"
                 }
               >
-                {getTierLabel(rule.tier)}
+                {rule.tier === CommissionTier.TIER_1 ? "Moins de 10 contrats" :
+                 rule.tier === CommissionTier.TIER_2 ? "De 11 à 20 contrats" :
+                 rule.tier === CommissionTier.TIER_3 ? "De 21 à 30 contrats" :
+                 "Au-delà de 31 contrats"}
               </Badge>
               <div className="mt-2 text-2xl font-bold">
                 {formatCurrency(rule.amount || 0)}

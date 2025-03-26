@@ -36,6 +36,7 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
   let visibleItems = allNavItems;
   
   if (isFreelancer) {
+    // Pour les freelancers, tous ces éléments doivent être visibles
     const freelancerItems = [
       "/dashboard",
       "/contacts",
@@ -52,13 +53,12 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
       "/contacts",
       "/appointments",
       "/quotes",
-      "/commissions",
       "/settings"
     ];
     
     visibleItems = allNavItems.filter(item => accountManagerItems.includes(item.href));
   } else if (!isAdmin) {
-    // Accès de base pour les autres rôles (minimum dashboard et settings)
+    // Accès de base pour les autres rôles
     visibleItems = allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
   }
   
