@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoonIcon, SunIcon, User, LogOut, Menu } from 'lucide-react';
+import { MoonIcon, SunIcon, User, LogOut, Menu, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -49,6 +49,10 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const handleWhatsAppContact = () => {
+    window.open('https://wa.me/+33612345678', '_blank');
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -85,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({
           <Menu className="h-5 w-5" />
         </Button>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
         <Button
           variant="ghost"
           size="icon"
@@ -93,6 +97,15 @@ const Header: React.FC<HeaderProps> = ({
           aria-label={isDarkMode ? 'Mode clair' : 'Mode sombre'}
         >
           {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleWhatsAppContact}
+          aria-label="Contacter par WhatsApp"
+        >
+          <MessageCircle className="h-5 w-5" />
         </Button>
 
         {user && (
