@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CommissionRule } from "@/types/commissions";
+import { CommissionRule, CommissionTier } from "@/types/commissions";
 import { createCommissionsService } from "@/services/supabase/commissions";
 
 export const useCommissionRules = () => {
@@ -38,19 +38,19 @@ export const useCommissionRules = () => {
         setCommissionRules([
           {
             id: "mock-rule-1",
-            tier: "TIER_1",
+            tier: CommissionTier.TIER_1,
             minContracts: 1,
             percentage: 5
           },
           {
             id: "mock-rule-2",
-            tier: "TIER_2",
+            tier: CommissionTier.TIER_2,
             minContracts: 5,
             percentage: 10
           },
           {
             id: "mock-rule-3",
-            tier: "TIER_3",
+            tier: CommissionTier.TIER_3,
             minContracts: 10,
             percentage: 15
           }
