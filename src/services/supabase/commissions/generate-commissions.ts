@@ -83,7 +83,7 @@ export async function generateMonthlyCommissions(
         if (!applicableRule) continue;
         
         // 3.4 Calculer le montant de la commission (nombre de contrats * montant unitaire)
-        const unitAmount = applicableRule.unitAmount || 0; 
+        const unitAmount = applicableRule.unit_amount || 0; 
         const amount = calculateCommissionAmount(contractsCount, unitAmount);
         
         if (!amount) continue; // Pas de montant à commissionner

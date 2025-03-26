@@ -131,27 +131,34 @@ export type Database = {
       commission_rules: {
         Row: {
           id: string
+          maxContracts: number | null
           minContracts: number
           percentage: number
           tier: string
+          unit_amount: number | null
         }
         Insert: {
           id?: string
+          maxContracts?: number | null
           minContracts: number
           percentage: number
           tier: string
+          unit_amount?: number | null
         }
         Update: {
           id?: string
+          maxContracts?: number | null
           minContracts?: number
           percentage?: number
           tier?: string
+          unit_amount?: number | null
         }
         Relationships: []
       }
       commissions: {
         Row: {
           amount: number
+          contracts_count: number | null
           createdAt: string | null
           deleted_at: string | null
           freelancerId: string
@@ -167,6 +174,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          contracts_count?: number | null
           createdAt?: string | null
           deleted_at?: string | null
           freelancerId: string
@@ -182,6 +190,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          contracts_count?: number | null
           createdAt?: string | null
           deleted_at?: string | null
           freelancerId?: string

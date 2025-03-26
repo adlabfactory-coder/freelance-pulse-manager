@@ -15,6 +15,8 @@ export interface CommissionsTable {
       status: string
       paidDate: string | null
       createdAt: string
+      contracts_count: number | null
+      unit_amount: number | null
     }
     Insert: {
       id?: string
@@ -28,6 +30,8 @@ export interface CommissionsTable {
       status: string
       paidDate?: string | null
       createdAt?: string
+      contracts_count?: number | null
+      unit_amount?: number | null
     }
     Update: {
       id?: string
@@ -41,6 +45,8 @@ export interface CommissionsTable {
       status?: string
       paidDate?: string | null
       createdAt?: string
+      contracts_count?: number | null
+      unit_amount?: number | null
     }
   }
   commission_rules: {
@@ -49,18 +55,24 @@ export interface CommissionsTable {
       tier: string
       minContracts: number
       percentage: number
+      unit_amount: number | null
+      maxContracts: number | null
     }
     Insert: {
       id?: string
       tier: string
       minContracts: number
       percentage: number
+      unit_amount?: number | null
+      maxContracts?: number | null
     }
     Update: {
       id?: string
       tier?: string
       minContracts?: number
       percentage?: number
+      unit_amount?: number | null
+      maxContracts?: number | null
     }
   }
 }
