@@ -19,39 +19,24 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
 }) => {
   // Utiliser des règles de commission par défaut si aucune n'est fournie
   const hasRules = commissionRules && commissionRules.length > 0;
-  const rules = hasRules ? commissionRules : [
-    {
-      id: "default-tier-1",
-      tier: CommissionTier.TIER_1,
-      minContracts: 1,
-      maxContracts: 10,
-      percentage: 0,
-      unitAmount: 500
-    },
-    {
-      id: "default-tier-2",
-      tier: CommissionTier.TIER_2,
-      minContracts: 11,
-      maxContracts: 20,
-      percentage: 0,
-      unitAmount: 1000
-    },
-    {
-      id: "default-tier-3",
-      tier: CommissionTier.TIER_3,
-      minContracts: 21,
-      maxContracts: 30,
-      percentage: 0,
-      unitAmount: 1500
-    },
-    {
-      id: "default-tier-4",
-      tier: CommissionTier.TIER_4,
-      minContracts: 31,
-      percentage: 0,
-      unitAmount: 2000
-    }
-  ];
+  const tiers = [CommissionTier.TIER_1, CommissionTier.TIER_2, CommissionTier.TIER_3, CommissionTier.TIER_4];
+  
+  // Assurer que tous les 4 paliers sont disponibles
+  let rules = hasRules ? [...commissionRules] : [];
+  
+  // Si nous n'avons pas les 4 paliers, compléter avec les paliers par défaut
+  if (rules.length < 4) {
+    const existingTiers = rules.map(rule => rule.tier);
+    tiers.forEach(tier => {
+      if (!existingTiers.includes(tier)) {
+        const defaultRule = getDefaultRule(tier);
+        rules.push(defaultRule);
+      }
+    });
+    
+    // Trier les règles par niveau minimum de contrats
+    rules.sort((a, b) => a.minContracts - b.minContracts);
+  }
 
   console.log("Affichage des règles de commission:", rules);
 
@@ -71,9 +56,9 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {rules.map((rule) => (
+          {rules.map((rule, index) => (
             <div 
-              key={rule.id}
+              key={rule.id || `tier-${index}`}
               className="border rounded-md p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow"
             >
               <Badge 
@@ -107,6 +92,56 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
       </CardContent>
     </Card>
   );
+};
+
+// Fonctions utilitaires pour générer des règles par défaut
+const getDefaultRule = (tier: CommissionTier): CommissionRule => {
+  switch (tier) {
+    case CommissionTier.TIER_1:
+      return {
+        id: "default-tier-1",
+        tier: CommissionTier.TIER_1,
+        minContracts: 1,
+        maxContracts: 10,
+        percentage: 0,
+        unitAmount: 500
+      };
+    case CommissionTier.TIER_2:
+      return {
+        id: "default-tier-2",
+        tier: CommissionTier.TIER_2,
+        minContracts: 11,
+        maxContracts: 20,
+        percentage: 0,
+        unitAmount: 1000
+      };
+    case CommissionTier.TIER_3:
+      return {
+        id: "default-tier-3",
+        tier: CommissionTier.TIER_3,
+        minContracts: 21,
+        maxContracts: 30,
+        percentage: 0,
+        unitAmount: 1500
+      };
+    case CommissionTier.TIER_4:
+      return {
+        id: "default-tier-4",
+        tier: CommissionTier.TIER_4,
+        minContracts: 31,
+        percentage: 0,
+        unitAmount: 2000
+      };
+    default:
+      return {
+        id: "default-unknown",
+        tier: CommissionTier.TIER_1,
+        minContracts: 1,
+        maxContracts: 10,
+        percentage: 0,
+        unitAmount: 500
+      };
+  }
 };
 
 export default CommissionTiers;

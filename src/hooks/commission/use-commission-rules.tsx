@@ -43,7 +43,13 @@ export const useCommissionRules = () => {
         }
       } catch (connError: any) {
         console.warn("Database connection check failed:", connError.message || connError);
-        throw new Error("Unable to connect to database");
+        console.log("Falling back to default commission rules due to connection issue");
+        setState(prev => ({
+          ...prev,
+          commissionRules: getDefaultCommissionRules(),
+          loading: false
+        }));
+        return;
       }
       
       // Fetch the actual rules
@@ -57,9 +63,32 @@ export const useCommissionRules = () => {
       if (data && data.length > 0) {
         console.log("Commission rules from DB:", data);
         const mappedRules = data.map(mapRuleFromDatabase);
+        
+        // Vérifier si tous les paliers sont présents
+        const tiers = [
+          CommissionTier.TIER_1, 
+          CommissionTier.TIER_2, 
+          CommissionTier.TIER_3, 
+          CommissionTier.TIER_4
+        ];
+        
+        // Pour chaque palier, vérifier s'il existe
+        const completeRules = [...mappedRules];
+        
+        for (const tier of tiers) {
+          const existingRule = completeRules.find(rule => rule.tier === tier);
+          if (!existingRule) {
+            console.log(`Adding missing tier: ${tier}`);
+            completeRules.push(getDefaultCommissionRule(tier));
+          }
+        }
+        
+        // Trier par nombre de contrats minimum
+        completeRules.sort((a, b) => a.minContracts - b.minContracts);
+        
         setState(prev => ({ 
           ...prev, 
-          commissionRules: mappedRules,
+          commissionRules: completeRules,
           loading: false 
         }));
       } else {
