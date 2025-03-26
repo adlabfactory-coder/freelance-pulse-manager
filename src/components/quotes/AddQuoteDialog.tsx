@@ -48,7 +48,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
         }));
       }
     }
-  }, [open, initialContactId]);
+  }, [open, initialContactId, loadData, setQuoteData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,7 +72,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
           onCurrentItemChange={setCurrentItem}
           onAddItem={handleAddItem}
           onRemoveItem={handleRemoveItem}
-          onSubmit={handleSubmit}
+          onSubmit={() => handleSubmit()}
           onCancel={() => onOpenChange(false)}
         />
       </DialogContent>

@@ -8,19 +8,33 @@ interface ClientSelectorProps {
   contactId?: string;
   contacts: Contact[];
   onSelect: (contactId: string) => void;
+  disabled?: boolean;
+  onChange?: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const ClientSelector: React.FC<ClientSelectorProps> = ({
   contactId,
   contacts,
-  onSelect
+  onSelect,
+  disabled = false,
+  onChange
 }) => {
+  // Si onChange est fourni, l'utiliser, sinon utiliser onSelect
+  const handleChange = (value: string) => {
+    if (onChange) {
+      onChange(value);
+    } else {
+      onSelect(value);
+    }
+  };
+
   return (
     <div>
       <Label htmlFor="contact">Contact</Label>
       <Select
         value={contactId}
-        onValueChange={onSelect}
+        onValueChange={handleChange}
+        disabled={disabled}
       >
         <SelectTrigger id="contact">
           <SelectValue placeholder="Sélectionner un contact" />

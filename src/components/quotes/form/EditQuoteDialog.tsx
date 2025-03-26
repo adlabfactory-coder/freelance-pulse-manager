@@ -51,7 +51,7 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
         loadQuoteData(quoteId);
       }
     }
-  }, [open, quoteId, initialQuote]);
+  }, [open, quoteId, initialQuote, loadData, loadQuoteData, setQuoteData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

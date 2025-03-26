@@ -7,28 +7,45 @@ import { QuoteStatus } from "@/types";
 interface StatusSelectorProps {
   status?: QuoteStatus;
   onSelect: (status: QuoteStatus) => void;
+  value?: QuoteStatus;
+  onChange?: React.Dispatch<React.SetStateAction<QuoteStatus>>;
 }
 
 const StatusSelector: React.FC<StatusSelectorProps> = ({
   status,
-  onSelect
+  onSelect,
+  value,
+  onChange
 }) => {
+  // Si onChange est fourni, l'utiliser, sinon utiliser onSelect
+  const handleChange = (newStatus: string) => {
+    const typedStatus = newStatus as QuoteStatus;
+    if (onChange) {
+      onChange(typedStatus);
+    } else {
+      onSelect(typedStatus);
+    }
+  };
+
+  // Utiliser value s'il est fourni, sinon utiliser status
+  const currentValue = value !== undefined ? value : status;
+
   return (
     <div>
       <Label htmlFor="status">Statut</Label>
       <Select
-        value={status}
-        onValueChange={value => onSelect(value as QuoteStatus)}
+        value={currentValue}
+        onValueChange={handleChange}
       >
         <SelectTrigger id="status">
           <SelectValue placeholder="Sélectionner un statut" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={QuoteStatus.DRAFT}>Brouillon</SelectItem>
-          <SelectItem value={QuoteStatus.SENT}>Envoyé</SelectItem>
-          <SelectItem value={QuoteStatus.ACCEPTED}>Accepté</SelectItem>
-          <SelectItem value={QuoteStatus.REJECTED}>Rejeté</SelectItem>
-          <SelectItem value={QuoteStatus.EXPIRED}>Expiré</SelectItem>
+          <SelectItem value="draft">Brouillon</SelectItem>
+          <SelectItem value="sent">Envoyé</SelectItem>
+          <SelectItem value="accepted">Accepté</SelectItem>
+          <SelectItem value="rejected">Rejeté</SelectItem>
+          <SelectItem value="expired">Expiré</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -1,139 +1,132 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Subscription } from "@/types/subscription";
+import { Loader2 } from "lucide-react";
+import { QuoteStatus, SubscriptionPlan } from "@/types";
 import { useQuoteForm } from "@/components/quotes/hooks/useQuoteForm";
 import ClientSelector from "@/components/quotes/form/ClientSelector";
 import FreelancerSelector from "@/components/quotes/form/FreelancerSelector";
-import QuoteValidityDatePicker from "@/components/quotes/form/QuoteValidityDatePicker";
 import StatusSelector from "@/components/quotes/form/StatusSelector";
-import QuoteItemsList from "@/components/quotes/form/QuoteItemsList";
-import { useNavigate } from "react-router-dom";
-import { Contact } from "@/services/contacts/types";
-import { QuoteStatus } from "@/types";
+import QuoteValidityDatePicker from "@/components/quotes/form/QuoteValidityDatePicker";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { formatCurrency } from "@/utils/format";
 
 interface SubscriptionToQuoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  subscription: Subscription;
-  contact?: Contact;
+  plan: SubscriptionPlan;
 }
 
-export default function SubscriptionToQuoteDialog({
+const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
   open,
   onOpenChange,
-  subscription,
-  contact
-}: SubscriptionToQuoteDialogProps) {
-  const navigate = useNavigate();
-  
-  // Generate a default quote based on the subscription
-  const initialQuote = {
-    contactId: subscription.clientId || contact?.id || "",
-    freelancerId: subscription.freelancerId || "",
-    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    status: "draft" as QuoteStatus,
-    notes: `Ce devis est basé sur l'abonnement "${subscription.name}".`,
-    items: [
-      {
-        description: subscription.name,
-        quantity: 1,
-        unitPrice: Number(subscription.price),
-        tax: 20, // Default tax rate in France
-        discount: 0
-      }
-    ]
-  };
-  
+  plan
+}) => {
+  const [contactId, setContactId] = useState("");
+  const [freelancerId, setFreelancerId] = useState("");
+  const [validUntil, setValidUntil] = useState<Date>(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
+  const [loading, setLoading] = useState(false);
+
   const {
-    contactId,
-    setContactId,
-    freelancerId,
-    setFreelancerId,
-    validUntil,
-    setValidUntil,
-    status,
-    setStatus,
-    notes,
-    setNotes,
-    items,
-    addItem,
-    updateItem,
-    removeItem,
-    totalAmount,
+    contacts,
+    freelancers,
     isSubmitting,
     handleSubmit
-  } = useQuoteForm(
-    initialQuote,
-    (quoteId) => {
+  } = useQuoteForm({
+    onCloseDialog: onOpenChange,
+    onQuoteCreated: () => {
+      toast.success("Devis créé avec succès");
       onOpenChange(false);
-      navigate(`/quotes/${quoteId}`);
     }
-  );
-  
+  });
+
+  const handleCreateQuote = async () => {
+    if (!contactId) {
+      toast.error("Veuillez sélectionner un client");
+      return;
+    }
+
+    if (!freelancerId) {
+      toast.error("Veuillez sélectionner un commercial");
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Créer le devis avec un seul élément basé sur le plan d'abonnement
+      const quoteItems = [{
+        description: `Abonnement ${plan.name}`,
+        quantity: 1,
+        unitPrice: plan.price,
+        tax: 20,
+        discount: 0
+      }];
+      
+      // Soumettre le formulaire
+      await handleSubmit();
+      
+    } catch (error) {
+      console.error("Erreur lors de la création du devis:", error);
+      toast.error("Une erreur est survenue lors de la création du devis");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Créer un devis à partir de l'abonnement</DialogTitle>
+          <DialogTitle>Créer un devis pour {plan.name}</DialogTitle>
+          <DialogDescription>
+            Créez un devis basé sur le plan d'abonnement {plan.name} ({formatCurrency(plan.price)}/{plan.interval})
+          </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            <ClientSelector
-              contactId={contactId}
-              onChange={setContactId}
-              disabled={!!contact}
-            />
-            
-            <FreelancerSelector
-              freelancerId={freelancerId}
-              onChange={setFreelancerId}
-            />
-            
-            <QuoteValidityDatePicker
-              value={validUntil}
-              onChange={setValidUntil}
-            />
-            
-            <StatusSelector
-              value={status}
-              onChange={setStatus}
-            />
-          </div>
-          
-          <QuoteItemsList
-            items={items}
-            onUpdateItem={updateItem}
-            onRemoveItem={removeItem}
-            onAddItem={addItem}
+
+        <div className="grid gap-6 py-4">
+          <ClientSelector
+            contacts={contacts}
+            contactId={contactId}
+            onSelect={setContactId}
           />
           
-          <div className="flex justify-between items-center">
-            <div className="text-lg font-semibold">
-              Total: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(totalAmount)}
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Annuler
-              </Button>
-              
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Création..." : "Créer le devis"}
-              </Button>
-            </div>
-          </div>
-        </form>
+          <FreelancerSelector
+            freelancers={freelancers}
+            freelancerId={freelancerId}
+            onSelect={setFreelancerId}
+          />
+          
+          <QuoteValidityDatePicker
+            date={validUntil}
+            onSelect={setValidUntil}
+          />
+          
+          <StatusSelector
+            status={status}
+            onSelect={setStatus}
+          />
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button onClick={handleCreateQuote} disabled={loading || !contactId || !freelancerId}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Création en cours...
+              </>
+            ) : (
+              "Créer le devis"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default SubscriptionToQuoteDialog;

@@ -8,19 +8,33 @@ interface FreelancerSelectorProps {
   freelancerId?: string;
   freelancers: User[];
   onSelect: (freelancerId: string) => void;
+  disabled?: boolean;
+  onChange?: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const FreelancerSelector: React.FC<FreelancerSelectorProps> = ({
   freelancerId,
   freelancers,
-  onSelect
+  onSelect,
+  disabled = false,
+  onChange
 }) => {
+  // Si onChange est fourni, l'utiliser, sinon utiliser onSelect
+  const handleChange = (value: string) => {
+    if (onChange) {
+      onChange(value);
+    } else {
+      onSelect(value);
+    }
+  };
+
   return (
     <div>
       <Label htmlFor="freelancer">Commercial</Label>
       <Select
         value={freelancerId}
-        onValueChange={onSelect}
+        onValueChange={handleChange}
+        disabled={disabled}
       >
         <SelectTrigger id="freelancer">
           <SelectValue placeholder="Sélectionner un commercial" />
