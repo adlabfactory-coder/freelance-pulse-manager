@@ -38,11 +38,12 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     onOpenChange(false);
   };
 
+  // Create the form hooks with manually wrapping callbacks to ensure the right signature
   const {
     contacts,
     freelancers,
     isSubmitting,
-    handleSubmit,
+    handleSubmit: formHandleSubmit,
     setContactId: setFormContactId,
     setFreelancerId: setFormFreelancerId,
     setValidUntil: setFormValidUntil,
@@ -92,8 +93,8 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         discount: 0
       });
       
-      // Soumettre le formulaire
-      await handleSubmit();
+      // Soumettre le formulaire - manually wrapping to ensure right signature
+      await formHandleSubmit();
       
     } catch (error) {
       console.error("Erreur lors de la création du devis:", error);
