@@ -6,6 +6,7 @@
 
 export { checkDatabaseStatus } from './database-status';
 export { initializeDatabase } from './database-initialization';
+export { enableRealtimeForTables } from './enable-realtime';
 export type { 
   DatabaseSetupOptions, 
   DatabaseSetupResult, 

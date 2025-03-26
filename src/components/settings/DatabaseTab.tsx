@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,8 +6,8 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { enableRealtimeForTables } from "@/services/supabase/setup/enable-realtime";
-import { initializeDatabase, checkDatabaseStatus } from "@/lib/supabase/setup";
-import { supabase } from "@/lib/supabase-client";
+import { initializeDatabase, checkDatabaseStatus } from "@/services/supabase/setup";
+import { Separator } from "@/components/ui/separator";
 import DatabaseStatusBadge from "./database/DatabaseStatusBadge";
 import DatabaseStatusTable from "./database/DatabaseStatusTable";
 import ConnectionErrorAlert from "./database/ConnectionErrorAlert";
@@ -17,11 +18,18 @@ const DatabaseTab = () => {
   const { isAdmin, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   const {
-    isConnected,
-    isCheckingConnection,
+    status,
+    isLoading,
+    refreshing,
     connectionError,
-    needsSetup,
+    tablesStatus,
+    handleRefresh
   } = useDatabaseStatus();
+
+  // Conversion de l'état en flags booléens pour simplifier l'interface
+  const isConnected = status === "ok" || status === "partial";
+  const needsSetup = status === "not_configured" || status === "partial";
+  const isCheckingConnection = isLoading;
 
   const [isInitializing, setIsInitializing] = useState(false);
   const [initializationError, setInitializationError] = useState<string | null>(null);
@@ -127,17 +135,26 @@ const DatabaseTab = () => {
             Vérifiez l'état de la connexion à votre base de données Supabase.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <Separator />
+        <CardContent className="space-y-4 pt-4">
           {isCheckingConnection ? (
-            <LoadingIndicator message="Vérification de la connexion..." />
+            <LoadingIndicator />
           ) : (
             <>
-              <DatabaseStatusBadge
-                isConnected={isConnected}
-                needsSetup={needsSetup}
-              />
+              <div className="mb-4 flex items-center">
+                <span className="font-medium mr-3">Statut global:</span>
+                <DatabaseStatusBadge status={status} />
+              </div>
+              
               {connectionError && (
                 <ConnectionErrorAlert error={connectionError} />
+              )}
+              
+              {tablesStatus.length > 0 && (
+                <DatabaseStatusTable 
+                  tablesStatus={tablesStatus} 
+                  isLoading={isLoading} 
+                />
               )}
             </>
           )}
@@ -156,9 +173,15 @@ const DatabaseTab = () => {
           <CardContent className="space-y-4">
             {isInitializing ? (
               <>
-                <LoadingIndicator message="Initialisation de la base de données..." />
+                <LoadingIndicator />
                 {initializationDetails.length > 0 && (
-                  <DatabaseStatusTable details={initializationDetails} />
+                  <DatabaseStatusTable 
+                    tablesStatus={initializationDetails.map(d => ({
+                      table: d.table,
+                      exists: d.status === "created"
+                    }))}
+                    isLoading={false}
+                  />
                 )}
               </>
             ) : (
@@ -169,7 +192,13 @@ const DatabaseTab = () => {
                       <strong>Erreur:</strong> {initializationError}
                     </p>
                     {initializationDetails.length > 0 && (
-                      <DatabaseStatusTable details={initializationDetails} />
+                      <DatabaseStatusTable 
+                        tablesStatus={initializationDetails.map(d => ({
+                          table: d.table,
+                          exists: d.status === "created"
+                        }))}
+                        isLoading={false} 
+                      />
                     )}
                   </div>
                 )}
@@ -183,7 +212,7 @@ const DatabaseTab = () => {
           <CardFooter>
             <Button
               onClick={handleInitializeDatabase}
-              disabled={isInitializing || !isAdmin && !isSuperAdmin}
+              disabled={isInitializing || (!isAdmin && !isSuperAdmin)}
             >
               {isInitializing ? (
                 <>
@@ -221,7 +250,7 @@ const DatabaseTab = () => {
         <CardFooter>
           <Button 
             onClick={handleEnableRealtime} 
-            disabled={enablingRealtime || !isAdmin && !isSuperAdmin}
+            disabled={enablingRealtime || (!isAdmin && !isSuperAdmin)}
           >
             {enablingRealtime ? (
               <>

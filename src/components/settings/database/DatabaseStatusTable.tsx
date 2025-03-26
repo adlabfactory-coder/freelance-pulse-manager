@@ -4,12 +4,12 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import TableStatusBadge from "./TableStatusBadge";
 import { getTableDescription } from "./TableDescriptions";
 
-interface TableStatus {
+export interface TableStatus {
   table: string;
   exists: boolean;
 }
 
-interface DatabaseStatusTableProps {
+export interface DatabaseStatusTableProps {
   tablesStatus: TableStatus[];
   isLoading: boolean;
 }
