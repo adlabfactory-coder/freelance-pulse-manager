@@ -12,6 +12,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isFreelancer: boolean;
+  isAccountManager: boolean;
   isClient: boolean;
 };
 
@@ -97,6 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAdmin = role === UserRole.ADMIN;
   const isFreelancer = role === UserRole.FREELANCER;
+  const isAccountManager = role === UserRole.ACCOUNT_MANAGER;
   const isClient = role === UserRole.CLIENT;
 
   return (
@@ -109,6 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         isAdmin,
         isFreelancer,
+        isAccountManager,
         isClient
       }}
     >

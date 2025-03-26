@@ -53,6 +53,8 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, toggleSideb
       case 'admin':
         return 'Administrateur';
       case 'freelancer':
+        return 'Freelancer';
+      case 'account_manager':
         return 'Chargé(e) d\'affaires';
       case 'client':
         return 'Client';

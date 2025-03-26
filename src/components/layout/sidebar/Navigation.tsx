@@ -20,7 +20,7 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
-  const { isAdmin, isFreelancer } = useAuth();
+  const { isAdmin, isFreelancer, isAccountManager } = useAuth();
   
   const allNavItems: NavItemType[] = [
     { title: "Tableau de bord", href: "/dashboard", icon: Home },
@@ -38,11 +38,20 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     // Les admins ont accès à tout
     if (isAdmin) return true;
     
-    // Les chargés d'affaires ont accès limité
+    // Les freelancers ont accès aux contacts, rendez-vous et devis
     if (isFreelancer) {
       return [
         "/dashboard",
         "/contacts",
+        "/appointments",
+        "/quotes",
+      ].includes(item.href);
+    }
+    
+    // Les chargés d'affaires ont accès aux devis à valider, rendez-vous et commissions
+    if (isAccountManager) {
+      return [
+        "/dashboard",
         "/appointments",
         "/quotes",
         "/commissions",
