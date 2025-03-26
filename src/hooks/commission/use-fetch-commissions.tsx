@@ -24,6 +24,18 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
     try {
       setLoading(true);
       setError(null);
+      
+      // Vérifier d'abord la connexion Supabase
+      try {
+        const { data, error } = await supabase.from('commissions').select('count', { count: 'exact', head: true });
+        if (error) {
+          throw new Error(`Problème d'accès à la base de données: ${error.message}`);
+        }
+      } catch (connError: any) {
+        console.warn("Vérification de connexion échouée:", connError.message || connError);
+        throw new Error("Impossible de se connecter à la base de données");
+      }
+      
       const data = await commissionsService.fetchCommissions(user.id, role || UserRole.CLIENT);
       setCommissions(data);
     } catch (error: any) {

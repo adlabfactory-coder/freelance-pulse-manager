@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CommissionRule } from "@/types/commissions";
 import { createCommissionsService } from "@/services/supabase/commissions";
@@ -11,62 +11,57 @@ export const useCommissionRules = () => {
   
   const commissionsService = createCommissionsService(supabase as any);
 
-  const fetchCommissionRules = useCallback(async () => {
-    try {
-      setError(null);
-      const data = await commissionsService.fetchCommissionRules();
-      setCommissionRules(data);
-    } catch (error: any) {
-      console.error("Erreur lors du chargement des règles de commissions:", error);
-      setError("Impossible de récupérer les règles de commission.");
-      
-      // Utiliser des règles par défaut en cas d'erreur
-      setCommissionRules([
-        {
-          id: "default-tier-1",
-          tier: "bronze" as any,
-          minContracts: 1,
-          maxContracts: 10,
-          percentage: 10,
-          amount: 500
-        },
-        {
-          id: "default-tier-2",
-          tier: "silver" as any,
-          minContracts: 11,
-          maxContracts: 20,
-          percentage: 15,
-          amount: 1000
-        },
-        {
-          id: "default-tier-3",
-          tier: "gold" as any,
-          minContracts: 21,
-          maxContracts: 30,
-          percentage: 20,
-          amount: 1500
-        },
-        {
-          id: "default-tier-4",
-          tier: "platinum" as any,
-          minContracts: 31,
-          percentage: 25,
-          amount: 2000
+  useEffect(() => {
+    const fetchRules = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Vérifier d'abord la connexion Supabase
+        try {
+          const { data, error } = await supabase.from('commission_rules').select('count', { count: 'exact', head: true });
+          if (error) {
+            throw new Error(`Problème d'accès à la base de données: ${error.message}`);
+          }
+        } catch (connError: any) {
+          console.warn("Vérification de connexion échouée:", connError.message || connError);
+          throw new Error("Impossible de se connecter à la base de données");
         }
-      ]);
-    } finally {
-      setLoading(false);
-    }
+        
+        const rules = await commissionsService.fetchCommissionRules();
+        setCommissionRules(rules);
+      } catch (error: any) {
+        console.error("Erreur lors du chargement des règles de commissions:", error);
+        setError("Impossible de récupérer les règles de commission. Veuillez réessayer plus tard.");
+        
+        // Fournir des données par défaut pour ne pas bloquer l'interface
+        setCommissionRules([
+          {
+            id: "mock-rule-1",
+            tier: "TIER_1",
+            minContracts: 1,
+            percentage: 5
+          },
+          {
+            id: "mock-rule-2",
+            tier: "TIER_2",
+            minContracts: 5,
+            percentage: 10
+          },
+          {
+            id: "mock-rule-3",
+            tier: "TIER_3",
+            minContracts: 10,
+            percentage: 15
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRules();
   }, [commissionsService]);
 
-  useEffect(() => {
-    fetchCommissionRules();
-  }, [fetchCommissionRules]);
-
-  return {
-    commissionRules,
-    loading,
-    error,
-    fetchCommissionRules
-  };
+  return { commissionRules, loading, error };
 };
