@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";

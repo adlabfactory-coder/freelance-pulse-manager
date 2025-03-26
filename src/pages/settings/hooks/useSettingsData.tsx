@@ -3,8 +3,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { User } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { checkDatabaseSetup } from "@/lib/supabase";
-import { getMockUsers } from "@/utils/supabase-mock-data";
 
 export const useSettingsData = () => {
   const supabase = useSupabase();
@@ -42,7 +40,7 @@ export const useSettingsData = () => {
           
           // Vérifier la configuration de la base de données
           try {
-            const dbSetupStatus = await checkDatabaseSetup();
+            const dbSetupStatus = await supabase.checkDatabaseStatus();
             setDbStatus(dbSetupStatus);
             
             if (!dbSetupStatus.success && dbSetupStatus.missingTables && dbSetupStatus.missingTables.length > 0) {
@@ -60,7 +58,7 @@ export const useSettingsData = () => {
       // Utiliser les données de démonstration si Supabase n'est pas accessible
       if (useMockData) {
         console.log("Utilisation des données de démonstration");
-        const mockUsers = getMockUsers();
+        const mockUsers = supabase.getMockUsers();
         setUsers(mockUsers);
         
         // Utiliser le premier utilisateur comme utilisateur actuel
@@ -94,7 +92,7 @@ export const useSettingsData = () => {
           console.error("Erreur lors de la récupération des utilisateurs:", error);
           
           // Utiliser les données de démonstration en cas d'erreur
-          const mockUsers = getMockUsers();
+          const mockUsers = supabase.getMockUsers();
           setUsers(mockUsers);
           
           if (mockUsers.length > 0) {
@@ -120,7 +118,7 @@ export const useSettingsData = () => {
       
       // Essayer quand même de charger les données de démonstration
       try {
-        const mockUsers = getMockUsers();
+        const mockUsers = supabase.getMockUsers();
         if (mockUsers.length > 0) {
           setCurrentUser(mockUsers[0]);
           setSelectedUserId(mockUsers[0].id);
@@ -156,7 +154,7 @@ export const useSettingsData = () => {
         
         // Essayer quand même de charger les données de démonstration
         try {
-          const mockUsers = getMockUsers();
+          const mockUsers = supabase.getMockUsers();
           if (mockUsers.length > 0) {
             setCurrentUser(mockUsers[0]);
             setSelectedUserId(mockUsers[0].id);

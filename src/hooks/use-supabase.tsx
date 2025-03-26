@@ -1,39 +1,62 @@
 
-import { useContext } from 'react';
-import { toast } from '@/components/ui/use-toast';
-import { fetchUsers, fetchUserById, updateUser } from '@/services/supabase-user-service';
-import { checkSupabaseStatus, checkDatabaseStatus, initializeDatabase } from '@/services/supabase-database-service';
-import { getMockUsers } from '@/utils/supabase-mock-data';
+import { createSupabaseService } from '@/services/supabase';
 
-// Import the centralized supabase client
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
-
+// Hook centralisé pour accéder aux services Supabase
 export const useSupabase = () => {
-  const checkSupabaseConnection = async () => {
-    try {
-      // Vérification simple de la connexion
-      const { data, error } = await supabaseClient.from('adlab hub freelancer').select('count()', { count: 'exact', head: true });
-      
-      if (error) {
-        console.warn('Erreur lors de la vérification de la connexion à Supabase:', error.message);
-        return { success: false, message: error.message };
-      }
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
-      return { success: false, message: 'Impossible de se connecter à Supabase' };
-    }
-  };
-
+  // Créer un service Supabase centralisé
+  const supabaseService = createSupabaseService();
+  
   return {
-    supabaseClient,
-    fetchUsers,
-    fetchUserById,
-    updateUser,
-    checkSupabaseStatus: checkSupabaseStatus || checkSupabaseConnection,
-    checkDatabaseStatus,
-    initializeDatabase,
-    getMockUsers
+    // Client Supabase
+    supabaseClient: supabaseService.client,
+    
+    // Fonctions de vérification de la connexion
+    checkSupabaseStatus: supabaseService.checkConnection,
+    
+    // Fonctions de gestion de la base de données
+    checkDatabaseStatus: supabaseService.database.checkStatus,
+    initializeDatabase: supabaseService.database.initialize,
+    
+    // Services des utilisateurs
+    fetchUsers: supabaseService.users.fetchUsers,
+    fetchUserById: supabaseService.users.fetchUserById,
+    updateUser: supabaseService.users.updateUser,
+    
+    // Fonctions de conversion de données
+    getMockUsers: () => {
+      // Conserver la fonction pour la retrocompatibilité
+      return [
+        {
+          id: '1',
+          name: 'Admin Démo',
+          email: 'admin@example.com',
+          role: 'admin',
+          avatar: null,
+          calendly_enabled: true,
+          calendly_url: 'https://calendly.com/admin-demo',
+          calendly_sync_email: 'admin@example.com'
+        },
+        {
+          id: '2',
+          name: 'Commercial Démo',
+          email: 'commercial@example.com',
+          role: 'freelancer',
+          avatar: null,
+          calendly_enabled: true,
+          calendly_url: 'https://calendly.com/commercial-demo',
+          calendly_sync_email: 'commercial@example.com'
+        },
+        {
+          id: '3',
+          name: 'Client Démo',
+          email: 'client@example.com',
+          role: 'client',
+          avatar: null,
+          calendly_enabled: false,
+          calendly_url: '',
+          calendly_sync_email: ''
+        }
+      ];
+    }
   };
 };

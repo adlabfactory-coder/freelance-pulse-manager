@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RefreshCw, Database, AlertTriangle, Check } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { createSQLFunctions } from "@/lib/supabase-sql";
 
 const InitializeDatabase: React.FC = () => {
   const supabase = useSupabase();
@@ -39,16 +38,6 @@ const InitializeDatabase: React.FC = () => {
       }
       
       updateStatus("Connexion à Supabase établie", 10);
-      
-      // Initialisation des fonctions SQL
-      updateStatus("Initialisation des fonctions SQL...", 10);
-      const sqlFunctionsResult = await createSQLFunctions();
-      
-      if (!sqlFunctionsResult.success) {
-        throw new Error(`Erreur lors de l'initialisation des fonctions SQL: ${sqlFunctionsResult.message}`);
-      }
-      
-      updateStatus("Fonctions SQL initialisées", 15);
       
       // Vérification de la configuration
       updateStatus("Vérification de la configuration des tables...", 10);

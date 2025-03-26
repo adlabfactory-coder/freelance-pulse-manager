@@ -29,6 +29,7 @@ export type Database = {
           contactId: string
           createdAt: string | null
           date: string
+          deleted_at: string | null
           description: string | null
           duration: number
           freelancerId: string
@@ -43,6 +44,7 @@ export type Database = {
           contactId: string
           createdAt?: string | null
           date: string
+          deleted_at?: string | null
           description?: string | null
           duration: number
           freelancerId: string
@@ -57,6 +59,7 @@ export type Database = {
           contactId?: string
           createdAt?: string | null
           date?: string
+          deleted_at?: string | null
           description?: string | null
           duration?: number
           freelancerId?: string
@@ -109,6 +112,7 @@ export type Database = {
         Row: {
           amount: number
           createdAt: string | null
+          deleted_at: string | null
           freelancerId: string
           id: string
           paidDate: string | null
@@ -123,6 +127,7 @@ export type Database = {
         Insert: {
           amount: number
           createdAt?: string | null
+          deleted_at?: string | null
           freelancerId: string
           id?: string
           paidDate?: string | null
@@ -137,6 +142,7 @@ export type Database = {
         Update: {
           amount?: number
           createdAt?: string | null
+          deleted_at?: string | null
           freelancerId?: string
           id?: string
           paidDate?: string | null
@@ -178,6 +184,7 @@ export type Database = {
           assignedTo: string | null
           company: string | null
           createdAt: string | null
+          deleted_at: string | null
           email: string
           id: string
           name: string
@@ -193,6 +200,7 @@ export type Database = {
           assignedTo?: string | null
           company?: string | null
           createdAt?: string | null
+          deleted_at?: string | null
           email: string
           id?: string
           name: string
@@ -208,6 +216,7 @@ export type Database = {
           assignedTo?: string | null
           company?: string | null
           createdAt?: string | null
+          deleted_at?: string | null
           email?: string
           id?: string
           name?: string
@@ -277,6 +286,7 @@ export type Database = {
         Row: {
           contactId: string
           createdAt: string | null
+          deleted_at: string | null
           freelancerId: string
           id: string
           notes: string | null
@@ -288,6 +298,7 @@ export type Database = {
         Insert: {
           contactId: string
           createdAt?: string | null
+          deleted_at?: string | null
           freelancerId: string
           id?: string
           notes?: string | null
@@ -299,6 +310,7 @@ export type Database = {
         Update: {
           contactId?: string
           createdAt?: string | null
+          deleted_at?: string | null
           freelancerId?: string
           id?: string
           notes?: string | null
@@ -400,6 +412,7 @@ export type Database = {
         Row: {
           clientId: string
           createdAt: string | null
+          deleted_at: string | null
           description: string | null
           endDate: string | null
           freelancerId: string
@@ -415,6 +428,7 @@ export type Database = {
         Insert: {
           clientId: string
           createdAt?: string | null
+          deleted_at?: string | null
           description?: string | null
           endDate?: string | null
           freelancerId: string
@@ -430,6 +444,7 @@ export type Database = {
         Update: {
           clientId?: string
           createdAt?: string | null
+          deleted_at?: string | null
           description?: string | null
           endDate?: string | null
           freelancerId?: string
@@ -502,6 +517,10 @@ export type Database = {
           table_name: string
         }
         Returns: boolean
+      }
+      clean_old_soft_deleted_records: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       execute_sql: {
         Args: {
