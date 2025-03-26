@@ -22,7 +22,7 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
-  const { role, isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
+  const { user, role, isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
   
   // Définition de tous les éléments de navigation possibles
   const allNavItems: NavItemType[] = [
@@ -44,46 +44,28 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     );
   }
   
-  // Configuration des accès par rôle - Make sure all roles have access to contacts
-  const roleAccess: Record<UserRole, string[]> = {
-    [UserRole.SUPER_ADMIN]: allNavItems.map(item => item.href), // Accès complet
-    [UserRole.ADMIN]: [
-      "/dashboard", 
-      "/contacts", 
-      "/appointments", 
-      "/quotes", 
-      "/subscriptions", 
-      "/commissions", 
-      "/reports", 
-      "/settings"
-    ],
-    [UserRole.ACCOUNT_MANAGER]: [
-      "/dashboard",
-      "/contacts",
-      "/appointments",
-      "/quotes",
-      "/commissions",
-      "/settings"
-    ],
-    [UserRole.FREELANCER]: [
-      "/dashboard",
-      "/contacts",
-      "/appointments", 
-      "/quotes",
-      "/commissions",
-      "/settings"
-    ]
-  };
-  
-  // Déterminer les éléments de navigation visibles en fonction du rôle
+  // La navigation est désormais contrôlée par le rôle de l'utilisateur
+  // Les administrateurs et super-administrateurs ont accès à tout
   let visibleItems: NavItemType[] = [];
   
-  if (role) {
-    const allowedPaths = roleAccess[role] || ["/dashboard", "/settings"];
-    visibleItems = allNavItems.filter(item => allowedPaths.includes(item.href));
+  if (isAdminOrSuperAdmin) {
+    // Accès complet pour admins et super admins
+    visibleItems = allNavItems;
+  } else if (role === UserRole.ACCOUNT_MANAGER) {
+    // Accès pour les chargés de compte
+    visibleItems = allNavItems.filter(item => 
+      ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
+    );
+  } else if (role === UserRole.FREELANCER) {
+    // Accès pour les freelancers
+    visibleItems = allNavItems.filter(item => 
+      ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
+    );
   } else {
-    // Fallback - accès minimum avec contacts toujours inclus
-    visibleItems = allNavItems.filter(item => ["/dashboard", "/contacts", "/settings"].includes(item.href));
+    // Accès minimum par défaut si rôle non défini
+    visibleItems = allNavItems.filter(item => 
+      ["/dashboard", "/contacts", "/settings"].includes(item.href)
+    );
   }
   
   return (

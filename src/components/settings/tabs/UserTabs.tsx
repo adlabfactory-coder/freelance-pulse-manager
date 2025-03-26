@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PersonalInfoTab from "./PersonalInfoTab";
 import SecurityTab from "./SecurityTab";
 import { useAuth } from "@/hooks/use-auth";
-import { hasMinimumRole } from "@/types/roles";
 import { UserRole } from "@/types";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 import { toast } from "@/components/ui/use-toast";
@@ -17,7 +16,7 @@ interface UserProfileTabsProps {
 
 const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
   const [activeTab, setActiveTab] = useState("general");
-  const { user, role } = useAuth();
+  const { user, role, isAdminOrSuperAdmin } = useAuth();
   const supabase = useSupabase();
   
   // State for PersonalInfoTab
@@ -28,7 +27,8 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const canAccessApiKeys = role && hasMinimumRole(role, UserRole.ACCOUNT_MANAGER);
+  // Seuls les administrateurs et les utilisateurs avec des rôles spécifiques peuvent accéder à certains onglets
+  const canAccessApiKeys = isAdminOrSuperAdmin || role === UserRole.ACCOUNT_MANAGER;
   
   // Fetch user data when component mounts or user changes
   useEffect(() => {
@@ -66,6 +66,18 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
   const handleSubmit = async () => {
     if (!user) return;
     
+    // Les utilisateurs normaux ne peuvent pas changer leur rôle
+    if (!isAdminOrSuperAdmin && userRole !== role) {
+      toast({
+        variant: "destructive",
+        title: "Action non autorisée",
+        description: "Seuls les administrateurs peuvent modifier les rôles utilisateurs.",
+      });
+      // Réinitialiser au rôle actuel
+      setUserRole(role || UserRole.FREELANCER);
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       // Try to update user data through Supabase
@@ -82,7 +94,6 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
           description: "Les informations ont été enregistrées avec succès.",
         });
       } else {
-        // Fix: TypeScript error - safely access the error property
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -143,6 +154,8 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
           currentUserRole={role || UserRole.FREELANCER}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
+          // Seuls les administrateurs peuvent modifier les rôles
+          canEditRole={isAdminOrSuperAdmin}
         />
       </TabsContent>
       <TabsContent value="security" className="space-y-4">

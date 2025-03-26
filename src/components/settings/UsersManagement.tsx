@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { User, UserRole } from "@/types";
@@ -6,11 +7,12 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, UserPlus } from "lucide-react";
 import { getMockUsers } from "@/utils/supabase-mock-data";
 import UserActions from "./UserActions";
 import { useAuth } from "@/hooks/use-auth";
 import { USER_ROLE_LABELS } from "@/types/roles";
+import { useNavigate } from "react-router-dom";
 
 interface UsersManagementProps {
   onSelectUser: (userId: string) => void;
@@ -28,10 +30,11 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
   isLoading: externalLoading
 }) => {
   const { fetchUsers } = useSupabase();
-  const { role: currentUserRole } = useAuth();
+  const { role: currentUserRole, isAdminOrSuperAdmin } = useAuth();
   const [users, setUsers] = useState<User[]>(externalUsers || []);
   const [isLoading, setIsLoading] = useState(externalLoading !== undefined ? externalLoading : true);
   const [hasError, setHasError] = useState(false);
+  const navigate = useNavigate();
 
   const fetchUsersData = async () => {
     if (externalUsers && externalUsers.length > 0) {
@@ -94,6 +97,25 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
   const handleRetry = () => {
     fetchUsersData();
   };
+  
+  const handleAddUser = () => {
+    // Rediriger vers la page de création d'utilisateur
+    navigate("/settings/users/create");
+  };
+
+  // Vérification des permissions administratives
+  if (!isAdminOrSuperAdmin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestion des utilisateurs</CardTitle>
+          <CardDescription>
+            Vous n'avez pas les droits nécessaires pour accéder à cette section.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -104,15 +126,25 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
             Liste de tous les utilisateurs de l'application
           </CardDescription>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRetry}
-          className="h-8 gap-1"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Actualiser
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRetry}
+            className="h-8 gap-1"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Actualiser
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={handleAddUser}
+            className="h-8 gap-1"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Ajouter un utilisateur
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -168,13 +200,7 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
                           user={user} 
                           currentUserRole={currentUserRole as UserRole}
                           onUserUpdated={handleRetry}
-                          supervisors={users.filter(u => 
-                            (user.role === UserRole.FREELANCER && 
-                              (u.role === UserRole.ACCOUNT_MANAGER || u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN)) ||
-                            (user.role === UserRole.ACCOUNT_MANAGER && 
-                              (u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN)) ||
-                            (user.role === UserRole.ADMIN && u.role === UserRole.SUPER_ADMIN)
-                          )}
+                          supervisors={users.filter(u => u.id !== user.id)}
                         />
                       </TableCell>
                     </TableRow>

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, Shield } from "lucide-react";
+import { Info, Shield, Plus } from "lucide-react";
 import { 
   UserRole, 
   DEFAULT_PERMISSIONS, 
@@ -15,8 +15,10 @@ import RoleSelector from "./RoleSelector";
 import PermissionFilter from "./PermissionFilter";
 import PermissionTablesContainer from "./PermissionTablesContainer";
 import PermissionEditDialog from "./PermissionEditDialog";
+import { useAuth } from "@/hooks/use-auth";
 
 const RoleManagement: React.FC = () => {
+  const { isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [permissions, setPermissions] = useState<RolePermission[]>(DEFAULT_PERMISSIONS);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -27,6 +29,20 @@ const RoleManagement: React.FC = () => {
 
   // Obtenir toutes les catégories de permissions
   const allCategories = Object.values(PermissionCategory);
+  
+  // Vérification des permissions administrateur
+  if (!isAdminOrSuperAdmin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestion des permissions</CardTitle>
+          <CardDescription>
+            Vous n'avez pas les droits nécessaires pour accéder à cette section.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   // Filtrer les permissions par catégorie et terme de recherche
   const filteredPermissions = permissions.filter(permission => {
@@ -55,17 +71,40 @@ const RoleManagement: React.FC = () => {
     setDialogOpen(true);
   };
   
+  const handleCreatePermission = () => {
+    const newPermission: RolePermission = {
+      id: crypto.randomUUID(),
+      name: "Nouvelle permission",
+      description: "Description de la nouvelle permission",
+      category: PermissionCategory.SYSTEM,
+      roles: [UserRole.SUPER_ADMIN]
+    };
+    
+    setEditingPermission(newPermission);
+    setDialogOpen(true);
+  };
+  
   const handleSavePermission = () => {
     if (editingPermission) {
-      setPermissions(permissions.map(p => 
-        p.id === editingPermission.id ? editingPermission : p
-      ));
+      // Si c'est une nouvelle permission, l'ajouter
+      const exists = permissions.some(p => p.id === editingPermission.id);
+      
+      if (exists) {
+        setPermissions(permissions.map(p => 
+          p.id === editingPermission.id ? editingPermission : p
+        ));
+      } else {
+        setPermissions([...permissions, editingPermission]);
+      }
+      
       setDialogOpen(false);
       setEditingPermission(null);
       
       toast({
-        title: "Permission mise à jour",
-        description: "La permission a été mise à jour avec succès.",
+        title: exists ? "Permission mise à jour" : "Permission créée",
+        description: exists 
+          ? "La permission a été mise à jour avec succès."
+          : "La nouvelle permission a été créée avec succès.",
       });
     }
   };
@@ -118,12 +157,21 @@ const RoleManagement: React.FC = () => {
             Configurez les permissions pour chaque rôle utilisateur
           </CardDescription>
         </div>
-        <Button 
-          onClick={handleSaveAllChanges}
-          disabled={saveInProgress}
-        >
-          {saveInProgress ? "Enregistrement..." : "Enregistrer les modifications"}
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={handleCreatePermission} 
+            variant="outline"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle permission
+          </Button>
+          <Button 
+            onClick={handleSaveAllChanges}
+            disabled={saveInProgress}
+          >
+            {saveInProgress ? "Enregistrement..." : "Enregistrer les modifications"}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Alert className="mb-6">
@@ -149,12 +197,21 @@ const RoleManagement: React.FC = () => {
         />
 
         <div className="overflow-auto">
-          <PermissionTablesContainer 
-            selectedCategory={selectedCategory}
-            permissionsByCategory={permissionsByCategory}
-            filteredPermissions={filteredPermissions}
-            onToggleRole={handleToggleRole}
-          />
+          {permissions.length === 0 ? (
+            <div className="text-center py-10 bg-muted/20 rounded-md">
+              <p className="text-muted-foreground">
+                Aucune permission configurée. Utilisez le bouton "Nouvelle permission" pour en créer.
+              </p>
+            </div>
+          ) : (
+            <PermissionTablesContainer 
+              selectedCategory={selectedCategory}
+              permissionsByCategory={permissionsByCategory}
+              filteredPermissions={filteredPermissions}
+              onToggleRole={handleToggleRole}
+              onEditPermission={handleEditPermission}
+            />
+          )}
         </div>
       </CardContent>
       

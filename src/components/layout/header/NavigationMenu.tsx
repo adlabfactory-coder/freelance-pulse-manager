@@ -29,7 +29,7 @@ interface NavItem {
 }
 
 const NavigationMenu: React.FC = () => {
-  const { role } = useAuth();
+  const { user, role, isAdminOrSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
@@ -47,44 +47,26 @@ const NavigationMenu: React.FC = () => {
       { title: "Paramètres", href: "/settings", icon: Icons.Settings },
     ];
     
-    // Configuration des accès par rôle
-    const roleAccess: Record<UserRole, string[]> = {
-      [UserRole.SUPER_ADMIN]: allNavItems.map(item => item.href), // Accès complet
-      [UserRole.ADMIN]: [
-        "/dashboard", 
-        "/contacts", 
-        "/appointments", 
-        "/quotes", 
-        "/subscriptions", 
-        "/commissions", 
-        "/reports", 
-        "/settings"
-      ],
-      [UserRole.ACCOUNT_MANAGER]: [
-        "/dashboard",
-        "/contacts",
-        "/appointments",
-        "/quotes",
-        "/commissions",
-        "/settings"
-      ],
-      [UserRole.FREELANCER]: [
-        "/dashboard",
-        "/contacts",
-        "/appointments", 
-        "/quotes",
-        "/commissions",
-        "/settings"
-      ]
-    };
-    
-    if (role) {
-      const allowedPaths = roleAccess[role] || ["/dashboard", "/settings"];
-      return allNavItems.filter(item => allowedPaths.includes(item.href));
+    // La navigation est désormais contrôlée par le rôle de l'utilisateur
+    if (isAdminOrSuperAdmin) {
+      // Accès complet pour admins et super admins
+      return allNavItems;
+    } else if (role === UserRole.ACCOUNT_MANAGER) {
+      // Accès pour les chargés de compte
+      return allNavItems.filter(item => 
+        ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
+      );
+    } else if (role === UserRole.FREELANCER) {
+      // Accès pour les freelancers
+      return allNavItems.filter(item => 
+        ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
+      );
+    } else {
+      // Accès minimum par défaut si rôle non défini
+      return allNavItems.filter(item => 
+        ["/dashboard", "/contacts", "/settings"].includes(item.href)
+      );
     }
-    
-    // Fallback - accès minimum
-    return allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
   };
 
   const navItems = getNavItems();

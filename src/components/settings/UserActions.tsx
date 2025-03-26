@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { deleteUser } from "@/services/user";
 import { updateUser } from "@/services/user/update-user";
 import { hasMinimumRole } from "@/types/roles";
+import { useNavigate } from "react-router-dom";
 
 interface UserActionsProps {
   user: User;
@@ -26,53 +27,15 @@ const UserActions: React.FC<UserActionsProps> = ({
   supervisors = []
 }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>(user.supervisor_id || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Seuls les administrateurs et super-administrateurs peuvent gérer les utilisateurs
   const canManageUsers = currentUserRole === UserRole.ADMIN || currentUserRole === UserRole.SUPER_ADMIN;
-  
-  // Filtrer les superviseurs potentiels en fonction du rôle de l'utilisateur
-  const getPotentialSupervisors = () => {
-    if (!supervisors || supervisors.length === 0) return [];
-    
-    // Règles spécifiques en fonction du rôle
-    switch (user.role) {
-      case UserRole.FREELANCER:
-        // Freelancers peuvent être supervisés par: Chargés de comptes, Admins, Super Admins
-        return supervisors.filter(s => 
-          s.id !== user.id && 
-          (s.role === UserRole.ACCOUNT_MANAGER || 
-           s.role === UserRole.ADMIN || 
-           s.role === UserRole.SUPER_ADMIN)
-        );
-      
-      case UserRole.ACCOUNT_MANAGER:
-        // Chargés de comptes peuvent être supervisés par: Admins, Super Admins
-        return supervisors.filter(s => 
-          s.id !== user.id && 
-          (s.role === UserRole.ADMIN || 
-           s.role === UserRole.SUPER_ADMIN)
-        );
-      
-      case UserRole.ADMIN:
-        // Admins sont supervisés par: Super Admin uniquement
-        return supervisors.filter(s => 
-          s.id !== user.id && 
-          s.role === UserRole.SUPER_ADMIN
-        );
-      
-      case UserRole.SUPER_ADMIN:
-        // Super Admin n'a pas de superviseur
-        return [];
-      
-      default:
-        return supervisors.filter(s => s.id !== user.id);
-    }
-  };
-  
-  const filteredSupervisors = getPotentialSupervisors();
+  const isSuperAdmin = currentUserRole === UserRole.SUPER_ADMIN;
   
   const handleDeleteUser = async () => {
     if (!canManageUsers) {
@@ -80,6 +43,26 @@ const UserActions: React.FC<UserActionsProps> = ({
         variant: "destructive",
         title: "Accès refusé",
         description: "Vous n'avez pas les droits pour supprimer un utilisateur."
+      });
+      return;
+    }
+    
+    // Vérifier les droits spécifiques - seul un super admin peut supprimer un admin
+    if (user.role === UserRole.ADMIN && !isSuperAdmin) {
+      toast({
+        variant: "destructive",
+        title: "Accès refusé",
+        description: "Seul un Super Admin peut supprimer un administrateur."
+      });
+      return;
+    }
+    
+    // Un Super Admin ne peut pas être supprimé
+    if (user.role === UserRole.SUPER_ADMIN) {
+      toast({
+        variant: "destructive",
+        title: "Action non autorisée",
+        description: "Les utilisateurs Super Admin ne peuvent pas être supprimés pour des raisons de sécurité."
       });
       return;
     }
@@ -114,7 +97,7 @@ const UserActions: React.FC<UserActionsProps> = ({
   };
   
   const handleAssignSupervisor = async () => {
-    if (!canManageUsers && currentUserRole !== UserRole.ACCOUNT_MANAGER) {
+    if (!canManageUsers) {
       toast({
         variant: "destructive",
         title: "Accès refusé",
@@ -123,8 +106,8 @@ const UserActions: React.FC<UserActionsProps> = ({
       return;
     }
     
-    // Vérifier si l'utilisateur actuel peut assigner un superviseur à cet utilisateur
-    if (user.role === UserRole.ADMIN && currentUserRole !== UserRole.SUPER_ADMIN) {
+    // Vérifier les droits spécifiques - seul un super admin peut gérer les admin
+    if (user.role === UserRole.ADMIN && !isSuperAdmin) {
       toast({
         variant: "destructive",
         title: "Accès refusé",
@@ -133,12 +116,12 @@ const UserActions: React.FC<UserActionsProps> = ({
       return;
     }
     
-    // Les chargés de compte ne peuvent superviser que les freelancers
-    if (currentUserRole === UserRole.ACCOUNT_MANAGER && user.role !== UserRole.FREELANCER) {
+    // Un Super Admin ne peut pas avoir de superviseur
+    if (user.role === UserRole.SUPER_ADMIN) {
       toast({
         variant: "destructive",
-        title: "Accès refusé",
-        description: "Les chargés de compte ne peuvent superviser que les freelancers."
+        title: "Action non autorisée",
+        description: "Les Super Admin ne peuvent pas avoir de superviseur."
       });
       return;
     }
@@ -175,24 +158,9 @@ const UserActions: React.FC<UserActionsProps> = ({
     }
   };
   
-  const canAssignSupervisor = () => {
-    // Super Admin peut assigner des superviseurs à tous les rôles sauf Super Admin
-    if (currentUserRole === UserRole.SUPER_ADMIN && user.role !== UserRole.SUPER_ADMIN) {
-      return true;
-    }
-    
-    // Admin peut assigner des superviseurs aux Chargés de compte et Freelancers
-    if (currentUserRole === UserRole.ADMIN && 
-        (user.role === UserRole.ACCOUNT_MANAGER || user.role === UserRole.FREELANCER)) {
-      return true;
-    }
-    
-    // Chargé de compte peut assigner uniquement pour les Freelancers
-    if (currentUserRole === UserRole.ACCOUNT_MANAGER && user.role === UserRole.FREELANCER) {
-      return true;
-    }
-    
-    return false;
+  const handleEditUser = () => {
+    // Rediriger vers la page d'édition de l'utilisateur
+    navigate(`/settings/users/edit/${user.id}`);
   };
   
   return (
@@ -205,26 +173,30 @@ const UserActions: React.FC<UserActionsProps> = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => window.location.href = `/settings/users/edit/${user.id}`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Modifier
-          </DropdownMenuItem>
-          
-          {canAssignSupervisor() && (
-            <DropdownMenuItem onClick={() => setIsAssignDialogOpen(true)}>
-              <UserCheck className="mr-2 h-4 w-4" />
-              Assigner un superviseur
-            </DropdownMenuItem>
-          )}
-          
           {canManageUsers && (
-            <DropdownMenuItem 
-              onClick={() => setIsDeleteDialogOpen(true)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Supprimer
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem onClick={handleEditUser}>
+                <Edit className="mr-2 h-4 w-4" />
+                Modifier
+              </DropdownMenuItem>
+              
+              {user.role !== UserRole.SUPER_ADMIN && (
+                <DropdownMenuItem onClick={() => setIsAssignDialogOpen(true)}>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Assigner un superviseur
+                </DropdownMenuItem>
+              )}
+              
+              {(user.role !== UserRole.SUPER_ADMIN) && (
+                <DropdownMenuItem 
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </DropdownMenuItem>
+              )}
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -256,11 +228,27 @@ const UserActions: React.FC<UserActionsProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Aucun superviseur</SelectItem>
-                    {filteredSupervisors.map(supervisor => (
-                      <SelectItem key={supervisor.id} value={supervisor.id}>
-                        {supervisor.name} ({supervisor.role})
-                      </SelectItem>
-                    ))}
+                    {supervisors
+                      .filter(s => {
+                        // Filtrer les superviseurs potentiels selon la hiérarchie des rôles
+                        if (user.role === UserRole.FREELANCER) {
+                          return s.role === UserRole.ACCOUNT_MANAGER || 
+                                s.role === UserRole.ADMIN || 
+                                s.role === UserRole.SUPER_ADMIN;
+                        } else if (user.role === UserRole.ACCOUNT_MANAGER) {
+                          return s.role === UserRole.ADMIN || 
+                                s.role === UserRole.SUPER_ADMIN;
+                        } else if (user.role === UserRole.ADMIN) {
+                          return s.role === UserRole.SUPER_ADMIN;
+                        }
+                        return false;
+                      })
+                      .map(supervisor => (
+                        <SelectItem key={supervisor.id} value={supervisor.id}>
+                          {supervisor.name} ({supervisor.role})
+                        </SelectItem>
+                      ))
+                    }
                   </SelectContent>
                 </Select>
               </div>
