@@ -33,52 +33,88 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     { title: "Paramètres", href: "/settings", icon: Settings },
   ];
   
-  // Filtrage des éléments de navigation en fonction du rôle
-  const navItems = allNavItems.filter(item => {
-    // Les admins ont accès à tout
-    if (isAdmin) return true;
+  // Pas de filtrage pour les administrateurs
+  if (isAdmin) {
+    return (
+      <nav className="space-y-1 px-2">
+        {allNavItems.map((item) => (
+          <NavItem 
+            key={item.href} 
+            item={item} 
+            collapsed={collapsed} 
+            renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
+          />
+        ))}
+      </nav>
+    );
+  }
+  
+  // Filtrage pour les freelancers
+  if (isFreelancer) {
+    const freelancerItems = [
+      "/dashboard",
+      "/contacts",
+      "/appointments",
+      "/quotes",
+      "/commissions",
+      "/settings"
+    ];
     
-    // Les freelancers ont accès au tableau de bord, contacts, rendez-vous, devis, commissions et paramètres
-    if (isFreelancer) {
-      return [
-        "/dashboard",
-        "/contacts",
-        "/appointments",
-        "/quotes",
-        "/commissions",
-        "/settings"
-      ].includes(item.href);
-    }
+    return (
+      <nav className="space-y-1 px-2">
+        {allNavItems
+          .filter(item => freelancerItems.includes(item.href))
+          .map((item) => (
+            <NavItem 
+              key={item.href} 
+              item={item} 
+              collapsed={collapsed} 
+              renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
+            />
+          ))}
+      </nav>
+    );
+  }
+  
+  // Filtrage pour les chargés d'affaires
+  if (isAccountManager) {
+    const accountManagerItems = [
+      "/dashboard",
+      "/appointments",
+      "/quotes",
+      "/commissions",
+      "/settings"
+    ];
     
-    // Les chargés d'affaires ont accès aux devis à valider, rendez-vous et commissions
-    if (isAccountManager) {
-      return [
-        "/dashboard",
-        "/appointments",
-        "/quotes",
-        "/commissions",
-        "/settings"
-      ].includes(item.href);
-    }
-    
-    // Par défaut, accès restreint
-    return ["/dashboard", "/settings"].includes(item.href);
-  });
-
-  const renderIcon = (Icon: React.ElementType) => {
-    return <Icon className="h-5 w-5" aria-hidden="true" />;
-  };
-
+    return (
+      <nav className="space-y-1 px-2">
+        {allNavItems
+          .filter(item => accountManagerItems.includes(item.href))
+          .map((item) => (
+            <NavItem 
+              key={item.href} 
+              item={item} 
+              collapsed={collapsed} 
+              renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
+            />
+          ))}
+      </nav>
+    );
+  }
+  
+  // Accès de base pour les autres rôles (minimum dashboard et settings)
   return (
     <nav className="space-y-1 px-2">
-      {navItems.map((item) => (
-        <NavItem 
-          key={item.href} 
-          item={item} 
-          collapsed={collapsed} 
-          renderIcon={renderIcon} 
-        />
-      ))}
+      {allNavItems
+        .filter(item => ["/dashboard", "/settings"].includes(item.href))
+        .map((item) => (
+          <NavItem 
+            key={item.href} 
+            item={item} 
+            collapsed={collapsed} 
+            renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
+          />
+        ))}
     </nav>
   );
 };

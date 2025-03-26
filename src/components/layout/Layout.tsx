@@ -12,7 +12,7 @@ const Layout: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   
   // Collapse sidebar by default on mobile only
   useEffect(() => {

@@ -1,12 +1,11 @@
 
 import React from "react";
-import { cn } from "@/lib/utils";
-import UserProfile from "./UserProfile";
-import { LogOut, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import UserProfile from "./UserProfile";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/use-toast";
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -15,60 +14,38 @@ interface SidebarFooterProps {
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed, renderIcon }) => {
   const { signOut } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     try {
       await signOut();
       toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès",
+        description: "Vous êtes déconnecté avec succès",
       });
-      navigate('/auth/login');
     } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
       toast({
         variant: "destructive",
-        title: "Erreur de déconnexion",
-        description: "Une erreur est survenue lors de la déconnexion",
+        title: "Erreur",
+        description: "Impossible de vous déconnecter. Veuillez réessayer.",
       });
     }
   };
 
-  const handleWhatsAppContact = () => {
-    window.open('https://wa.me/+212663529031', '_blank');
-  };
-
   return (
-    <div className="border-t border-sidebar-border pt-4 pb-6 px-4">
-      <UserProfile collapsed={collapsed} renderIcon={renderIcon} />
-      
-      <div className={cn("mt-4 flex gap-2", 
-        collapsed ? "flex-col items-center" : "flex-col")}>
+    <div className="p-3 mt-auto">
+      <Separator className="my-2" />
+      <div className="flex flex-col space-y-3">
+        <UserProfile collapsed={collapsed} renderIcon={renderIcon} />
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className={cn(
-            "flex items-center justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground w-full",
-            collapsed && "justify-center px-0"
-          )}
-          onClick={handleWhatsAppContact}
-        >
-          {renderIcon(MessageCircle)}
-          {!collapsed && <span className="ml-3">WhatsApp</span>}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "flex items-center justify-start text-destructive hover:bg-sidebar-accent hover:text-destructive w-full",
-            collapsed && "justify-center px-0"
-          )}
-          onClick={handleLogout}
+          className="h-9 w-full justify-start gap-2 text-sm"
+          onClick={handleSignOut}
         >
           {renderIcon(LogOut)}
-          {!collapsed && <span className="ml-3">Déconnexion</span>}
+          <span className={collapsed ? "hidden" : "inline-block"}>
+            Déconnexion
+          </span>
         </Button>
       </div>
     </div>

@@ -2,6 +2,7 @@
 import React from "react";
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
 
 interface UserProfileProps {
   collapsed: boolean;
@@ -12,6 +13,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
   collapsed, 
   renderIcon = (Icon) => <Icon className="h-5 w-5" aria-hidden="true" />
 }) => {
+  const { user } = useAuth();
+  
   return (
     <div
       className={cn(
@@ -28,8 +31,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
           collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
         )}
       >
-        <div className="font-medium text-sidebar-foreground">Admin</div>
-        <div className="text-xs">admin@example.com</div>
+        <div className="font-medium text-sidebar-foreground">
+          {user?.name || "Utilisateur"}
+        </div>
+        <div className="text-xs">{user?.email || "Connecté"}</div>
       </div>
     </div>
   );
