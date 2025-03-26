@@ -156,7 +156,11 @@ export const appointmentService = {
         description: "Le rendez-vous a été créé avec succès."
       });
       
-      return data;
+      // Conversion explicite des données au format Appointment
+      return data ? {
+        ...data,
+        status: data.status as 'scheduled' | 'cancelled' | 'completed' | 'pending'
+      } : null;
     } catch (error: any) {
       console.error('Erreur lors de la création du rendez-vous:', error);
       
