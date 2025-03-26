@@ -15,6 +15,8 @@ interface AppointmentTabsProps {
   timeView: "day" | "week";
   setTimeView: (view: "day" | "week") => void;
   onAddAppointment: () => void;
+  activeTab: "upcoming" | "past" | "schedule";
+  setActiveTab: (tab: "upcoming" | "past" | "schedule") => void;
 }
 
 const AppointmentTabs: React.FC<AppointmentTabsProps> = ({
@@ -22,10 +24,16 @@ const AppointmentTabs: React.FC<AppointmentTabsProps> = ({
   setDate, 
   timeView, 
   setTimeView, 
-  onAddAppointment
+  onAddAppointment,
+  activeTab,
+  setActiveTab
 }) => {
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as "upcoming" | "past" | "schedule");
+  };
+
   return (
-    <Tabs defaultValue="upcoming">
+    <Tabs value={activeTab} onValueChange={handleTabChange}>
       <TabsList>
         <TabsTrigger value="upcoming">À venir</TabsTrigger>
         <TabsTrigger value="past">Passés</TabsTrigger>
@@ -69,19 +77,7 @@ const AppointmentTabs: React.FC<AppointmentTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="past">
-        <Card>
-          <CardHeader>
-            <CardTitle>Rendez-vous passés</CardTitle>
-            <CardDescription>
-              Historique de vos rendez-vous passés
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-6 text-muted-foreground">
-              Aucun rendez-vous passé
-            </div>
-          </CardContent>
-        </Card>
+        {/* Le contenu des rendez-vous passés est maintenant géré par AppointmentList */}
       </TabsContent>
       
       <TabsContent value="schedule">

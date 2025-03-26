@@ -4,6 +4,9 @@ import AppointmentHeader from "@/components/appointments/AppointmentHeader";
 import AppointmentTabs from "@/components/appointments/AppointmentTabs";
 import AddAppointmentDialog from "@/components/appointments/AddAppointmentDialog";
 import { useNotifications } from "@/hooks/use-notifications";
+import AppointmentList from "@/components/appointments/AppointmentList";
+import PendingAppointmentsList from "@/components/appointments/PendingAppointmentsList";
+import { useAuth } from "@/hooks/use-auth";
 
 const Appointments: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -13,6 +16,8 @@ const Appointments: React.FC = () => {
   const [openNewAppointmentDialog, setOpenNewAppointmentDialog] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const { refreshNotifications } = useNotifications();
+  const { isAccountManager, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "schedule">("upcoming");
 
   const handleAddAppointment = () => {
     setOpenNewAppointmentDialog(true);
@@ -57,7 +62,22 @@ const Appointments: React.FC = () => {
         timeView={timeView}
         setTimeView={setTimeView}
         onAddAppointment={handleAddAppointment}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
+
+      {/* Afficher les rendez-vous en attente d'attribution pour les chargés de compte et admins */}
+      {(isAccountManager || isAdmin) && activeTab === "upcoming" && (
+        <PendingAppointmentsList />
+      )}
+
+      {/* Afficher la liste des rendez-vous selon l'onglet actif */}
+      {activeTab !== "schedule" && (
+        <AppointmentList 
+          type={activeTab} 
+          onAddAppointment={handleAddAppointment}
+        />
+      )}
 
       <AddAppointmentDialog 
         open={openNewAppointmentDialog} 
