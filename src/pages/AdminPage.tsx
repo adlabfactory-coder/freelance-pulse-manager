@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { User, UserRole } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -243,7 +244,6 @@ const AdminPage: React.FC = () => {
                   <SelectItem value={UserRole.ADMIN}>{formatRole(UserRole.ADMIN)}</SelectItem>
                   <SelectItem value={UserRole.SUPER_ADMIN}>{formatRole(UserRole.SUPER_ADMIN)}</SelectItem>
                   <SelectItem value={UserRole.FREELANCER}>{formatRole(UserRole.FREELANCER)}</SelectItem>
-                  <SelectItem value={UserRole.CLIENT}>{formatRole(UserRole.CLIENT)}</SelectItem>
                   <SelectItem value={UserRole.ACCOUNT_MANAGER}>{formatRole(UserRole.ACCOUNT_MANAGER)}</SelectItem>
                 </SelectContent>
               </Select>
@@ -293,8 +293,6 @@ const formatRole = (role: UserRole | string): string => {
       return "Super Administrateur";
     case UserRole.FREELANCER:
       return "Freelance";
-    case UserRole.CLIENT:
-      return "Client";
     case UserRole.ACCOUNT_MANAGER:
       return "Chargé de compte";
     default:

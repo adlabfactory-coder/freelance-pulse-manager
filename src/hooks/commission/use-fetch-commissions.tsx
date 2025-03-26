@@ -39,7 +39,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
         throw new Error("Impossible de se connecter à la base de données");
       }
       
-      const data = await commissionsService.fetchCommissions(user.id, role || UserRole.CLIENT);
+      const data = await commissionsService.fetchCommissions(user.id, role || UserRole.FREELANCER);
       setCommissions(data);
     } catch (error: any) {
       console.error("Erreur lors du chargement des commissions:", error);

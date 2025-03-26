@@ -75,10 +75,6 @@ const NavigationMenu: React.FC = () => {
         "/quotes",
         "/commissions",
         "/settings"
-      ],
-      [UserRole.CLIENT]: [
-        "/dashboard", 
-        "/settings"
       ]
     };
     

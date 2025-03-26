@@ -78,7 +78,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
             <SelectContent>
               <SelectItem value={UserRole.ADMIN}>Administrateur</SelectItem>
               <SelectItem value={UserRole.FREELANCER}>Chargé(e) d'affaires</SelectItem>
-              <SelectItem value={UserRole.CLIENT}>Client</SelectItem>
+              <SelectItem value={UserRole.ACCOUNT_MANAGER}>Chargé(e) de compte</SelectItem>
             </SelectContent>
           </Select>
         </div>

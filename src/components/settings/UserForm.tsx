@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,12 @@ interface UserFormProps {
 }
 
 const UserForm: React.FC<UserFormProps> = ({ 
-  initialData = { name: "", email: "", role: UserRole.CLIENT },
+  initialData = { name: "", email: "", role: UserRole.FREELANCER },
   isEditing = false
 }) => {
   const [name, setName] = useState(initialData.name || "");
   const [email, setEmail] = useState(initialData.email || "");
-  const [role, setRole] = useState<UserRole>(initialData.role || UserRole.CLIENT);
+  const [role, setRole] = useState<UserRole>(initialData.role || UserRole.FREELANCER);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { isAdminOrSuperAdmin, isSuperAdmin, user } = useAuth();
@@ -166,7 +167,6 @@ const UserForm: React.FC<UserFormProps> = ({
                 )}
                 <SelectItem value={UserRole.FREELANCER}>Chargé(e) d'affaires</SelectItem>
                 <SelectItem value={UserRole.ACCOUNT_MANAGER}>Chargé(e) de compte</SelectItem>
-                <SelectItem value={UserRole.CLIENT}>Client</SelectItem>
               </SelectContent>
             </Select>
           </div>

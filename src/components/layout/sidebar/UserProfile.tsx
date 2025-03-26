@@ -18,8 +18,8 @@ const getRoleLabel = (role?: UserRole) => {
       return "Freelance";
     case UserRole.ACCOUNT_MANAGER:
       return "Chargé d'affaires";
-    case UserRole.CLIENT:
-      return "Client";
+    case UserRole.SUPER_ADMIN:
+      return "Super Admin";
     default:
       return "Utilisateur";
   }
