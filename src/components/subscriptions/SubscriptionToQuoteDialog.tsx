@@ -84,8 +84,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     setLoading(true);
     
     try {
-      // Créer le devis avec un seul élément basé sur le plan d'abonnement
-      // Use the addItem function properly by calling it with the item object
+      // First set up the item in the hook's state
       addItem({
         description: `Abonnement ${plan.name}`,
         quantity: 1,
@@ -94,7 +93,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         discount: 0
       });
       
-      // Soumettre le formulaire - manually wrapping to ensure right signature
+      // Then submit the form
       await formHandleSubmit();
       
     } catch (error) {
