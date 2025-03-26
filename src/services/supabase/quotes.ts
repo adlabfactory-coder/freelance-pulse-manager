@@ -2,261 +2,279 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { Quote, QuoteItem, QuoteStatus } from '@/types';
-import { format, addDays } from 'date-fns';
+import { toast } from 'sonner';
 
-export const createQuotesService = (supabase: SupabaseClient) => {
+export const createQuotesService = (supabase: SupabaseClient<Database>) => {
   return {
+    // Récupérer tous les devis
     fetchQuotes: async (): Promise<Quote[]> => {
-      try {
-        const { data: quotesData, error: quotesError } = await supabase
-          .from('quotes')
-          .select('*')
-          .is('deleted_at', null);
-          
-        if (quotesError) throw quotesError;
-        
-        // Récupérer tous les éléments de devis
-        const { data: itemsData, error: itemsError } = await supabase
-          .from('quote_items')
-          .select('*');
-          
-        if (itemsError) throw itemsError;
-        
-        // Mapper les éléments aux devis
-        const quotesWithItems = quotesData.map(quote => {
-          const quoteItems = itemsData.filter(item => item.quoteId === quote.id);
-          
-          return {
-            id: quote.id,
-            contactId: quote.contactId,
-            freelancerId: quote.freelancerId,
-            totalAmount: quote.totalAmount,
-            validUntil: new Date(quote.validUntil),
-            status: quote.status as QuoteStatus,
-            notes: quote.notes || "",
-            items: quoteItems.map(item => ({
-              id: item.id,
-              quoteId: item.quoteId,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              discount: item.discount || 0,
-              tax: item.tax || 0,
-              serviceId: item.serviceId
-            })),
-            createdAt: new Date(quote.createdAt),
-            updatedAt: new Date(quote.updatedAt)
-          };
-        });
-        
-        return quotesWithItems;
-      } catch (error) {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*, quote_items(*)')
+        .is('deleted_at', null)
+        .order('createdAt', { ascending: false });
+      
+      if (error) {
         console.error('Erreur lors de la récupération des devis:', error);
-        return [];
+        throw error;
       }
+      
+      // Mapper les données de la base de données vers le type Quote
+      return data.map(quote => ({
+        id: quote.id,
+        contactId: quote.contactId,
+        freelancerId: quote.freelancerId,
+        totalAmount: Number(quote.totalAmount),
+        validUntil: new Date(quote.validUntil),
+        status: quote.status as QuoteStatus,
+        notes: quote.notes,
+        createdAt: new Date(quote.createdAt),
+        updatedAt: new Date(quote.updatedAt),
+        items: quote.quote_items ? quote.quote_items.map((item: any) => ({
+          id: item.id,
+          quoteId: item.quoteId,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: Number(item.unitPrice),
+          tax: item.tax ? Number(item.tax) : 0,
+          discount: item.discount ? Number(item.discount) : 0
+        })) : []
+      }));
     },
     
+    // Récupérer un devis par son ID
     fetchQuoteById: async (id: string): Promise<Quote | null> => {
-      try {
-        const { data: quote, error: quoteError } = await supabase
-          .from('quotes')
-          .select('*')
-          .eq('id', id)
-          .is('deleted_at', null)
-          .single();
-          
-        if (quoteError) throw quoteError;
-        
-        // Récupérer les éléments du devis
-        const { data: items, error: itemsError } = await supabase
-          .from('quote_items')
-          .select('*')
-          .eq('quoteId', id);
-          
-        if (itemsError) throw itemsError;
-        
-        return {
-          id: quote.id,
-          contactId: quote.contactId,
-          freelancerId: quote.freelancerId,
-          totalAmount: quote.totalAmount,
-          validUntil: new Date(quote.validUntil),
-          status: quote.status as QuoteStatus,
-          notes: quote.notes || "",
-          items: items.map(item => ({
-            id: item.id,
-            quoteId: item.quoteId,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount || 0,
-            tax: item.tax || 0,
-            serviceId: item.serviceId
-          })),
-          createdAt: new Date(quote.createdAt),
-          updatedAt: new Date(quote.updatedAt)
-        };
-      } catch (error) {
+      const { data, error } = await supabase
+        .from('quotes')
+        .select('*, quote_items(*)')
+        .eq('id', id)
+        .is('deleted_at', null)
+        .single();
+      
+      if (error) {
         console.error(`Erreur lors de la récupération du devis ${id}:`, error);
         return null;
       }
+      
+      if (!data) return null;
+      
+      return {
+        id: data.id,
+        contactId: data.contactId,
+        freelancerId: data.freelancerId,
+        totalAmount: Number(data.totalAmount),
+        validUntil: new Date(data.validUntil),
+        status: data.status as QuoteStatus,
+        notes: data.notes,
+        createdAt: new Date(data.createdAt),
+        updatedAt: new Date(data.updatedAt),
+        items: data.quote_items ? data.quote_items.map((item: any) => ({
+          id: item.id,
+          quoteId: item.quoteId,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: Number(item.unitPrice),
+          tax: item.tax ? Number(item.tax) : 0,
+          discount: item.discount ? Number(item.discount) : 0
+        })) : []
+      };
     },
     
-    createQuote: async (quote: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>): Promise<Quote | null> => {
+    // Créer un nouveau devis avec ses éléments
+    createQuote: async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, items: Omit<QuoteItem, 'id' | 'quoteId'>[]): Promise<Quote | null> => {
       try {
-        const now = new Date();
-        // Fixer la validité à 30 jours à partir de la date de création
-        const validityDate = addDays(now, 30);
+        console.log('Création du devis avec les données:', quoteData);
+        console.log('Éléments du devis:', items);
         
-        const quoteData = {
-          contactId: quote.contactId,
-          freelancerId: quote.freelancerId,
-          totalAmount: quote.totalAmount,
-          // Toujours utiliser validité de 30 jours
-          validUntil: format(validityDate, 'yyyy-MM-dd'),
-          // Toujours statut brouillon à la création
-          status: QuoteStatus.DRAFT,
-          notes: quote.notes || "",
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString()
-        };
-        
-        // Insérer le devis
-        const { data: newQuote, error: quoteError } = await supabase
+        // 1. Insérer le devis principal
+        const { data: quote, error: quoteError } = await supabase
           .from('quotes')
-          .insert(quoteData)
+          .insert({
+            contactId: quoteData.contactId,
+            freelancerId: quoteData.freelancerId,
+            totalAmount: quoteData.totalAmount,
+            validUntil: quoteData.validUntil.toISOString(),
+            status: quoteData.status,
+            notes: quoteData.notes
+          })
           .select()
           .single();
-          
-        if (quoteError) throw quoteError;
         
-        // Insérer les éléments du devis
-        if (quote.items && quote.items.length > 0) {
-          const quoteItems = quote.items.map(item => ({
-            quoteId: newQuote.id,
+        if (quoteError) {
+          console.error('Erreur lors de la création du devis:', quoteError);
+          toast.error("Erreur lors de la création du devis: " + quoteError.message);
+          return null;
+        }
+        
+        // 2. Insérer les éléments du devis
+        if (items.length > 0) {
+          const quoteItems = items.map(item => ({
+            quoteId: quote.id,
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
-            discount: item.discount || 0,
             tax: item.tax || 0,
-            serviceId: item.serviceId
+            discount: item.discount || 0
           }));
           
           const { error: itemsError } = await supabase
             .from('quote_items')
             .insert(quoteItems);
-            
-          if (itemsError) throw itemsError;
+          
+          if (itemsError) {
+            console.error('Erreur lors de l\'insertion des éléments du devis:', itemsError);
+            // Ne pas échouer complètement, mais informer l'utilisateur
+            toast.error("Certains éléments du devis n'ont pas pu être ajoutés");
+          }
         }
         
-        return {
-          id: newQuote.id,
-          contactId: newQuote.contactId,
-          freelancerId: newQuote.freelancerId,
-          totalAmount: newQuote.totalAmount,
-          validUntil: new Date(newQuote.validUntil),
-          status: newQuote.status as QuoteStatus,
-          notes: newQuote.notes || "",
-          items: quote.items || [],
-          createdAt: new Date(newQuote.createdAt),
-          updatedAt: new Date(newQuote.updatedAt)
-        };
+        // 3. Récupérer le devis complet avec ses éléments
+        return await this.fetchQuoteById(quote.id);
       } catch (error) {
-        console.error("Erreur lors de la création du devis:", error);
+        console.error('Erreur inattendue lors de la création du devis:', error);
+        toast.error("Une erreur inattendue s'est produite lors de la création du devis");
         return null;
       }
     },
     
-    updateQuote: async (id: string, quoteData: Partial<Quote>): Promise<boolean> => {
+    // Mettre à jour un devis existant
+    updateQuote: async (id: string, quoteData: Partial<Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>>, 
+      items?: { 
+        add?: Omit<QuoteItem, 'id' | 'quoteId'>[], 
+        update?: Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>[],
+        delete?: string[]
+      }): Promise<Quote | null> => {
+      
       try {
-        const updateData: any = {
+        // 1. Mettre à jour le devis principal
+        const updates: any = {
+          ...quoteData,
           updatedAt: new Date().toISOString()
         };
         
-        // Ajout des champs à mettre à jour
-        if (quoteData.contactId) updateData.contactId = quoteData.contactId;
-        if (quoteData.freelancerId) updateData.freelancerId = quoteData.freelancerId;
-        if (quoteData.totalAmount !== undefined) updateData.totalAmount = quoteData.totalAmount;
-        if (quoteData.validUntil) updateData.validUntil = format(quoteData.validUntil, 'yyyy-MM-dd');
-        if (quoteData.status) updateData.status = quoteData.status;
-        if (quoteData.notes !== undefined) updateData.notes = quoteData.notes || null;
-        
-        // Mise à jour du devis
-        const { error: quoteError } = await supabase
-          .from('quotes')
-          .update(updateData)
-          .eq('id', id);
-          
-        if (quoteError) throw quoteError;
-        
-        // Mise à jour des éléments si nécessaire
-        if (quoteData.items && quoteData.items.length > 0) {
-          // Supprimer les éléments existants
-          const { error: deleteError } = await supabase
-            .from('quote_items')
-            .delete()
-            .eq('quoteId', id);
-            
-          if (deleteError) throw deleteError;
-          
-          // Insérer les nouveaux éléments
-          const quoteItems = quoteData.items.map(item => ({
-            quoteId: id,
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount || 0,
-            tax: item.tax || 0,
-            serviceId: item.serviceId
-          }));
-          
-          const { error: itemsError } = await supabase
-            .from('quote_items')
-            .insert(quoteItems);
-            
-          if (itemsError) throw itemsError;
+        if (quoteData.validUntil) {
+          updates.validUntil = quoteData.validUntil.toISOString();
         }
         
-        return true;
+        const { error: quoteError } = await supabase
+          .from('quotes')
+          .update(updates)
+          .eq('id', id);
+        
+        if (quoteError) {
+          console.error(`Erreur lors de la mise à jour du devis ${id}:`, quoteError);
+          toast.error("Erreur lors de la mise à jour du devis: " + quoteError.message);
+          return null;
+        }
+        
+        // 2. Gérer les éléments du devis si nécessaire
+        if (items) {
+          // 2.1 Ajouter de nouveaux éléments
+          if (items.add && items.add.length > 0) {
+            const newItems = items.add.map(item => ({
+              quoteId: id,
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              tax: item.tax || 0,
+              discount: item.discount || 0
+            }));
+            
+            const { error: addError } = await supabase
+              .from('quote_items')
+              .insert(newItems);
+            
+            if (addError) {
+              console.error('Erreur lors de l\'ajout d\'éléments au devis:', addError);
+              toast.error("Certains éléments n'ont pas pu être ajoutés au devis");
+            }
+          }
+          
+          // 2.2 Mettre à jour des éléments existants
+          if (items.update && items.update.length > 0) {
+            for (const item of items.update) {
+              const { id: itemId, ...updates } = item;
+              
+              const { error: updateError } = await supabase
+                .from('quote_items')
+                .update(updates)
+                .eq('id', itemId);
+              
+              if (updateError) {
+                console.error(`Erreur lors de la mise à jour de l'élément ${itemId}:`, updateError);
+                toast.error("Certains éléments n'ont pas pu être mis à jour");
+              }
+            }
+          }
+          
+          // 2.3 Supprimer des éléments
+          if (items.delete && items.delete.length > 0) {
+            const { error: deleteError } = await supabase
+              .from('quote_items')
+              .delete()
+              .in('id', items.delete);
+            
+            if (deleteError) {
+              console.error('Erreur lors de la suppression d\'éléments du devis:', deleteError);
+              toast.error("Certains éléments n'ont pas pu être supprimés du devis");
+            }
+          }
+        }
+        
+        // 3. Récupérer le devis mis à jour avec ses éléments
+        return await this.fetchQuoteById(id);
       } catch (error) {
-        console.error(`Erreur lors de la mise à jour du devis ${id}:`, error);
-        return false;
+        console.error(`Erreur inattendue lors de la mise à jour du devis ${id}:`, error);
+        toast.error("Une erreur inattendue s'est produite lors de la mise à jour du devis");
+        return null;
       }
     },
     
+    // Mettre à jour le statut d'un devis
     updateQuoteStatus: async (id: string, status: QuoteStatus): Promise<boolean> => {
       try {
         const { error } = await supabase
           .from('quotes')
-          .update({ 
-            status: status,
+          .update({
+            status,
             updatedAt: new Date().toISOString()
           })
           .eq('id', id);
         
-        if (error) throw error;
+        if (error) {
+          console.error(`Erreur lors de la mise à jour du statut du devis ${id}:`, error);
+          toast.error("Erreur lors de la mise à jour du statut du devis: " + error.message);
+          return false;
+        }
         
         return true;
       } catch (error) {
-        console.error(`Erreur lors de la mise à jour du statut du devis ${id}:`, error);
+        console.error(`Erreur inattendue lors de la mise à jour du statut du devis ${id}:`, error);
+        toast.error("Une erreur inattendue s'est produite lors de la mise à jour du statut du devis");
         return false;
       }
     },
     
+    // Supprimer un devis (suppression logique)
     deleteQuote: async (id: string): Promise<boolean> => {
       try {
         const { error } = await supabase
           .from('quotes')
-          .update({ 
+          .update({
             deleted_at: new Date().toISOString()
           })
           .eq('id', id);
         
-        if (error) throw error;
+        if (error) {
+          console.error(`Erreur lors de la suppression du devis ${id}:`, error);
+          toast.error("Erreur lors de la suppression du devis: " + error.message);
+          return false;
+        }
         
         return true;
       } catch (error) {
-        console.error(`Erreur lors de la suppression du devis ${id}:`, error);
+        console.error(`Erreur inattendue lors de la suppression du devis ${id}:`, error);
+        toast.error("Une erreur inattendue s'est produite lors de la suppression du devis");
         return false;
       }
     }

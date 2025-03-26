@@ -1,105 +1,70 @@
 
-import { supabase } from "@/lib/supabase-client";
+import { supabase } from "@/lib/supabase";
+import { Contact } from "@/types";
+import { ContactStatus } from "@/types/database/enums";
 import { toast } from "sonner";
-import { ContactFormValues } from "@/components/contacts/schema/contactFormSchema";
-import { v4 as uuidv4 } from 'uuid';
 
-// Ajouter un nouveau contact
-export const addContact = async (data: ContactFormValues): Promise<string> => {
-  console.log("Insertion d'un nouveau contact avec les données:", data);
-  
-  if (!data.assignedTo) {
-    console.error("AssignedTo est requis pour établir la propriété du contact");
-    throw new Error("Erreur: L'attribution du contact est obligatoire");
-  }
-
-  // Vérifier que assignedTo est un UUID valide
+// Créer un nouveau contact
+export const createContact = async (
+  contactData: Omit<Contact, 'id' | 'createdAt' | 'updatedAt' | 'status'>
+): Promise<Contact | null> => {
   try {
-    // Validation pour vérifier que l'ID ressemble à un UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(data.assignedTo)) {
-      console.error("L'ID assignedTo n'est pas un UUID valide:", data.assignedTo);
-      throw new Error("Erreur: L'identifiant d'utilisateur n'est pas valide");
-    }
+    // Toujours définir le statut initial comme "lead"
+    const newContact = {
+      ...contactData,
+      status: 'lead' as ContactStatus,
+    };
 
-    const { data: newContact, error } = await supabase
+    const { data, error } = await supabase
       .from('contacts')
-      .insert([{
-        name: data.name,
-        email: data.email,
-        phone: data.phone || null,
-        company: data.company || null,
-        position: data.position || null,
-        address: data.address || null,
-        status: data.status,
-        notes: data.notes || null,
-        assignedTo: data.assignedTo
-      }])
-      .select('id')
+      .insert(newContact)
+      .select()
       .single();
 
     if (error) {
-      console.error("Erreur Supabase lors de l'insertion:", error);
-      throw error;
+      console.error('Erreur lors de la création du contact:', error);
+      toast.error(`Erreur lors de la création du contact: ${error.message}`);
+      return null;
     }
 
-    if (!newContact) {
-      throw new Error("Aucune donnée retournée après l'insertion");
-    }
-
-    return newContact.id;
-  } catch (error: any) {
-    console.error("Erreur lors de l'ajout du contact:", error);
-    throw error;
+    toast.success('Contact créé avec succès');
+    return data as Contact;
+  } catch (err) {
+    console.error('Erreur inattendue lors de la création du contact:', err);
+    toast.error('Une erreur inattendue est survenue lors de la création du contact');
+    return null;
   }
 };
 
 // Mettre à jour un contact existant
-export const updateContact = async (id: string, data: ContactFormValues): Promise<void> => {
-  console.log("Mise à jour du contact avec ID:", id, "et données:", data);
-  
-  if (!data.assignedTo) {
-    console.error("AssignedTo est requis pour établir la propriété du contact");
-    throw new Error("Erreur: L'attribution du contact est obligatoire");
-  }
-
-  // Vérifier que assignedTo est un UUID valide
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(data.assignedTo)) {
-    console.error("L'ID assignedTo n'est pas un UUID valide:", data.assignedTo);
-    throw new Error("Erreur: L'identifiant d'utilisateur n'est pas valide");
-  }
-
+export const updateContact = async (
+  id: string,
+  contactData: Partial<Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>>
+): Promise<Contact | null> => {
   try {
-    const { error } = await supabase
+    const updates = {
+      ...contactData,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
       .from('contacts')
-      .update({
-        name: data.name,
-        email: data.email,
-        phone: data.phone || null,
-        company: data.company || null,
-        position: data.position || null,
-        address: data.address || null,
-        status: data.status,
-        notes: data.notes || null,
-        assignedTo: data.assignedTo,
-        updatedAt: new Date().toISOString()
-      })
-      .eq('id', id);
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
     if (error) {
-      console.error("Erreur Supabase lors de la mise à jour:", error);
-      throw error;
+      console.error('Erreur lors de la mise à jour du contact:', error);
+      toast.error(`Erreur lors de la mise à jour du contact: ${error.message}`);
+      return null;
     }
-  } catch (error: any) {
-    console.error("Erreur lors de la mise à jour du contact:", error);
-    throw error;
-  }
-};
 
-// Export du service pour l'intégration
-export const contactCreateUpdateService = {
-  createContact: addContact,
-  updateContact,
-  addContact
+    toast.success('Contact mis à jour avec succès');
+    return data as Contact;
+  } catch (err) {
+    console.error('Erreur inattendue lors de la mise à jour du contact:', err);
+    toast.error('Une erreur inattendue est survenue lors de la mise à jour du contact');
+    return null;
+  }
 };

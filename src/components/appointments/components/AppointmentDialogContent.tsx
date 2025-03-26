@@ -1,22 +1,27 @@
 
-import React from "react";
-import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
+import { CalendarClock } from "lucide-react";
+import { useAppointmentForm } from "@/components/appointments/hooks/useAppointmentForm";
 import AppointmentTypeSelect from "./AppointmentTypeSelect";
 import AppointmentDescription from "./AppointmentDescription";
 import AppointmentDateTimePicker from "./AppointmentDateTimePicker";
-import { useAppointmentForm } from "../hooks/useAppointmentForm";
+import ContactSelector from "./ContactSelector";
+import { toast } from "sonner";
 
 interface AppointmentDialogContentProps {
   onOpenChange: (open: boolean) => void;
   selectedDate?: Date;
+  initialContactId?: string;
 }
 
 const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
   onOpenChange,
-  selectedDate
+  selectedDate,
+  initialContactId
 }) => {
+  const [contactId, setContactId] = useState(initialContactId || "");
   const {
     titleOption,
     setTitleOption,
@@ -31,19 +36,46 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
     duration,
     setDuration,
     isSubmitting,
-    handleSubmit
+    handleSubmit: formSubmit
   } = useAppointmentForm(selectedDate, () => onOpenChange(false));
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!contactId) {
+      toast.error("Veuillez sélectionner un contact pour ce rendez-vous");
+      return;
+    }
+    
+    // Passer l'ID du contact lors de la soumission
+    formSubmit(e, contactId);
+  };
+
   return (
-    <DialogContent className="sm:max-w-[500px] w-[95vw] max-w-full">
+    <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
-          <CalendarPlus className="h-5 w-5" />
-          Nouveau rendez-vous
+          <CalendarClock className="h-5 w-5" />
+          Planifier un nouveau rendez-vous
         </DialogTitle>
+        <DialogDescription>
+          Remplissez les informations ci-dessous pour créer un nouveau rendez-vous
+        </DialogDescription>
       </DialogHeader>
+      
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="contact" className="text-sm font-medium">
+              Contact *
+            </label>
+            <ContactSelector 
+              value={contactId} 
+              onChange={setContactId} 
+              placeholder="Sélectionner un contact"
+            />
+          </div>
+          
           <AppointmentTypeSelect
             titleOption={titleOption}
             onTitleOptionChange={setTitleOption}
@@ -65,23 +97,22 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
             onDurationChange={setDuration}
           />
         </div>
-        <DialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+        
+        <div className="flex justify-end gap-2 mt-4">
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            className="w-full sm:w-auto"
           >
             Annuler
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting}
-            className="w-full sm:w-auto"
+            disabled={isSubmitting || !contactId}
           >
             {isSubmitting ? "Planification..." : "Planifier le rendez-vous"}
           </Button>
-        </DialogFooter>
+        </div>
       </form>
     </DialogContent>
   );

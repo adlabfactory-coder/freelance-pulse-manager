@@ -1,198 +1,86 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
+import { createAppointment, createAutoAssignAppointment } from "@/services/appointments/create";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale"; 
-import { useAuth } from "@/hooks/use-auth";
-import * as appointmentService from "@/services/appointments";
-import { supabase } from "@/lib/supabase-client";
-
-// Options pour les types de rendez-vous
-export const APPOINTMENT_TITLE_OPTIONS = [
-  { value: "consultation-initiale", label: "Consultation initiale" },
-  { value: "negociation-devis", label: "Négociation devis" },
-  { value: "relance-paiement", label: "Relance de paiement" },
-  { value: "autre", label: "Autre (personnalisé)" }
-];
-
-export type AppointmentFormData = {
-  titleOption: string;
-  customTitle: string;
-  description: string;
-  date: Date | undefined;
-  time: string;
-  duration: string;
-};
+import { Appointment } from "@/types/appointment";
 
 export const useAppointmentForm = (
-  selectedDate?: Date | undefined, 
-  onClose?: () => void,
-  contactId?: string,
-  autoAssign?: boolean
+  initialDate?: Date,
+  onSuccess?: () => void,
+  initialContactId?: string,
+  autoAssign = false
 ) => {
+  // Réglage par défaut - options de titre prédéfinies
+  const titleOptions = {
+    "consultation-initiale": "Consultation initiale",
+    "session-suivi": "Session de suivi",
+    "demo-produit": "Démonstration de produit",
+    "revision-contrat": "Révision de contrat",
+    "custom": "Titre personnalisé"
+  };
+
   // États du formulaire
-  const [titleOption, setTitleOption] = useState("consultation-initiale");
-  const [customTitle, setCustomTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
-  const [time, setTime] = useState("09:00");
-  const [duration, setDuration] = useState("60");
+  const [titleOption, setTitleOption] = useState<keyof typeof titleOptions | "">('consultation-initiale');
+  const [customTitle, setCustomTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
+  const [time, setTime] = useState('10:00'); // Heure par défaut
+  const [duration, setDuration] = useState(30); // Minutes
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { user } = useAuth();
-
-  // Mise à jour de la date quand selectedDate change
-  useEffect(() => {
-    if (selectedDate) {
-      setDate(selectedDate);
+  const handleSubmit = async (e: React.FormEvent, contactId: string) => {
+    e.preventDefault();
+    
+    if (!date) {
+      toast.error("Veuillez sélectionner une date valide");
+      return;
     }
-  }, [selectedDate]);
-
-  // Fonction pour créer un rendez-vous d'attribution automatique
-  const createAutoAssignAppointment = async (
-    title: string, 
-    appointmentDate: Date, 
-    appointmentDuration: number,
-    appointmentDescription: string,
-    appointmentContactId: string
-  ) => {
+    
     try {
-      // Dans le cas d'un rendez-vous d'attribution, on utilise un ID spécial pour freelancerId
-      // qui sera remplacé par l'ID du premier chargé de compte à accepter
-      const appointmentData = {
+      setIsSubmitting(true);
+      
+      // Construire la date avec l'heure
+      const [hours, minutes] = time.split(':').map(Number);
+      const appointmentDate = new Date(date);
+      appointmentDate.setHours(hours, minutes, 0, 0);
+      
+      // Déterminer le titre final
+      const title = titleOption === 'custom' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
+      
+      // Créer l'objet de rendez-vous à envoyer
+      const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {
         title,
-        description: appointmentDescription,
+        description,
         date: appointmentDate.toISOString(),
-        duration: appointmentDuration,
-        status: "pending" as const, // important: statut "pending" pour indiquer qu'il attend attribution
-        freelancerId: "auto-assign", // un marqueur spécial qui sera remplacé
-        contactId: appointmentContactId,
+        duration,
+        status: "scheduled",
+        contactId,
+        freelancerId: "", // Sera rempli par le backend
         location: null,
         notes: null
       };
       
-      console.log("Création d'un rendez-vous avec attribution automatique:", appointmentData);
-      
-      // Modification pour gérer spécifiquement les rendez-vous avec attribution automatique
-      const result = await appointmentService.createAutoAssignAppointment(appointmentData);
-      
-      if (!result) {
-        throw new Error("Erreur lors de la création du rendez-vous avec attribution automatique");
-      }
-      
-      // Message de succès spécifique
-      toast.success(`${title} planifié et en attente d'attribution à un chargé de compte`);
-      
-      return result;
-    } catch (error: any) {
-      console.error("Erreur lors de la création du rendez-vous avec attribution:", error);
-      throw error;
-    }
-  };
-
-  // Fonction de soumission du formulaire
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const title = titleOption === "autre" ? customTitle : 
-      APPOINTMENT_TITLE_OPTIONS.find(option => option.value === titleOption)?.label || "";
-    
-    if (!date || !title) {
-      toast.error("Veuillez remplir tous les champs obligatoires.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // S'assurer qu'un ID de contact valide est disponible
-      if (!contactId) {
-        console.error("ID de contact manquant pour la création du rendez-vous");
-        toast.error("Le contact pour ce rendez-vous n'est pas spécifié");
-        return;
-      }
-      
-      // Créer le format de date pour la base de données
-      // Nous utilisons une nouvelle instance de Date pour éviter les problèmes de référence
-      const dateObj = new Date(date.getTime());
-      const [hours, minutes] = time.split(':').map(Number);
-      
-      dateObj.setHours(hours, minutes, 0, 0);
-      
-      // Vérifier que la date est valide
-      if (isNaN(dateObj.getTime())) {
-        toast.error("La date ou l'heure spécifiée n'est pas valide");
-        return;
-      }
-      
-      // Si autoAssign est activé et que c'est une consultation initiale, traiter comme un RDV avec attribution auto
-      if (autoAssign && titleOption === "consultation-initiale") {
-        await createAutoAssignAppointment(
-          title,
-          dateObj,
-          parseInt(duration),
-          description,
-          contactId
-        );
+      let result;
+      if (autoAssign) {
+        // Créer un rendez-vous auto-assigné
+        result = await createAutoAssignAppointment(appointmentData);
       } else {
-        // Vérifier que l'utilisateur est connecté pour un rendez-vous normal
-        if (!user || !user.id) {
-          toast.error("Vous devez être connecté pour effectuer cette action");
-          return;
-        }
-        
-        // Créer un rendez-vous normal
-        const appointmentData = {
-          title,
-          description,
-          date: dateObj.toISOString(),
-          duration: parseInt(duration),
-          status: "scheduled" as const,
-          freelancerId: user.id,
-          contactId: contactId,
-          location: null,
-          notes: null
-        };
-        
-        console.log("Création d'un rendez-vous standard avec les données:", appointmentData);
-        
-        // Appel du service avec les données préparées
-        const result = await appointmentService.createAppointment(appointmentData);
-        
-        if (!result) {
-          throw new Error("Erreur lors de la création du rendez-vous");
-        }
-        
-        // Message de succès
-        toast.success(`${title} planifié le ${format(dateObj, "dd/MM/yyyy à HH:mm", { locale: fr })}`);
+        // Créer un rendez-vous standard
+        result = await createAppointment(appointmentData);
       }
       
-      // Réinitialiser le formulaire et fermer la boîte de dialogue
-      resetForm();
-      if (onClose) onClose();
-      
-      // Attendre un court instant avant de déclencher un événement personnalisé
-      // pour rafraîchir les notifications
-      setTimeout(() => {
-        const event = new CustomEvent('appointment-created');
-        window.dispatchEvent(event);
-      }, 500);
-      
-    } catch (error: any) {
-      console.error("Erreur lors de la planification du rendez-vous:", error);
-      toast.error(error.message || "Une erreur est survenue lors de la planification du rendez-vous.");
+      if (result) {
+        // Déclencher l'événement de création de rendez-vous pour rafraîchir les données
+        window.dispatchEvent(new CustomEvent('appointment-created'));
+        
+        // Appeler le callback de succès si fourni
+        if (onSuccess) onSuccess();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création du rendez-vous:", error);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Fonction pour réinitialiser le formulaire
-  const resetForm = () => {
-    setTitleOption("consultation-initiale");
-    setCustomTitle("");
-    setDescription("");
-    setDate(new Date());
-    setTime("09:00");
-    setDuration("60");
   };
 
   return {
