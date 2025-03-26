@@ -9,7 +9,7 @@ import { ContactFormValues } from "./schema/contactFormSchema";
 interface ContactFormProps {
   form: UseFormReturn<ContactFormValues>;
   isSubmitting: boolean;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   isEditing: boolean;
   submitLabel: string;
   onCancel?: () => void;

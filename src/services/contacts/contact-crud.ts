@@ -3,7 +3,7 @@
  * Main contact service file that re-exports all functionality from specialized services
  */
 import { contactOperationsService } from './contact-operations';
-import { contactCreateUpdateService } from './contact-create-update';
+import { addContact, updateContact, contactCreateUpdateService } from './contact-create-update';
 
 /**
  * Service pour la gestion des contacts - regroupe toutes les fonctionnalités

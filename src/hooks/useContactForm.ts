@@ -2,14 +2,14 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { contactFormSchema, ContactFormValues } from "@/components/contacts/schema/contactFormSchema";
+import { contactSchema, ContactFormValues } from "@/components/contacts/schema/contactFormSchema";
 import { addContact, updateContact } from "@/services/contacts/contact-create-update";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Contact } from "@/services/contacts/types";
 
 interface UseContactFormProps {
-  initialData?: Contact;
+  initialData?: Partial<Contact>;
   onSuccess?: () => void;
   isEditing: boolean;
 }
@@ -19,7 +19,7 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
   const { user } = useAuth();
 
   const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
+    resolver: zodResolver(contactSchema),
     defaultValues: initialData || {
       name: "",
       email: "",
@@ -47,7 +47,7 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       
       console.log("Données de contact à soumettre:", contactData);
 
-      if (isEditing && initialData) {
+      if (isEditing && initialData?.id) {
         console.log("Mise à jour du contact existant avec ID:", initialData.id);
         await updateContact(initialData.id, contactData);
         toast("Contact mis à jour avec succès");
@@ -74,6 +74,6 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
   return {
     form,
     isSubmitting,
-    onSubmit,
+    onSubmit: form.handleSubmit(onSubmit),
   };
 };

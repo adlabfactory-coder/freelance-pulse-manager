@@ -80,3 +80,10 @@ export const updateContact = async (id: string, data: ContactFormValues): Promis
     throw error;
   }
 };
+
+// Export du service pour l'intégration
+export const contactCreateUpdateService = {
+  createContact: addContact,
+  updateContact,
+  addContact
+};
