@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { CalendarPlus, Clock } from "lucide-react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { fr } from "date-fns/locale";
 import { AppointmentStatus } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
+import appointmentService from "@/services/appointments";
 
 const APPOINTMENT_TITLE_OPTIONS = [
   { value: "consultation-initiale", label: "Consultation initiale" },
@@ -33,6 +35,7 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
   selectedDate
 }) => {
   const supabase = useSupabase();
+  const { user } = useAuth();
   const [titleOption, setTitleOption] = useState("consultation-initiale");
   const [customTitle, setCustomTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -63,18 +66,26 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
       const dateTimeString = format(date, "yyyy-MM-dd") + "T" + time;
       const appointmentDateTime = new Date(dateTimeString);
       
-      // Simuler l'enregistrement pour la démo (dans une application réelle, nous utiliserions supabase)
-      // const { data, error } = await supabase.from('appointments').insert({
-      //   title,
-      //   description,
-      //   date: appointmentDateTime.toISOString(),
-      //   duration: parseInt(duration),
-      //   status: AppointmentStatus.SCHEDULED,
-      //   freelancerId: '00000000-0000-0000-0000-000000000000', // À remplacer par l'ID réel
-      //   contactId: '00000000-0000-0000-0000-000000000000', // À remplacer par l'ID réel
-      // });
+      // Dans une application réelle, nous utiliserions appointmentService.createAppointment() 
+      // Créer un rendez-vous
+      const appointmentData = {
+        title,
+        description,
+        date: appointmentDateTime.toISOString(),
+        duration: parseInt(duration),
+        status: AppointmentStatus.SCHEDULED,
+        freelancerId: user?.id || '',
+        contactId: '00000000-0000-0000-0000-000000000000', // À remplacer par un vrai ID
+        location: null,
+        notes: null
+      };
       
-      // if (error) throw error;
+      // Appel du service avec les données préparées
+      const result = await appointmentService.createAppointment(appointmentData);
+      
+      if (!result) {
+        throw new Error("Erreur lors de la création du rendez-vous");
+      }
       
       // Message de succès
       toast({
@@ -89,6 +100,14 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
       setTime("09:00");
       setDuration("60");
       onOpenChange(false);
+      
+      // Attendre un court instant avant de déclencher un événement personnalisé
+      // pour rafraîchir les notifications
+      setTimeout(() => {
+        const event = new CustomEvent('appointment-created');
+        window.dispatchEvent(event);
+      }, 500);
+      
     } catch (error) {
       console.error("Erreur lors de la planification du rendez-vous:", error);
       toast({

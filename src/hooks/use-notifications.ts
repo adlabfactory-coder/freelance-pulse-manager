@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Quote, QuoteStatus } from "@/types";
+import { useAuth } from "@/hooks/use-auth";
+import { UserRole } from "@/types";
 
 export type Notification = {
   id: string;
@@ -13,9 +15,11 @@ export type Notification = {
   type: "appointment" | "quote";
   read: boolean;
   linkTo?: string;
+  createdBy?: string; // ID du créateur de l'événement
 };
 
 export const useNotifications = () => {
+  const { user, role, isAdmin, isSuperAdmin, isAccountManager } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -56,7 +60,7 @@ export const useNotifications = () => {
     try {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*')
+        .select('*, freelancer:freelancerId(id, name)')
         .gte('date', `${formattedDate}T00:00:00`)
         .lte('date', `${formattedDate}T23:59:59`);
       
@@ -65,15 +69,27 @@ export const useNotifications = () => {
         return [];
       }
       
-      return data.map((appointment) => ({
-        id: `appointment-${appointment.id}`,
-        title: "Rendez-vous aujourd'hui",
-        description: `${appointment.title} à ${format(new Date(appointment.date), 'HH:mm', { locale: fr })}`,
-        date: new Date(appointment.date),
-        type: "appointment" as const,
-        read: false,
-        linkTo: "/appointments"
-      }));
+      // Filtrer les notifications selon le rôle de l'utilisateur
+      return data.map((appointment) => {
+        // Si c'est un admin, super admin ou chargé d'affaires, ils reçoivent toutes les notifications
+        const shouldReceive = isAdmin || isSuperAdmin || isAccountManager || 
+                           // Les freelances ne reçoivent que leurs propres rendez-vous
+                           (user?.id === appointment.freelancerId);
+                           
+        if (shouldReceive) {
+          return {
+            id: `appointment-${appointment.id}`,
+            title: "Rendez-vous aujourd'hui",
+            description: `${appointment.title} à ${format(new Date(appointment.date), 'HH:mm', { locale: fr })}${appointment.freelancer ? ` par ${appointment.freelancer.name}` : ''}`,
+            date: new Date(appointment.date),
+            type: "appointment" as const,
+            read: false,
+            linkTo: "/appointments",
+            createdBy: appointment.freelancerId
+          };
+        }
+        return null;
+      }).filter(Boolean); // Filtrer les valeurs null
     } catch (error) {
       console.error("Erreur inattendue:", error);
       return [];
@@ -96,15 +112,26 @@ export const useNotifications = () => {
         return [];
       }
       
-      return data.map((quote) => ({
-        id: `quote-${quote.id}`,
-        title: "Devis en attente",
-        description: `Devis pour ${quote.contact?.name || 'Client'} - ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(quote.totalAmount)}`,
-        date: new Date(quote.updatedAt),
-        type: "quote" as const,
-        read: false,
-        linkTo: "/quotes"
-      }));
+      // Pour les devis, les règles peuvent être différentes
+      // Ici, nous appliquons les mêmes règles que pour les rendez-vous
+      return data.map((quote) => {
+        const shouldReceive = isAdmin || isSuperAdmin || isAccountManager || 
+                           (user?.id === quote.freelancerId);
+                           
+        if (shouldReceive) {
+          return {
+            id: `quote-${quote.id}`,
+            title: "Devis en attente",
+            description: `Devis pour ${quote.contact?.name || 'Client'} - ${new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(quote.totalAmount)}`,
+            date: new Date(quote.updatedAt),
+            type: "quote" as const,
+            read: false,
+            linkTo: "/quotes",
+            createdBy: quote.freelancerId
+          };
+        }
+        return null;
+      }).filter(Boolean); // Filtrer les valeurs null
     } catch (error) {
       console.error("Erreur inattendue:", error);
       return [];
@@ -149,3 +176,4 @@ export const useNotifications = () => {
     refreshNotifications: loadNotifications
   };
 };
+
