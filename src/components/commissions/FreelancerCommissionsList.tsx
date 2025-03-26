@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Commission } from "@/types/commissions";
+import { Commission, CommissionWithDetails } from "@/types/commissions";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,18 +16,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/utils/format";
 import CommissionStatusBadge from "@/components/commissions/CommissionStatusBadge";
-
-interface SubscriptionDetails {
-  name?: string;
-  clientId?: string;
-  client?: {
-    name?: string;
-  };
-}
-
-interface CommissionWithDetails extends Commission {
-  subscriptionDetails?: SubscriptionDetails;
-}
 
 const FreelancerCommissionsList: React.FC = () => {
   const { user } = useAuth();
@@ -56,7 +43,7 @@ const FreelancerCommissionsList: React.FC = () => {
         }
 
         // Transformer les données pour correspondre à notre interface
-        const transformedData = data.map(item => ({
+        const transformedData: CommissionWithDetails[] = data.map(item => ({
           id: item.id,
           freelancerId: item.freelancerId,
           freelancerName: user?.email?.split('@')[0] || "Freelancer inconnu", // Using email as fallback
@@ -64,7 +51,7 @@ const FreelancerCommissionsList: React.FC = () => {
           tier: item.tier,
           periodStart: new Date(item.periodStart),
           periodEnd: new Date(item.periodEnd),
-          status: item.status,
+          status: item.status as CommissionStatus,
           paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
           paymentRequested: item.payment_requested || false,
           subscriptionDetails: item.subscription

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { SubscriptionPlan } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import { formatMoney } from "@/utils/format";
+import { formatCurrency } from "@/utils/format";
 
 interface SubscriptionPlansProps {
   plans: SubscriptionPlan[];
@@ -48,7 +48,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
           </CardHeader>
           <CardContent className="pb-2 flex-1">
             <div className="text-4xl font-bold mb-4">
-              {formatMoney(plan.price)} MAD
+              {formatCurrency(plan.price)} MAD
               <span className="text-sm font-normal text-muted-foreground ml-1">
                 par mois
               </span>

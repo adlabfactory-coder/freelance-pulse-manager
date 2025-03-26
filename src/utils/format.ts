@@ -1,3 +1,4 @@
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -20,3 +21,6 @@ export function formatDate(date: Date): string {
     return 'Invalid date';
   }
 }
+
+// Add formatMoney function as an alias to formatCurrency for backward compatibility
+export const formatMoney = formatCurrency;
