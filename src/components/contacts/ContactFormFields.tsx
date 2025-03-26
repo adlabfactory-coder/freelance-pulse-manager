@@ -19,81 +19,63 @@ interface ContactFormFieldsProps {
   isEditing?: boolean;
 }
 
-const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form, isEditing = false }) => {
+const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ 
+  form, 
+  isEditing = false 
+}) => {
+  const renderRequiredField = (
+    name: keyof ContactFormValues,
+    label: string,
+    placeholder: string,
+    type: string = "text"
+  ) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label} *</FormLabel>
+          <FormControl>
+            <Input placeholder={placeholder} type={type} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
+  const renderOptionalField = (
+    name: keyof ContactFormValues,
+    label: string,
+    placeholder: string
+  ) => (
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input placeholder={placeholder} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
   return (
     <>
-      <FormField
-        control={form.control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nom *</FormLabel>
-            <FormControl>
-              <Input placeholder="Jean Dupont" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email *</FormLabel>
-            <FormControl>
-              <Input placeholder="jean.dupont@example.com" type="email" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {renderRequiredField("name", "Nom", "Jean Dupont")}
+      {renderRequiredField("email", "Email", "jean.dupont@example.com", "email")}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Téléphone *</FormLabel>
-              <FormControl>
-                <Input placeholder="06 12 34 56 78" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="company"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Entreprise</FormLabel>
-              <FormControl>
-                <Input placeholder="Entreprise SARL" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {renderRequiredField("phone", "Téléphone", "06 12 34 56 78")}
+        {renderOptionalField("company", "Entreprise", "Entreprise SARL")}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="position"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Poste</FormLabel>
-              <FormControl>
-                <Input placeholder="Directeur commercial" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {renderOptionalField("position", "Poste", "Directeur commercial")}
 
         {isEditing ? (
           <FormField
@@ -122,19 +104,7 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form, isEditing =
         )}
       </div>
 
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Adresse</FormLabel>
-            <FormControl>
-              <Input placeholder="123 rue de Paris, 75001 Paris" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {renderOptionalField("address", "Adresse", "123 rue de Paris, 75001 Paris")}
 
       <FormField
         control={form.control}
@@ -143,7 +113,11 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form, isEditing =
           <FormItem>
             <FormLabel>Notes</FormLabel>
             <FormControl>
-              <Textarea placeholder="Informations complémentaires..." className="resize-none min-h-24" {...field} />
+              <Textarea 
+                placeholder="Informations complémentaires..." 
+                className="resize-none min-h-24" 
+                {...field} 
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

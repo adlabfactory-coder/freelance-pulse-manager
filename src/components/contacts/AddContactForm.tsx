@@ -1,9 +1,7 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
 import { useContactForm } from "./hooks/useContactForm";
-import ContactFormFields from "./ContactFormFields";
+import ContactForm from "./ContactForm";
 
 interface AddContactFormProps {
   onSuccess?: () => void;
@@ -13,26 +11,18 @@ interface AddContactFormProps {
 export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
   const { form, isSubmitting, onSubmit } = useContactForm({ 
     onSuccess,
-    isEditing: false // Indique que c'est une création et non une édition
+    isEditing: false
   });
 
   return (
-    <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <ContactFormFields form={form} isEditing={false} />
-
-        <div className="flex justify-end space-x-2 pt-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Annuler
-            </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Enregistrement..." : "Ajouter le contact"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+    <ContactForm
+      form={form}
+      isSubmitting={isSubmitting}
+      onSubmit={onSubmit}
+      isEditing={false}
+      submitLabel="Ajouter le contact"
+      onCancel={onCancel}
+    />
   );
 }
 
