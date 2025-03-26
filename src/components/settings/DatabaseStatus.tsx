@@ -4,18 +4,22 @@ import { useSupabase } from "@/hooks/use-supabase";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Database, Check, X } from "lucide-react";
+import { RefreshCw, Database, Check, X, AlertTriangle, WifiOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DatabaseStatus: React.FC = () => {
   const supabase = useSupabase();
   const [isLoading, setIsLoading] = useState(true);
   const [tablesStatus, setTablesStatus] = useState<{ table: string; exists: boolean }[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   
   const fetchStatus = async () => {
     setIsLoading(true);
+    setConnectionError(null);
+
     try {
       const tables = [
         'users', 
@@ -28,29 +32,41 @@ const DatabaseStatus: React.FC = () => {
         'commission_rules'
       ];
       
-      // Utiliser checkDatabaseSetup au lieu de requêtes RPC
-      const dbStatus = await supabase.checkDatabaseStatus();
-      
-      if (dbStatus.success) {
-        // Toutes les tables existent
-        setTablesStatus(tables.map(table => ({ table, exists: true })));
-      } else if (dbStatus.missingTables) {
-        // Certaines tables sont manquantes
-        setTablesStatus(tables.map(table => ({
-          table, 
-          exists: !dbStatus.missingTables?.includes(table)
-        })));
-      } else {
-        // Échec de la vérification
+      try {
+        // Vérifier la connexion d'abord
+        const connectionStatus = await supabase.checkSupabaseStatus();
+        
+        if (!connectionStatus.success) {
+          setConnectionError(connectionStatus.message || "Impossible de se connecter à Supabase");
+          setTablesStatus(tables.map(table => ({ table, exists: false })));
+          setIsLoading(false);
+          return;
+        }
+        
+        // Si la connexion est établie, vérifier les tables
+        const dbStatus = await supabase.checkDatabaseStatus();
+        
+        if (dbStatus.success) {
+          // Toutes les tables existent
+          setTablesStatus(tables.map(table => ({ table, exists: true })));
+        } else if (dbStatus.missingTables) {
+          // Certaines tables sont manquantes
+          setTablesStatus(tables.map(table => ({
+            table, 
+            exists: !dbStatus.missingTables?.includes(table)
+          })));
+        } else {
+          // Échec de la vérification
+          setTablesStatus(tables.map(table => ({ table, exists: false })));
+        }
+      } catch (error: any) {
+        console.error("Erreur lors de la vérification des tables:", error);
+        setConnectionError(error.message || "Erreur lors de la vérification des tables");
         setTablesStatus(tables.map(table => ({ table, exists: false })));
       }
     } catch (error) {
-      console.error("Erreur lors de la vérification des tables:", error);
-      const tables = [
-        'users', 'contacts', 'appointments', 'quotes', 'quote_items',
-        'subscriptions', 'commissions', 'commission_rules'
-      ];
-      setTablesStatus(tables.map(table => ({ table, exists: false })));
+      console.error("Erreur générale:", error);
+      setConnectionError("Erreur inattendue lors de la vérification de la base de données");
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +84,7 @@ const DatabaseStatus: React.FC = () => {
   
   const getOverallStatus = () => {
     if (isLoading) return "loading";
+    if (connectionError) return "connection_error";
     if (tablesStatus.length === 0) return "unknown";
     const missingTables = tablesStatus.filter(t => !t.exists);
     if (missingTables.length === 0) return "ok";
@@ -108,6 +125,16 @@ const DatabaseStatus: React.FC = () => {
       </CardHeader>
       <Separator />
       <CardContent className="pt-4">
+        {connectionError && (
+          <Alert variant="destructive" className="mb-4">
+            <WifiOff className="h-4 w-4" />
+            <AlertTitle>Erreur de connexion</AlertTitle>
+            <AlertDescription>
+              {connectionError}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {isLoading ? (
           <div className="flex justify-center py-8">
             <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -124,6 +151,9 @@ const DatabaseStatus: React.FC = () => {
               )}
               {status === "not_configured" && (
                 <Badge variant="destructive">Non configurée</Badge>
+              )}
+              {status === "connection_error" && (
+                <Badge variant="destructive"><WifiOff className="h-3 w-3 mr-1" /> Connexion impossible</Badge>
               )}
               {status === "unknown" && (
                 <Badge variant="outline">Statut inconnu</Badge>

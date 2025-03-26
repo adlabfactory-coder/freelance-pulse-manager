@@ -13,11 +13,12 @@ import QuoteDetailPage from "./pages/quotes/QuoteDetailPage";
 import Subscriptions from "./pages/Subscriptions";
 import Reports from "./pages/Reports";
 import Commissions from "./pages/Commissions";
-import SettingsPage from "./pages/settings/SettingsPage";
+import SettingsRoutes from "./pages/settings";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import CommissionDetailPage from "./pages/commissions/CommissionDetailPage";
 import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./hooks/use-theme";
+import Layout from "./components/layout/Layout";
 
 function App() {
   return (
@@ -29,18 +30,19 @@ function App() {
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
-              <Route path="/appointments" element={<Appointments />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/commissions" element={<Commissions />} />
-              <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/settings/:tab" element={<SettingsPage />} />
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/contacts" element={<Contacts />} />
+                <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/commissions" element={<Commissions />} />
+                <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
+                <Route path="/settings/*" element={<SettingsRoutes />} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

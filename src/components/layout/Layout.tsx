@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 const Layout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -31,6 +32,18 @@ const Layout: React.FC = () => {
     }
   }, [location.pathname, isMobile]);
 
+  // Effet pour vérifier si la sidebar est réellement rendue
+  useEffect(() => {
+    // Vérifier si l'élément sidebar existe après le montage du composant
+    const checkSidebarVisibility = () => {
+      const sidebarElement = document.querySelector('aside');
+      setSidebarVisible(!!sidebarElement);
+    };
+
+    // Attendre que le DOM soit complètement chargé
+    setTimeout(checkSidebarVisibility, 200);
+  }, []);
+
   const toggleSidebar = () => {
     setSidebarCollapsed((prev) => !prev);
   };
@@ -41,19 +54,26 @@ const Layout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Le wrapper de la sidebar est rendu visible par force */}
-      <div className="block" style={{ zIndex: 50 }}>
+      {/* Le wrapper de la sidebar avec une visibilité forcée */}
+      <div className="block" style={{ 
+        zIndex: 50, 
+        visibility: "visible",
+        display: "block",
+        position: isMobile ? "fixed" : "relative",
+      }}>
         <Sidebar 
           collapsed={sidebarCollapsed} 
           onToggle={toggleSidebar} 
         />
       </div>
+      
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header 
           toggleSidebar={toggleSidebar} 
           isDarkMode={theme === 'dark'} 
           toggleDarkMode={toggleDarkMode} 
           sidebarCollapsed={sidebarCollapsed}
+          sidebarVisible={sidebarVisible}
         />
         <main className="flex-1 overflow-auto w-full">
           <div className={`container mx-auto ${isMobile ? 'px-2 py-3 pb-20' : 'p-4 md:p-6'} animate-scale-in`}>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import UserProfile from "@/components/settings/UserProfile";
 import CompanySettings from "@/components/settings/CompanySettings";
 import ServicesSettings from "@/components/settings/ServicesSettings";
@@ -42,15 +42,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
 
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <UserProfile
-            userId={selectedUserId}
-            currentUser={currentUser}
-          />
-        }
-      />
+      <Route index element={<Navigate to="profile" replace />} />
       <Route
         path="/profile"
         element={
@@ -66,6 +58,8 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
       <Route path="/schedule" element={<ScheduleSettings />} />
       <Route path="/database" element={<DatabaseTab />} />
       {isAdmin && <Route path="/freelancers" element={<FreelancerManagement />} />}
+      {/* Redirection par défaut sur la première route si aucune ne correspond */}
+      <Route path="*" element={<Navigate to="profile" replace />} />
     </Routes>
   );
 };

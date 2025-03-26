@@ -16,7 +16,8 @@ import {
   BarChart,
   PieChart,
   Settings,
-  ChevronDown
+  ChevronDown,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,13 +39,15 @@ interface HeaderProps {
   toggleDarkMode: () => void;
   toggleSidebar: () => void;
   sidebarCollapsed: boolean;
+  sidebarVisible?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   isDarkMode, 
   toggleDarkMode, 
   toggleSidebar,
-  sidebarCollapsed 
+  sidebarCollapsed,
+  sidebarVisible = true
 }) => {
   const { user, role, signOut } = useAuth();
   const { toast } = useToast();
@@ -131,15 +134,26 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between px-4 border-b bg-background shadow-sm">
       <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          aria-label={sidebarCollapsed ? "Afficher le menu" : "Masquer le menu"}
-          className="mr-2"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        {sidebarVisible ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            aria-label={sidebarCollapsed ? "Afficher le menu" : "Masquer le menu"}
+            className="mr-2"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mr-2 cursor-not-allowed opacity-50"
+            title="La barre latérale n'est pas disponible"
+          >
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+          </Button>
+        )}
 
         {/* Menu déroulant de navigation */}
         <DropdownMenu>

@@ -31,62 +31,84 @@ export const useSettingsData = () => {
     
     try {
       console.log("Vérification du statut Supabase...");
-      const supabaseStatus = await supabase.checkSupabaseStatus();
+      let useMockData = false;
       
-      if (!supabaseStatus.success) {
-        console.warn("Problème de connexion à Supabase:", supabaseStatus.message);
+      try {
+        const supabaseStatus = await supabase.checkSupabaseStatus();
         
-        const dbSetupStatus = await checkDatabaseSetup();
-        setDbStatus(dbSetupStatus);
+        if (!supabaseStatus.success) {
+          console.warn("Problème de connexion à Supabase:", supabaseStatus.message);
+          useMockData = true;
+          
+          // Vérifier la configuration de la base de données
+          try {
+            const dbSetupStatus = await checkDatabaseSetup();
+            setDbStatus(dbSetupStatus);
+            
+            if (!dbSetupStatus.success && dbSetupStatus.missingTables && dbSetupStatus.missingTables.length > 0) {
+              console.warn("Tables manquantes dans la base de données:", dbSetupStatus.missingTables);
+            }
+          } catch (dbError) {
+            console.error("Erreur lors de la vérification de la base de données:", dbError);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification du statut Supabase:", error);
+        useMockData = true;
+      }
+      
+      // Utiliser les données de démonstration si Supabase n'est pas accessible
+      if (useMockData) {
+        console.log("Utilisation des données de démonstration");
+        const mockUsers = getMockUsers();
+        setUsers(mockUsers);
         
-        if (!dbSetupStatus.success && dbSetupStatus.missingTables && dbSetupStatus.missingTables.length > 0) {
-          console.warn("Tables manquantes dans la base de données:", dbSetupStatus.missingTables);
-          setErrorDetails({
-            title: "Base de données non configurée",
-            description: `Les tables nécessaires n'existent pas: ${dbSetupStatus.missingTables.join(', ')}`
-          });
-          setHasError(true);
-          setIsLoading(false);
-          return;
+        // Utiliser le premier utilisateur comme utilisateur actuel
+        if (mockUsers.length > 0) {
+          const user = mockUsers[0];
+          setCurrentUser(user);
+          setSelectedUserId(user.id);
         }
         
-        console.log("Utilisation des données de démonstration");
         toast({
           variant: "default",
           title: "Mode démo activé",
           description: "Utilisation des données de démonstration car Supabase n'est pas accessible.",
         });
-      }
-      
-      let usersData: User[] = [];
-      
-      try {
-        console.log("Récupération des utilisateurs...");
-        usersData = await supabase.fetchUsers();
-        console.log("Utilisateurs récupérés:", usersData);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des utilisateurs:", error);
-        // Utiliser les données de démonstration
-        usersData = getMockUsers();
-        console.log("Utilisation des données de démonstration pour les utilisateurs");
-      }
-      
-      if (usersData.length > 0) {
-        const user = usersData[0]; // Utilisation du premier utilisateur comme utilisateur actuel
-        setCurrentUser(user);
-        setSelectedUserId(user.id);
-        setUsers(usersData);
       } else {
-        setHasError(true);
-        setErrorDetails({
-          title: "Aucun utilisateur trouvé",
-          description: "Impossible de récupérer les données utilisateurs, même en mode démo."
-        });
-        toast({
-          variant: "destructive",
-          title: "Erreur critique",
-          description: "Impossible de récupérer les informations utilisateur, même en mode démo.",
-        });
+        // Essayer de récupérer les données depuis Supabase
+        try {
+          console.log("Récupération des utilisateurs...");
+          const usersData = await supabase.fetchUsers();
+          console.log("Utilisateurs récupérés:", usersData);
+          
+          if (usersData.length > 0) {
+            const user = usersData[0];
+            setCurrentUser(user);
+            setSelectedUserId(user.id);
+            setUsers(usersData);
+          } else {
+            throw new Error("Aucun utilisateur trouvé dans Supabase");
+          }
+        } catch (error) {
+          console.error("Erreur lors de la récupération des utilisateurs:", error);
+          
+          // Utiliser les données de démonstration en cas d'erreur
+          const mockUsers = getMockUsers();
+          setUsers(mockUsers);
+          
+          if (mockUsers.length > 0) {
+            const user = mockUsers[0];
+            setCurrentUser(user);
+            setSelectedUserId(user.id);
+          }
+          
+          toast({
+            variant: "default",
+            title: "Mode démo activé",
+            description: "Utilisation des données de démonstration suite à une erreur de connexion.",
+          });
+        }
       }
     } catch (error) {
       console.error("Erreur fatale lors de la récupération des données:", error);
@@ -95,10 +117,24 @@ export const useSettingsData = () => {
         title: "Erreur système",
         description: "Une erreur système est survenue lors du chargement des paramètres."
       });
+      
+      // Essayer quand même de charger les données de démonstration
+      try {
+        const mockUsers = getMockUsers();
+        if (mockUsers.length > 0) {
+          setCurrentUser(mockUsers[0]);
+          setSelectedUserId(mockUsers[0].id);
+          setUsers(mockUsers);
+          setHasError(false);
+        }
+      } catch (e) {
+        console.error("Impossible de charger les données de démo:", e);
+      }
+      
       toast({
         variant: "destructive",
-        title: "Erreur système",
-        description: "Impossible de récupérer les informations utilisateur.",
+        title: "Erreur de chargement",
+        description: "Utilisateur chargé en mode hors ligne.",
       });
     } finally {
       setIsLoading(false);
@@ -117,6 +153,19 @@ export const useSettingsData = () => {
           title: "Erreur inattendue",
           description: "Une erreur inattendue est survenue lors du chargement des données."
         });
+        
+        // Essayer quand même de charger les données de démonstration
+        try {
+          const mockUsers = getMockUsers();
+          if (mockUsers.length > 0) {
+            setCurrentUser(mockUsers[0]);
+            setSelectedUserId(mockUsers[0].id);
+            setUsers(mockUsers);
+            setHasError(false);
+          }
+        } catch (err) {
+          console.error("Impossible de charger les données de démo:", err);
+        }
       }
     };
     
@@ -133,8 +182,7 @@ export const useSettingsData = () => {
   };
 
   const handleRetry = () => {
-    setRetryCount(prev => prev + 1); // Forcer la réexécution du useEffect
-    fetchData();
+    setRetryCount(prev => prev + 1);
   };
 
   return {
