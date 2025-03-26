@@ -59,14 +59,8 @@ const SettingsPage: React.FC = () => {
       )}
       
       <SettingsContent 
+        onSelectUser={handleUserSelect}
         currentUser={displayUser}
-        selectedUserId={displayUserId}
-        activeTab={activeTab}
-        isLoading={isLoading}
-        onUserSelect={handleUserSelect}
-        onTabChange={handleTabChange}
-        users={users}
-        error={hasError ? errorDetails.description : null}
       />
     </div>
   );

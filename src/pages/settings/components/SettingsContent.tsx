@@ -10,21 +10,30 @@ import DatabaseTab from "@/components/settings/DatabaseTab";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 import { useAuth } from "@/hooks/use-auth";
 
-const SettingsContent: React.FC = () => {
-  const { isSuperAdmin, isAdminOrSuperAdmin } = useAuth();
+interface SettingsContentProps {
+  onSelectUser?: (userId: string) => void;
+  currentUser?: any;
+}
+
+const SettingsContent: React.FC<SettingsContentProps> = ({ 
+  onSelectUser = () => {}, // valeur par défaut pour éviter les erreurs
+  currentUser 
+}) => {
+  const { isSuperAdmin, isAdminOrSuperAdmin, user } = useAuth();
+  const isCurrentUser = currentUser && user ? currentUser.id === user.id : true;
   
   return (
     <div className="flex-1 space-y-4">
       <Routes>
         {/* Base routes for all users */}
-        <Route path="" element={<UserProfileTabs />} />
-        <Route path="security" element={<SecurityTab />} />
+        <Route path="" element={<UserProfileTabs onSelectUser={onSelectUser} />} />
+        <Route path="security" element={<SecurityTab isCurrentUser={isCurrentUser} />} />
         <Route path="api-keys" element={<ApiKeysTab />} />
         
         {/* Admin & Super Admin routes */}
         {isAdminOrSuperAdmin && (
           <>
-            <Route path="users" element={<UsersManagement />} />
+            <Route path="users" element={<UsersManagement onSelectUser={onSelectUser} />} />
             <Route path="freelancers" element={<FreelancerManagement />} />
             <Route path="services" element={<ServicesSettings />} />
           </>
