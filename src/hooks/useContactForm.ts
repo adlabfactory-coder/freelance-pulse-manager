@@ -70,9 +70,18 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
         await updateContact(initialData.id, contactData);
         
         // Créer un objet Contact avec les données mises à jour
+        // On s'assure que toutes les propriétés requises sont présentes
         createdOrUpdatedContact = {
           id: initialData.id,
-          ...contactData,
+          name: contactData.name,        // Propriété requise
+          email: contactData.email,      // Propriété requise
+          phone: contactData.phone || "",
+          company: contactData.company || "",
+          position: contactData.position || "",
+          address: contactData.address || "",
+          notes: contactData.notes || "",
+          status: contactData.status,    // Propriété requise
+          assignedTo: contactData.assignedTo,
           createdAt: initialData.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -81,9 +90,18 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       } else {
         console.log("Création d'un nouveau contact");
         const contactId = await addContact(contactData);
+        // On s'assure que toutes les propriétés requises sont présentes
         createdOrUpdatedContact = {
           id: contactId,
-          ...contactData,
+          name: contactData.name,        // Propriété requise
+          email: contactData.email,      // Propriété requise
+          phone: contactData.phone || "",
+          company: contactData.company || "",
+          position: contactData.position || "",
+          address: contactData.address || "",
+          notes: contactData.notes || "",
+          status: contactData.status,    // Propriété requise
+          assignedTo: contactData.assignedTo,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
