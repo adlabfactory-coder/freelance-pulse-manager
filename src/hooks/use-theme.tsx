@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 // Définition du type pour le contexte de thème
 type Theme = "dark" | "light" | "system";
@@ -41,7 +41,9 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme() || defaultTheme);
+  const [theme, setTheme] = React.useState<Theme>(
+    () => getInitialTheme() || defaultTheme
+  );
 
   useEffect(() => {
     const root = window.document.documentElement;

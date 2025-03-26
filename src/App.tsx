@@ -21,6 +21,7 @@ import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./hooks/use-theme";
 import Layout from "./components/layout/Layout";
 import { AuthProvider } from "./hooks/use-auth";
+import { Toaster as SonnerToaster } from "./components/ui/sonner";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />
+            <SonnerToaster />
           </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
