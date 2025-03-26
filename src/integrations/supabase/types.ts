@@ -73,7 +73,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           duration: number
-          freelancerId: string
+          freelancerid: string
           id: string
           location: string | null
           notes: string | null
@@ -88,7 +88,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           duration: number
-          freelancerId: string
+          freelancerid: string
           id?: string
           location?: string | null
           notes?: string | null
@@ -103,7 +103,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           duration?: number
-          freelancerId?: string
+          freelancerid?: string
           id?: string
           location?: string | null
           notes?: string | null
@@ -121,7 +121,7 @@ export type Database = {
           },
           {
             foreignKeyName: "appointments_freelancerId_fkey"
-            columns: ["freelancerId"]
+            columns: ["freelancerid"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]

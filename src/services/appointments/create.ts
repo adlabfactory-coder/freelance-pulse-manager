@@ -47,12 +47,12 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       };
 
       // Only process notification if we have required data
-      if (appointmentData.freelancerId) {
+      if (appointmentData.freelancerid) {
         // Get freelancer name
         const { data: freelancer } = await supabase
           .from('users')
           .select('name')
-          .eq('id', appointmentData.freelancerId)
+          .eq('id', appointmentData.freelancerid)
           .single();
         
         if (freelancer) {

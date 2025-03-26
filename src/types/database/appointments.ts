@@ -8,7 +8,7 @@ export interface AppointmentsTable {
       title: string
       description: string | null
       contactId: string
-      freelancerId: string
+      freelancerid: string // Modifié de freelancerId à freelancerid
       date: string
       duration: number
       status: string
@@ -22,7 +22,7 @@ export interface AppointmentsTable {
       title: string
       description?: string | null
       contactId: string
-      freelancerId: string
+      freelancerid: string // Modifié
       date: string
       duration: number
       status: string
@@ -36,7 +36,7 @@ export interface AppointmentsTable {
       title?: string
       description?: string | null
       contactId?: string
-      freelancerId?: string
+      freelancerid?: string // Modifié
       date?: string
       duration?: number
       status?: string

@@ -65,7 +65,7 @@ export const useAppointmentForm = (
         duration,
         status: "scheduled",
         contactId,
-        freelancerId: "", // Sera rempli par le backend
+        freelancerid: "", // Modifié de freelancerId à freelancerid
         location: null,
         notes: null
       };
