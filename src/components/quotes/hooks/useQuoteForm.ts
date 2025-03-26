@@ -3,10 +3,15 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { QuoteItem, QuoteStatus, Quote } from "@/types";
 import { Contact } from "@/services/contacts/types";
-import { Service } from "@/types";
+import { Service } from "@/types/services";
 import { User } from "@/types";
 import { addDays } from "date-fns";
-import { createQuote } from "@/services/quote-service";
+import { 
+  createQuote, 
+  fetchQuoteById, 
+  updateQuote,
+  updateQuoteStatus 
+} from "@/services/quote-service";
 import { fetchServices } from "@/services/services-service";
 import { fetchUsers } from "@/services/supabase-user-service";
 import { contactService } from "@/services/contacts";
@@ -14,9 +19,16 @@ import { contactService } from "@/services/contacts";
 interface UseQuoteFormProps {
   onCloseDialog: (open: boolean) => void;
   onQuoteCreated: () => void;
+  isEditing?: boolean;
+  quoteId?: string;
 }
 
-export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProps) => {
+export const useQuoteForm = ({ 
+  onCloseDialog, 
+  onQuoteCreated,
+  isEditing = false,
+  quoteId = ""
+}: UseQuoteFormProps) => {
   const { toast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [freelancers, setFreelancers] = useState<User[]>([]);
@@ -58,6 +70,32 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
         variant: "destructive",
         title: "Erreur de chargement",
         description: "Impossible de charger les données nécessaires.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Charger les données d'un devis existant
+  const loadQuoteData = async (id: string) => {
+    setLoading(true);
+    try {
+      const quote = await fetchQuoteById(id);
+      if (quote) {
+        setQuoteData(quote);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de charger le devis demandé.",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement du devis:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger le devis demandé.",
       });
     } finally {
       setLoading(false);
@@ -120,7 +158,7 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
     }));
   };
 
-  // Soumettre le formulaire de devis
+  // Soumettre le formulaire de devis (création)
   const handleSubmit = async () => {
     if (!quoteData.contactId || !quoteData.freelancerId || !quoteData.items?.length) {
       toast({
@@ -149,7 +187,7 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
       
       const result = await createQuote(completeQuote);
       
-      if (result) { // Changed from result.success to just result check
+      if (result) {
         toast({
           title: "Succès",
           description: "Le devis a été créé avec succès.",
@@ -177,6 +215,67 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
       setIsSubmitting(false);
     }
   };
+  
+  // Soumettre le formulaire de devis (modification)
+  const handleSubmitEdit = async (id: string) => {
+    if (!quoteData.contactId || !quoteData.freelancerId || !quoteData.items?.length) {
+      toast({
+        variant: "destructive",
+        title: "Champs requis",
+        description: "Veuillez remplir tous les champs obligatoires et ajouter au moins un article.",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    console.log("Mise à jour du devis:", quoteData);
+    
+    try {
+      const success = await updateQuote(id, quoteData);
+      
+      if (success) {
+        toast({
+          title: "Succès",
+          description: "Le devis a été mis à jour avec succès.",
+        });
+        
+        onCloseDialog(false);
+        onQuoteCreated();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du devis:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du devis.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Mettre à jour le statut d'un devis
+  const handleStatusChange = async (id: string, status: QuoteStatus) => {
+    try {
+      const success = await updateQuoteStatus(id, status);
+      
+      if (success) {
+        toast({
+          title: "Succès",
+          description: `Le statut du devis a été changé en "${status}".`,
+        });
+        
+        onQuoteCreated();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du statut.",
+      });
+    }
+  };
 
   return {
     contacts,
@@ -191,6 +290,9 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
     handleAddItem,
     handleRemoveItem,
     handleSubmit,
-    loadData
+    handleSubmitEdit,
+    handleStatusChange,
+    loadData,
+    loadQuoteData
   };
 };

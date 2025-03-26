@@ -2,7 +2,7 @@
 import React from "react";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Save } from "lucide-react";
 import { QuoteItem, Quote, User } from "@/types";
 import { Contact } from "@/services/contacts/types";
 import { Service } from "@/types/services";
@@ -22,6 +22,7 @@ interface QuoteDialogContentProps {
   onRemoveItem: (index: number) => void;
   onSubmit: () => void;
   onCancel: () => void;
+  isEditing?: boolean;
 }
 
 const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
@@ -37,7 +38,8 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
   onAddItem,
   onRemoveItem,
   onSubmit,
-  onCancel
+  onCancel,
+  isEditing = false
 }) => {
   if (loading) {
     return <div className="py-8 text-center">Chargement des données...</div>;
@@ -55,6 +57,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
         onCurrentItemChange={onCurrentItemChange}
         onAddItem={onAddItem}
         onRemoveItem={onRemoveItem}
+        isEditing={isEditing}
       />
 
       <DialogFooter>
@@ -63,7 +66,11 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
         </Button>
         <Button disabled={isSubmitting} onClick={onSubmit}>
           {isSubmitting ? (
-            "Création en cours..."
+            "Traitement en cours..."
+          ) : isEditing ? (
+            <>
+              <Save className="mr-2 h-4 w-4" /> Mettre à jour
+            </>
           ) : (
             <>
               <Check className="mr-2 h-4 w-4" /> Créer le devis

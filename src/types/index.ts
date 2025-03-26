@@ -1,5 +1,6 @@
 import { ContactStatus as ContactStatusEnum } from "@/types/database/enums";
 import { Commission, CommissionStatus, CommissionTier } from "./commissions";
+import { Service } from "./services";
 
 export enum UserRole {
   ADMIN = "admin",
@@ -75,16 +76,7 @@ export interface Subscription {
   renewalDate?: Date;
 }
 
-export interface Service {
-  id: string;
-  name: string;
-  description: string | null;
-  type: ServiceType;
-  price: number;
-  isActive: boolean;
-  created_at?: Date;
-  updated_at?: Date;
-}
+export type { Service };
 
 export interface SubscriptionPlan {
   id: string;
