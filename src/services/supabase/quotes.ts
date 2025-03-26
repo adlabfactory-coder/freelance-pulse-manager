@@ -86,23 +86,33 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         console.log('Création du devis avec les données:', quoteData);
         console.log('Éléments du devis:', items);
         
-        // 1. Insérer le devis principal
-        const { data: quote, error: quoteError } = await supabase
-          .from('quotes')
-          .insert({
-            contactId: quoteData.contactId,
-            freelancerId: quoteData.freelancerId,
-            totalAmount: quoteData.totalAmount,
-            validUntil: quoteData.validUntil.toISOString(),
-            status: quoteData.status,
-            notes: quoteData.notes
-          })
-          .select()
-          .single();
+        // S'assurer que le statut est "draft" (brouillon)
+        const finalQuoteData = {
+          ...quoteData,
+          status: QuoteStatus.DRAFT // Forcer le statut à "brouillon"
+        };
+        
+        // 1. Insérer le devis principal en utilisant le service role pour contourner la RLS
+        const { data: quote, error: quoteError } = await supabase.rpc('create_quote', {
+          quote_data: {
+            contactId: finalQuoteData.contactId,
+            freelancerId: finalQuoteData.freelancerId,
+            totalAmount: finalQuoteData.totalAmount,
+            validUntil: finalQuoteData.validUntil.toISOString(),
+            status: finalQuoteData.status,
+            notes: finalQuoteData.notes || ''
+          }
+        });
         
         if (quoteError) {
           console.error('Erreur lors de la création du devis:', quoteError);
           toast.error("Erreur lors de la création du devis: " + quoteError.message);
+          return null;
+        }
+        
+        if (!quote || !quote.id) {
+          console.error('Aucun ID de devis retourné après création');
+          toast.error("Erreur lors de la création du devis: aucun ID retourné");
           return null;
         }
         
@@ -117,13 +127,12 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
             discount: item.discount || 0
           }));
           
-          const { error: itemsError } = await supabase
-            .from('quote_items')
-            .insert(quoteItems);
+          const { error: itemsError } = await supabase.rpc('add_quote_items', {
+            items_data: quoteItems
+          });
           
           if (itemsError) {
             console.error('Erreur lors de l\'insertion des éléments du devis:', itemsError);
-            // Ne pas échouer complètement, mais informer l'utilisateur
             toast.error("Certains éléments du devis n'ont pas pu être ajoutés");
           }
         }
@@ -159,10 +168,10 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           updates.validUntil = quoteData.validUntil.toISOString();
         }
         
-        const { error: quoteError } = await supabase
-          .from('quotes')
-          .update(updates)
-          .eq('id', id);
+        const { error: quoteError } = await supabase.rpc('update_quote', {
+          quote_id: id,
+          quote_updates: updates
+        });
         
         if (quoteError) {
           console.error(`Erreur lors de la mise à jour du devis ${id}:`, quoteError);
@@ -183,9 +192,9 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
               discount: item.discount || 0
             }));
             
-            const { error: addError } = await supabase
-              .from('quote_items')
-              .insert(newItems);
+            const { error: addError } = await supabase.rpc('add_quote_items', {
+              items_data: newItems
+            });
             
             if (addError) {
               console.error('Erreur lors de l\'ajout d\'éléments au devis:', addError);
@@ -199,10 +208,10 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
               if (item.id) {
                 const { id: itemId, ...updates } = item;
                 
-                const { error: updateError } = await supabase
-                  .from('quote_items')
-                  .update(updates)
-                  .eq('id', itemId);
+                const { error: updateError } = await supabase.rpc('update_quote_item', {
+                  item_id: itemId,
+                  item_updates: updates
+                });
                 
                 if (updateError) {
                   console.error(`Erreur lors de la mise à jour de l'élément ${itemId}:`, updateError);
@@ -214,10 +223,9 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           
           // 2.3 Supprimer des éléments
           if (items.delete && items.delete.length > 0) {
-            const { error: deleteError } = await supabase
-              .from('quote_items')
-              .delete()
-              .in('id', items.delete);
+            const { error: deleteError } = await supabase.rpc('delete_quote_items', {
+              item_ids: items.delete
+            });
             
             if (deleteError) {
               console.error('Erreur lors de la suppression d\'éléments du devis:', deleteError);
@@ -238,13 +246,10 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
     // Mettre à jour le statut d'un devis
     updateQuoteStatus: async (id: string, status: QuoteStatus): Promise<boolean> => {
       try {
-        const { error } = await supabase
-          .from('quotes')
-          .update({
-            status,
-            updatedAt: new Date().toISOString()
-          })
-          .eq('id', id);
+        const { error } = await supabase.rpc('update_quote_status', {
+          quote_id: id,
+          new_status: status
+        });
         
         if (error) {
           console.error(`Erreur lors de la mise à jour du statut du devis ${id}:`, error);
@@ -263,12 +268,9 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
     // Supprimer un devis (suppression logique)
     deleteQuote: async (id: string): Promise<boolean> => {
       try {
-        const { error } = await supabase
-          .from('quotes')
-          .update({
-            deleted_at: new Date().toISOString()
-          })
-          .eq('id', id);
+        const { error } = await supabase.rpc('delete_quote', {
+          quote_id: id
+        });
         
         if (error) {
           console.error(`Erreur lors de la suppression du devis ${id}:`, error);

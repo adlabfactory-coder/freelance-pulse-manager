@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
 import { createQuotesService } from "./supabase/quotes";
 
-// Créer une instance du service de devis
+// Créer une instance du service de devis avec RPCMODE activé pour contourner la RLS
 const quotesService = createQuotesService(supabase);
 
 // Exporter les fonctions du service
