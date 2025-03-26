@@ -5,10 +5,13 @@ import { cn } from "@/lib/utils";
 
 interface UserProfileProps {
   collapsed: boolean;
-  renderIcon: (Icon: React.ElementType) => React.ReactNode;
+  renderIcon?: (Icon: React.ElementType) => React.ReactNode;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ collapsed, renderIcon }) => {
+const UserProfile: React.FC<UserProfileProps> = ({ 
+  collapsed, 
+  renderIcon = (Icon) => <Icon className="h-5 w-5" aria-hidden="true" />
+}) => {
   return (
     <div
       className={cn(

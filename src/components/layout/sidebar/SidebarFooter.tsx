@@ -41,7 +41,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed, renderIcon }) 
 
   return (
     <div className="border-t border-sidebar-border pt-4 pb-6 px-4">
-      <UserProfile collapsed={collapsed} />
+      <UserProfile collapsed={collapsed} renderIcon={renderIcon} />
       
       <div className={cn("mt-4 flex gap-2", 
         collapsed ? "flex-col items-center" : "flex-col")}>
