@@ -40,7 +40,7 @@ const Layout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
+    <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar 
         collapsed={sidebarCollapsed} 
         onToggle={toggleSidebar} 
