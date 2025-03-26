@@ -29,6 +29,11 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
   const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
   const [loading, setLoading] = useState(false);
 
+  // Fix: Pass a function that takes no arguments to onCloseDialog
+  const handleCloseDialog = () => {
+    onOpenChange(false);
+  };
+
   const {
     contacts,
     freelancers,
@@ -41,8 +46,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     addItem,
     loadData
   } = useQuoteForm({
-    // Fix the error by creating a function that calls onOpenChange with false
-    onCloseDialog: () => onOpenChange(false),
+    onCloseDialog: handleCloseDialog, // Use the properly typed handler function
     onQuoteCreated: () => {
       toast.success("Devis créé avec succès");
       onOpenChange(false);
