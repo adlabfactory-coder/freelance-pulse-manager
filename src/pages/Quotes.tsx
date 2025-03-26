@@ -18,6 +18,7 @@ const Quotes: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   
   const loadQuotes = async () => {
     if (!isAdmin && !isFreelancer) return; // Ne charger que pour les admins et les freelancers
@@ -39,10 +40,12 @@ const Quotes: React.FC = () => {
   };
   
   useEffect(() => {
-    if (isAdmin || isFreelancer) {
+    if ((isAdmin || isFreelancer) && loadAttempt === 0) {
+      console.log("Chargement initial des devis");
       loadQuotes();
+      setLoadAttempt(1);
     }
-  }, [isAdmin, isFreelancer]);
+  }, [isAdmin, isFreelancer, loadAttempt]);
   
   const filteredQuotes = quotes.filter(quote => {
     if (!searchTerm) return true;

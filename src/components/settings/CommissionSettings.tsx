@@ -2,7 +2,7 @@
 import React from "react";
 import CommissionSettingsForm from "./commission/CommissionSettingsForm";
 import LoadingIndicator from "./database/LoadingIndicator";
-import { useCommissionRules } from "./commission/useCommissionTiers";
+import { useCommissionRules } from "@/hooks/commission/use-commission-rules";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 

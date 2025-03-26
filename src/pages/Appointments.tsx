@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppointmentHeader from "@/components/appointments/AppointmentHeader";
 import AppointmentTabs from "@/components/appointments/AppointmentTabs";
 import AddAppointmentDialog from "@/components/appointments/AddAppointmentDialog";
@@ -10,10 +10,20 @@ const Appointments: React.FC = () => {
   const [timeView, setTimeView] = useState<"day" | "week">("day");
   const [searchQuery, setSearchQuery] = useState("");
   const [openNewAppointmentDialog, setOpenNewAppointmentDialog] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const handleAddAppointment = () => {
     setOpenNewAppointmentDialog(true);
   };
+
+  // Limite à un seul chargement
+  useEffect(() => {
+    if (!dataLoaded) {
+      console.log("Chargement initial des rendez-vous");
+      // Ici, vous pouvez ajouter des chargements de données si nécessaire
+      setDataLoaded(true);
+    }
+  }, [dataLoaded]);
 
   return (
     <div className="space-y-6">

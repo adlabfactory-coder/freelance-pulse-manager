@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BarChart, Calendar, FileText, Users } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import DashboardCard from "@/components/dashboard/DashboardCard";
@@ -8,6 +8,16 @@ import { useAuth } from "@/hooks/use-auth";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // Limite à un seul chargement
+  useEffect(() => {
+    if (!dataLoaded) {
+      console.log("Chargement initial du tableau de bord");
+      // Ici, vous pouvez ajouter d'autres chargements de données si nécessaire
+      setDataLoaded(true);
+    }
+  }, [dataLoaded]);
   
   return (
     <div className="space-y-6">

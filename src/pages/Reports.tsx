@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Download, PieChart } from "lucide-react";
 
 const Reports: React.FC = () => {
+  const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // Limite à un seul chargement
+  useEffect(() => {
+    if (!dataLoaded) {
+      console.log("Chargement initial des rapports");
+      // Ici, vous pouvez ajouter des chargements de données si nécessaire
+      setDataLoaded(true);
+    }
+  }, [dataLoaded]);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">

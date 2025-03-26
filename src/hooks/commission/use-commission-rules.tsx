@@ -20,10 +20,15 @@ export const useCommissionRules = () => {
     loading: true,
     error: null
   });
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
-    fetchCommissionRules();
-  }, []);
+    // Limiter à une seule tentative de chargement
+    if (loadAttempt === 0) {
+      fetchCommissionRules();
+      setLoadAttempt(1);
+    }
+  }, [loadAttempt]);
 
   /**
    * Fetches commission rules from the database

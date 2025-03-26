@@ -16,6 +16,7 @@ const Contacts: React.FC = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   
   const fetchContacts = async () => {
     if (!isAdmin) return; // Ne charger pour l'admin uniquement
@@ -27,10 +28,12 @@ const Contacts: React.FC = () => {
   };
   
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && loadAttempt === 0) {
+      console.log("Chargement initial des contacts");
       fetchContacts();
+      setLoadAttempt(1);
     }
-  }, [isAdmin]);
+  }, [isAdmin, loadAttempt]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);

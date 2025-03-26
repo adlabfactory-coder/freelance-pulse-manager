@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useCommissions } from "@/hooks/commission";
 import FreelancerCommissionsList from "@/components/commissions/FreelancerCommissionsList";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,6 +20,16 @@ const Commissions: React.FC = () => {
     approvePayment,
     generateMonthlyCommissions
   } = useCommissions();
+  const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // Limite à un seul chargement
+  useEffect(() => {
+    if (!dataLoaded) {
+      console.log("Chargement initial des commissions");
+      // Les données se chargent déjà via le hook useCommissions
+      setDataLoaded(true);
+    }
+  }, [dataLoaded]);
 
   // Si c'est un chargé d'affaires, afficher un message d'accès restreint
   if (isAccountManager) {
