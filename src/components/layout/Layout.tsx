@@ -41,10 +41,13 @@ const Layout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      <Sidebar 
-        collapsed={sidebarCollapsed} 
-        onToggle={toggleSidebar} 
-      />
+      {/* Le wrapper de la sidebar est rendu visible par force */}
+      <div className="block" style={{ zIndex: 50 }}>
+        <Sidebar 
+          collapsed={sidebarCollapsed} 
+          onToggle={toggleSidebar} 
+        />
+      </div>
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header 
           toggleSidebar={toggleSidebar} 

@@ -1,18 +1,37 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoonIcon, SunIcon, User, LogOut, Menu, MessageCircle } from 'lucide-react';
+import { 
+  MoonIcon, 
+  SunIcon, 
+  User, 
+  LogOut, 
+  Menu, 
+  MessageCircle,
+  Home,
+  Users,
+  Calendar,
+  FileText,
+  FileSpreadsheet,
+  BarChart,
+  PieChart,
+  Settings,
+  ChevronDown
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -31,6 +50,7 @@ const Header: React.FC<HeaderProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -76,8 +96,40 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  // Navigation items based on role
+  const getNavItems = () => {
+    const allNavItems = [
+      { title: "Tableau de bord", href: "/dashboard", icon: Home },
+      { title: "Contacts", href: "/contacts", icon: Users },
+      { title: "Rendez-vous", href: "/appointments", icon: Calendar },
+      { title: "Devis", href: "/quotes", icon: FileText },
+      { title: "Abonnements", href: "/subscriptions", icon: FileSpreadsheet },
+      { title: "Commissions", href: "/commissions", icon: BarChart },
+      { title: "Rapports", href: "/reports", icon: PieChart },
+      { title: "Paramètres", href: "/settings", icon: Settings },
+    ];
+    
+    if (role === 'freelancer') {
+      const freelancerItems = [
+        "/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"
+      ];
+      return allNavItems.filter(item => freelancerItems.includes(item.href));
+    } else if (role === 'account_manager') {
+      const accountManagerItems = [
+        "/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"
+      ];
+      return allNavItems.filter(item => accountManagerItems.includes(item.href));
+    } else if (role !== 'admin') {
+      return allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
+    }
+    
+    return allNavItems;
+  };
+
+  const navItems = getNavItems();
+
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 border-b bg-background">
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between px-4 border-b bg-background shadow-sm">
       <div className="flex items-center">
         <Button
           variant="ghost"
@@ -88,7 +140,54 @@ const Header: React.FC<HeaderProps> = ({
         >
           <Menu className="h-5 w-5" />
         </Button>
+
+        {/* Menu déroulant de navigation */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-2 hidden md:flex">
+              Navigation <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuLabel>Menu de navigation</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {navItems.map((item) => (
+              <DropdownMenuItem key={item.href} onClick={() => navigate(item.href)}>
+                <item.icon className="mr-2 h-4 w-4" />
+                <span>{item.title}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Menu de navigation pour mobile */}
+        <Popover open={navMenuOpen} onOpenChange={setNavMenuOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="ml-2 md:hidden">
+              Navigation <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" align="start">
+            <div className="grid gap-1">
+              {navItems.map((item) => (
+                <Button 
+                  key={item.href} 
+                  variant="ghost" 
+                  className="justify-start" 
+                  onClick={() => {
+                    navigate(item.href);
+                    setNavMenuOpen(false);
+                  }}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  <span>{item.title}</span>
+                </Button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
+      
       <div className="flex items-center space-x-2">
         <Button
           variant="ghost"

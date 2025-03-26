@@ -22,7 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
     <TooltipProvider>
       <aside
         className={cn(
-          "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out z-40",
+          "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out z-50",
           collapsed 
             ? "w-[70px]" 
             : isMobile 
@@ -30,7 +30,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
               : "w-[250px]"
         )}
         style={{ 
-          transform: isMobile && collapsed ? "translateX(-100%)" : "translateX(0)"
+          transform: isMobile && collapsed ? "translateX(-100%)" : "translateX(0)",
+          // Force the visibility to ensure the sidebar is shown
+          visibility: "visible",
+          display: "flex"
         }}
       >
         <SidebarHeader collapsed={collapsed} onToggle={onToggle} />
@@ -45,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
       {/* Overlay pour mobile quand sidebar est ouverte */}
       {isMobile && !collapsed && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30" 
+          className="fixed inset-0 bg-black/50 z-40" 
           onClick={onToggle}
           aria-hidden="true"
         />
