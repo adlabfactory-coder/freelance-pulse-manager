@@ -13,7 +13,7 @@ export const useCommissions = () => {
   const [requestingPayment, setRequestingPayment] = useState(false);
   const { user, isAdmin, isFreelancer, role } = useAuth();
   
-  const commissionsService = createCommissionsService(supabase);
+  const commissionsService = createCommissionsService(supabase as any);
 
   const fetchCommissions = useCallback(async () => {
     if (!user) {

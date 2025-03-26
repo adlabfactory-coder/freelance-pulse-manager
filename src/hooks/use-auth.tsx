@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types';
+import { toast } from '@/components/ui/use-toast';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +44,26 @@ export const useAuth = () => {
     })
   }, []);
 
+  // Fonction de déconnexion
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès."
+      });
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de vous déconnecter. Veuillez réessayer."
+      });
+    }
+  };
+
   // Vérifier si l'utilisateur est un admin
   const isAdmin = user?.role === UserRole.ADMIN;
   
@@ -62,7 +84,8 @@ export const useAuth = () => {
     isFreelancer,
     isAccountManager,
     isClient,
-    role: user?.role
+    role: user?.role,
+    signOut
   };
 };
 

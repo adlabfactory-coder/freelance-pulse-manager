@@ -9,13 +9,13 @@ import { CommissionStatus, CommissionTier } from "@/types/commissions";
 export const getTierLabel = (tier: CommissionTier): string => {
   switch (tier) {
     case CommissionTier.TIER_1:
-      return "Niveau 1";
+      return "Moins de 10 contrats";
     case CommissionTier.TIER_2:
-      return "Niveau 2";
+      return "11 à 20 contrats";
     case CommissionTier.TIER_3:
-      return "Niveau 3";
+      return "21 à 30 contrats";
     case CommissionTier.TIER_4:
-      return "Niveau 4";
+      return "31 contrats et plus";
     default:
       return "Inconnu";
   }
@@ -66,12 +66,12 @@ export const formatCurrency = (amount: number): string => {
  * @returns Montant de commission calculé
  */
 export const calculateCommissionAmount = (amount: number, tier: CommissionTier): number => {
-  const percentages: Record<CommissionTier, number> = {
-    [CommissionTier.TIER_1]: 0.05,
-    [CommissionTier.TIER_2]: 0.10,
-    [CommissionTier.TIER_3]: 0.15,
-    [CommissionTier.TIER_4]: 0.20
+  const baseAmounts: Record<CommissionTier, number> = {
+    [CommissionTier.TIER_1]: 500,   // Moins de 10 contrats
+    [CommissionTier.TIER_2]: 1000,  // 11 à 20 contrats
+    [CommissionTier.TIER_3]: 1500,  // 21 à 30 contrats
+    [CommissionTier.TIER_4]: 2000   // 31+ contrats
   };
   
-  return amount * (percentages[tier] || 0);
+  return amount * baseAmounts[tier];
 };

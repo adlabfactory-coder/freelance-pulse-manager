@@ -1,51 +1,40 @@
 
 import React from "react";
-import { LogOut } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import UserProfile from "./UserProfile";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
+import { LogOut, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarFooterProps {
   collapsed: boolean;
-  renderIcon: (Icon: React.ElementType) => React.ReactNode;
 }
 
-const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed, renderIcon }) => {
+const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
   const { signOut } = useAuth();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      toast({
-        description: "Vous êtes déconnecté avec succès",
-      });
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de vous déconnecter. Veuillez réessayer.",
-      });
-    }
-  };
-
   return (
-    <div className="p-3 mt-auto">
-      <Separator className="my-2" />
-      <div className="flex flex-col space-y-3">
-        <UserProfile collapsed={collapsed} renderIcon={renderIcon} />
+    <div className="mt-auto border-t px-2 py-2">
+      <div className="flex items-center justify-between">
         <Button
-          variant="outline"
-          size="sm"
-          className="h-9 w-full justify-start gap-2 text-sm"
-          onClick={handleSignOut}
+          variant="ghost"
+          size="icon"
+          asChild
+          className={`${collapsed ? 'w-full justify-center' : 'w-1/2'}`}
         >
-          {renderIcon(LogOut)}
-          <span className={collapsed ? "hidden" : "inline-block"}>
-            Déconnexion
-          </span>
+          <Link to="/settings">
+            <Settings className="h-5 w-5" />
+            {!collapsed && <span className="ml-2">Paramètres</span>}
+          </Link>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={signOut}
+          className={`${collapsed ? 'w-full justify-center' : 'w-1/2'}`}
+        >
+          <LogOut className="h-5 w-5" />
+          {!collapsed && <span className="ml-2">Déconnexion</span>}
         </Button>
       </div>
     </div>

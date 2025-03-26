@@ -1,20 +1,16 @@
 
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./index.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "./hooks/use-auth";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter as Router } from 'react-router-dom'
+import App from './App'
+import './index.css'
+import { Toaster } from './components/ui/sonner'
 
-// Create a client for React Query
-const queryClient = new QueryClient();
-
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+    <Router>
+      <App />
+      <Toaster />
+    </Router>
+  </React.StrictMode>,
+)
