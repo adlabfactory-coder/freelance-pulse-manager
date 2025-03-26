@@ -17,6 +17,8 @@ import Commissions from "./pages/Commissions";
 import SettingsRoutes from "./pages/settings";
 import ContactDetailPage from "./pages/contacts/ContactDetailPage";
 import CommissionDetailPage from "./pages/commissions/CommissionDetailPage";
+import AdminPage from "./pages/AdminPage";
+import AuditPage from "./pages/AuditPage";
 import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./hooks/use-theme";
 import Layout from "./components/layout/Layout";
@@ -46,6 +48,8 @@ function App() {
                   <Route path="/commissions" element={<Commissions />} />
                   <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
                   <Route path="/settings/*" element={<SettingsRoutes />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/audit" element={<AuditPage />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />

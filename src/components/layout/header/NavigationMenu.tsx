@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LucideIcon } from 'lucide-react';
 import * as Icons from 'lucide-react';
+import { UserRole } from '@/types';
 
 interface NavItem {
   title: string;
@@ -46,21 +47,47 @@ const NavigationMenu: React.FC = () => {
       { title: "Paramètres", href: "/settings", icon: Icons.Settings },
     ];
     
-    if (role === 'freelancer') {
-      const freelancerItems = [
-        "/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"
-      ];
-      return allNavItems.filter(item => freelancerItems.includes(item.href));
-    } else if (role === 'account_manager') {
-      const accountManagerItems = [
-        "/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"
-      ];
-      return allNavItems.filter(item => accountManagerItems.includes(item.href));
-    } else if (role !== 'admin') {
-      return allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
+    // Configuration des accès par rôle
+    const roleAccess: Record<UserRole, string[]> = {
+      [UserRole.SUPER_ADMIN]: allNavItems.map(item => item.href), // Accès complet
+      [UserRole.ADMIN]: [
+        "/dashboard", 
+        "/contacts", 
+        "/appointments", 
+        "/quotes", 
+        "/subscriptions", 
+        "/commissions", 
+        "/reports", 
+        "/settings"
+      ],
+      [UserRole.FREELANCER]: [
+        "/dashboard",
+        "/contacts",
+        "/appointments", 
+        "/quotes",
+        "/commissions",
+        "/settings"
+      ],
+      [UserRole.ACCOUNT_MANAGER]: [
+        "/dashboard",
+        "/contacts",
+        "/appointments",
+        "/quotes",
+        "/settings"
+      ],
+      [UserRole.CLIENT]: [
+        "/dashboard", 
+        "/settings"
+      ]
+    };
+    
+    if (role) {
+      const allowedPaths = roleAccess[role] || ["/dashboard", "/settings"];
+      return allNavItems.filter(item => allowedPaths.includes(item.href));
     }
     
-    return allNavItems;
+    // Fallback - accès minimum
+    return allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
   };
 
   const navItems = getNavItems();

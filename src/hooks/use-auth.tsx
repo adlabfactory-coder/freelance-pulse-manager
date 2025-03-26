@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, UserRole } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ interface AuthContextType {
   isAccountManager?: boolean;
   isSuperAdmin?: boolean;
   isAdminOrSuperAdmin?: boolean;
+  isAuthenticated: boolean;
   role?: UserRole;
   signIn: (email: string, password: string) => Promise<User>;
   signOut: () => Promise<void>;
@@ -22,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   isAdmin: false,
   isFreelancer: false,
+  isAuthenticated: false,
   signIn: async () => ({ id: "", name: "", email: "", role: UserRole.CLIENT, avatar: null, calendly_enabled: false, calendly_url: "", calendly_sync_email: "" }),
   signOut: async () => {},
   logout: async () => {},
@@ -67,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
   const isFreelancer = user?.role === UserRole.FREELANCER;
   const isAccountManager = user?.role === UserRole.ACCOUNT_MANAGER;
+  const isAuthenticated = !!user;
   const role = user?.role;
 
   return (
@@ -77,7 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isFreelancer, 
       isAccountManager, 
       isSuperAdmin, 
-      isAdminOrSuperAdmin, 
+      isAdminOrSuperAdmin,
+      isAuthenticated,
       role,
       signIn, 
       signOut,
@@ -114,6 +119,26 @@ const MOCK_USERS = [
     name: "Client Test",
     email: "client@example.com",
     role: UserRole.CLIENT,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "4",
+    name: "Super Admin Test",
+    email: "superadmin@example.com",
+    role: UserRole.SUPER_ADMIN,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "5",
+    name: "Account Manager Test",
+    email: "manager@example.com",
+    role: UserRole.ACCOUNT_MANAGER,
     avatar: null,
     calendly_enabled: false,
     calendly_url: "",
