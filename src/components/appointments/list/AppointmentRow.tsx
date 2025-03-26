@@ -39,23 +39,26 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
   onUpdate,
   onView,
 }) => {
-  const { isAdmin, isFreelancer } = useAuth();
+  const { isAdmin, isFreelancer, user } = useAuth();
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
 
+  // Propriété pour vérifier si l'utilisateur actuel est affecté au rendez-vous
+  const currentUserId = user?.id;
+
   const getStatusBadgeVariant = (status: AppointmentStatus) => {
     switch (status) {
       case AppointmentStatus.SCHEDULED:
         return "default";
       case AppointmentStatus.COMPLETED:
-        return "success";
+        return "secondary";  // Changé de "success" à "secondary" pour compatibilité
       case AppointmentStatus.CANCELLED:
         return "destructive";
       case AppointmentStatus.PENDING:
-        return "warning";
+        return "outline";  // Changé de "warning" à "outline"
       case AppointmentStatus.NO_SHOW:
         return "outline";
       default:
@@ -100,7 +103,10 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
     setInitialConsultationDialogOpen(true);
   };
 
-  const isActionable = isAdmin || (isFreelancer && appointment.freelancerId === appointment.currentUserId);
+  const isActionable = isAdmin || (isFreelancer && appointment.freelancerId === currentUserId);
+
+  const contactName = appointment.contactName || "Client";
+  const freelancerName = appointment.freelancerName || "Commercial";
 
   return (
     <TableRow>
@@ -110,19 +116,19 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
         {formatTime(new Date(appointment.date))}
       </TableCell>
       <TableCell>{appointment.duration} min</TableCell>
-      <TableCell>{appointment.contactName}</TableCell>
-      <TableCell>{appointment.freelancerName}</TableCell>
+      <TableCell>{contactName}</TableCell>
+      <TableCell>{freelancerName}</TableCell>
       <TableCell>
         <Badge variant={getStatusBadgeVariant(appointment.status)}>
-          {appointment.status === "scheduled"
+          {appointment.status === AppointmentStatus.SCHEDULED
             ? "Planifié"
-            : appointment.status === "completed"
+            : appointment.status === AppointmentStatus.COMPLETED
             ? "Terminé"
-            : appointment.status === "cancelled"
+            : appointment.status === AppointmentStatus.CANCELLED
             ? "Annulé"
-            : appointment.status === "pending"
+            : appointment.status === AppointmentStatus.PENDING
             ? "En attente"
-            : appointment.status === "no_show"
+            : appointment.status === AppointmentStatus.NO_SHOW
             ? "Absent"
             : appointment.status}
         </Badge>
@@ -222,13 +228,13 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
               <div>
                 <h4 className="font-medium mb-1">Client</h4>
                 <p className="text-sm text-muted-foreground">
-                  {appointment.contactName}
+                  {contactName}
                 </p>
               </div>
               <div>
                 <h4 className="font-medium mb-1">Commercial</h4>
                 <p className="text-sm text-muted-foreground">
-                  {appointment.freelancerName}
+                  {freelancerName}
                 </p>
               </div>
               {appointment.notes && (

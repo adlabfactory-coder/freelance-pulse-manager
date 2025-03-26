@@ -5,17 +5,21 @@ export interface Appointment {
   description: string | null;
   date: string;
   duration: number;
-  status: "scheduled" | "cancelled" | "completed" | "pending" | "no_show";
+  status: AppointmentStatus;
   contactId: string;
-  freelancerId: string; // Consistent naming
+  freelancerId: string;
   location: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
   deleted_at?: string | null;
+  // Propriétés dérivées pour l'affichage
+  contactName?: string;
+  freelancerName?: string;
+  currentUserId?: string;
 }
 
-// Add a type to bridge between DB string status and our TypeScript enum
+// Type pour les statuts de rendez-vous venant de la base de données
 export type AppointmentStatusFromDB = string;
 
 // Enum pour les statuts de rendez-vous

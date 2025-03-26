@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import { formatDateToFrench } from "@/utils/format";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
+import { contactService } from "@/services/contact-service";
 
 interface FreelancerContactsListProps {
   contacts: Contact[];
@@ -18,16 +19,44 @@ interface FreelancerContactsListProps {
 }
 
 const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
-  contacts,
-  loading
+  contacts: initialContacts,
+  loading: initialLoading
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const [contacts, setContacts] = useState<Contact[]>(initialContacts || []);
+  const [loading, setLoading] = useState<boolean>(initialLoading || true);
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
   const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [selectedContactName, setSelectedContactName] = useState<string>("");
+
+  // Charger les contacts du freelancer si non fournis en prop
+  useEffect(() => {
+    if (initialContacts) {
+      setContacts(initialContacts);
+      setLoading(initialLoading);
+    } else if (user?.id) {
+      const loadContacts = async () => {
+        try {
+          const result = await contactService.getContactsByFreelancer(user.id);
+          setContacts(result || []);
+        } catch (error) {
+          console.error("Erreur lors du chargement des contacts:", error);
+          toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Impossible de charger vos contacts."
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      loadContacts();
+    }
+  }, [initialContacts, initialLoading, user?.id, toast]);
 
   const handleScheduleAppointment = (contactId: string, contactName: string) => {
     setSelectedContactId(contactId);

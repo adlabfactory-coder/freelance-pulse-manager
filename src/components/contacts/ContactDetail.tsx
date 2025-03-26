@@ -6,7 +6,7 @@ import { CalendarClock, FileText, UserCog } from "lucide-react";
 import ContactInfoDisplay from "./ContactInfoDisplay";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import { Contact } from "@/types";
-import ContactEditDialog from "./ContactEditForm";
+import ContactEditForm from "./ContactEditForm";
 import { formatDateToFrench } from "@/utils/format";
 import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
@@ -82,12 +82,16 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
         contactName={contact.name}
       />
       
-      <ContactEditDialog 
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        contact={contact}
-        onSave={onUpdate}
-      />
+      {editDialogOpen && (
+        <ContactEditForm 
+          contact={contact}
+          onSuccess={() => {
+            setEditDialogOpen(false);
+            onUpdate(contact);
+          }}
+          onCancel={() => setEditDialogOpen(false)}
+        />
+      )}
       
       <InitialConsultationTemplate
         open={initialConsultationDialogOpen}

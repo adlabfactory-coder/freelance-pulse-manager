@@ -34,7 +34,7 @@ const Contacts: React.FC = () => {
     return (
       <div className="space-y-6">
         <ContactsHeader onContactAdded={fetchContacts} />
-        <FreelancerContactsList />
+        <FreelancerContactsList contacts={contacts} loading={loading} />
       </div>
     );
   }

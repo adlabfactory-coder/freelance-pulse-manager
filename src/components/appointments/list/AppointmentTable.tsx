@@ -15,17 +15,23 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
   appointments, 
   contacts 
 }) => {
+  // Enrichir les rendez-vous avec les noms des contacts
+  const enrichedAppointments = appointments.map(appointment => ({
+    ...appointment,
+    contactName: contacts[appointment.contactId] || 'Contact inconnu'
+  }));
+
   return (
     <CardContent>
       <div className="rounded-md border">
         <Table>
           <AppointmentTableHeader />
           <TableBody>
-            {appointments.map((appointment) => (
+            {enrichedAppointments.map((appointment) => (
               <AppointmentRow 
                 key={appointment.id}
                 appointment={appointment}
-                contactName={contacts[appointment.contactId] || 'Contact inconnu'}
+                onUpdate={() => {}}
               />
             ))}
           </TableBody>

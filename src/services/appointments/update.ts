@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Appointment } from "@/types/appointment";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 
 // Fonction pour mettre à jour un rendez-vous
 export const updateAppointment = async (id: string, appointmentData: Partial<Appointment>) => {
@@ -41,5 +41,16 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     console.error('Unexpected error when updating appointment:', err);
     toast.error("Une erreur inattendue s'est produite lors de la mise à jour du rendez-vous");
     return null;
+  }
+};
+
+// Fonction spécifique pour mettre à jour le statut d'un rendez-vous
+export const updateAppointmentStatus = async (id: string, status: AppointmentStatus): Promise<boolean> => {
+  try {
+    const result = await updateAppointment(id, { status });
+    return !!result;
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    return false;
   }
 };
