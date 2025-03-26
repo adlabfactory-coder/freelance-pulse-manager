@@ -10,7 +10,16 @@ import { Contact, ContactFormInput, ContactUpdate, ContactInsert } from './types
 export const contactService = {
   ...contactCrudService,
   ...contactSubscriptionService,
-  ...contactExcelService
+  ...contactExcelService,
+  
+  // Assurer que les méthodes essentielles sont correctement définies
+  getContacts: contactOperationsService.getContacts,
+  getContactById: contactOperationsService.getContactById,
+  createContact: contactCreateUpdateService.createContact,
+  addContact: contactCreateUpdateService.addContact,
+  updateContact: contactCreateUpdateService.updateContact,
+  deleteContact: contactOperationsService.deleteContact,
+  linkSubscriptionPlan: contactCrudService.linkSubscriptionPlan
 };
 
 // Re-export types

@@ -1,85 +1,80 @@
 
-import { CommissionTier } from '@/types/commissions';
-import { CommissionDbRecord, CommissionRuleDbRecord } from './types';
+import { Commission, CommissionRule, CommissionTier } from '@/types/commissions';
+import { UserRole } from '@/types';
 
 /**
- * Convertit une valeur de niveau de commission de la base de données en enum TypeScript
+ * Convertit un tier de commission en format de base de données
+ * @param tier - Tier de commission de l'énumération
+ * @returns - Chaîne compatible avec la base de données
  */
-export function mapTierFromDb(dbTier: string): CommissionTier {
-  switch(dbTier) {
-    case 'bronze':
-      return CommissionTier.TIER_1;
-    case 'silver':
-      return CommissionTier.TIER_2;
-    case 'gold':
-      return CommissionTier.TIER_3;
-    case 'platinum':
-      return CommissionTier.TIER_4;
-    default:
-      return CommissionTier.TIER_1;
+export const mapTierToDb = (tier: CommissionTier): string => {
+  switch (tier) {
+    case CommissionTier.TIER_1: return 'bronze';
+    case CommissionTier.TIER_2: return 'silver';
+    case CommissionTier.TIER_3: return 'gold';
+    case CommissionTier.TIER_4: return 'platinum';
+    default: return 'bronze';
   }
-}
+};
 
 /**
- * Convertit un enum TypeScript de niveau de commission en valeur pour la base de données
+ * Convertit un tier de la base de données en énumération CommissionTier
+ * @param dbTier - Tier stocké en base de données
+ * @returns - Valeur de l'énumération CommissionTier
  */
-export function mapTierToDb(tier: CommissionTier): string {
-  switch(tier) {
-    case CommissionTier.TIER_1:
-      return 'bronze';
-    case CommissionTier.TIER_2:
-      return 'silver';
-    case CommissionTier.TIER_3:
-      return 'gold';
-    case CommissionTier.TIER_4:
-      return 'platinum';
-    default:
-      return 'bronze';
+export const mapTierFromDb = (dbTier: string): CommissionTier => {
+  switch (dbTier) {
+    case 'bronze': return CommissionTier.TIER_1;
+    case 'silver': return CommissionTier.TIER_2;
+    case 'gold': return CommissionTier.TIER_3;
+    case 'platinum': return CommissionTier.TIER_4;
+    default: return CommissionTier.TIER_1;
   }
-}
+};
 
 /**
- * Convertit un enregistrement de règle de commission de la base de données en objet métier
+ * Mappe une commission depuis la base de données vers le format de l'application
  */
-export function mapCommissionRuleFromDb(rule: CommissionRuleDbRecord) {
+export const mapCommissionFromDb = (dbCommission: any): Commission => {
   return {
-    id: rule.id,
-    tier: mapTierFromDb(rule.tier),
-    minContracts: rule.minContracts,
-    maxContracts: rule.maxContracts || null,
-    percentage: rule.percentage,
-    amount: rule.amount || null,
+    id: dbCommission.id,
+    freelancerId: dbCommission.freelancerId,
+    freelancerName: dbCommission.freelancer?.name || 'Freelance inconnu',
+    amount: dbCommission.amount,
+    tier: mapTierFromDb(dbCommission.tier),
+    periodStart: new Date(dbCommission.periodStart),
+    periodEnd: new Date(dbCommission.periodEnd),
+    status: dbCommission.status,
+    paidDate: dbCommission.paidDate ? new Date(dbCommission.paidDate) : undefined,
+    paymentRequested: dbCommission.payment_requested || false,
+    period: `${new Date(dbCommission.periodStart).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`
   };
-}
+};
 
 /**
- * Convertit un enregistrement de commission de la base de données en objet métier
+ * Mappe une règle de commission depuis la base de données vers le format de l'application
  */
-export function mapCommissionFromDb(item: CommissionDbRecord) {
+export const mapCommissionRuleFromDb = (dbRule: any): CommissionRule => {
   return {
-    id: item.id,
-    freelancerId: item.freelancerId,
-    freelancerName: item.freelancer?.name || "Freelancer inconnu",
-    amount: item.amount,
-    tier: mapTierFromDb(item.tier),
-    periodStart: new Date(item.periodStart),
-    periodEnd: new Date(item.periodEnd),
-    status: item.status as any,
-    paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
-    paymentRequested: item.payment_requested || false,
-    period: `${new Date(item.periodStart).toLocaleDateString()} - ${new Date(item.periodEnd).toLocaleDateString()}`
+    id: dbRule.id,
+    tier: mapTierFromDb(dbRule.tier),
+    minContracts: dbRule.minContracts,
+    maxContracts: dbRule.maxContracts || null,
+    percentage: dbRule.percentage,
+    amount: dbRule.amount || undefined
   };
-}
+};
 
 /**
- * Renvoie des règles de commission par défaut en cas d'erreur ou d'absence de données
+ * Obtient les règles de commission par défaut
  */
-export function getDefaultCommissionRules() {
+export const getDefaultCommissionRules = (): CommissionRule[] => {
   return [
     {
       id: "default-tier-1",
       tier: CommissionTier.TIER_1,
-      minContracts: 0,
+      minContracts: 1,
+      maxContracts: 10,
       percentage: 10,
       amount: 500
     },
@@ -107,4 +102,12 @@ export function getDefaultCommissionRules() {
       amount: 2000
     }
   ];
+};
+
+/**
+ * Options pour le service de commissions
+ */
+export interface CommissionServiceOptions {
+  enableNotifications?: boolean;
+  defaultCurrency?: string;
 }
