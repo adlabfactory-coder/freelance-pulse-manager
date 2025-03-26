@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useContactForm } from "@/hooks/useContactForm";
 import ContactForm from "./ContactForm";
@@ -22,6 +22,9 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
     setCreatedContactId(contactId);
     setCreatedContactName(contactName);
     
+    // Automatiquement ouvrir la boîte de dialogue de rendez-vous lors de la création
+    setShowAppointmentDialog(true);
+    
     if (onSuccess) {
       onSuccess();
     }
@@ -39,9 +42,10 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
     }
   });
 
-  const handleScheduleInitialConsultation = () => {
-    setShowAppointmentDialog(true);
-  };
+  // Cette fonction n'est plus nécessaire car la boîte de dialogue s'ouvre automatiquement
+  // const handleScheduleInitialConsultation = () => {
+  //   setShowAppointmentDialog(true);
+  // };
 
   return (
     <>
@@ -63,14 +67,10 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
                     Le contact {createdContactName} a été ajouté avec succès.
                   </p>
                 </div>
-                <div className="mt-4">
-                  <Button
-                    onClick={handleScheduleInitialConsultation}
-                    className="flex items-center"
-                  >
-                    <CalendarPlus className="mr-2 h-4 w-4" />
-                    Planifier une consultation initiale
-                  </Button>
+                <div className="mt-2 text-sm text-green-700">
+                  <p>
+                    Une consultation initiale est en cours de planification...
+                  </p>
                 </div>
               </div>
             </div>
@@ -95,6 +95,7 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
           contactId={createdContactId}
           contactName={createdContactName}
           initialType="consultation-initiale"
+          autoAssign={true}
         />
       )}
     </>

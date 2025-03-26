@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ interface ContactAppointmentDialogProps {
   contactId: string;
   contactName: string;
   initialType?: string;
+  autoAssign?: boolean;
 }
 
 const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
@@ -21,7 +22,8 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   onOpenChange,
   contactId,
   contactName,
-  initialType = "consultation-initiale"
+  initialType = "consultation-initiale",
+  autoAssign = false
 }) => {
   // Utiliser le hook de formulaire pour les rendez-vous avec données explicites
   const {
@@ -42,15 +44,21 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   } = useAppointmentForm(
     open ? new Date() : undefined, // Réinitialiser la date à chaque ouverture du dialogue
     () => onOpenChange(false), 
-    contactId
+    contactId,
+    autoAssign
   );
 
   // Définir le type initial lors de l'ouverture du dialogue
   React.useEffect(() => {
     if (open && initialType) {
       setTitleOption(initialType);
+      
+      // Si c'est une consultation initiale, ajouter une description automatique
+      if (initialType === "consultation-initiale") {
+        setDescription(`Consultation initiale avec ${contactName} pour évaluer les besoins du client.`);
+      }
     }
-  }, [open, initialType, setTitleOption]);
+  }, [open, initialType, setTitleOption, contactName, setDescription]);
 
   // Gérer la soumission du formulaire en incluant l'ID du contact
   const handleFormSubmit = (e: React.FormEvent) => {
