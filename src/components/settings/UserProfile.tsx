@@ -96,11 +96,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
     
     setIsSubmitting(true);
     try {
-      const success = await supabase.updateUser(userId, {
+      const updatedUser = {
+        id: userId,
         name,
         email,
         role
-      });
+      };
+      
+      const success = await supabase.updateUser(updatedUser);
 
       if (success) {
         toast({

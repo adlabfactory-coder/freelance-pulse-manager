@@ -11,6 +11,14 @@ import { createSubscriptionsService } from './subscriptions';
 
 // Service centralisé pour Supabase
 export const createSupabaseService = () => {
+  // Créer les services avec le client Supabase
+  const storageService = createStorageService(supabase);
+  const usersService = createUsersService(supabase);
+  const contactsService = createContactsService(supabase);
+  const quotesService = createQuotesService(supabase);
+  const commissionsService = createCommissionsService(supabase);
+  const subscriptionsService = createSubscriptionsService(supabase);
+
   return {
     client: supabase,
     checkConnection: checkSupabaseConnection,
@@ -18,12 +26,12 @@ export const createSupabaseService = () => {
       initialize: initializeDatabase,
       checkStatus: checkDatabaseStatus,
     },
-    storage: createStorageService(supabase),
-    users: createUsersService(supabase),
-    contacts: createContactsService(supabase),
-    quotes: createQuotesService(supabase),
-    commissions: createCommissionsService(supabase),
-    subscriptions: createSubscriptionsService(supabase),
+    storage: storageService,
+    users: usersService,
+    contacts: contactsService,
+    quotes: quotesService,
+    commissions: commissionsService,
+    subscriptions: subscriptionsService,
   };
 };
 

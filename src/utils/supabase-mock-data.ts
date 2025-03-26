@@ -64,4 +64,3 @@ export const mockSignIn = (email: string, password: string): { user: User | null
   
   return { user, error: null };
 };
-

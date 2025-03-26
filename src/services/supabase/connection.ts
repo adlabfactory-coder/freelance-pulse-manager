@@ -21,20 +21,22 @@ export const checkSupabaseConnection = async (): Promise<DatabaseConnectionStatu
     
     // Essayons également de vérifier l'accès aux tables
     try {
-      // Utiliser une requête RPC qui devrait toujours fonctionner pour vérifier la connexion
-      const { error: functionError } = await supabase.rpc('version');
+      // Utiliser une simple requête sur une table pour vérifier l'accès
+      const { error: tableError } = await supabase
+        .from('users')
+        .select('count', { count: 'exact', head: true });
       
-      if (functionError) {
-        console.warn('Erreur lors de la vérification des fonctions:', functionError.message);
+      if (tableError) {
+        console.warn('Erreur lors de la vérification des tables:', tableError.message);
         return { 
           success: false, 
           message: 'Accès limité à la base de données. Certaines fonctionnalités peuvent ne pas être disponibles.',
           partialConnection: true
         };
       }
-    } catch (functionCheckError) {
-      console.warn('Erreur lors de la vérification des fonctions:', functionCheckError);
-      // On ne fait pas échouer complètement la vérification si seules les fonctions sont inaccessibles
+    } catch (tableCheckError) {
+      console.warn('Erreur lors de la vérification des tables:', tableCheckError);
+      // On ne fait pas échouer complètement la vérification si seules les tables sont inaccessibles
       return { 
         success: true, 
         message: 'Connexion établie, mais avec des fonctionnalités limitées',

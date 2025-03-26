@@ -1,7 +1,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
-import { User } from '@/types';
+import { User, UserRole } from '@/types';
 import { ServiceResponse } from './types';
 
 export const createUsersService = (supabase: SupabaseClient<Database>) => {
@@ -20,7 +20,10 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
           throw error;
         }
 
-        return data as User[];
+        return data.map(user => ({
+          ...user,
+          role: user.role as UserRole
+        })) as User[];
       } catch (error) {
         console.error('Erreur inattendue lors de la récupération des utilisateurs:', error);
         throw error;
@@ -43,7 +46,12 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
           throw error;
         }
 
-        return data as User;
+        if (!data) return null;
+
+        return {
+          ...data,
+          role: data.role as UserRole
+        } as User;
       } catch (error) {
         console.error(`Erreur inattendue lors de la récupération de l'utilisateur (${userId}):`, error);
         throw error;
@@ -72,7 +80,12 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
           throw error;
         }
 
-        return data as User;
+        if (!data) return null;
+
+        return {
+          ...data,
+          role: data.role as UserRole
+        } as User;
       } catch (error) {
         console.error('Erreur inattendue lors de la récupération de l\'utilisateur actuel:', error);
         throw error;
@@ -96,7 +109,13 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
           return { success: false, error: error.message };
         }
 
-        return { success: true, data: data as User };
+        return { 
+          success: true, 
+          data: {
+            ...data,
+            role: data.role as UserRole
+          } as User 
+        };
       } catch (error: any) {
         console.error(`Erreur inattendue lors de la mise à jour de l'utilisateur (${user.id}):`, error);
         return { success: false, error: error.message || 'Erreur inattendue lors de la mise à jour' };
@@ -119,7 +138,13 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
           return { success: false, error: error.message };
         }
 
-        return { success: true, data: data as User };
+        return { 
+          success: true, 
+          data: {
+            ...data,
+            role: data.role as UserRole
+          } as User 
+        };
       } catch (error: any) {
         console.error('Erreur inattendue lors de la création de l\'utilisateur:', error);
         return { success: false, error: error.message || 'Erreur inattendue lors de la création' };

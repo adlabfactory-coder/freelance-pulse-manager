@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
-import { User } from "@/types";
+import { User, UserRole } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export const useSettingsData = () => {
