@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SubscriptionPlan, SubscriptionStatus } from '@/types';
+import { SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from '@/types';
 
 export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
   try {
@@ -18,7 +18,7 @@ export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
       id: plan.id,
       name: plan.name,
       description: plan.description,
-      interval: plan.interval,
+      interval: plan.interval as SubscriptionInterval,
       price: plan.price,
       isActive: plan.is_active,
       code: plan.code,
@@ -49,7 +49,7 @@ export const getSubscriptionPlanById = async (id: string): Promise<SubscriptionP
       id: data.id,
       name: data.name,
       description: data.description,
-      interval: data.interval,
+      interval: data.interval as SubscriptionInterval,
       price: data.price,
       isActive: data.is_active,
       code: data.code,

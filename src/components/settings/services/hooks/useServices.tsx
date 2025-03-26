@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Service, ServiceType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -76,14 +75,14 @@ export const useServices = () => {
     try {
       if (selectedService.id) {
         // Update existing service
-        await updateService(selectedService as Service);
+        const result = await updateService(selectedService as Service);
         toast({
           title: "Service mis à jour",
           description: `Le service "${selectedService.name}" a été mis à jour avec succès.`,
         });
       } else {
         // Create new service - pass only one argument as expected by the function
-        await createService({
+        const result = await createService({
           name: selectedService.name,
           description: selectedService.description,
           type: selectedService.type || ServiceType.SERVICE,
@@ -112,7 +111,7 @@ export const useServices = () => {
     if (!selectedService || !selectedService.id) return;
 
     try {
-      await deleteService(selectedService.id);
+      const result = await deleteService(selectedService.id);
       toast({
         title: "Service supprimé",
         description: `Le service "${selectedService.name}" a été supprimé avec succès.`,

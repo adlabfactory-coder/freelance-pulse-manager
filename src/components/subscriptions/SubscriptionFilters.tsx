@@ -1,76 +1,54 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Filter } from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SubscriptionInterval } from "@/types";
+import SubscriptionIntervalLabel from "./SubscriptionIntervalLabel";
 
-const SubscriptionFilters: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    // Dans une implémentation réelle, cette fonction déclencherait une recherche filtrée
-  };
-  
-  const handleFilterClick = () => {
-    // Cette fonction serait utilisée pour appliquer les filtres sélectionnés
-    toast("Filtres appliqués", {
-      description: "Les données ont été filtrées selon vos critères."
-    });
-  };
+interface SubscriptionFiltersProps {
+  selectedInterval: string | null;
+  onFilterChange: (interval: string | null) => void;
+}
+
+const SubscriptionFilters: React.FC<SubscriptionFiltersProps> = ({ 
+  selectedInterval, 
+  onFilterChange 
+}) => {
+  const intervals = Object.values(SubscriptionInterval);
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 md:items-center">
-      <div className="relative w-full md:w-64">
-        <Input 
-          type="text" 
-          placeholder="Rechercher..." 
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-      </div>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" /> Filtrer
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuCheckboxItem
-            checked={true}
-            onCheckedChange={() => {
-              handleFilterClick();
-            }}
-          >
-            Abonnements actifs
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem
-            checked={false}
-            onCheckedChange={() => {
-              handleFilterClick();
-            }}
-          >
-            Abonnements en attente
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem
-            checked={false}
-            onCheckedChange={() => {
-              handleFilterClick();
-            }}
-          >
-            Abonnements expirés
-          </DropdownMenuCheckboxItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle>Filtres</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Période de facturation</h3>
+          <div className="flex flex-col space-y-2">
+            <Button
+              variant={selectedInterval === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => onFilterChange(null)}
+              className="justify-start"
+            >
+              Tous
+            </Button>
+            
+            {intervals.map((interval) => (
+              <Button
+                key={interval}
+                variant={selectedInterval === interval ? "default" : "outline"}
+                size="sm"
+                onClick={() => onFilterChange(interval)}
+                className="justify-start"
+              >
+                <SubscriptionIntervalLabel interval={interval as SubscriptionInterval} />
+              </Button>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

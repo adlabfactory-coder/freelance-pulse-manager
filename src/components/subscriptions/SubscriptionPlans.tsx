@@ -1,83 +1,99 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, ChevronRight } from "lucide-react";
-import { SubscriptionPlan } from '@/types';
-import SubscriptionIntervalLabel from './SubscriptionIntervalLabel';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SubscriptionPlan, SubscriptionInterval } from "@/types";
+import SubscriptionIntervalLabel from "./SubscriptionIntervalLabel";
 
 interface SubscriptionPlansProps {
   plans: SubscriptionPlan[];
-  onSelectPlan?: (plan: SubscriptionPlan) => void;
-  selectedPlanId?: string;
-  showActionButton?: boolean;
-  actionButtonText?: string;
+  onSelectPlan: (plan: SubscriptionPlan) => void;
+  loading: boolean;
 }
 
-const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
-  plans,
-  onSelectPlan,
-  selectedPlanId,
-  showActionButton = true,
-  actionButtonText = "Sélectionner"
+const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ 
+  plans, 
+  onSelectPlan, 
+  loading 
 }) => {
-  if (!plans || plans.length === 0) {
-    return <div className="text-center py-8">Aucun plan d'abonnement disponible</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Plans d'abonnement</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-6 w-36 mb-2" />
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <div className="space-y-2">
+                  {[1, 2, 3].map((j) => (
+                    <Skeleton key={j} className="h-4 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-9 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  const handleSelectPlan = (plan: SubscriptionPlan) => {
-    if (onSelectPlan) {
-      onSelectPlan(plan);
-    }
-  };
+  if (plans.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground">Aucun plan d'abonnement disponible.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {plans.map((plan) => (
-        <Card 
-          key={plan.id} 
-          className={`flex flex-col ${selectedPlanId === plan.id ? 'border-primary ring-1 ring-primary' : ''}`}
-        >
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-              </div>
-              <Badge variant="outline" className="ml-2">
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Plans d'abonnement</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {plans.map((plan) => (
+          <Card key={plan.id} className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle>{plan.name}</CardTitle>
+              <CardDescription>
                 <SubscriptionIntervalLabel interval={plan.interval} />
-              </Badge>
-            </div>
-            <div className="mt-4">
-              <span className="text-3xl font-bold">{plan.price}€</span>
-              <span className="text-muted-foreground">/{plan.interval.toLowerCase()}</span>
-            </div>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            <ul className="space-y-2">
-              {plan.features && Array.isArray(plan.features.features) && plan.features.features.map((feature, index) => (
-                <li key={index} className="flex items-start">
-                  <Check className="text-green-500 mr-2 h-5 w-5 mt-0.5" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-          <CardFooter>
-            {showActionButton && (
-              <Button 
-                onClick={() => handleSelectPlan(plan)} 
-                className="w-full"
-                variant={selectedPlanId === plan.id ? "default" : "outline"}
-              >
-                {actionButtonText}
-                <ChevronRight className="ml-1 h-4 w-4" />
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-3xl font-bold">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(plan.price)}</div>
+              <div className="space-y-2 text-sm">
+                {plan.description && <p>{plan.description}</p>}
+                {plan.features && typeof plan.features === 'object' && Array.isArray(plan.features) ? 
+                  plan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center">
+                      <span className="mr-2">✓</span> {feature}
+                    </div>
+                  ))
+                  : plan.features && typeof plan.features === 'object' ? 
+                    Object.entries(plan.features).map(([key, value]) => (
+                      <div key={key} className="flex items-center">
+                        <span className="mr-2">✓</span> {key}: {String(value)}
+                      </div>
+                    ))
+                    : null
+                }
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => onSelectPlan(plan)} className="w-full">
+                Sélectionner
               </Button>
-            )}
-          </CardFooter>
-        </Card>
-      ))}
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

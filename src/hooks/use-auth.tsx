@@ -2,66 +2,23 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, UserRole } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { hasMinimumRole } from "@/types/roles";
 
 // Helper function to check if one role is at least as high as another
-export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): boolean {
-  // Ordre des rôles du plus élevé au plus bas
-  const roles = [
-    UserRole.SUPER_ADMIN,
-    UserRole.ADMIN,
-    UserRole.ACCOUNT_MANAGER,
-    UserRole.FREELANCER,
-    UserRole.CLIENT
-  ];
-  
-  const userRoleIndex = roles.indexOf(userRole);
-  const requiredRoleIndex = roles.indexOf(requiredRole);
-  
-  // Plus l'index est bas, plus le rôle est élevé
-  return userRoleIndex <= requiredRoleIndex && userRoleIndex !== -1 && requiredRoleIndex !== -1;
-}
-
-// Mock authentication pour le développement
-const MOCK_USERS = [
-  {
-    id: "1",
-    name: "Admin Test",
-    email: "admin@example.com",
-    role: UserRole.ADMIN,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: "",
-    calendly_sync_email: ""
-  },
-  {
-    id: "2",
-    name: "Freelancer Test",
-    email: "freelancer@example.com",
-    role: UserRole.FREELANCER,
-    avatar: null,
-    calendly_enabled: true,
-    calendly_url: "https://calendly.com/freelancer-test",
-    calendly_sync_email: "freelancer@example.com"
-  },
-  {
-    id: "3",
-    name: "Client Test",
-    email: "client@example.com",
-    role: UserRole.CLIENT,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: "",
-    calendly_sync_email: ""
-  }
-];
+// Moved to types/roles.ts
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
   isFreelancer: boolean;
+  isAccountManager?: boolean;
+  isSuperAdmin?: boolean;
+  isAdminOrSuperAdmin?: boolean;
+  role?: UserRole;
   signIn: (email: string, password: string) => Promise<User>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>; // Alias for signOut for compatibility
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -70,7 +27,8 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isFreelancer: false,
   signIn: async () => ({ id: "", name: "", email: "", role: UserRole.CLIENT, avatar: null, calendly_enabled: false, calendly_url: "", calendly_sync_email: "" }),
-  signOut: async () => {}
+  signOut: async () => {},
+  logout: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -112,17 +70,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("currentUser");
   };
 
-  // Vérifier si l'utilisateur est admin
+  // Alias for signOut for backwards compatibility
+  const logout = signOut;
+
+  // Vérifier les rôles de l'utilisateur
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
-  
-  // Vérifier si l'utilisateur est freelancer
+  const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
   const isFreelancer = user?.role === UserRole.FREELANCER;
+  const isAccountManager = user?.role === UserRole.ACCOUNT_MANAGER;
+  const role = user?.role;
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, isFreelancer, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      isAdmin, 
+      isFreelancer, 
+      isAccountManager, 
+      isSuperAdmin, 
+      isAdminOrSuperAdmin, 
+      role,
+      signIn, 
+      signOut,
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+// Mock authentication pour le développement
+const MOCK_USERS = [
+  {
+    id: "1",
+    name: "Admin Test",
+    email: "admin@example.com",
+    role: UserRole.ADMIN,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "2",
+    name: "Freelancer Test",
+    email: "freelancer@example.com",
+    role: UserRole.FREELANCER,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: "https://calendly.com/freelancer-test",
+    calendly_sync_email: "freelancer@example.com"
+  },
+  {
+    id: "3",
+    name: "Client Test",
+    email: "client@example.com",
+    role: UserRole.CLIENT,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  }
+];
 
 export const useAuth = () => useContext(AuthContext);

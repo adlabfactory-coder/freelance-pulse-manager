@@ -1,7 +1,7 @@
-
-import { supabase } from '@/integrations/supabase/client';
-import { Quote, QuoteStatus } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
+import { Quote, QuoteItem, QuoteStatus } from "@/types";
+import { format } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
 
 export const fetchQuotes = async (): Promise<Quote[]> => {
   try {
@@ -43,59 +43,42 @@ export const fetchQuoteById = async (id: string): Promise<Quote | null> => {
   }
 };
 
-export const createQuote = async (quoteData: Quote): Promise<{ success: boolean, id?: string }> => {
+export const createQuote = async (quote: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>): Promise<Quote | null> => {
   try {
-    // Map Quote to database format
-    const dbQuote = {
-      contactId: quoteData.contactId,
-      freelancerId: quoteData.freelancerId,
-      totalAmount: quoteData.totalAmount,
-      status: quoteData.status,
-      validUntil: quoteData.validUntil,
-      notes: quoteData.notes,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const now = new Date();
+    const quoteWithDates = {
+      ...quote,
+      validUntil: format(quote.validUntil, 'yyyy-MM-dd'),
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString()
     };
-    
-    // Insert the quote
+
     const { data, error } = await supabase
       .from('quotes')
-      .insert(dbQuote)
+      .insert(quoteWithDates)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Erreur lors de la création du devis:', error);
-      return { success: false };
+      console.error("Error creating quote:", error);
+      return null;
     }
-    
-    const quoteId = data.id;
-    
-    // Now insert quote items
-    if (quoteData.items && quoteData.items.length > 0) {
-      const itemsWithQuoteId = quoteData.items.map(item => ({
-        quoteId: quoteId,
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount,
-        tax: item.tax,
-      }));
-      
-      const { error: itemsError } = await supabase
-        .from('quote_items')
-        .insert(itemsWithQuoteId);
-      
-      if (itemsError) {
-        console.error('Erreur lors de l\'ajout des éléments du devis:', itemsError);
-        // We don't return an error here since the quote was created successfully
-      }
-    }
-    
-    return { success: true, id: quoteId };
+
+    return {
+      id: data.id,
+      contactId: data.contactId,
+      freelancerId: data.freelancerId,
+      totalAmount: data.totalAmount,
+      validUntil: new Date(data.validUntil),
+      status: data.status as QuoteStatus,
+      notes: data.notes || "",
+      items: [],
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at)
+    };
   } catch (error) {
-    console.error('Erreur lors de la création du devis:', error);
-    return { success: false };
+    console.error("Error creating quote:", error);
+    return null;
   }
 };
 
@@ -142,7 +125,6 @@ export const deleteQuote = async (id: string): Promise<boolean> => {
   }
 };
 
-// Helper function to map database quote to our Quote type
 const mapDatabaseQuoteToQuote = (dbQuote: any): Quote => {
   return {
     id: dbQuote.id,
