@@ -36,7 +36,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed, renderIcon }) 
   };
 
   const handleWhatsAppContact = () => {
-    window.open('https://wa.me/+33612345678', '_blank');
+    window.open('https://wa.me/+212663529031', '_blank');
   };
 
   return (

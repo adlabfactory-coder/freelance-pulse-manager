@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleWhatsAppContact = () => {
-    window.open('https://wa.me/+33612345678', '_blank');
+    window.open('https://wa.me/+212663529031', '_blank');
   };
 
   const getInitials = (name: string) => {
