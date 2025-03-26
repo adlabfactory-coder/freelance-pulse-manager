@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Skeleton } from "@/components/ui/skeleton";
 import { SubscriptionPlan, SubscriptionInterval } from "@/types";
 import SubscriptionIntervalLabel from "./SubscriptionIntervalLabel";
+import { formatCurrency } from "@/utils/format";
 
 interface SubscriptionPlansProps {
   plans: SubscriptionPlan[];
@@ -67,7 +68,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-3xl font-bold">{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(plan.price)}</div>
+              <div className="text-3xl font-bold">{formatCurrency(plan.price)}</div>
               <div className="space-y-2 text-sm">
                 {plan.description && <p>{plan.description}</p>}
                 {plan.features && typeof plan.features === 'object' && Array.isArray(plan.features) ? 

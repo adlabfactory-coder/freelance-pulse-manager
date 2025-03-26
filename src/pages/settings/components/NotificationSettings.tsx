@@ -633,7 +633,7 @@ const NotificationSettings: React.FC = () => {
                               className="font-mono"
                             />
                             <p className="text-sm text-muted-foreground">
-                              La première ligne est utilisée comme sujet de l'email. Utilisez les variables comme {{variable}} pour personnaliser le contenu.
+                              La première ligne est utilisée comme sujet de l'email. Utilisez les variables comme {"{contact}"} pour le nom du contact et {"{date}"} pour la date du rendez-vous.
                             </p>
                           </div>
                         </AccordionContent>
@@ -649,7 +649,7 @@ const NotificationSettings: React.FC = () => {
                               className="font-mono"
                             />
                             <p className="text-sm text-muted-foreground">
-                              Utilisez les variables comme {{variable}} pour personnaliser le contenu.
+                              Utilisez les variables comme {"{contact}"} pour le nom du contact et {"{date}"} pour la date du rendez-vous.
                             </p>
                           </div>
                         </AccordionContent>
