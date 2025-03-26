@@ -12,6 +12,14 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   'freelancer': 'Chargé(e) d\'affaires'
 };
 
+// Définition de la hiérarchie des rôles (du plus bas au plus élevé)
+export const ROLE_HIERARCHY: UserRole[] = [
+  UserRole.FREELANCER,
+  UserRole.ACCOUNT_MANAGER,
+  UserRole.ADMIN,
+  UserRole.SUPER_ADMIN
+];
+
 // Catégories de permissions pour l'organisation dans l'interface
 export enum PermissionCategory {
   USERS = "Utilisateurs",
