@@ -9,13 +9,13 @@ import { CommissionStatus, CommissionTier } from "@/types/commissions";
 export const getTierLabel = (tier: CommissionTier): string => {
   switch (tier) {
     case CommissionTier.TIER_1:
-      return "Moins de 10 contrats";
+      return "Bronze (1-10 contrats)";
     case CommissionTier.TIER_2:
-      return "De 11 à 20 contrats";
+      return "Argent (11-20 contrats)";
     case CommissionTier.TIER_3:
-      return "De 21 à 30 contrats";
+      return "Or (21-30 contrats)";
     case CommissionTier.TIER_4:
-      return "Au-delà de 31 contrats";
+      return "Platine (31+ contrats)";
     default:
       return "Inconnu";
   }
@@ -38,7 +38,7 @@ export const formatPeriod = (startDate: Date, endDate: Date): string => {
  */
 export const formatDate = (date: Date | undefined): string => {
   if (!date) return "N/A";
-  return date.toLocaleDateString("fr-MA", {
+  return date.toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
@@ -51,9 +51,9 @@ export const formatDate = (date: Date | undefined): string => {
  * @returns Montant formaté
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("fr-MA", {
+  return new Intl.NumberFormat("fr-FR", {
     style: "currency",
-    currency: "MAD",
+    currency: "EUR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);

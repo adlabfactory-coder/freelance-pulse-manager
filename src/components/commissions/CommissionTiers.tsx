@@ -54,7 +54,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
                 {getTierLabel(rule.tier)}
               </Badge>
               <div className="mt-2 text-2xl font-bold">
-                {formatCurrency(rule.percentage)}%
+                {rule.percentage}%
               </div>
               <div className="text-sm text-muted-foreground mt-1">
                 {rule.amount ? formatCurrency(rule.amount) : 'Montant variable'}
