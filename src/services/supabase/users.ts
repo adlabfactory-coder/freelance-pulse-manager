@@ -17,7 +17,13 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
 
         if (error) {
           console.error('Erreur lors de la récupération des utilisateurs:', error);
-          throw error;
+          throw new Error(`Erreur de récupération: ${error.message}`);
+        }
+
+        // Si aucun utilisateur n'est trouvé, retourner un tableau vide
+        if (!data || data.length === 0) {
+          console.warn('Aucun utilisateur trouvé dans la base de données');
+          return [];
         }
 
         return data.map(user => ({
@@ -31,10 +37,20 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
     },
 
     /**
-     * Récupère un utilisateur par son ID
+     * Récupère un utilisateur par son ID en gérant les cas où l'ID est numérique
      */
     fetchUserById: async (userId: string): Promise<User | null> => {
       try {
+        // Vérifier si l'ID est un UUID valide
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isValidUuid = uuidPattern.test(userId);
+        
+        if (!isValidUuid) {
+          console.warn(`ID utilisateur '${userId}' n'est pas un UUID valide. Utilisez un UUID valide.`);
+          // Retourner null pour indiquer que cet ID n'est pas valide pour Supabase
+          return null;
+        }
+
         const { data, error } = await supabase
           .from('users')
           .select('*')
@@ -42,6 +58,11 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
           .single();
 
         if (error) {
+          if (error.code === 'PGRST116') {
+            // Cas où l'utilisateur n'est pas trouvé
+            console.warn(`Utilisateur avec ID ${userId} non trouvé`);
+            return null;
+          }
           console.error(`Erreur lors de la récupération de l'utilisateur (${userId}):`, error);
           throw error;
         }

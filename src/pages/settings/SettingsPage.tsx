@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useSettingsData } from "@/pages/settings/hooks/useSettingsData";
 import { UserRole } from "@/types";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
@@ -13,20 +13,64 @@ import ScheduleSettings from "@/components/settings/ScheduleSettings";
 import ServicesSettings from "@/components/settings/ServicesSettings";
 import CommissionSettingsTab from "@/pages/settings/components/CommissionSettingsTab";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
+import SettingsError from "@/pages/settings/components/SettingsError";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const SettingsPage: React.FC = () => {
   const { tab = "profile" } = useParams<{ tab: string }>();
+  const navigate = useNavigate();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { 
     currentUser, 
     users, 
     isAdmin, 
     isSuperAdmin,
-    loadingUser 
+    loadingUser,
+    error 
   } = useSettingsData();
 
-  if (loadingUser || !currentUser) {
-    return <div className="py-10 text-center">Chargement des paramètres...</div>;
+  // Réinitialiser l'utilisateur sélectionné lors du changement d'onglet
+  useEffect(() => {
+    setSelectedUserId(null);
+  }, [tab]);
+
+  // Afficher un écran de chargement
+  if (loadingUser) {
+    return (
+      <div className="py-10 space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-1/3" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+        <div className="flex gap-6">
+          <Skeleton className="h-[500px] w-64" />
+          <div className="flex-1 space-y-6">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Gérer les erreurs
+  if (error) {
+    return (
+      <SettingsError 
+        error={error} 
+        onRetry={() => navigate(0)} 
+      />
+    );
+  }
+
+  // Vérifier que l'utilisateur est bien chargé
+  if (!currentUser) {
+    return (
+      <div className="py-10 text-center text-red-500">
+        Erreur de chargement du profil utilisateur. Veuillez vous reconnecter.
+      </div>
+    );
   }
 
   // Rendre le contenu en fonction de l'onglet sélectionné

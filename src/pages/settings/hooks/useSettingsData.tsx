@@ -9,10 +9,11 @@ import { useUsersDataLoader } from "./useUsersDataLoader";
 
 export const useSettingsData = () => {
   const { user: currentUser, isAdmin, isSuperAdmin, role, loading: authLoading } = useAuth();
-  const { users, loading: usersLoading } = useUsersDataLoader();
+  const { users, loading: usersLoading, error: usersError } = useUsersDataLoader();
   const { dbStatus, checkDatabaseStatus } = useDatabaseStatus();
   const { checkSupabaseStatus } = useSupabaseStatus();
   const [loadingSupabase, setLoadingSupabase] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   // Vérifie l'état de Supabase et de la base de données au chargement
   useEffect(() => {
@@ -25,6 +26,7 @@ export const useSettingsData = () => {
           const supabaseStatus = await checkSupabaseStatus();
           
           if (!supabaseStatus.success) {
+            setConnectionError(supabaseStatus.message || "Impossible de se connecter à Supabase");
             toast({
               variant: "destructive",
               title: "Erreur de connexion",
@@ -45,6 +47,7 @@ export const useSettingsData = () => {
           }
         } catch (error) {
           console.error("Erreur lors de la vérification de l'état de Supabase:", error);
+          setConnectionError("Impossible de vérifier l'état de la connexion Supabase");
           toast({
             variant: "destructive",
             title: "Erreur",
@@ -62,6 +65,7 @@ export const useSettingsData = () => {
   }, [currentUser, isSuperAdmin, checkSupabaseStatus, checkDatabaseStatus]);
 
   const loading = authLoading || usersLoading || loadingSupabase;
+  const error = connectionError || usersError;
 
   return {
     currentUser,
@@ -70,6 +74,7 @@ export const useSettingsData = () => {
     isSuperAdmin,
     role,
     loadingUser: loading,
+    error,
     dbStatus
   };
 };

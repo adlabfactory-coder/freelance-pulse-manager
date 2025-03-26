@@ -112,8 +112,13 @@ const SettingsError: React.FC<SettingsErrorProps> = ({
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <div className="text-sm text-muted-foreground max-w-md text-center">
-            Les tables nécessaires ('users', 'contacts', etc.) n'existent pas dans votre projet Supabase.
-            Vous pouvez initialiser automatiquement la base de données ou continuer avec les données de démonstration.
+            Plusieurs problèmes peuvent empêcher le chargement correct de la page des paramètres :
+            <ul className="list-disc mt-2 text-left pl-5">
+              <li>Problème de connexion à la base de données</li>
+              <li>Tables nécessaires manquantes</li>
+              <li>Conflit d'ID d'utilisateurs (UUID vs ID numériques)</li>
+              <li>Problèmes de permissions utilisateur</li>
+            </ul>
           </div>
           
           {isSettingUp && (
