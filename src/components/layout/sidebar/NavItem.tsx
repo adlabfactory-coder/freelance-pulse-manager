@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { NavItem as NavItemType } from "@/types";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavItemProps {
   item: NavItemType;
@@ -12,6 +13,8 @@ interface NavItemProps {
 }
 
 const NavItem: React.FC<NavItemProps> = ({ item, collapsed, renderIcon }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <TooltipProvider>
       <Tooltip>
@@ -35,7 +38,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, collapsed, renderIcon }) => {
             )}
             <span
               className={cn(
-                "transition-opacity",
+                "transition-opacity duration-200",
                 collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
               )}
             >
@@ -43,7 +46,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, collapsed, renderIcon }) => {
             </span>
           </NavLink>
         </TooltipTrigger>
-        {collapsed && (
+        {collapsed && !isMobile && (
           <TooltipContent side="right" className="ml-1">
             {item.title}
           </TooltipContent>

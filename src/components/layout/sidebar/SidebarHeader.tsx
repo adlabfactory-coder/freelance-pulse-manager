@@ -1,8 +1,9 @@
 
 import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SidebarHeaderProps {
   collapsed: boolean;
@@ -10,6 +11,8 @@ interface SidebarHeaderProps {
 }
 
 const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed, onToggle }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex items-center justify-between px-4 h-16 border-b border-sidebar-border">
       <div

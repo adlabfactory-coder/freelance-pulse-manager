@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           collapsed 
             ? "w-[70px]" 
             : isMobile 
-              ? "w-[220px] absolute" 
+              ? "w-[250px] absolute" 
               : "w-[250px]"
         )}
         style={{ 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoonIcon, SunIcon, User, LogOut } from 'lucide-react';
+import { MoonIcon, SunIcon, User, LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,17 +11,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface HeaderProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   toggleSidebar: () => void;
+  sidebarCollapsed: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, toggleSidebar }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  isDarkMode, 
+  toggleDarkMode, 
+  toggleSidebar,
+  sidebarCollapsed 
+}) => {
   const { user, role, signOut } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSignOut = async () => {
     try {
@@ -65,13 +74,23 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode, toggleSideb
 
   return (
     <header className="flex h-16 items-center justify-between px-4 border-b">
-      <div className="flex-1"></div>
+      <div className="flex-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          aria-label={sidebarCollapsed ? "Afficher le menu" : "Masquer le menu"}
+          className="mr-2"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
       <div className="flex items-center space-x-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleDarkMode}
-          aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={isDarkMode ? 'Mode clair' : 'Mode sombre'}
         >
           {isDarkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
         </Button>

@@ -20,7 +20,7 @@ const Quotes: React.FC = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   
   const loadQuotes = async () => {
-    if (!isAdmin) return; // Ne charger pour l'admin uniquement
+    if (!isAdmin && !isFreelancer) return; // Ne charger que pour les admins et les freelancers
     
     setLoading(true);
     try {
@@ -39,10 +39,10 @@ const Quotes: React.FC = () => {
   };
   
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin || isFreelancer) {
       loadQuotes();
     }
-  }, [isAdmin]);
+  }, [isAdmin, isFreelancer]);
   
   const filteredQuotes = quotes.filter(quote => {
     if (!searchTerm) return true;
