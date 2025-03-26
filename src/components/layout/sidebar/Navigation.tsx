@@ -38,7 +38,7 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     // Les admins ont accès à tout
     if (isAdmin) return true;
     
-    // Les freelancers ont accès limité
+    // Les chargés d'affaires ont accès limité
     if (isFreelancer) {
       return [
         "/dashboard",

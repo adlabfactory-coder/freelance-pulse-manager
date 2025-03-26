@@ -158,7 +158,7 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
                       {user.role === UserRole.ADMIN 
                         ? "Administrateur" 
                         : user.role === UserRole.FREELANCER 
-                          ? "Commercial" 
+                          ? "Chargé(e) d'affaires" 
                           : "Client"}
                     </TableCell>
                     <TableCell>{user.calendly_enabled ? "Activé" : "Désactivé"}</TableCell>

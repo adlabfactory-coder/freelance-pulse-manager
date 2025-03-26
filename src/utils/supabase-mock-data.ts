@@ -15,7 +15,7 @@ export const getMockUsers = (): User[] => {
     },
     {
       id: "2",
-      name: "Commercial Démo",
+      name: "Chargé d'affaires Démo",
       email: "commercial@example.com",
       role: UserRole.FREELANCER,
       calendly_url: "https://calendly.com/commercial-demo",
@@ -33,7 +33,7 @@ export const getMockUsers = (): User[] => {
     },
     {
       id: "4",
-      name: "Freelance Démo",
+      name: "Chargé d'affaires 2 Démo",
       email: "freelance@example.com",
       role: UserRole.FREELANCER,
       calendly_url: "https://calendly.com/freelance-demo",

@@ -39,11 +39,11 @@ const FreelancerManagement: React.FC = () => {
 
       setFreelancers(data || []);
     } catch (error: any) {
-      console.error("Erreur lors de la récupération des freelances:", error);
+      console.error("Erreur lors de la récupération des chargés d'affaires:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de récupérer la liste des commerciaux",
+        description: "Impossible de récupérer la liste des chargés d'affaires",
       });
     } finally {
       setLoading(false);
@@ -54,7 +54,7 @@ const FreelancerManagement: React.FC = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Gestion des commerciaux</CardTitle>
+          <CardTitle>Gestion des chargés d'affaires</CardTitle>
           <CardDescription>
             Vous n'avez pas les droits pour accéder à cette section.
           </CardDescription>
@@ -68,14 +68,14 @@ const FreelancerManagement: React.FC = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Gestion des commerciaux</CardTitle>
+            <CardTitle>Gestion des chargés d'affaires</CardTitle>
             <CardDescription>
-              Liste des commerciaux ayant accès à la plateforme
+              Liste des chargés d'affaires ayant accès à la plateforme
             </CardDescription>
           </div>
           <Button onClick={() => setShowCreateForm(!showCreateForm)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            {showCreateForm ? "Annuler" : "Ajouter un commercial"}
+            {showCreateForm ? "Annuler" : "Ajouter un chargé d'affaires"}
           </Button>
         </CardHeader>
         
@@ -92,7 +92,7 @@ const FreelancerManagement: React.FC = () => {
             </div>
           ) : (
             <Table>
-              <TableCaption>Liste des commerciaux</TableCaption>
+              <TableCaption>Liste des chargés d'affaires</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
@@ -104,7 +104,7 @@ const FreelancerManagement: React.FC = () => {
                 {freelancers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center">
-                      Aucun commercial trouvé
+                      Aucun chargé d'affaires trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
