@@ -1,13 +1,13 @@
 
-import { ServiceType } from './index';
+import { ServiceType } from "./index";
 
 export interface Service {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   type: ServiceType;
   price: number;
-  is_active: boolean;
-  created_at: Date;
-  updated_at: Date;
+  isActive: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }

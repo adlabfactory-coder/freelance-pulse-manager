@@ -1,4 +1,45 @@
+
 import { UserRole } from './roles';
+
+// Définition des statuts pour les devis
+export enum QuoteStatus {
+  DRAFT = 'draft',
+  SENT = 'sent',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired'
+}
+
+// Définition des statuts pour les abonnements
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  CANCELLED = 'cancelled',
+  EXPIRED = 'expired'
+}
+
+// Définition des intervalles d'abonnement
+export enum SubscriptionInterval {
+  MONTHLY = 'monthly',
+  QUARTERLY = 'quarterly',
+  BIANNUAL = 'biannual',
+  ANNUAL = 'annual'
+}
+
+// Définition des types de service
+export enum ServiceType {
+  SERVICE = 'service',
+  PACK = 'pack'
+}
+
+// Définition des statuts pour les contacts
+export enum ContactStatus {
+  LEAD = 'lead',
+  PROSPECT = 'prospect',
+  NEGOTIATION = 'negotiation',
+  SIGNED = 'signed',
+  LOST = 'lost'
+}
 
 // Définition du type User
 export interface User {
@@ -37,7 +78,7 @@ export interface Contact {
   assignedTo?: string;
   createdAt: string;
   updatedAt: string;
-  status: 'lead' | 'prospect' | 'negotiation' | 'signed' | 'lost';
+  status: ContactStatus | string;
   subscription_plan_id?: string;
 }
 
@@ -63,23 +104,37 @@ export interface Quote {
   contactId: string;
   freelancerId: string;
   totalAmount: number;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
-  validUntil: string;
+  status: QuoteStatus;
+  validUntil: Date;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   items: QuoteItem[];
+  contact?: any;
+  freelancer?: any;
 }
 
 // Quote Item (Élément de devis)
 export interface QuoteItem {
-  id: string;
-  quoteId: string;
+  id?: string;
+  quoteId?: string;
   description: string;
   quantity: number;
   unitPrice: number;
   discount?: number;
   tax?: number;
+  serviceId?: string;
+}
+
+// Plan d'abonnement
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  interval: SubscriptionInterval;
+  features?: any[];
+  isActive: boolean;
 }
 
 // Subscription (Abonnement)
@@ -88,10 +143,10 @@ export interface Subscription {
   name: string;
   description?: string;
   price: number;
-  interval: 'monthly' | 'quarterly' | 'biannual' | 'annual';
+  interval: SubscriptionInterval;
   clientId: string;
   freelancerId: string;
-  status: 'active' | 'pending' | 'cancelled' | 'expired';
+  status: SubscriptionStatus;
   startDate: string;
   endDate?: string;
   renewalDate?: string;
@@ -127,9 +182,11 @@ export interface Service {
   id: string;
   name: string;
   description?: string;
-  type: 'service' | 'pack';
+  type: ServiceType;
   price: number;
   isActive: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 // API Response

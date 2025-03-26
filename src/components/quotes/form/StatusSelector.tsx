@@ -26,6 +26,9 @@ const StatusSelector: React.FC<StatusSelectorProps> = ({
         <SelectContent>
           <SelectItem value={QuoteStatus.DRAFT}>Brouillon</SelectItem>
           <SelectItem value={QuoteStatus.SENT}>Envoyé</SelectItem>
+          <SelectItem value={QuoteStatus.ACCEPTED}>Accepté</SelectItem>
+          <SelectItem value={QuoteStatus.REJECTED}>Rejeté</SelectItem>
+          <SelectItem value={QuoteStatus.EXPIRED}>Expiré</SelectItem>
         </SelectContent>
       </Select>
     </div>

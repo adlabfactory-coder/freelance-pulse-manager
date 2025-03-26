@@ -1,35 +1,30 @@
+
 import { supabase } from '@/lib/supabase';
 import { Service, ServiceType } from '@/types';
-import { toast } from '@/hooks/use-toast';
-
-const ensureServiceType = (type: string): ServiceType => {
-  if (type === 'service' || type === 'pack') {
-    return type;
-  }
-  return 'service'; // Default fallback
-};
 
 export const fetchServices = async (): Promise<Service[]> => {
   try {
     const { data, error } = await supabase
       .from('services')
       .select('*')
+      .eq('is_active', true)
       .order('name');
-
+    
     if (error) {
       console.error('Error fetching services:', error);
       return [];
     }
-
-    return data.map(service => ({
-      id: service.id,
-      name: service.name,
-      description: service.description || '',
-      type: ensureServiceType(service.type),
-      price: service.price,
-      is_active: service.is_active || true,
-      created_at: new Date(service.created_at || Date.now()),
-      updated_at: new Date(service.updated_at || Date.now())
+    
+    // Convert database fields to match our Service interface
+    return data.map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      type: item.type as ServiceType,
+      price: item.price,
+      isActive: item.is_active,
+      created_at: new Date(item.created_at),
+      updated_at: new Date(item.updated_at)
     }));
   } catch (error) {
     console.error('Unexpected error fetching services:', error);
@@ -37,119 +32,73 @@ export const fetchServices = async (): Promise<Service[]> => {
   }
 };
 
-export const getServiceById = async (id: string): Promise<Service | null> => {
+export const createService = async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, serviceId?: string }> => {
   try {
     const { data, error } = await supabase
       .from('services')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error || !data) {
-      console.error('Error fetching service:', error);
-      return null;
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description || '',
-      type: ensureServiceType(data.type),
-      price: data.price,
-      is_active: data.is_active || true,
-      created_at: new Date(data.created_at || Date.now()),
-      updated_at: new Date(data.updated_at || Date.now())
-    };
-  } catch (error) {
-    console.error('Error in getServiceById:', error);
-    return null;
-  }
-};
-
-export const createService = async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<Service | null> => {
-  try {
-    const dbService = {
-      name: service.name,
-      description: service.description,
-      type: service.type,
-      price: service.price,
-      is_active: service.is_active,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    const { data, error } = await supabase
-      .from('services')
-      .insert([dbService])
+      .insert({
+        name: service.name,
+        description: service.description,
+        type: service.type,
+        price: service.price,
+        is_active: service.isActive
+      })
       .select()
       .single();
-
+    
     if (error) {
       console.error('Error creating service:', error);
-      return null;
+      return { success: false };
     }
-
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description || '',
-      type: ensureServiceType(data.type),
-      price: data.price,
-      is_active: data.is_active || true,
-      created_at: new Date(data.created_at || Date.now()),
-      updated_at: new Date(data.updated_at || Date.now())
-    };
+    
+    return { success: true, serviceId: data.id };
   } catch (error) {
-    console.error('Error in createService:', error);
-    return null;
+    console.error('Unexpected error creating service:', error);
+    return { success: false };
   }
 };
 
-export const updateService = async (service: Service): Promise<boolean> => {
+export const updateService = async (id: string, service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> => {
   try {
-    const { id, name, description, type, price, is_active } = service;
-    
     const { error } = await supabase
       .from('services')
       .update({
-        name,
-        description,
-        type,
-        price,
-        is_active,
-        updated_at: new Date().toISOString()
+        name: service.name,
+        description: service.description,
+        type: service.type,
+        price: service.price,
+        is_active: service.isActive
       })
       .eq('id', id);
-
+    
     if (error) {
       console.error('Error updating service:', error);
       return false;
     }
-
+    
     return true;
   } catch (error) {
-    console.error('Error in updateService:', error);
+    console.error('Unexpected error updating service:', error);
     return false;
   }
 };
 
 export const deleteService = async (id: string): Promise<boolean> => {
   try {
+    // Using soft delete by setting is_active to false
     const { error } = await supabase
       .from('services')
-      .delete()
+      .update({ is_active: false })
       .eq('id', id);
-
+    
     if (error) {
       console.error('Error deleting service:', error);
       return false;
     }
-
+    
     return true;
   } catch (error) {
-    console.error('Error in deleteService:', error);
+    console.error('Unexpected error deleting service:', error);
     return false;
   }
 };
-
-export type { Service, ServiceType };
