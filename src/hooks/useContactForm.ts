@@ -29,8 +29,7 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       address: "",
       status: "lead",
       notes: "",
-      // Important: nous définissons toujours assignedTo à l'ID de l'utilisateur actuel
-      // car c'est requis par les politiques RLS
+      // Important: Make sure user.id is a valid UUID
       assignedTo: user?.id || "",
     },
   });
@@ -39,10 +38,18 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
     try {
       setIsSubmitting(true);
       
-      // Assurons-nous que assignedTo est toujours défini avec l'utilisateur actuel
+      // Ensure we have a valid user ID - if user.id doesn't exist, don't proceed
+      if (!user?.id) {
+        toast.error("Erreur", {
+          description: "Vous devez être connecté pour effectuer cette action"
+        });
+        return;
+      }
+      
+      // Make sure we use the actual UUID from the auth user
       const contactData = {
         ...data,
-        assignedTo: user?.id || "",
+        assignedTo: user.id, // Use the actual UUID here
       };
       
       console.log("Données de contact à soumettre:", contactData);
@@ -50,11 +57,11 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       if (isEditing && initialData?.id) {
         console.log("Mise à jour du contact existant avec ID:", initialData.id);
         await updateContact(initialData.id, contactData);
-        toast("Contact mis à jour avec succès");
+        toast.success("Contact mis à jour avec succès");
       } else {
         console.log("Création d'un nouveau contact");
         await addContact(contactData);
-        toast("Contact ajouté avec succès");
+        toast.success("Contact ajouté avec succès");
       }
 
       if (onSuccess) {
@@ -62,9 +69,8 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       }
     } catch (error: any) {
       console.error("Erreur lors de l'ajout du contact:", error);
-      toast("Erreur", {
-        description: error.message || "Une erreur est survenue",
-        style: { backgroundColor: 'hsl(var(--destructive))' }
+      toast.error("Erreur", {
+        description: error.message || "Une erreur est survenue"
       });
     } finally {
       setIsSubmitting(false);
