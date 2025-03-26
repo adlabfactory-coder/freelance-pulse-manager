@@ -13,11 +13,11 @@ export const addContact = async (data: ContactFormValues): Promise<string> => {
     throw new Error("Erreur: L'attribution du contact est obligatoire");
   }
 
-  // Validate that assignedTo is a proper UUID
+  // Vérifier que assignedTo est un UUID valide
   try {
-    // Simple validation to check if the ID looks like a UUID
-    // A proper UUID should have 5 groups separated by hyphens
-    if (data.assignedTo && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.assignedTo)) {
+    // Validation pour vérifier que l'ID ressemble à un UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(data.assignedTo)) {
       console.error("L'ID assignedTo n'est pas un UUID valide:", data.assignedTo);
       throw new Error("Erreur: L'identifiant d'utilisateur n'est pas valide");
     }
@@ -63,8 +63,9 @@ export const updateContact = async (id: string, data: ContactFormValues): Promis
     throw new Error("Erreur: L'attribution du contact est obligatoire");
   }
 
-  // Validate that assignedTo is a proper UUID
-  if (data.assignedTo && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.assignedTo)) {
+  // Vérifier que assignedTo est un UUID valide
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(data.assignedTo)) {
     console.error("L'ID assignedTo n'est pas un UUID valide:", data.assignedTo);
     throw new Error("Erreur: L'identifiant d'utilisateur n'est pas valide");
   }

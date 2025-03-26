@@ -17,8 +17,7 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
     onSuccess,
     isEditing: false,
     initialData: {
-      // Pass empty values for initial form, but ensure we have assignedTo field
-      // Leave this empty - it will be set in the form submission
+      // Ne pas définir assignedTo ici, ce sera fait dans le hook lors de la soumission
       assignedTo: ""
     }
   });

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useContactForm } from "@/hooks/useContactForm";
 import { Contact } from "@/services/contacts/types";
@@ -17,11 +18,10 @@ const ContactEditForm: React.FC<ContactEditFormProps> = ({
 }) => {
   const { user } = useAuth();
   
-  // Make sure we keep the existing assignedTo if present, or fall back to the current user
+  // Faire une copie du contact existant sans modifier son assignedTo
+  // Le hook useContactForm s'occupera de l'assignation lors de la soumission
   const contactWithAssignedTo = {
-    ...contact,
-    // Preserve the existing assignedTo value if it exists and is valid
-    assignedTo: contact.assignedTo || ""
+    ...contact
   };
   
   const { form, isSubmitting, onSubmit } = useContactForm({

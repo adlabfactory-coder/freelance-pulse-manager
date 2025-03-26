@@ -29,8 +29,8 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       address: "",
       status: "lead",
       notes: "",
-      // Important: Make sure user.id is a valid UUID
-      assignedTo: user?.id || "",
+      // Ne pas définir assignedTo ici, cela sera géré lors de la soumission
+      assignedTo: "",
     },
   });
 
@@ -38,18 +38,28 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
     try {
       setIsSubmitting(true);
       
-      // Ensure we have a valid user ID - if user.id doesn't exist, don't proceed
-      if (!user?.id) {
+      // Vérifie que l'utilisateur est connecté
+      if (!user || !user.id) {
         toast.error("Erreur", {
           description: "Vous devez être connecté pour effectuer cette action"
         });
         return;
       }
       
-      // Make sure we use the actual UUID from the auth user
+      // Assurez-vous que l'ID utilisateur est un UUID valide
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(user.id)) {
+        console.error("L'ID utilisateur n'est pas un UUID valide:", user.id);
+        toast.error("Erreur", {
+          description: "Identifiant utilisateur invalide, veuillez vous reconnecter"
+        });
+        return;
+      }
+      
+      // Définir assignedTo avec l'ID de l'utilisateur connecté
       const contactData = {
         ...data,
-        assignedTo: user.id, // Use the actual UUID here
+        assignedTo: user.id,
       };
       
       console.log("Données de contact à soumettre:", contactData);
