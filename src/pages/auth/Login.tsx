@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { Card as LogoCard } from "@/components/ui/card";
 import { mockSignIn } from "@/utils/supabase-mock-data";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { checkSupabaseConnection } from "@/lib/supabase";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -20,19 +21,55 @@ const Login: React.FC = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(true); // Utilisation du mode démo par défaut
+  const [supabaseStatus, setSupabaseStatus] = useState<{success: boolean, message?: string}>({success: true});
   
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate("/dashboard");
+    const checkDatabaseConnection = async () => {
+      try {
+        const status = await checkSupabaseConnection();
+        setSupabaseStatus(status);
+        if (!status.success) {
+          console.warn("Problème de connexion à Supabase:", status.message);
+          toast({
+            variant: "default",
+            title: "Mode démo activé",
+            description: "La connexion à Supabase n'est pas disponible. Utilisation du mode démo.",
+          });
+          setDemoMode(true);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de la connexion à Supabase:", error);
+        setSupabaseStatus({success: false, message: "Erreur de connexion"});
+        setDemoMode(true);
       }
-      setCheckingSession(false);
+    };
+
+    const checkSession = async () => {
+      try {
+        // Vérifier d'abord si un utilisateur de démo est stocké
+        const demoUser = localStorage.getItem('demoUser');
+        
+        if (demoUser) {
+          navigate("/dashboard");
+          return;
+        }
+        
+        // Sinon, vérifier la session Supabase
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification de la session:", error);
+      } finally {
+        setCheckingSession(false);
+      }
     };
     
+    checkDatabaseConnection();
     checkSession();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -93,6 +130,16 @@ const Login: React.FC = () => {
       console.error("Erreur de connexion:", error);
       
       setErrorMessage(error.message || "Veuillez vérifier vos identifiants");
+      
+      // Si l'authentification Supabase échoue mais que le mode démo est disponible, suggérer d'utiliser le mode démo
+      if (!demoMode) {
+        setDemoMode(true);
+        toast({
+          variant: "destructive",
+          title: "Erreur de connexion",
+          description: "Connexion automatique au mode démo. Utilisez l'un des comptes de démonstration listés.",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -133,6 +180,15 @@ const Login: React.FC = () => {
           <CardDescription className="text-center">
             Gérez vos prospects et suivez vos commissions
           </CardDescription>
+          
+          {!supabaseStatus.success && (
+            <Alert variant="warning" className="mt-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Connexion à Supabase indisponible. Mode démo activé automatiquement.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
         
         <CardContent>

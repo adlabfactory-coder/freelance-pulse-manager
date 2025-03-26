@@ -4,6 +4,7 @@ import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole, User } from "@/types";
 import { getMockUserById } from "@/utils/supabase-mock-data";
+import { toast } from "@/components/ui/use-toast";
 
 type AuthContextType = {
   user: SupabaseUser | User | null;
@@ -15,6 +16,7 @@ type AuthContextType = {
   isFreelancer: boolean;
   isAccountManager: boolean;
   isClient: boolean;
+  isDemoMode: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     // Vérifier s'il y a un utilisateur de démo stocké
@@ -34,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const demoUser = JSON.parse(demoUserStr) as User;
         setUser(demoUser);
         setRole(demoUser.role as UserRole);
+        setIsDemoMode(true);
         setLoading(false);
         return; // Ne pas vérifier Supabase si on est en mode démo
       } catch (error) {
@@ -57,7 +61,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               .eq("id", session.user.id)
               .single();
             
-            if (error) throw error;
+            if (error) {
+              console.error("Erreur lors de la récupération du rôle:", error);
+              throw error;
+            }
             
             if (data) {
               const userRole = data.role as UserRole;
@@ -65,6 +72,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
           } catch (error) {
             console.error("Erreur lors de la récupération du rôle:", error);
+            toast({
+              variant: "destructive",
+              title: "Erreur",
+              description: "Impossible de récupérer les informations utilisateur"
+            });
           }
         } else {
           setRole(null);
@@ -83,18 +95,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Récupérer le rôle de l'utilisateur depuis la table users
-          const { data, error } = await supabase
-            .from("users")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-          
-          if (error) throw error;
-          
-          if (data) {
-            const userRole = data.role as UserRole;
-            setRole(userRole);
+          try {
+            // Récupérer le rôle de l'utilisateur depuis la table users
+            const { data, error } = await supabase
+              .from("users")
+              .select("role")
+              .eq("id", session.user.id)
+              .single();
+            
+            if (error) {
+              console.error("Erreur lors de la récupération du rôle:", error);
+              throw error;
+            }
+            
+            if (data) {
+              const userRole = data.role as UserRole;
+              setRole(userRole);
+            }
+          } catch (error) {
+            console.error("Erreur lors de la récupération du rôle:", error);
           }
         }
       } catch (error) {
@@ -115,12 +134,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('demoUser');
       setUser(null);
       setRole(null);
+      setIsDemoMode(false);
       window.location.href = '/auth/login';
       return;
     }
     
     // Sinon, déconnexion Supabase
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de vous déconnecter. Veuillez réessayer."
+      });
+    }
   };
 
   const isAdmin = role === UserRole.ADMIN;
@@ -139,7 +168,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         isFreelancer,
         isAccountManager,
-        isClient
+        isClient,
+        isDemoMode
       }}
     >
       {children}
