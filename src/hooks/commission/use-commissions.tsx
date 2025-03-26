@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFetchCommissions } from "./use-fetch-commissions";
 import { useCommissionRules } from "./use-commission-rules";
 import { useCommissionOperations } from "./use-commission-operations";
+import { useCallback } from "react";
 
 export const useCommissions = () => {
   const { user, role } = useAuth();
@@ -32,6 +33,11 @@ export const useCommissions = () => {
   const loading = commissionsLoading || rulesLoading;
   const error = commissionsError || rulesError;
 
+  // Utilisation de useCallback pour empêcher les re-renders inutiles
+  const refreshCommissions = useCallback(() => {
+    fetchCommissions();
+  }, [fetchCommissions]);
+
   return {
     commissions,
     commissionRules,
@@ -41,5 +47,6 @@ export const useCommissions = () => {
     requestPayment,
     approvePayment,
     generateMonthlyCommissions,
+    refreshCommissions
   };
 };

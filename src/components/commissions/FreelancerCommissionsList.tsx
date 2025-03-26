@@ -1,54 +1,11 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CommissionStatus, CommissionTier, CommissionWithDetails } from "@/types/commissions";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Link } from "react-router-dom";
-
-// Mock data for freelancer commissions
-const getMockCommissions = (): CommissionWithDetails[] => {
-  return [
-    {
-      id: "1",
-      freelancerId: "2",
-      freelancerName: "Commercial Démo",
-      amount: 1500,
-      tier: CommissionTier.TIER_2,
-      periodStart: new Date("2023-01-01"),
-      periodEnd: new Date("2023-01-31"),
-      status: "pending" as CommissionStatus,
-      paidDate: undefined,
-      paymentRequested: true,
-      subscriptionDetails: {
-        name: "Pack Enterprise",
-        clientId: "3",
-        client: {
-          name: "Client Démo"
-        }
-      }
-    },
-    {
-      id: "2",
-      freelancerId: "2",
-      freelancerName: "Commercial Démo",
-      amount: 2000,
-      tier: CommissionTier.TIER_3,
-      periodStart: new Date("2023-02-01"),
-      periodEnd: new Date("2023-02-28"),
-      status: "processing" as CommissionStatus,
-      paidDate: undefined,
-      paymentRequested: true,
-      subscriptionDetails: {
-        name: "Pack Premium",
-        clientId: "3",
-        client: {
-          name: "Client Démo"
-        }
-      }
-    }
-  ];
-};
+import { useCommissions } from "@/hooks/commission";
 
 interface FreelancerCommissionsListProps {
   freelancerId?: string;
@@ -57,13 +14,27 @@ interface FreelancerCommissionsListProps {
 const FreelancerCommissionsList: React.FC<FreelancerCommissionsListProps> = ({ 
   freelancerId 
 }) => {
-  // In a real app, this would fetch from the API based on freelancerId
-  const commissions = getMockCommissions();
+  const { commissions, loading } = useCommissions();
   
   // Filter commissions by freelancerId if provided
   const filteredCommissions = freelancerId 
     ? commissions.filter(comm => comm.freelancerId === freelancerId)
     : commissions;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Commissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (filteredCommissions.length === 0) {
     return (

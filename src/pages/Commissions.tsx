@@ -20,17 +20,9 @@ const Commissions: React.FC = () => {
     approvePayment,
     generateMonthlyCommissions
   } = useCommissions();
-  const [dataLoaded, setDataLoaded] = useState(false);
   
-  // Limite à un seul chargement
-  useEffect(() => {
-    if (!dataLoaded) {
-      console.log("Chargement initial des commissions");
-      // Les données se chargent déjà via le hook useCommissions
-      setDataLoaded(true);
-    }
-  }, [dataLoaded]);
-
+  // Suppression de l'état et du useEffect qui causent le rechargement en boucle
+  
   // Si c'est un chargé d'affaires, afficher un message d'accès restreint
   if (isAccountManager) {
     return (

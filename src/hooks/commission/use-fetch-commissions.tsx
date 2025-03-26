@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Commission, CommissionTier } from "@/types/commissions";
 import { User, UserRole } from "@/types";
@@ -13,6 +13,9 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
   const commissionsService = createCommissionsService(supabase as any);
   const isFreelancer = role === UserRole.FREELANCER;
   const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+  
+  // Utiliser useRef pour suivre si les données ont déjà été chargées
+  const dataFetchedRef = useRef(false);
 
   const fetchCommissions = useCallback(async () => {
     if (!user) {
@@ -93,7 +96,11 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
   }, [user, role, commissionsService, isFreelancer, isAdmin]);
 
   useEffect(() => {
-    fetchCommissions();
+    // Chargement unique des données seulement
+    if (!dataFetchedRef.current) {
+      dataFetchedRef.current = true;
+      fetchCommissions();
+    }
   }, [fetchCommissions]);
 
   return {
