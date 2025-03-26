@@ -105,10 +105,16 @@ const FreelancerCommissionsList: React.FC<FreelancerCommissionsListProps> = ({
                   </div>
                   <Badge 
                     variant={
-                      commission.status === "paid" ? "success" : 
-                      commission.status === "pending" ? "warning" : 
-                      commission.status === "processing" ? "default" : 
+                      commission.status === "paid" ? "default" : 
+                      commission.status === "pending" ? "secondary" : 
+                      commission.status === "processing" ? "outline" : 
                       "destructive"
+                    }
+                    className={
+                      commission.status === "paid" ? "bg-green-100 text-green-800 hover:bg-green-200" :
+                      commission.status === "pending" ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200" :
+                      commission.status === "processing" ? "bg-blue-100 text-blue-800 hover:bg-blue-200" :
+                      ""
                     }
                   >
                     {commission.status === "paid" ? "Payée" : 

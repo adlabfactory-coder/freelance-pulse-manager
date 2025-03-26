@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatCurrency } from "@/utils/format";
 import Layout from "@/components/layout/Layout";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 type QuoteStatus = "draft" | "pending" | "accepted" | "rejected" | "expired";
 
@@ -43,9 +43,9 @@ const getStatusBadgeVariant = (status: QuoteStatus) => {
     case "draft":
       return "secondary";
     case "pending":
-      return "warning";
+      return "outline";
     case "accepted":
-      return "success";
+      return "default";
     case "rejected":
       return "destructive";
     case "expired":
@@ -77,9 +77,9 @@ const getStatusLabel = (status: QuoteStatus) => {
 const StatusIcon = ({ status }: { status: QuoteStatus }) => {
   switch (status) {
     case "pending":
-      return <Clock className="h-4 w-4 text-warning" />;
+      return <Clock className="h-4 w-4 text-yellow-500" />;
     case "accepted":
-      return <CheckCircle className="h-4 w-4 text-success" />;
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
     case "rejected":
       return <XCircle className="h-4 w-4 text-destructive" />;
     case "expired":
@@ -192,6 +192,24 @@ const QuoteDetailPage: React.FC = () => {
     });
   };
 
+  // Badge class based on status
+  const getStatusBadgeClass = (status: QuoteStatus) => {
+    switch (status) {
+      case "draft":
+        return "";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200";
+      case "accepted":
+        return "bg-green-100 text-green-800 hover:bg-green-200";
+      case "rejected":
+        return "";
+      case "expired":
+        return "text-muted-foreground";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-6">
@@ -241,7 +259,10 @@ const QuoteDetailPage: React.FC = () => {
                   Créé le {quote.createdAt.toLocaleDateString()}
                 </CardDescription>
               </div>
-              <Badge variant={getStatusBadgeVariant(quote.status)}>
+              <Badge 
+                variant={getStatusBadgeVariant(quote.status)}
+                className={getStatusBadgeClass(quote.status)}
+              >
                 {quote.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
                 {getStatusLabel(quote.status)}
               </Badge>
@@ -289,7 +310,8 @@ const QuoteDetailPage: React.FC = () => {
                 </AlertDialog>
                 
                 <Button 
-                  variant="success" 
+                  variant="default"
+                  className="bg-green-600 hover:bg-green-700" 
                   onClick={handleAcceptQuote}
                 >
                   Accepter
