@@ -10,7 +10,7 @@ interface SidebarFooterProps {
 }
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
-  const { signOut } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <div className="mt-auto border-t px-2 py-2">
@@ -30,7 +30,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={signOut}
+          onClick={() => logout()}
           className={`${collapsed ? 'w-full justify-center' : 'w-1/2'}`}
         >
           <LogOut className="h-5 w-5" />

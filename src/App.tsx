@@ -20,35 +20,38 @@ import CommissionDetailPage from "./pages/commissions/CommissionDetailPage";
 import { Toaster } from "./components/ui/toaster";
 import { ThemeProvider } from "./hooks/use-theme";
 import Layout from "./components/layout/Layout";
+import { AuthProvider } from "./hooks/use-auth";
 
 function App() {
   return (
     <div className="app">
       <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
-            <Route element={<ProtectedRoute />}>
-              <Route element={<Layout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/contacts" element={<Contacts />} />
-                <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
-                <Route path="/appointments" element={<Appointments />} />
-                <Route path="/quotes" element={<Quotes />} />
-                <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/commissions" element={<Commissions />} />
-                <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
-                <Route path="/settings/*" element={<SettingsRoutes />} />
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth/login" element={<Login />} />
+              <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<Layout />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
+                  <Route path="/appointments" element={<Appointments />} />
+                  <Route path="/quotes" element={<Quotes />} />
+                  <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/commissions" element={<Commissions />} />
+                  <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
+                  <Route path="/settings/*" element={<SettingsRoutes />} />
+                </Route>
               </Route>
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </BrowserRouter>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </BrowserRouter>
+        </AuthProvider>
       </ThemeProvider>
     </div>
   );

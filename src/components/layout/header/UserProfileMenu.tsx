@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { BookOpen, HelpCircle, LogOut, Settings, User } from 'lucide-react';
 
 const UserProfileMenu: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   if (!user) return null;
@@ -55,7 +55,7 @@ const UserProfileMenu: React.FC = () => {
           <span>Support</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut}>
+        <DropdownMenuItem onClick={() => logout()}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Se déconnecter</span>
         </DropdownMenuItem>

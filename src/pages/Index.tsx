@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Index: React.FC = () => {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, logout } = useAuth();
+  const isLoading = false; // Nous n'avons pas cette propriété dans notre contexte
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -31,7 +32,7 @@ const Index: React.FC = () => {
                   <Button asChild variant="default" size="lg" className="w-full">
                     <Link to="/dashboard">Accéder au Tableau de Bord</Link>
                   </Button>
-                  <Button variant="outline" size="lg" onClick={signOut}>
+                  <Button variant="outline" size="lg" onClick={() => logout()}>
                     Se Déconnecter
                   </Button>
                 </div>
@@ -45,7 +46,7 @@ const Index: React.FC = () => {
                 ) : (
                   <div className="flex flex-col gap-2">
                     <Button asChild variant="default" size="lg" className="w-full">
-                      <Link to="/login">Se Connecter</Link>
+                      <Link to="/auth/login">Se Connecter</Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="w-full">
                       <Link to="/register">Créer un Compte</Link>

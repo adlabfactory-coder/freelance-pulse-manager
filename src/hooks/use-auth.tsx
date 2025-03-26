@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { User, UserRole, hasMinimumRole } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "./use-toast";
 
 // Mock data for demonstration purposes
 const MOCK_USER: User = {
@@ -39,10 +41,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Démo: simuler une vérification de session initiale
   useEffect(() => {
     const checkSession = async () => {
-      // Dans un environnement réel, on vérifierait la session avec Supabase
-      // const { data: { session } } = await supabase.auth.getSession();
-      // setUser(session ? session.user : null);
-      setLoading(false);
+      try {
+        // Dans un environnement réel, on vérifierait la session avec Supabase
+        // const { data: { session } } = await supabase.auth.getSession();
+        // setUser(session ? session.user : null);
+        
+        // Vérifier d'abord si un utilisateur de démo est stocké
+        const demoUser = localStorage.getItem('demoUser');
+        if (demoUser) {
+          setUser(JSON.parse(demoUser));
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de la vérification de la session:", error);
+        setUser(null);
+        setLoading(false);
+      }
     };
 
     checkSession();
@@ -66,16 +81,48 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Fonctions d'authentification (simulations pour démo)
   const login = async (email: string, password: string): Promise<void> => {
-    // Dans un environnement réel, on utiliserait Supabase
-    // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    // if (error) throw error;
-    // setUser(data.user);
-    setUser(MOCK_USER);
+    try {
+      // Dans un environnement réel, on utiliserait Supabase
+      // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      // if (error) throw error;
+      // setUser(data.user);
+      setUser(MOCK_USER);
+      localStorage.setItem('demoUser', JSON.stringify(MOCK_USER));
+      
+      toast({
+        title: "Connexion réussie",
+        description: "Vous êtes maintenant connecté",
+      });
+    } catch (error: any) {
+      console.error("Erreur de connexion:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de connexion",
+        description: error.message || "Une erreur s'est produite lors de la connexion"
+      });
+      throw error;
+    }
   };
 
   const logout = async (): Promise<void> => {
-    // Dans un environnement réel: await supabase.auth.signOut();
-    setUser(null);
+    try {
+      // Dans un environnement réel: await supabase.auth.signOut();
+      setUser(null);
+      localStorage.removeItem('demoUser');
+      
+      toast({
+        title: "Déconnexion réussie",
+        description: "Vous avez été déconnecté avec succès",
+      });
+    } catch (error: any) {
+      console.error("Erreur de déconnexion:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de déconnexion",
+        description: error.message || "Une erreur s'est produite lors de la déconnexion"
+      });
+      throw error;
+    }
   };
 
   const value = {
