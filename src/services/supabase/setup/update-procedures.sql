@@ -15,8 +15,8 @@ BEGIN
     date,
     duration,
     status,
-    freelancerid, -- Modifié de freelancerId à freelancerid
-    contactId,
+    freelancerid,
+    "contactId",
     location,
     notes
   )
@@ -26,7 +26,7 @@ BEGIN
     (appointment_data->>'date')::TIMESTAMP WITH TIME ZONE,
     (appointment_data->>'duration')::INTEGER,
     appointment_data->>'status',
-    (appointment_data->>'freelancerid')::UUID, -- Modifié
+    (appointment_data->>'freelancerid')::UUID,
     (appointment_data->>'contactId')::UUID,
     appointment_data->>'location',
     appointment_data->>'notes'
@@ -58,8 +58,8 @@ BEGIN
     date,
     duration,
     status,
-    freelancerid, -- Modifié de freelancerId à freelancerid
-    contactId,
+    freelancerid,
+    "contactId",
     location,
     notes
   )
@@ -95,7 +95,7 @@ DECLARE
   contact_id UUID;
 BEGIN
   -- Récupérer l'ID du contact associé au rendez-vous
-  SELECT contactId INTO contact_id
+  SELECT "contactId" INTO contact_id
   FROM public.appointments
   WHERE id = appointment_id;
   
@@ -103,13 +103,13 @@ BEGIN
   UPDATE public.appointments
   SET 
     status = 'scheduled',
-    freelancerid = freelancer_id -- Modifié de freelancerId à freelancerid
+    freelancerid = freelancer_id
   WHERE id = appointment_id;
   
   -- Mettre à jour le contact
   UPDATE public.contacts
   SET 
-    assignedTo = freelancer_id,
+    "assignedTo" = freelancer_id,
     status = 'prospect'
   WHERE id = contact_id;
 END;

@@ -7,7 +7,7 @@ export interface Appointment {
   duration: number;
   status: "scheduled" | "cancelled" | "completed" | "pending" | "no_show";
   contactId: string;
-  freelancerid: string; // Modifié de freelancerId à freelancerid
+  freelancerid: string; // Utilisation cohérente de freelancerid (tout en minuscule)
   location: string | null;
   notes: string | null;
   createdAt: string;
@@ -17,3 +17,12 @@ export interface Appointment {
 
 // Add a type to bridge between DB string status and our TypeScript enum
 export type AppointmentStatusFromDB = string;
+
+// Enum pour les statuts de rendez-vous
+export enum AppointmentStatus {
+  SCHEDULED = "scheduled",
+  CANCELLED = "cancelled",
+  COMPLETED = "completed",
+  PENDING = "pending",
+  NO_SHOW = "no_show"
+}

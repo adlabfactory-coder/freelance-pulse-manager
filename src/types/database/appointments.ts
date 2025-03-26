@@ -8,7 +8,7 @@ export interface AppointmentsTable {
       title: string
       description: string | null
       contactId: string
-      freelancerid: string // Modifié de freelancerId à freelancerid
+      freelancerid: string // Utilisation cohérente de freelancerid (tout en minuscule)
       date: string
       duration: number
       status: string
@@ -16,13 +16,14 @@ export interface AppointmentsTable {
       notes: string | null
       createdAt: string
       updatedAt: string
+      deleted_at?: string | null
     }
     Insert: {
       id?: string
       title: string
       description?: string | null
       contactId: string
-      freelancerid: string // Modifié
+      freelancerid: string
       date: string
       duration: number
       status: string
@@ -30,13 +31,14 @@ export interface AppointmentsTable {
       notes?: string | null
       createdAt?: string
       updatedAt?: string
+      deleted_at?: string | null
     }
     Update: {
       id?: string
       title?: string
       description?: string | null
       contactId?: string
-      freelancerid?: string // Modifié
+      freelancerid?: string
       date?: string
       duration?: number
       status?: string
@@ -44,6 +46,7 @@ export interface AppointmentsTable {
       notes?: string | null
       createdAt?: string
       updatedAt?: string
+      deleted_at?: string | null
     }
   }
 }
