@@ -88,12 +88,12 @@ export const createSubscriptionsService = () => {
         return {
           id: data.id,
           name: data.name,
-          description: data.description,
+          description: plan.description,
           interval: data.interval as SubscriptionInterval,
-          price: data.price,
-          isActive: data.is_active,
-          code: data.code,
-          features: data.features,
+          price: plan.price,
+          isActive: plan.isActive,
+          code: plan.code,
+          features: plan.features,
           created_at: data.created_at ? new Date(data.created_at) : undefined,
           updated_at: data.updated_at ? new Date(data.updated_at) : undefined
         };

@@ -18,7 +18,7 @@ export const createSupabaseService = () => {
   const contactsService = createContactsService(supabase as any);
   const quotesService = createQuotesService(supabase as any);
   const commissionsService = createCommissionsService(supabase as any);
-  const subscriptionsService = createSubscriptionsService(supabase as any);
+  const subscriptionsService = createSubscriptionsService();
 
   return {
     client: supabase,
