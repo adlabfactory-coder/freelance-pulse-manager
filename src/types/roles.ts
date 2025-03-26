@@ -8,8 +8,8 @@ export { UserRole };
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
   'super_admin': 'Super Admin',
   'admin': 'Administrateur',
-  'freelancer': 'Chargé(e) d\'affaires',
   'account_manager': 'Chargé(e) de compte',
+  'freelancer': 'Chargé(e) d\'affaires',
   'client': 'Client'
 };
 
@@ -106,7 +106,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Créer des contacts",
     description: "Ajouter de nouveaux contacts",
     category: PermissionCategory.CONTACTS,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
+    roles: [UserRole.FREELANCER]
   },
   {
     id: "edit_contacts",
@@ -150,7 +150,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Créer des rendez-vous",
     description: "Planifier de nouveaux rendez-vous",
     category: PermissionCategory.APPOINTMENTS,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
+    roles: [UserRole.FREELANCER]
   },
   {
     id: "edit_appointments",
@@ -158,6 +158,13 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     description: "Modifier les détails des rendez-vous",
     category: PermissionCategory.APPOINTMENTS,
     roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
+  },
+  {
+    id: "approve_appointments",
+    name: "Approuver des rendez-vous",
+    description: "Approuver les rendez-vous créés par les chargés d'affaires",
+    category: PermissionCategory.APPOINTMENTS,
+    roles: [UserRole.ACCOUNT_MANAGER]
   },
   {
     id: "cancel_appointments",
@@ -187,7 +194,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Créer des devis",
     description: "Créer de nouveaux devis",
     category: PermissionCategory.QUOTES,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
+    roles: [UserRole.FREELANCER]
   },
   {
     id: "edit_quotes",
@@ -205,10 +212,17 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
   },
   {
     id: "approve_quotes",
-    name: "Approuver des devis",
-    description: "Modifier le statut des devis (accepté, refusé, etc.)",
+    name: "Valider des devis",
+    description: "Approuver les devis créés par les chargés d'affaires",
     category: PermissionCategory.QUOTES,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER]
+    roles: [UserRole.ACCOUNT_MANAGER]
+  },
+  {
+    id: "validate_payments",
+    name: "Valider les paiements",
+    description: "Confirmer les paiements clients pour débloquer les commissions",
+    category: PermissionCategory.QUOTES,
+    roles: [UserRole.ADMIN, UserRole.SUPER_ADMIN]
   },
   {
     id: "view_all_quotes",
@@ -231,7 +245,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Créer des abonnements",
     description: "Créer de nouveaux abonnements",
     category: PermissionCategory.SUBSCRIPTIONS,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER]
   },
   {
     id: "edit_subscriptions",

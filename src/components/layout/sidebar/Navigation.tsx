@@ -57,19 +57,20 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
       "/reports", 
       "/settings"
     ],
+    [UserRole.ACCOUNT_MANAGER]: [
+      "/dashboard",
+      "/contacts",
+      "/appointments",
+      "/quotes",
+      "/commissions",
+      "/settings"
+    ],
     [UserRole.FREELANCER]: [
       "/dashboard",
       "/contacts",
       "/appointments", 
       "/quotes",
       "/commissions",
-      "/settings"
-    ],
-    [UserRole.ACCOUNT_MANAGER]: [
-      "/dashboard",
-      "/contacts",
-      "/appointments",
-      "/quotes",
       "/settings"
     ],
     [UserRole.CLIENT]: [
