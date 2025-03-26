@@ -1,11 +1,16 @@
 
-import { supabase } from '@/lib/supabase';
-import { checkDatabaseSetup, setupDatabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  checkDatabaseStatus as checkDbStatus, 
+  initializeDatabase as initDb
+} from '@/services/supabase/setup';
 
-// Exporter les fonctions depuis lib/supabase pour une utilisation directe
+/**
+ * Checks if there's a valid connection to Supabase
+ */
 export const checkSupabaseStatus = async () => {
   try {
-    // Vérification simple de la connexion
+    // Simple connection check
     const { data, error } = await supabase.from('adlab hub freelancer').select('count()', { count: 'exact', head: true });
     
     if (error) {
@@ -20,10 +25,16 @@ export const checkSupabaseStatus = async () => {
   }
 };
 
+/**
+ * Checks the database setup status
+ */
 export const checkDatabaseStatus = async () => {
-  return await checkDatabaseSetup();
+  return await checkDbStatus();
 };
 
+/**
+ * Initializes the database with required tables
+ */
 export const initializeDatabase = async (options: any = {}) => {
-  return await setupDatabase(options);
+  return await initDb(options);
 };
