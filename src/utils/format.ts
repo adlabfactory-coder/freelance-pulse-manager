@@ -16,8 +16,8 @@ export function formatPrice(price: number): string {
   }).format(price);
 }
 
-// Add formatDate function 
-export function formatDate(date: Date): string {
+// Format pour les dates
+export function formatDate(date: Date | string): string {
   if (!date) return 'N/A';
   
   try {
@@ -32,5 +32,5 @@ export function formatDate(date: Date): string {
   }
 }
 
-// Export formatMoney function as an alias to formatCurrency
+// Alias de formatCurrency pour garder la cohérence dans le code
 export const formatMoney = formatCurrency;
