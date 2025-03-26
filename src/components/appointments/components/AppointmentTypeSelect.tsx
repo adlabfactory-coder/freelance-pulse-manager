@@ -3,7 +3,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { APPOINTMENT_TITLE_OPTIONS } from "../hooks/useAppointmentForm";
+import { APPOINTMENT_TITLE_OPTIONS, AppointmentTitleOption } from "../hooks/useAppointmentForm";
 
 interface AppointmentTypeSelectProps {
   titleOption: string;

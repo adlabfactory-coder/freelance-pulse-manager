@@ -4,23 +4,25 @@ import { createAppointment, createAutoAssignAppointment } from "@/services/appoi
 import { toast } from "sonner";
 import { Appointment } from "@/types/appointment";
 
+// Export the title options for reuse in other components
+export const APPOINTMENT_TITLE_OPTIONS = [
+  { value: "consultation-initiale", label: "Consultation initiale" },
+  { value: "session-suivi", label: "Session de suivi" },
+  { value: "demo-produit", label: "Démonstration de produit" },
+  { value: "revision-contrat", label: "Révision de contrat" },
+  { value: "autre", label: "Titre personnalisé" }
+];
+
+export type AppointmentTitleOption = "consultation-initiale" | "session-suivi" | "demo-produit" | "revision-contrat" | "autre" | "";
+
 export const useAppointmentForm = (
   initialDate?: Date,
   onSuccess?: () => void,
   initialContactId?: string,
   autoAssign = false
 ) => {
-  // Réglage par défaut - options de titre prédéfinies
-  const titleOptions = {
-    "consultation-initiale": "Consultation initiale",
-    "session-suivi": "Session de suivi",
-    "demo-produit": "Démonstration de produit",
-    "revision-contrat": "Révision de contrat",
-    "custom": "Titre personnalisé"
-  };
-
   // États du formulaire
-  const [titleOption, setTitleOption] = useState<keyof typeof titleOptions | "">('consultation-initiale');
+  const [titleOption, setTitleOption] = useState<AppointmentTitleOption>('consultation-initiale');
   const [customTitle, setCustomTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
@@ -45,7 +47,15 @@ export const useAppointmentForm = (
       appointmentDate.setHours(hours, minutes, 0, 0);
       
       // Déterminer le titre final
-      const title = titleOption === 'custom' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
+      const titleOptions = {
+        "consultation-initiale": "Consultation initiale",
+        "session-suivi": "Session de suivi",
+        "demo-produit": "Démonstration de produit",
+        "revision-contrat": "Révision de contrat",
+        "autre": "Titre personnalisé"
+      };
+      
+      const title = titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
       
       // Créer l'objet de rendez-vous à envoyer
       const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {

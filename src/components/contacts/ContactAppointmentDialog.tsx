@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAppointmentForm } from "@/components/appointments/hooks/useAppointmentForm";
+import { useAppointmentForm, AppointmentTitleOption } from "@/components/appointments/hooks/useAppointmentForm";
 import AppointmentTypeSelect from "@/components/appointments/components/AppointmentTypeSelect";
 import AppointmentDescription from "@/components/appointments/components/AppointmentDescription";
 import AppointmentDateTimePicker from "@/components/appointments/components/AppointmentDateTimePicker";
@@ -51,7 +51,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   // Définir le type initial lors de l'ouverture du dialogue
   React.useEffect(() => {
     if (open && initialType) {
-      setTitleOption(initialType);
+      setTitleOption(initialType as AppointmentTitleOption);
       
       // Si c'est une consultation initiale, ajouter une description automatique
       if (initialType === "consultation-initiale") {
@@ -67,7 +67,15 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       console.error("ID de contact manquant pour la création du rendez-vous");
       return;
     }
-    handleSubmit(e);
+    handleSubmit(e, contactId);
+  };
+
+  const handleTitleOptionChange = (value: string) => {
+    setTitleOption(value as AppointmentTitleOption);
+  };
+
+  const handleDurationChange = (value: string) => {
+    setDuration(parseInt(value, 10));
   };
 
   return (
@@ -84,7 +92,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
           <div className="grid gap-4 py-4">
             <AppointmentTypeSelect
               titleOption={titleOption}
-              onTitleOptionChange={setTitleOption}
+              onTitleOptionChange={handleTitleOptionChange}
               customTitle={customTitle}
               onCustomTitleChange={(e) => setCustomTitle(e.target.value)}
             />
@@ -99,8 +107,8 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
               onDateChange={setDate}
               time={time}
               onTimeChange={(e) => setTime(e.target.value)}
-              duration={duration}
-              onDurationChange={setDuration}
+              duration={duration.toString()}
+              onDurationChange={handleDurationChange}
             />
           </div>
           

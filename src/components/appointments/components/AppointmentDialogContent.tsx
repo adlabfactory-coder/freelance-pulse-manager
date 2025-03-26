@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CalendarClock } from "lucide-react";
-import { useAppointmentForm } from "@/components/appointments/hooks/useAppointmentForm";
+import { useAppointmentForm, AppointmentTitleOption } from "../hooks/useAppointmentForm";
 import AppointmentTypeSelect from "./AppointmentTypeSelect";
 import AppointmentDescription from "./AppointmentDescription";
 import AppointmentDateTimePicker from "./AppointmentDateTimePicker";
@@ -51,6 +51,14 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
     formSubmit(e, contactId);
   };
 
+  const handleTitleOptionChange = (value: string) => {
+    setTitleOption(value as AppointmentTitleOption);
+  };
+
+  const handleDurationChange = (value: string) => {
+    setDuration(parseInt(value, 10));
+  };
+
   return (
     <DialogContent className="sm:max-w-[500px]">
       <DialogHeader>
@@ -78,7 +86,7 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
           
           <AppointmentTypeSelect
             titleOption={titleOption}
-            onTitleOptionChange={setTitleOption}
+            onTitleOptionChange={handleTitleOptionChange}
             customTitle={customTitle}
             onCustomTitleChange={(e) => setCustomTitle(e.target.value)}
           />
@@ -93,8 +101,8 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
             onDateChange={setDate}
             time={time}
             onTimeChange={(e) => setTime(e.target.value)}
-            duration={duration}
-            onDurationChange={setDuration}
+            duration={duration.toString()}
+            onDurationChange={handleDurationChange}
           />
         </div>
         

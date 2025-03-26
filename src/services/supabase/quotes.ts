@@ -5,7 +5,7 @@ import { Quote, QuoteItem, QuoteStatus } from '@/types';
 import { toast } from 'sonner';
 
 export const createQuotesService = (supabase: SupabaseClient<Database>) => {
-  return {
+  const service = {
     // Récupérer tous les devis
     fetchQuotes: async (): Promise<Quote[]> => {
       const { data, error } = await supabase
@@ -107,7 +107,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         }
         
         // 2. Insérer les éléments du devis
-        if (items.length > 0) {
+        if (items.length > 0 && quote) {
           const quoteItems = items.map(item => ({
             quoteId: quote.id,
             description: item.description,
@@ -129,7 +129,10 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         }
         
         // 3. Récupérer le devis complet avec ses éléments
-        return await this.fetchQuoteById(quote.id);
+        if (quote) {
+          return await service.fetchQuoteById(quote.id);
+        }
+        return null;
       } catch (error) {
         console.error('Erreur inattendue lors de la création du devis:', error);
         toast.error("Une erreur inattendue s'est produite lors de la création du devis");
@@ -141,7 +144,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
     updateQuote: async (id: string, quoteData: Partial<Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>>, 
       items?: { 
         add?: Omit<QuoteItem, 'id' | 'quoteId'>[], 
-        update?: Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>[],
+        update?: (Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>)[],
         delete?: string[]
       }): Promise<Quote | null> => {
       
@@ -193,16 +196,18 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           // 2.2 Mettre à jour des éléments existants
           if (items.update && items.update.length > 0) {
             for (const item of items.update) {
-              const { id: itemId, ...updates } = item;
-              
-              const { error: updateError } = await supabase
-                .from('quote_items')
-                .update(updates)
-                .eq('id', itemId);
-              
-              if (updateError) {
-                console.error(`Erreur lors de la mise à jour de l'élément ${itemId}:`, updateError);
-                toast.error("Certains éléments n'ont pas pu être mis à jour");
+              if (item.id) {
+                const { id: itemId, ...updates } = item;
+                
+                const { error: updateError } = await supabase
+                  .from('quote_items')
+                  .update(updates)
+                  .eq('id', itemId);
+                
+                if (updateError) {
+                  console.error(`Erreur lors de la mise à jour de l'élément ${itemId}:`, updateError);
+                  toast.error("Certains éléments n'ont pas pu être mis à jour");
+                }
               }
             }
           }
@@ -222,7 +227,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         }
         
         // 3. Récupérer le devis mis à jour avec ses éléments
-        return await this.fetchQuoteById(id);
+        return await service.fetchQuoteById(id);
       } catch (error) {
         console.error(`Erreur inattendue lors de la mise à jour du devis ${id}:`, error);
         toast.error("Une erreur inattendue s'est produite lors de la mise à jour du devis");
@@ -279,4 +284,6 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     }
   };
+  
+  return service;
 };

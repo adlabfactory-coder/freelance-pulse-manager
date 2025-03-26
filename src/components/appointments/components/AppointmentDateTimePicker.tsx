@@ -2,10 +2,14 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 interface AppointmentDateTimePickerProps {
   date: Date | undefined;
@@ -25,27 +29,40 @@ const AppointmentDateTimePicker: React.FC<AppointmentDateTimePickerProps> = ({
   onDurationChange
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="space-y-2">
-        <Label htmlFor="date">Date*</Label>
-        <div className="border rounded-md p-2 max-w-full overflow-auto">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={onDateChange}
-            initialFocus
-            locale={fr}
-            className="mx-auto"
-          />
-        </div>
+    <div className="grid grid-cols-1 gap-2">
+      <div className="grid gap-2">
+        <Label>Date du rendez-vous*</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={onDateChange}
+              initialFocus
+              locale={fr}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
-      
-      <div className="space-y-4">
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="time">Heure*</Label>
           <div className="flex items-center">
             <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-            <Input
+            <Input 
               id="time"
               type="time"
               value={time}
@@ -56,7 +73,7 @@ const AppointmentDateTimePicker: React.FC<AppointmentDateTimePickerProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="duration">Durée (minutes)*</Label>
+          <Label htmlFor="duration">Durée*</Label>
           <Select 
             value={duration}
             onValueChange={onDurationChange}
