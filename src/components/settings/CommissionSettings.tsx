@@ -6,28 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
+import { CommissionTier } from "@/types/commissions";
 
-interface CommissionTier {
+interface CommissionRule {
   id?: string;
   tier: string;
   minContracts: number;
   percentage: number;
+  maxContracts?: number | null;
+  amount?: number | null;
 }
 
 const CommissionSettings: React.FC = () => {
   const { supabaseClient } = useSupabase();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [tiers, setTiers] = useState<CommissionTier[]>([
-    { tier: 'tier_1', minContracts: 0, percentage: 10 },
-    { tier: 'tier_2', minContracts: 5, percentage: 15 },
-    { tier: 'tier_3', minContracts: 10, percentage: 20 },
-    { tier: 'tier_4', minContracts: 20, percentage: 25 },
+  const [tiers, setTiers] = useState<CommissionRule[]>([
+    { tier: CommissionTier.TIER_1, minContracts: 0, percentage: 10 },
+    { tier: CommissionTier.TIER_2, minContracts: 11, percentage: 15, maxContracts: 20 },
+    { tier: CommissionTier.TIER_3, minContracts: 21, percentage: 20, maxContracts: 30 },
+    { tier: CommissionTier.TIER_4, minContracts: 31, percentage: 25 },
   ]);
 
   useEffect(() => {
     fetchCommissionRules();
-  }, [supabaseClient]);
+  }, []);
 
   const fetchCommissionRules = async () => {
     try {
@@ -42,7 +46,12 @@ const CommissionSettings: React.FC = () => {
       }
 
       if (data && data.length > 0) {
-        setTiers(data);
+        setTiers(data.map(rule => ({
+          ...rule,
+          minContracts: rule.minContracts || 0,
+          percentage: rule.percentage || 0,
+          tier: mapTierToEnum(rule.tier)
+        })));
       }
     } catch (error) {
       console.error("Erreur lors du chargement des règles de commission:", error);
@@ -56,12 +65,46 @@ const CommissionSettings: React.FC = () => {
     }
   };
 
-  const handleInputChange = (index: number, field: keyof CommissionTier, value: string) => {
+  const mapTierToEnum = (tierString: string): string => {
+    switch(tierString) {
+      case 'bronze':
+        return CommissionTier.TIER_1;
+      case 'silver':
+        return CommissionTier.TIER_2;
+      case 'gold':
+        return CommissionTier.TIER_3;
+      case 'platinum':
+        return CommissionTier.TIER_4;
+      default:
+        return tierString;
+    }
+  };
+
+  const mapEnumToTier = (tierEnum: string): string => {
+    switch(tierEnum) {
+      case CommissionTier.TIER_1:
+        return 'bronze';
+      case CommissionTier.TIER_2:
+        return 'silver';
+      case CommissionTier.TIER_3:
+        return 'gold';
+      case CommissionTier.TIER_4:
+        return 'platinum';
+      default:
+        return tierEnum;
+    }
+  };
+
+  const handleInputChange = (index: number, field: keyof CommissionRule, value: string) => {
     const newTiers = [...tiers];
-    if (field === 'minContracts' || field === 'percentage') {
-      newTiers[index][field] = parseInt(value, 10);
+    if (field === 'minContracts' || field === 'percentage' || field === 'maxContracts' || field === 'amount') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue)) {
+        // @ts-ignore - Nous savons que c'est un champ numérique
+        newTiers[index][field] = numValue;
+      }
     } else {
-      // @ts-ignore - We know this is safe since it's a string field
+      // @ts-ignore - Nous savons que c'est un champ texte
       newTiers[index][field] = value;
     }
     setTiers(newTiers);
@@ -73,47 +116,47 @@ const CommissionSettings: React.FC = () => {
       // Vérifier les données avant l'envoi
       const validTiers = tiers.map(tier => ({
         ...tier,
+        tier: mapEnumToTier(tier.tier),
         minContracts: isNaN(tier.minContracts) ? 0 : tier.minContracts,
-        percentage: isNaN(tier.percentage) ? 0 : tier.percentage
+        percentage: isNaN(tier.percentage) ? 0 : tier.percentage,
+        maxContracts: tier.maxContracts && !isNaN(tier.maxContracts) ? tier.maxContracts : null,
+        amount: tier.amount && !isNaN(tier.amount) ? tier.amount : null
       }));
 
-      // Supprimer les anciennes règles et insérer les nouvelles
-      for (const tier of validTiers) {
-        if (tier.id) {
-          // Mettre à jour le tier existant
-          const { error } = await supabaseClient
-            .from('commission_rules')
-            .update({
-              minContracts: tier.minContracts,
-              percentage: tier.percentage
-            })
-            .eq('id', tier.id);
+      // Supprimer les anciennes règles
+      const { error: deleteError } = await supabaseClient
+        .from('commission_rules')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Une condition toujours vraie pour tout supprimer
 
-          if (error) throw error;
-        } else {
-          // Créer un nouveau tier
-          const { error } = await supabaseClient
-            .from('commission_rules')
-            .insert({
-              tier: tier.tier,
-              minContracts: tier.minContracts,
-              percentage: tier.percentage
-            });
+      if (deleteError) throw deleteError;
 
-          if (error) throw error;
-        }
-      }
+      // Créer les nouvelles règles
+      const { error: insertError } = await supabaseClient
+        .from('commission_rules')
+        .insert(validTiers.map(tier => ({
+          tier: tier.tier,
+          minContracts: tier.minContracts,
+          percentage: tier.percentage,
+          maxContracts: tier.maxContracts,
+          amount: tier.amount
+        })));
+
+      if (insertError) throw insertError;
 
       toast({
         title: "Paliers mis à jour",
         description: "Les paliers de commission ont été enregistrés avec succès.",
       });
-    } catch (error) {
+      
+      // Recharger les données après la mise à jour
+      fetchCommissionRules();
+    } catch (error: any) {
       console.error("Erreur lors de l'enregistrement des paliers:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'enregistrement des paliers.",
+        description: error.message || "Une erreur est survenue lors de l'enregistrement des paliers.",
       });
     } finally {
       setIsSubmitting(false);
@@ -122,73 +165,84 @@ const CommissionSettings: React.FC = () => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Paliers de commission</CardTitle>
-        <CardDescription>
-          Configurez les paliers de commission des commerciaux
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {tiers.map((tier, index) => (
-            <div key={tier.tier} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center border-b pb-4">
-              <div>
-                <Label className="text-base">
-                  {tier.tier === 'tier_1' ? 'Palier 1 (Base)' :
-                   tier.tier === 'tier_2' ? 'Palier 2' :
-                   tier.tier === 'tier_3' ? 'Palier 3' :
-                   'Palier 4'}
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  {tier.minContracts} contrats et plus
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`tier${index+1}`}>Taux de commission (%)</Label>
-                <Input 
-                  id={`tier${index+1}`} 
-                  value={tier.percentage} 
-                  onChange={(e) => handleInputChange(index, 'percentage', e.target.value)}
-                  type="number"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              {tier.tier !== 'tier_1' && (
-                <div className="space-y-2">
-                  <Label htmlFor={`tier${index+1}-min`}>Nombre min. de contrats</Label>
-                  <Input 
-                    id={`tier${index+1}-min`} 
-                    value={tier.minContracts} 
-                    onChange={(e) => handleInputChange(index, 'minContracts', e.target.value)}
-                    type="number"
-                    min="0"
-                  />
-                </div>
-              )}
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Configurez les pourcentages et les seuils pour chaque palier de commission. Les freelances seront rémunérés en fonction du nombre de contrats validés dans chaque palier.
+        </p>
+      </div>
+      
+      <div className="space-y-4">
+        {tiers.map((tier, index) => (
+          <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b pb-4">
+            <div>
+              <Label className="text-base font-medium">
+                {tier.tier === CommissionTier.TIER_1 ? 'Bronze (Palier 1)' :
+                 tier.tier === CommissionTier.TIER_2 ? 'Silver (Palier 2)' :
+                 tier.tier === CommissionTier.TIER_3 ? 'Gold (Palier 3)' :
+                 'Platinum (Palier 4)'}
+              </Label>
             </div>
-          ))}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={fetchCommissionRules}>Annuler</Button>
-        <Button onClick={handleSave} disabled={isSubmitting}>
-          {isSubmitting ? "Enregistrement..." : "Enregistrer"}
+            
+            <div className="space-y-2">
+              <Label htmlFor={`percentage-${index}`}>Pourcentage (%)</Label>
+              <Input 
+                id={`percentage-${index}`} 
+                value={tier.percentage} 
+                onChange={(e) => handleInputChange(index, 'percentage', e.target.value)}
+                type="number"
+                min="0"
+                max="100"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor={`min-${index}`}>Contrats minimum</Label>
+              <Input 
+                id={`min-${index}`} 
+                value={tier.minContracts} 
+                onChange={(e) => handleInputChange(index, 'minContracts', e.target.value)}
+                type="number"
+                min="0"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor={`max-${index}`}>{index < 3 ? "Contrats maximum" : "Montant fixe (optionnel)"}</Label>
+              <Input 
+                id={`max-${index}`} 
+                value={index < 3 ? tier.maxContracts || '' : tier.amount || ''} 
+                onChange={(e) => handleInputChange(index, index < 3 ? 'maxContracts' : 'amount', e.target.value)}
+                type="number"
+                min="0"
+                placeholder={index < 3 ? "Optionnel" : "Montant en MAD"}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="flex justify-between pt-4">
+        <Button variant="outline" onClick={fetchCommissionRules} disabled={isSubmitting}>
+          Annuler
         </Button>
-      </CardFooter>
-    </Card>
+        <Button onClick={handleSave} disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enregistrement...
+            </>
+          ) : "Enregistrer les paliers"}
+        </Button>
+      </div>
+    </div>
   );
 };
 

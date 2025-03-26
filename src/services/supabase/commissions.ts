@@ -4,6 +4,7 @@ import { Database } from '@/types/database';
 import { Commission, CommissionStatus, CommissionTier } from '@/types/commissions';
 import { UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { determineCommissionTier, calculateCommissionAmount } from '@/utils/commission';
 
 export const createCommissionsService = (supabase: SupabaseClient<Database>) => {
   return {
@@ -70,6 +71,7 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
             status: item.status as CommissionStatus,
             paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
             paymentRequested: item.payment_requested || false,
+            period: `${new Date(item.periodStart).toLocaleDateString()} - ${new Date(item.periodEnd).toLocaleDateString()}`
           };
         });
       } catch (error) {
@@ -90,6 +92,42 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
         
         if (error) {
           throw error;
+        }
+        
+        if (!data || data.length === 0) {
+          console.warn("Aucune règle de commission trouvée, utilisation des valeurs par défaut");
+          return [
+            {
+              id: "default-tier-1",
+              tier: CommissionTier.TIER_1,
+              minContracts: 0,
+              percentage: 10,
+              amount: 500
+            },
+            {
+              id: "default-tier-2",
+              tier: CommissionTier.TIER_2,
+              minContracts: 11,
+              maxContracts: 20,
+              percentage: 15,
+              amount: 1000
+            },
+            {
+              id: "default-tier-3",
+              tier: CommissionTier.TIER_3,
+              minContracts: 21,
+              maxContracts: 30,
+              percentage: 20,
+              amount: 1500
+            },
+            {
+              id: "default-tier-4",
+              tier: CommissionTier.TIER_4,
+              minContracts: 31,
+              percentage: 25,
+              amount: 2000
+            }
+          ];
         }
         
         return data.map((rule) => {
@@ -118,12 +156,28 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
             minContracts: rule.minContracts,
             maxContracts: rule.maxContracts || null,
             percentage: rule.percentage,
-            amount: rule.amount || getCommissionAmount(tierEnum),
+            amount: rule.amount || null,
           };
         });
       } catch (error) {
         console.error("Erreur lors du chargement des règles de commissions:", error);
-        throw error;
+        // Retourner des valeurs par défaut en cas d'erreur
+        return [
+          {
+            id: "default-error-tier-1",
+            tier: CommissionTier.TIER_1,
+            minContracts: 0,
+            percentage: 10,
+            amount: 500
+          },
+          {
+            id: "default-error-tier-2",
+            tier: CommissionTier.TIER_2,
+            minContracts: 11,
+            percentage: 15,
+            amount: 1000
+          }
+        ];
       }
     },
 
@@ -151,7 +205,10 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
             .eq("id", commissionId)
             .single();
           
-          if (commissionError) throw commissionError;
+          if (commissionError) {
+            console.error("Erreur lors de la vérification de la commission:", commissionError);
+            throw new Error("Impossible de vérifier les détails de la commission");
+          }
           
           // Vérifier que le freelancer est bien le propriétaire
           if (commission.freelancerId !== userId) {
@@ -249,20 +306,123 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
           return false;
         }
         
-        // À implémenter: logique de génération des commissions mensuelles
-        toast({
-          title: "Calcul des commissions",
-          description: "Génération des commissions pour le mois en cours.",
-        });
-
-        // Simuler un traitement asynchrone
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // 1. Récupérer les règles de commission
+        const { data: rules, error: rulesError } = await supabase
+          .from("commission_rules")
+          .select("*")
+          .order("minContracts", { ascending: true });
+        
+        if (rulesError) {
+          throw new Error("Impossible de récupérer les règles de commission");
+        }
+        
+        // 2. Obtenir tous les freelancers
+        const { data: freelancers, error: freelancersError } = await supabase
+          .from("users")
+          .select("id, name")
+          .eq("role", UserRole.FREELANCER);
+        
+        if (freelancersError) {
+          throw new Error("Impossible de récupérer la liste des freelancers");
+        }
+        
+        // 3. Pour chaque freelancer, calculer les commissions du mois
+        const startDate = new Date(month.getFullYear(), month.getMonth(), 1);
+        const endDate = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+        
+        let successCount = 0;
+        
+        for (const freelancer of freelancers) {
+          try {
+            // 3.1 Compter le nombre de contrats signés pendant le mois
+            const { count, error: quotesError } = await supabase
+              .from("quotes")
+              .select("*", { count: 'exact', head: true })
+              .eq("freelancerId", freelancer.id)
+              .eq("status", "approved")
+              .gte("createdAt", startDate.toISOString())
+              .lte("createdAt", endDate.toISOString());
+            
+            if (quotesError) {
+              console.error(`Erreur lors du comptage des contrats pour ${freelancer.name}:`, quotesError);
+              continue;
+            }
+            
+            const contractsCount = count || 0;
+            
+            // 3.2 Déterminer le palier applicable
+            const tier = determineCommissionTier(contractsCount, rules);
+            let tierString = 'bronze';
+            switch (tier) {
+              case CommissionTier.TIER_2:
+                tierString = 'silver';
+                break;
+              case CommissionTier.TIER_3:
+                tierString = 'gold';
+                break;
+              case CommissionTier.TIER_4:
+                tierString = 'platinum';
+                break;
+            }
+            
+            // 3.3 Calculer le montant de la commission
+            const applicableRule = rules.find(r => r.tier === tierString);
+            if (!applicableRule) continue;
+            
+            // Montant fixe ou pourcentage du chiffre d'affaires
+            let amount = applicableRule.amount;
+            
+            if (!amount && applicableRule.percentage) {
+              // Calculer le chiffre d'affaires total du mois
+              const { data: quotes, error: quotesTotalError } = await supabase
+                .from("quotes")
+                .select("totalAmount")
+                .eq("freelancerId", freelancer.id)
+                .eq("status", "approved")
+                .gte("createdAt", startDate.toISOString())
+                .lte("createdAt", endDate.toISOString());
+              
+              if (quotesTotalError) {
+                console.error(`Erreur lors du calcul du chiffre d'affaires pour ${freelancer.name}:`, quotesTotalError);
+                continue;
+              }
+              
+              const totalRevenue = quotes.reduce((sum, quote) => sum + (quote.totalAmount || 0), 0);
+              amount = calculateCommissionAmount(totalRevenue, applicableRule.percentage);
+            }
+            
+            if (!amount) continue; // Pas de montant à commissionner
+            
+            // 3.4 Créer la commission
+            const { error: insertError } = await supabase
+              .from("commissions")
+              .insert({
+                freelancerId: freelancer.id,
+                amount,
+                tier: tierString,
+                periodStart: startDate.toISOString(),
+                periodEnd: endDate.toISOString(),
+                status: 'pending',
+                payment_requested: false
+              });
+            
+            if (insertError) {
+              console.error(`Erreur lors de la création de la commission pour ${freelancer.name}:`, insertError);
+              continue;
+            }
+            
+            successCount++;
+          } catch (error) {
+            console.error(`Erreur lors du traitement du freelancer ${freelancer.name}:`, error);
+          }
+        }
         
         toast({
-          title: "Succès",
-          description: "Les commissions du mois ont été calculées avec succès",
+          title: "Commissions générées",
+          description: `${successCount} commissions ont été générées avec succès pour ${month.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}.`,
         });
-        return true;
+        
+        return successCount > 0;
       } catch (error: any) {
         console.error("Erreur lors de la génération des commissions:", error);
         toast({
@@ -274,23 +434,4 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
       }
     }
   };
-};
-
-/**
- * Obtient le montant de commission en fonction du palier
- * Basé sur le nombre de contrats selon les règles spécifiées
- */
-const getCommissionAmount = (tier: CommissionTier): number => {
-  switch(tier) {
-    case CommissionTier.TIER_1: // Moins de 10 contrats
-      return 500;
-    case CommissionTier.TIER_2: // 11 à 20 contrats
-      return 1000;
-    case CommissionTier.TIER_3: // 21 à 30 contrats
-      return 1500;
-    case CommissionTier.TIER_4: // 31+ contrats
-      return 2000;
-    default:
-      return 500;
-  }
 };

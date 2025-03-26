@@ -47,7 +47,7 @@ export const formatDate = (date: Date | undefined): string => {
 
 /**
  * Formate un montant en devise
- * @param amount - Montant à formater
+ * @param amount: number - Montant à formater
  * @returns Montant formaté
  */
 export const formatCurrency = (amount: number): string => {
@@ -60,18 +60,46 @@ export const formatCurrency = (amount: number): string => {
 };
 
 /**
- * Calcule le montant de commission en fonction du niveau
+ * Calcule le montant de commission en fonction du niveau et du montant
  * @param amount - Montant de base
  * @param tier - Niveau de commission
  * @returns Montant de commission calculé
  */
-export const calculateCommissionAmount = (amount: number, tier: CommissionTier): number => {
-  const baseAmounts: Record<CommissionTier, number> = {
-    [CommissionTier.TIER_1]: 500,   // Moins de 10 contrats
-    [CommissionTier.TIER_2]: 1000,  // 11 à 20 contrats
-    [CommissionTier.TIER_3]: 1500,  // 21 à 30 contrats
-    [CommissionTier.TIER_4]: 2000   // 31+ contrats
-  };
+export const calculateCommissionAmount = (amount: number, percentage: number): number => {
+  return amount * (percentage / 100);
+};
+
+/**
+ * Détermine le niveau de commission en fonction du nombre de contrats
+ * @param contractsCount - Nombre de contrats
+ * @param rules - Règles de commission
+ * @returns Niveau de commission applicable
+ */
+export const determineCommissionTier = (contractsCount: number, rules: any[]): CommissionTier => {
+  if (!rules || rules.length === 0) {
+    return CommissionTier.TIER_1;
+  }
   
-  return amount * baseAmounts[tier];
+  // Trier les règles par nombre minimum de contrats décroissant
+  const sortedRules = [...rules].sort((a, b) => b.minContracts - a.minContracts);
+  
+  // Trouver la première règle qui s'applique
+  for (const rule of sortedRules) {
+    if (contractsCount >= rule.minContracts) {
+      switch (rule.tier) {
+        case 'bronze': return CommissionTier.TIER_1;
+        case 'silver': return CommissionTier.TIER_2;
+        case 'gold': return CommissionTier.TIER_3;
+        case 'platinum': return CommissionTier.TIER_4;
+        default: 
+          if (rule.tier === CommissionTier.TIER_1) return CommissionTier.TIER_1;
+          if (rule.tier === CommissionTier.TIER_2) return CommissionTier.TIER_2;
+          if (rule.tier === CommissionTier.TIER_3) return CommissionTier.TIER_3;
+          if (rule.tier === CommissionTier.TIER_4) return CommissionTier.TIER_4;
+          return CommissionTier.TIER_1;
+      }
+    }
+  }
+  
+  return CommissionTier.TIER_1;
 };

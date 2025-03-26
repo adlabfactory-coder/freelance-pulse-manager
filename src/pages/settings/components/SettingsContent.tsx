@@ -8,6 +8,7 @@ import FreelancerManagement from "@/components/settings/FreelancerManagement";
 import ServicesSettings from "@/components/settings/ServicesSettings";
 import DatabaseTab from "@/components/settings/DatabaseTab";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
+import CommissionSettingsTab from "@/pages/settings/components/CommissionSettingsTab";
 import { useAuth } from "@/hooks/use-auth";
 
 interface SettingsContentProps {
@@ -36,6 +37,7 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
             <Route path="users" element={<UsersManagement onSelectUser={onSelectUser} />} />
             <Route path="freelancers" element={<FreelancerManagement />} />
             <Route path="services" element={<ServicesSettings />} />
+            <Route path="commissions" element={<CommissionSettingsTab />} />
           </>
         )}
         

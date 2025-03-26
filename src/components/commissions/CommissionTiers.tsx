@@ -15,6 +15,22 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
   formatCurrency,
   getTierLabel
 }) => {
+  // Vérifier si nous avons des règles de commission
+  if (!commissionRules || commissionRules.length === 0) {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">Paliers de Commission</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center text-muted-foreground">
+            Chargement des paliers de commission...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -35,29 +51,24 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
                   "bg-green-100 text-green-800 hover:bg-green-200"
                 }
               >
-                {rule.tier === CommissionTier.TIER_1 ? "Moins de 10 contrats" :
-                 rule.tier === CommissionTier.TIER_2 ? "De 11 à 20 contrats" :
-                 rule.tier === CommissionTier.TIER_3 ? "De 21 à 30 contrats" :
-                 "Au-delà de 31 contrats"}
+                {getTierLabel(rule.tier)}
               </Badge>
               <div className="mt-2 text-2xl font-bold">
-                {formatCurrency(rule.amount || 0)}
+                {formatCurrency(rule.percentage)}%
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                par contrat
+                {rule.amount ? formatCurrency(rule.amount) : 'Montant variable'}
               </div>
               <div className="text-xs mt-3 text-muted-foreground">
-                {rule.tier === CommissionTier.TIER_1 && "Jusqu'à 10 contrats par mois"}
-                {rule.tier === CommissionTier.TIER_2 && "De 11 à 20 contrats par mois"}
-                {rule.tier === CommissionTier.TIER_3 && "De 21 à 30 contrats par mois"}
-                {rule.tier === CommissionTier.TIER_4 && "31 contrats et plus par mois"}
+                {rule.minContracts} contrats minimum
+                {rule.maxContracts ? ` - ${rule.maxContracts} contrats maximum` : ' et plus'}
               </div>
             </div>
           ))}
         </div>
         <div className="mt-6 text-sm text-muted-foreground">
           <p>Les commissions sont calculées à la fin de chaque mois en fonction du nombre total de contrats validés.</p>
-          <p className="mt-2">Les versements sont effectués sur demande après validation par l'administration.</p>
+          <p className="mt-2">Les pourcentages sont appliqués sur le montant total des contrats signés dans la période.</p>
         </div>
       </CardContent>
     </Card>
