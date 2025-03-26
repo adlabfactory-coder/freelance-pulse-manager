@@ -8,20 +8,22 @@ import { contactSchema, ContactFormValues } from "../schema/contactFormSchema";
 
 interface UseContactFormProps {
   onSuccess?: () => void;
+  initialData?: Partial<ContactFormValues>;
+  isEditing?: boolean;
 }
 
-export function useContactForm({ onSuccess }: UseContactFormProps = {}) {
+export function useContactForm({ onSuccess, initialData, isEditing = false }: UseContactFormProps = {}) {
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      position: "",
-      address: "",
-      notes: "",
-      status: "lead" as ContactStatus,
+      name: initialData?.name || "",
+      email: initialData?.email || "",
+      phone: initialData?.phone || "",
+      company: initialData?.company || "",
+      position: initialData?.position || "",
+      address: initialData?.address || "",
+      notes: initialData?.notes || "",
+      status: initialData?.status || "lead" as ContactStatus,
     },
   });
 
@@ -37,18 +39,28 @@ export function useContactForm({ onSuccess }: UseContactFormProps = {}) {
         position: data.position || "",
         address: data.address || "",
         notes: data.notes || "",
-        status: data.status as ContactStatus
+        // Toujours définir le statut à "lead" lors de la création d'un nouveau contact
+        status: isEditing ? data.status as ContactStatus : "lead" as ContactStatus
       };
       
-      const result = await contactService.createContact(contactData);
-      if (result) {
-        toast.success("Contact ajouté avec succès");
-        form.reset();
-        if (onSuccess) onSuccess();
+      let result;
+      if (isEditing && initialData?.id) {
+        result = await contactService.updateContact(initialData.id, contactData);
+        if (result) {
+          toast.success("Contact mis à jour avec succès");
+        }
+      } else {
+        result = await contactService.createContact(contactData);
+        if (result) {
+          toast.success("Contact ajouté avec succès");
+          form.reset();
+        }
       }
+      
+      if (result && onSuccess) onSuccess();
     } catch (error) {
-      console.error("Erreur lors de l'ajout du contact:", error);
-      toast.error("Erreur lors de l'ajout du contact");
+      console.error("Erreur lors de l'ajout/mise à jour du contact:", error);
+      toast.error("Erreur lors de l'opération sur le contact");
     }
   }
 

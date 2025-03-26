@@ -11,12 +11,15 @@ interface AddContactFormProps {
 }
 
 export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
-  const { form, isSubmitting, onSubmit } = useContactForm({ onSuccess });
+  const { form, isSubmitting, onSubmit } = useContactForm({ 
+    onSuccess,
+    isEditing: false // Indique que c'est une création et non une édition
+  });
 
   return (
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-4">
-        <ContactFormFields form={form} />
+        <ContactFormFields form={form} isEditing={false} />
 
         <div className="flex justify-end space-x-2 pt-4">
           {onCancel && (

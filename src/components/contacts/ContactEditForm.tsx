@@ -1,86 +1,45 @@
 
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Contact } from "@/services/contacts/types";
+import React from 'react';
+import { Form } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { useContactForm } from './hooks/useContactForm';
+import { Contact } from '@/services/contacts/types';
+import ContactFormFields from './ContactFormFields';
 
 interface ContactEditFormProps {
-  formData: Partial<Contact>;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  contact: Contact;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const ContactEditForm: React.FC<ContactEditFormProps> = ({ formData, handleInputChange }) => {
+const ContactEditForm: React.FC<ContactEditFormProps> = ({
+  contact,
+  onSuccess,
+  onCancel
+}) => {
+  const { form, isSubmitting, onSubmit } = useContactForm({
+    initialData: contact,
+    onSuccess,
+    isEditing: true
+  });
+
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Nom</Label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name || ""}
-            onChange={handleInputChange}
-          />
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <ContactFormFields form={form} isEditing={true} />
+        
+        <div className="flex justify-end space-x-2 pt-4">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Annuler
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Enregistrement..." : "Mettre à jour le contact"}
+          </Button>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Téléphone</Label>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="company">Entreprise</Label>
-          <Input
-            id="company"
-            name="company"
-            value={formData.company || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="position">Poste</Label>
-          <Input
-            id="position"
-            name="position"
-            value={formData.position || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="address">Adresse</Label>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address || ""}
-            onChange={handleInputChange}
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          name="notes"
-          rows={4}
-          value={formData.notes || ""}
-          onChange={handleInputChange}
-        />
-      </div>
-    </div>
+      </form>
+    </Form>
   );
 };
 

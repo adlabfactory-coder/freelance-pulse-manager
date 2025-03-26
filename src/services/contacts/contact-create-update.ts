@@ -13,10 +13,10 @@ export const contactCreateUpdateService = {
    */
   async addContact(contactData: ContactInsert): Promise<Contact | null> {
     try {
-      // Assurez-vous que le statut est du type ContactStatus
+      // S'assurer que le statut est "lead" pour les nouveaux contacts
       const contact = {
         ...contactData,
-        status: (contactData.status || 'lead') as ContactStatus
+        status: 'lead' as ContactStatus
       };
       
       const { data, error } = await supabase

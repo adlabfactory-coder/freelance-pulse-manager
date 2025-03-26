@@ -10,15 +10,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import ContactStatusSelector from "./ContactStatusSelector";
+import ContactStatusBadge from "./ContactStatusBadge";
 import { ContactFormValues } from "./schema/contactFormSchema";
 import { ContactStatus } from "@/types/database/enums";
 
 interface ContactFormFieldsProps {
   form: UseFormReturn<ContactFormValues>;
+  isEditing?: boolean;
 }
 
-const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form }) => {
+const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form, isEditing = false }) => {
   return (
     <>
       <FormField
@@ -94,22 +95,31 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({ form }) => {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Statut</FormLabel>
-              <FormControl>
-                <ContactStatusSelector 
-                  value={field.value as ContactStatus} 
-                  onChange={(value) => field.onChange(value)} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isEditing ? (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Statut</FormLabel>
+                <FormControl>
+                  <div className="h-10 px-3 py-2 flex items-center">
+                    <ContactStatusBadge status={field.value as ContactStatus} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        ) : (
+          <FormItem>
+            <FormLabel>Statut</FormLabel>
+            <div className="h-10 px-3 py-2 flex items-center bg-gray-100 rounded-md border">
+              <ContactStatusBadge status="lead" />
+              <span className="ml-2 text-sm text-muted-foreground">(Automatique)</span>
+            </div>
+          </FormItem>
+        )}
       </div>
 
       <FormField
