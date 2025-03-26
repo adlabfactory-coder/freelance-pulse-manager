@@ -1,7 +1,8 @@
+
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { Quote, QuoteItem, QuoteStatus } from '@/types';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 export const createQuotesService = (supabase: SupabaseClient) => {
   return {
@@ -104,12 +105,17 @@ export const createQuotesService = (supabase: SupabaseClient) => {
     createQuote: async (quote: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>): Promise<Quote | null> => {
       try {
         const now = new Date();
+        // Fixer la validité à 30 jours à partir de la date de création
+        const validityDate = addDays(now, 30);
+        
         const quoteData = {
           contactId: quote.contactId,
           freelancerId: quote.freelancerId,
           totalAmount: quote.totalAmount,
-          validUntil: format(quote.validUntil, 'yyyy-MM-dd'),
-          status: quote.status,
+          // Toujours utiliser validité de 30 jours
+          validUntil: format(validityDate, 'yyyy-MM-dd'),
+          // Toujours statut brouillon à la création
+          status: QuoteStatus.DRAFT,
           notes: quote.notes || "",
           createdAt: now.toISOString(),
           updatedAt: now.toISOString()

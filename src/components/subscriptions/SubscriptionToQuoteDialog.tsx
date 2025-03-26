@@ -89,7 +89,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
       const taxAmount = subtotal * (quoteItem.tax / 100);
       const totalAmount = subtotal + taxAmount;
 
-      // Créer le devis
+      // Créer le devis avec validité de 30 jours
       const quote: Quote = {
         contactId: selectedContactId,
         freelancerId: selectedFreelancerId,

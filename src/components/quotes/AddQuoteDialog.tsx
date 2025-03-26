@@ -8,12 +8,14 @@ interface AddQuoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onQuoteCreated: () => void;
+  initialContactId?: string;
 }
 
 const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
   open,
   onOpenChange,
   onQuoteCreated,
+  initialContactId
 }) => {
   const {
     contacts,
@@ -28,7 +30,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     handleAddItem,
     handleRemoveItem,
     handleSubmit,
-    loadData
+    loadData,
   } = useQuoteForm({
     onCloseDialog: onOpenChange,
     onQuoteCreated
@@ -37,8 +39,16 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
   useEffect(() => {
     if (open) {
       loadData();
+      
+      // Si un ID de contact est fourni, définissez-le comme contactId initial
+      if (initialContactId) {
+        setQuoteData(prev => ({
+          ...prev,
+          contactId: initialContactId
+        }));
+      }
     }
-  }, [open]);
+  }, [open, initialContactId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

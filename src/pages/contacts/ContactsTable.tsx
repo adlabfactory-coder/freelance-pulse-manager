@@ -1,27 +1,22 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Contact } from "@/services/contacts/types";
 import { useNavigate } from "react-router-dom";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { ContactStatus } from "@/types/database/enums";
+import { MoreHorizontal, FileText } from "lucide-react";
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { User, Calendar, Building, Phone } from "lucide-react";
-import { Contact } from "@/services/contacts/types";
-import { ContactStatus } from "@/types/database/enums";
-import ContactStatusBadge from "@/components/contacts/ContactStatusBadge";
-import { toast } from "sonner";
+import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -30,102 +25,148 @@ interface ContactsTableProps {
   statusFilter: ContactStatus | null;
 }
 
-const ContactsTable: React.FC<ContactsTableProps> = ({ 
-  contacts, 
+const ContactsTable: React.FC<ContactsTableProps> = ({
+  contacts,
   loading,
   searchTerm,
   statusFilter
 }) => {
   const navigate = useNavigate();
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
 
-  const handleViewContact = (contactId: string) => {
-    navigate(`/contacts/detail/${contactId}`);
+  const handleCreateQuote = (contactId: string) => {
+    setSelectedContactId(contactId);
+    setQuoteDialogOpen(true);
   };
 
-  const filteredContacts = contacts
-    .filter(contact => 
-      (searchTerm === "" || 
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (contact.company && contact.company.toLowerCase().includes(searchTerm.toLowerCase()))
-      ) && 
-      (statusFilter === null || contact.status === statusFilter)
+  // Filtrer les contacts par terme de recherche et statut
+  const filteredContacts = contacts.filter(contact => {
+    // Filtrer par terme de recherche
+    if (searchTerm && !contact.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Filtrer par statut
+    if (statusFilter && contact.status !== statusFilter) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  const handleContactClick = (id: string) => {
+    navigate(`/contacts/${id}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Téléphone</TableHead>
+              <TableHead>Entreprise</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell><Skeleton className="h-5 w-[180px]" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-[250px]" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-[120px]" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-[150px]" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-[100px]" /></TableCell>
+                <TableCell><Skeleton className="h-5 w-[80px] ml-auto" /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
+  }
+
+  if (filteredContacts.length === 0) {
+    return (
+      <div className="rounded-md border p-8 text-center">
+        <p className="text-muted-foreground">Aucun contact trouvé.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-md border shadow-sm">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nom</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead className="hidden md:table-cell">Téléphone</TableHead>
-            <TableHead className="hidden md:table-cell">Entreprise</TableHead>
-            <TableHead className="hidden md:table-cell">Statut</TableHead>
-            <TableHead className="hidden md:table-cell">Date d'ajout</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
-                Chargement des contacts...
-              </TableCell>
+              <TableHead>Nom</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Téléphone</TableHead>
+              <TableHead>Entreprise</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ) : filteredContacts.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-8">
-                Aucun contact trouvé
-              </TableCell>
-            </TableRow>
-          ) : (
-            filteredContacts.map((contact) => (
-              <TableRow key={contact.id}>
+          </TableHeader>
+          <TableBody>
+            {filteredContacts.map((contact) => (
+              <TableRow key={contact.id} className="cursor-pointer" onClick={() => handleContactClick(contact.id)}>
                 <TableCell className="font-medium">{contact.name}</TableCell>
                 <TableCell>{contact.email}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {contact.phone}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {contact.company}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <ContactStatusBadge status={contact.status as ContactStatus} />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {new Date(contact.createdAt).toLocaleDateString()}
+                <TableCell>{contact.phone || "—"}</TableCell>
+                <TableCell>{contact.company || "—"}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">
+                    {contact.status === ContactStatus.LEAD && "Prospect"}
+                    {contact.status === ContactStatus.CUSTOMER && "Client"}
+                    {contact.status === ContactStatus.LOST && "Perdu"}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        Actions
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewContact(contact.id)}>
-                        <User className="mr-2 h-4 w-4" /> Voir le profil
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Calendar className="mr-2 h-4 w-4" /> Planifier un RDV
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Building className="mr-2 h-4 w-4" /> Associer un abonnement
-                      </DropdownMenuItem>
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        <Phone className="mr-2 h-4 w-4" /> Appeler
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleContactClick(contact.id);
+                      }}>
+                        Voir les détails
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleCreateQuote(contact.id);
+                      }}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Créer un devis
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Boîte de dialogue pour créer un devis */}
+      <AddQuoteDialog 
+        open={quoteDialogOpen}
+        onOpenChange={setQuoteDialogOpen}
+        onQuoteCreated={() => setQuoteDialogOpen(false)}
+        initialContactId={selectedContactId || undefined}
+      />
+    </>
   );
 };
 

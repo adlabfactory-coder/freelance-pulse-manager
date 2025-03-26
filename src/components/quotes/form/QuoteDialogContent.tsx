@@ -1,12 +1,18 @@
 
 import React from "react";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, Save } from "lucide-react";
-import { QuoteItem, Quote, User } from "@/types";
+import { Loader2 } from "lucide-react";
 import { Contact } from "@/services/contacts/types";
+import { QuoteItem, QuoteStatus, Quote } from "@/types";
 import { Service } from "@/types/services";
-import QuoteFormSections from "./QuoteFormSections";
+import { User } from "@/types";
+import ClientSelector from "./ClientSelector";
+import FreelancerSelector from "./FreelancerSelector";
+import QuoteItemForm from "./QuoteItemForm";
+import QuoteItemsList from "./QuoteItemsList";
+import QuoteNotesField from "./QuoteNotesField";
+import StatusSelector from "./StatusSelector";
+import QuoteValidityDatePicker from "./QuoteValidityDatePicker";
 
 interface QuoteDialogContentProps {
   loading: boolean;
@@ -42,43 +48,97 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
   isEditing = false
 }) => {
   if (loading) {
-    return <div className="py-8 text-center">Chargement des données...</div>;
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des données...</span>
+      </div>
+    );
   }
 
   return (
-    <>
-      <QuoteFormSections
-        quoteData={quoteData}
-        currentItem={currentItem}
-        contacts={contacts}
-        freelancers={freelancers}
-        services={services}
-        onQuoteDataChange={onQuoteDataChange}
-        onCurrentItemChange={onCurrentItemChange}
-        onAddItem={onAddItem}
-        onRemoveItem={onRemoveItem}
-        isEditing={isEditing}
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ClientSelector
+          contacts={contacts}
+          selectedContactId={quoteData.contactId}
+          onSelect={(contactId) => onQuoteDataChange({ ...quoteData, contactId })}
+        />
+        
+        <FreelancerSelector
+          freelancers={freelancers}
+          selectedFreelancerId={quoteData.freelancerId}
+          onSelect={(freelancerId) => onQuoteDataChange({ ...quoteData, freelancerId })}
+        />
+      </div>
+      
+      {/* N'afficher le sélecteur de statut et la date de validité que lors de l'édition */}
+      {isEditing && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <StatusSelector
+            status={quoteData.status as QuoteStatus}
+            onSelect={(status) => onQuoteDataChange({ ...quoteData, status })}
+          />
+          
+          <QuoteValidityDatePicker
+            date={quoteData.validUntil}
+            onSelect={(validUntil) => onQuoteDataChange({ ...quoteData, validUntil })}
+          />
+        </div>
+      )}
+      
+      <div className="border rounded-md p-4">
+        <h3 className="text-lg font-medium mb-4">Articles</h3>
+        
+        <QuoteItemsList 
+          items={quoteData.items || []} 
+          onRemoveItem={onRemoveItem}
+        />
+        
+        <div className="mt-4 border-t pt-4">
+          <h4 className="font-medium mb-2">Ajouter un article</h4>
+          <QuoteItemForm
+            item={currentItem}
+            services={services}
+            onChange={onCurrentItemChange}
+            onAddItem={onAddItem}
+          />
+        </div>
+      </div>
+      
+      <QuoteNotesField
+        notes={quoteData.notes}
+        onChange={(notes) => onQuoteDataChange({ ...quoteData, notes })}
       />
-
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>
-          Annuler
-        </Button>
-        <Button disabled={isSubmitting} onClick={onSubmit}>
-          {isSubmitting ? (
-            "Traitement en cours..."
-          ) : isEditing ? (
-            <>
-              <Save className="mr-2 h-4 w-4" /> Mettre à jour
-            </>
-          ) : (
-            <>
-              <Check className="mr-2 h-4 w-4" /> Créer le devis
-            </>
+      
+      <div className="flex justify-between border-t pt-4">
+        <div>
+          {quoteData.totalAmount !== undefined && (
+            <div className="font-bold text-lg">
+              Total: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(quoteData.totalAmount)}
+            </div>
           )}
-        </Button>
-      </DialogFooter>
-    </>
+        </div>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+          <Button 
+            onClick={onSubmit}
+            disabled={isSubmitting || !quoteData.contactId || !quoteData.freelancerId || !(quoteData.items && quoteData.items.length > 0)}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Traitement en cours...
+              </>
+            ) : (
+              isEditing ? "Mettre à jour" : "Créer le devis"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
