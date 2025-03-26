@@ -76,7 +76,7 @@ const CreateFreelancerForm: React.FC = () => {
       
       toast("Erreur", {
         description: error.message || "Une erreur est survenue lors de la création du compte freelance",
-        variant: "destructive"
+        style: { backgroundColor: 'hsl(var(--destructive))' }
       });
     } finally {
       setIsLoading(false);
