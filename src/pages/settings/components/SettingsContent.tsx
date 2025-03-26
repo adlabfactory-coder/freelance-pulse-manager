@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import UserProfileTabs from "@/components/settings/tabs/UserTabs";
 import SecurityTab from "@/components/settings/tabs/SecurityTab";
@@ -11,6 +11,9 @@ import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 import CommissionSettingsTab from "@/pages/settings/components/CommissionSettingsTab";
 import RoleSettingsTab from "@/pages/settings/components/RoleSettingsTab";
 import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface SettingsContentProps {
   onSelectUser?: (userId: string) => void;
@@ -18,11 +21,44 @@ interface SettingsContentProps {
 }
 
 const SettingsContent: React.FC<SettingsContentProps> = ({ 
-  onSelectUser = () => {}, // valeur par défaut pour éviter les erreurs
+  onSelectUser = () => {}, 
   currentUser 
 }) => {
   const { isSuperAdmin, isAdminOrSuperAdmin, user } = useAuth();
   const isCurrentUser = currentUser && user ? currentUser.id === user.id : true;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Simulate loading state to give components time to initialize
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  if (isLoading) {
+    return (
+      <div className="flex-1 space-y-4">
+        <Skeleton className="h-12 w-full" />
+        <div className="space-y-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erreur</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
   
   return (
     <div className="flex-1 space-y-4">
