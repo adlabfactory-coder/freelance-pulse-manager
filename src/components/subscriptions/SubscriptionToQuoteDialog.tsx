@@ -41,6 +41,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     addItem,
     loadData
   } = useQuoteForm({
+    // Fix the error by creating a function that calls onOpenChange with false
     onCloseDialog: () => onOpenChange(false),
     onQuoteCreated: () => {
       toast.success("Devis créé avec succès");
