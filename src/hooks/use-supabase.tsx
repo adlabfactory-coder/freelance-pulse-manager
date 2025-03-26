@@ -3,6 +3,7 @@ import { createSupabaseService } from '@/services/supabase';
 import { User, UserRole } from '@/types';
 import { auditCreate, auditDelete, auditUpdate } from '@/services/audit-service';
 import { validateSupabaseConnection } from '@/integrations/supabase/client';
+import { fetchUsers, fetchUserById, updateUser, createUser, deleteUser } from '@/services/user';
 
 // Hook centralisé pour accéder aux services Supabase
 export const useSupabase = () => {
@@ -26,28 +27,28 @@ export const useSupabase = () => {
     checkDatabaseStatus: supabaseService.database.checkStatus,
     initializeDatabase: supabaseService.database.initialize,
     
-    // Services des utilisateurs avec audit
-    fetchUsers: supabaseService.users.fetchUsers,
-    fetchUserById: supabaseService.users.fetchUserById,
+    // Services des utilisateurs - Utiliser les fonctions importées de notre nouveau module
+    fetchUsers,
+    fetchUserById,
     
     // Mise à jour d'un utilisateur avec audit
     updateUser: async (userData: Partial<User> & { id: string }) => {
-      const result = await supabaseService.users.updateUser(userData);
-      if (result.success && result.data) {
+      const success = await updateUser(userData.id, userData);
+      if (success) {
         // Log de l'action dans l'audit
         auditUpdate('system', UserRole.ADMIN, 'users', userData.id, {
           fields: Object.keys(userData).filter(k => k !== 'id')
         });
       }
-      return result;
+      return { success };
     },
     
     // Création d'un utilisateur avec audit
     createUser: async (userData: Omit<User, 'id'>) => {
-      const result = await supabaseService.users.createUser(userData, UserRole.ADMIN);
-      if (result.success && result.data) {
+      const result = await createUser(userData, UserRole.ADMIN);
+      if (result.success && result.userId) {
         // Log de l'action dans l'audit
-        auditCreate('system', UserRole.ADMIN, 'users', result.data.id, {
+        auditCreate('system', UserRole.ADMIN, 'users', result.userId, {
           role: userData.role
         });
       }
@@ -56,13 +57,12 @@ export const useSupabase = () => {
     
     // Suppression d'un utilisateur avec audit
     deleteUser: async (userId: string) => {
-      // Implémentation fictive pour la démo
-      const success = true;
-      if (success) {
+      const result = await deleteUser(userId, UserRole.ADMIN);
+      if (result.success) {
         // Log de l'action dans l'audit
         auditDelete('system', UserRole.ADMIN, 'users', userId, {});
       }
-      return { success };
+      return result;
     },
     
     // Fonctions de conversion de données - Avec UserRole explicite
