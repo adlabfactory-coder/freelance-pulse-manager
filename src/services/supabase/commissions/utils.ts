@@ -47,7 +47,9 @@ export const mapCommissionFromDb = (dbCommission: any): Commission => {
     status: dbCommission.status,
     paidDate: dbCommission.paidDate ? new Date(dbCommission.paidDate) : undefined,
     paymentRequested: dbCommission.payment_requested || false,
-    period: `${new Date(dbCommission.periodStart).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`
+    period: `${new Date(dbCommission.periodStart).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`,
+    contractsCount: dbCommission.contracts_count,
+    unitAmount: dbCommission.unit_amount
   };
 };
 
@@ -61,7 +63,7 @@ export const mapCommissionRuleFromDb = (dbRule: any): CommissionRule => {
     minContracts: dbRule.minContracts,
     maxContracts: dbRule.maxContracts || null,
     percentage: dbRule.percentage,
-    amount: dbRule.amount || undefined
+    unitAmount: dbRule.unit_amount || dbRule.amount || 0
   };
 };
 
@@ -75,31 +77,31 @@ export const getDefaultCommissionRules = (): CommissionRule[] => {
       tier: CommissionTier.TIER_1,
       minContracts: 1,
       maxContracts: 10,
-      percentage: 10,
-      amount: 500
+      percentage: 0, // Non utilisé
+      unitAmount: 500 // 500 MAD par contrat
     },
     {
       id: "default-tier-2",
       tier: CommissionTier.TIER_2,
       minContracts: 11,
       maxContracts: 20,
-      percentage: 15,
-      amount: 1000
+      percentage: 0, // Non utilisé
+      unitAmount: 1000 // 1000 MAD par contrat
     },
     {
       id: "default-tier-3",
       tier: CommissionTier.TIER_3,
       minContracts: 21,
       maxContracts: 30,
-      percentage: 20,
-      amount: 1500
+      percentage: 0, // Non utilisé
+      unitAmount: 1500 // 1500 MAD par contrat
     },
     {
       id: "default-tier-4",
       tier: CommissionTier.TIER_4,
       minContracts: 31,
-      percentage: 25,
-      amount: 2000
+      percentage: 0, // Non utilisé
+      unitAmount: 2000 // 2000 MAD par contrat
     }
   ];
 };

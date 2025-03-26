@@ -55,7 +55,7 @@ export async function generateMonthlyCommissions(
     
     for (const freelancer of freelancers) {
       try {
-        // 3.1 Compter le nombre de contrats signés pendant le mois
+        // 3.1 Compter le nombre de devis approuvés pendant le mois
         const { count, error: quotesError } = await supabase
           .from("quotes")
           .select("*", { count: 'exact', head: true })
@@ -71,39 +71,24 @@ export async function generateMonthlyCommissions(
         
         const contractsCount = count || 0;
         
+        // Si aucun contrat, ne pas créer de commission
+        if (contractsCount === 0) continue;
+        
         // 3.2 Déterminer le palier applicable
         const tier = determineCommissionTier(contractsCount, rules);
         const tierString = mapTierToDb(tier);
         
-        // 3.3 Calculer le montant de la commission
+        // 3.3 Récupérer la règle applicable
         const applicableRule = rules.find(r => r.tier === tierString);
         if (!applicableRule) continue;
         
-        // Montant fixe ou pourcentage du chiffre d'affaires
-        let amount = applicableRule.amount;
-        
-        if (!amount && applicableRule.percentage) {
-          // Calculer le chiffre d'affaires total du mois
-          const { data: quotes, error: quotesTotalError } = await supabase
-            .from("quotes")
-            .select("totalAmount")
-            .eq("freelancerId", freelancer.id)
-            .eq("status", "approved")
-            .gte("createdAt", startDate.toISOString())
-            .lte("createdAt", endDate.toISOString());
-          
-          if (quotesTotalError) {
-            console.error(`Erreur lors du calcul du chiffre d'affaires pour ${freelancer.name}:`, quotesTotalError);
-            continue;
-          }
-          
-          const totalRevenue = quotes.reduce((sum, quote) => sum + (quote.totalAmount || 0), 0);
-          amount = calculateCommissionAmount(totalRevenue, applicableRule.percentage);
-        }
+        // 3.4 Calculer le montant de la commission (nombre de contrats * montant unitaire)
+        const unitAmount = applicableRule.unitAmount || 0; 
+        const amount = calculateCommissionAmount(contractsCount, unitAmount);
         
         if (!amount) continue; // Pas de montant à commissionner
         
-        // 3.4 Créer la commission
+        // 3.5 Créer la commission
         const { error: insertError } = await supabase
           .from("commissions")
           .insert({

@@ -18,7 +18,6 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
   getTierLabel
 }) => {
   // Utiliser des règles de commission par défaut si aucune n'est fournie
-  // Cela permet d'éviter les problèmes d'affichage en cas d'erreur de connexion à la base de données
   const hasRules = commissionRules && commissionRules.length > 0;
   const rules = hasRules ? commissionRules : [
     {
@@ -26,31 +25,31 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
       tier: CommissionTier.TIER_1,
       minContracts: 1,
       maxContracts: 10,
-      percentage: 10,
-      amount: 500
+      percentage: 0,
+      unitAmount: 500
     },
     {
       id: "default-tier-2",
       tier: CommissionTier.TIER_2,
       minContracts: 11,
       maxContracts: 20,
-      percentage: 15,
-      amount: 1000
+      percentage: 0,
+      unitAmount: 1000
     },
     {
       id: "default-tier-3",
       tier: CommissionTier.TIER_3,
       minContracts: 21,
       maxContracts: 30,
-      percentage: 20,
-      amount: 1500
+      percentage: 0,
+      unitAmount: 1500
     },
     {
       id: "default-tier-4",
       tier: CommissionTier.TIER_4,
       minContracts: 31,
-      percentage: 25,
-      amount: 2000
+      percentage: 0,
+      unitAmount: 2000
     }
   ];
 
@@ -86,10 +85,10 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
                 {getTierLabel(rule.tier)}
               </Badge>
               <div className="mt-2 text-2xl font-bold">
-                {rule.percentage}%
+                {formatCurrency(rule.unitAmount)}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                {rule.amount ? formatCurrency(rule.amount) : 'Montant variable'}
+                par contrat validé
               </div>
               <div className="text-xs mt-3 text-muted-foreground">
                 {rule.minContracts} contrat{rule.minContracts > 1 ? 's' : ''} minimum
@@ -99,8 +98,8 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
           ))}
         </div>
         <div className="mt-6 text-sm text-muted-foreground">
-          <p>Les commissions sont calculées à la fin de chaque mois en fonction du nombre total de contrats validés.</p>
-          <p className="mt-2">Les pourcentages sont appliqués sur le montant total des contrats signés dans la période.</p>
+          <p>Les commissions sont calculées à la fin de chaque mois en fonction du nombre de contrats validés.</p>
+          <p className="mt-2">Pour chaque contrat validé dans un palier, une commission fixe est attribuée selon le montant unitaire de ce palier.</p>
         </div>
       </CardContent>
     </Card>

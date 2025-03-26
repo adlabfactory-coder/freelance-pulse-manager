@@ -8,14 +8,15 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { CommissionTier } from "@/types/commissions";
+import LoadingIndicator from "./database/LoadingIndicator";
 
 interface CommissionRule {
   id?: string;
   tier: string;
   minContracts: number;
-  percentage: number;
+  percentage?: number;
   maxContracts?: number | null;
-  amount?: number | null;
+  unitAmount: number;
 }
 
 const CommissionSettings: React.FC = () => {
@@ -23,10 +24,10 @@ const CommissionSettings: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tiers, setTiers] = useState<CommissionRule[]>([
-    { tier: CommissionTier.TIER_1, minContracts: 0, percentage: 10 },
-    { tier: CommissionTier.TIER_2, minContracts: 11, percentage: 15, maxContracts: 20 },
-    { tier: CommissionTier.TIER_3, minContracts: 21, percentage: 20, maxContracts: 30 },
-    { tier: CommissionTier.TIER_4, minContracts: 31, percentage: 25 },
+    { tier: CommissionTier.TIER_1, minContracts: 0, unitAmount: 500, maxContracts: 10 },
+    { tier: CommissionTier.TIER_2, minContracts: 11, unitAmount: 1000, maxContracts: 20 },
+    { tier: CommissionTier.TIER_3, minContracts: 21, unitAmount: 1500, maxContracts: 30 },
+    { tier: CommissionTier.TIER_4, minContracts: 31, unitAmount: 2000 },
   ]);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const CommissionSettings: React.FC = () => {
         setTiers(data.map(rule => ({
           ...rule,
           minContracts: rule.minContracts || 0,
-          percentage: rule.percentage || 0,
+          unitAmount: rule.unit_amount || rule.amount || 0,
           tier: mapTierToEnum(rule.tier)
         })));
       }
@@ -97,7 +98,7 @@ const CommissionSettings: React.FC = () => {
 
   const handleInputChange = (index: number, field: keyof CommissionRule, value: string) => {
     const newTiers = [...tiers];
-    if (field === 'minContracts' || field === 'percentage' || field === 'maxContracts' || field === 'amount') {
+    if (field === 'minContracts' || field === 'unitAmount' || field === 'maxContracts') {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         // @ts-ignore - Nous savons que c'est un champ numérique
@@ -118,9 +119,9 @@ const CommissionSettings: React.FC = () => {
         ...tier,
         tier: mapEnumToTier(tier.tier),
         minContracts: isNaN(tier.minContracts) ? 0 : tier.minContracts,
-        percentage: isNaN(tier.percentage) ? 0 : tier.percentage,
+        unitAmount: isNaN(tier.unitAmount) ? 0 : tier.unitAmount,
         maxContracts: tier.maxContracts && !isNaN(tier.maxContracts) ? tier.maxContracts : null,
-        amount: tier.amount && !isNaN(tier.amount) ? tier.amount : null
+        percentage: 0 // Non utilisé dans la nouvelle logique
       }));
 
       // Supprimer les anciennes règles
@@ -137,9 +138,9 @@ const CommissionSettings: React.FC = () => {
         .insert(validTiers.map(tier => ({
           tier: tier.tier,
           minContracts: tier.minContracts,
-          percentage: tier.percentage,
           maxContracts: tier.maxContracts,
-          amount: tier.amount
+          unit_amount: tier.unitAmount,
+          percentage: 0 // Non utilisé dans la nouvelle logique
         })));
 
       if (insertError) throw insertError;
@@ -164,18 +165,14 @@ const CommissionSettings: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center p-6">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <LoadingIndicator />;
   }
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-sm text-muted-foreground mb-4">
-          Configurez les pourcentages et les seuils pour chaque palier de commission. Les freelances seront rémunérés en fonction du nombre de contrats validés dans chaque palier.
+          Configurez les montants fixes pour chaque palier de commission. Les freelances recevront une commission par contrat validé en fonction du palier atteint.
         </p>
       </div>
       
@@ -184,22 +181,21 @@ const CommissionSettings: React.FC = () => {
           <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b pb-4">
             <div>
               <Label className="text-base font-medium">
-                {tier.tier === CommissionTier.TIER_1 ? 'Bronze (Palier 1)' :
-                 tier.tier === CommissionTier.TIER_2 ? 'Silver (Palier 2)' :
-                 tier.tier === CommissionTier.TIER_3 ? 'Gold (Palier 3)' :
-                 'Platinum (Palier 4)'}
+                {tier.tier === CommissionTier.TIER_1 ? 'Palier 1 (Bronze)' :
+                 tier.tier === CommissionTier.TIER_2 ? 'Palier 2 (Silver)' :
+                 tier.tier === CommissionTier.TIER_3 ? 'Palier 3 (Gold)' :
+                 'Palier 4 (Platinum)'}
               </Label>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor={`percentage-${index}`}>Pourcentage (%)</Label>
+              <Label htmlFor={`unitAmount-${index}`}>Commission par contrat (MAD)</Label>
               <Input 
-                id={`percentage-${index}`} 
-                value={tier.percentage} 
-                onChange={(e) => handleInputChange(index, 'percentage', e.target.value)}
+                id={`unitAmount-${index}`} 
+                value={tier.unitAmount} 
+                onChange={(e) => handleInputChange(index, 'unitAmount', e.target.value)}
                 type="number"
                 min="0"
-                max="100"
               />
             </div>
             
@@ -215,14 +211,15 @@ const CommissionSettings: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor={`max-${index}`}>{index < 3 ? "Contrats maximum" : "Montant fixe (optionnel)"}</Label>
+              <Label htmlFor={`max-${index}`}>Contrats maximum</Label>
               <Input 
                 id={`max-${index}`} 
-                value={index < 3 ? tier.maxContracts || '' : tier.amount || ''} 
-                onChange={(e) => handleInputChange(index, index < 3 ? 'maxContracts' : 'amount', e.target.value)}
+                value={tier.maxContracts || ''} 
+                onChange={(e) => handleInputChange(index, 'maxContracts', e.target.value)}
                 type="number"
                 min="0"
-                placeholder={index < 3 ? "Optionnel" : "Montant en MAD"}
+                placeholder={index === 3 ? "Illimité" : ""}
+                disabled={index === 3}
               />
             </div>
           </div>

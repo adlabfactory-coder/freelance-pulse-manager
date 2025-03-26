@@ -9,13 +9,13 @@ import { CommissionStatus, CommissionTier } from "@/types/commissions";
 export const getTierLabel = (tier: CommissionTier): string => {
   switch (tier) {
     case CommissionTier.TIER_1:
-      return "Bronze (1-10 contrats)";
+      return "Palier 1 (1-10 devis)";
     case CommissionTier.TIER_2:
-      return "Argent (11-20 contrats)";
+      return "Palier 2 (11-20 devis)";
     case CommissionTier.TIER_3:
-      return "Or (21-30 contrats)";
+      return "Palier 3 (21-30 devis)";
     case CommissionTier.TIER_4:
-      return "Platine (31+ contrats)";
+      return "Palier 4 (31+ devis)";
     default:
       return "Inconnu";
   }
@@ -53,20 +53,20 @@ export const formatDate = (date: Date | undefined): string => {
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
-    currency: "EUR",
+    currency: "MAD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);
 };
 
 /**
- * Calcule le montant de commission en fonction du niveau et du montant
- * @param amount - Montant de base
- * @param tier - Niveau de commission
+ * Calcule le montant de commission en fonction du nombre de contrats et du montant unitaire
+ * @param contractsCount - Nombre de contrats
+ * @param unitAmount - Montant unitaire par contrat
  * @returns Montant de commission calculé
  */
-export const calculateCommissionAmount = (amount: number, percentage: number): number => {
-  return amount * (percentage / 100);
+export const calculateCommissionAmount = (contractsCount: number, unitAmount: number): number => {
+  return contractsCount * unitAmount;
 };
 
 /**

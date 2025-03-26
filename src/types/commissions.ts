@@ -1,12 +1,12 @@
 
 export type CommissionStatus = 'pending' | 'paid' | 'rejected' | 'processing';
 
-// Update CommissionTier to be a string enum, not just a type
+// Nous gardons l'énumération des paliers pour maintenir la compatibilité
 export enum CommissionTier {
-  TIER_1 = 'bronze',  // Moins de 10 contrats
-  TIER_2 = 'silver',  // 11 à 20 contrats
-  TIER_3 = 'gold',    // 21 à 30 contrats
-  TIER_4 = 'platinum' // 31+ contrats
+  TIER_1 = 'bronze',
+  TIER_2 = 'silver',
+  TIER_3 = 'gold',
+  TIER_4 = 'platinum'
 }
 
 export interface CommissionRule {
@@ -14,8 +14,9 @@ export interface CommissionRule {
   tier: CommissionTier;
   minContracts: number;
   maxContracts?: number | null;
-  percentage: number;
-  amount?: number;
+  // On ne calcule plus par pourcentage mais par montant fixe par contrat
+  unitAmount: number; // Montant fixe par contrat validé
+  percentage?: number; // Gardé pour compatibilité mais non utilisé
 }
 
 export interface Commission {
@@ -30,6 +31,9 @@ export interface Commission {
   paidDate?: Date;
   paymentRequested: boolean;
   period?: string;
+  // Nouvelles propriétés pour détailler le calcul
+  contractsCount?: number; // Nombre de contrats dans cette période
+  unitAmount?: number; // Montant unitaire appliqué
 }
 
 export interface CommissionDetails {
