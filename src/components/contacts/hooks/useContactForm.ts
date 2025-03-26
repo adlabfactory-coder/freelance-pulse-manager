@@ -5,10 +5,11 @@ import { contactService } from "@/services/contacts";
 import { ContactStatus } from "@/types/database/enums";
 import { toast } from "sonner";
 import { contactSchema, ContactFormValues } from "../schema/contactFormSchema";
+import { Contact } from "@/services/contacts/types";
 
 interface UseContactFormProps {
   onSuccess?: () => void;
-  initialData?: Partial<ContactFormValues>;
+  initialData?: Partial<ContactFormValues> & { id?: string };
   isEditing?: boolean;
 }
 

@@ -20,7 +20,6 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) =>
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<Contact>>({});
   
   const { plans, isLoading: plansLoading } = useSubscriptionPlans();
 
@@ -30,18 +29,12 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) =>
       const data = await contactService.getContactById(contactId);
       if (data) {
         setContact(data);
-        setFormData(data);
       }
       setLoading(false);
     };
     
     fetchContact();
   }, [contactId]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
   const handleStatusChange = (newStatus: ContactStatus) => {
     if (contact) {
@@ -60,15 +53,18 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) =>
     }
   };
 
-  const handleSave = async () => {
-    if (contact && formData) {
-      const result = await contactService.updateContact(contact.id, formData as any);
-      if (result) {
-        setContact({ ...contact, ...formData });
-        setEditing(false);
-        if (onUpdate) onUpdate();
+  const handleUpdateSuccess = () => {
+    // Refetch contact data after successful update
+    const refreshContact = async () => {
+      const updatedContact = await contactService.getContactById(contactId);
+      if (updatedContact) {
+        setContact(updatedContact);
       }
-    }
+      setEditing(false);
+      if (onUpdate) onUpdate();
+    };
+    
+    refreshContact();
   };
 
   if (loading) {
@@ -113,8 +109,9 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) =>
       <CardContent className="space-y-4">
         {editing ? (
           <ContactEditForm 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
+            contact={contact}
+            onSuccess={handleUpdateSuccess}
+            onCancel={() => setEditing(false)}
           />
         ) : (
           <ContactInfoDisplay contact={contact} />
@@ -129,16 +126,7 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contactId, onUpdate }) =>
         />
       </CardContent>
       <CardFooter className="flex justify-between">
-        {editing ? (
-          <>
-            <Button variant="outline" onClick={() => setEditing(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSave}>
-              Enregistrer
-            </Button>
-          </>
-        ) : (
+        {!editing && (
           <Button variant="outline" onClick={() => setEditing(true)}>
             Modifier
           </Button>
