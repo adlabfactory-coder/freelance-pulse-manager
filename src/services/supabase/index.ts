@@ -1,4 +1,5 @@
 
+import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { checkSupabaseConnection } from './connection';
 import { initializeDatabase, checkDatabaseStatus } from './setup';
@@ -11,13 +12,13 @@ import { createSubscriptionsService } from './subscriptions';
 
 // Service centralisé pour Supabase
 export const createSupabaseService = () => {
-  // Créer les services avec le client Supabase
-  const storageService = createStorageService(supabase);
-  const usersService = createUsersService(supabase);
-  const contactsService = createContactsService(supabase);
-  const quotesService = createQuotesService(supabase);
-  const commissionsService = createCommissionsService(supabase);
-  const subscriptionsService = createSubscriptionsService(supabase);
+  // Création des services avec des types génériques pour éviter les erreurs de compatibilité
+  const storageService = createStorageService(supabase as any);
+  const usersService = createUsersService(supabase as any);
+  const contactsService = createContactsService(supabase as any);
+  const quotesService = createQuotesService(supabase as any);
+  const commissionsService = createCommissionsService(supabase as any);
+  const subscriptionsService = createSubscriptionsService(supabase as any);
 
   return {
     client: supabase,

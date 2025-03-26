@@ -97,6 +97,51 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
      */
     updateUser: async (user: Partial<User> & { id: string }): Promise<ServiceResponse<User>> => {
       try {
+        // Vérifie l'utilisateur courant
+        const { data: authData } = await supabase.auth.getUser();
+        
+        if (!authData.user) {
+          return { 
+            success: false, 
+            error: "Vous devez être connecté pour effectuer cette action" 
+          };
+        }
+        
+        // Vérifier les permissions
+        const { data: currentUserData, error: userError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', authData.user.id)
+          .single();
+          
+        if (userError || !currentUserData) {
+          return { 
+            success: false, 
+            error: "Impossible de vérifier vos permissions" 
+          };
+        }
+        
+        // Seul un admin peut modifier un autre utilisateur
+        const isAdmin = currentUserData.role === UserRole.ADMIN;
+        const isSelfEdit = user.id === authData.user.id;
+        
+        if (!isAdmin && !isSelfEdit) {
+          return { 
+            success: false, 
+            error: "Vous n'avez pas les droits pour modifier cet utilisateur" 
+          };
+        }
+        
+        // Restrictions pour les modifications sensibles
+        if (!isAdmin && user.role) {
+          // Non-admins ne peuvent pas changer leur propre rôle
+          return { 
+            success: false, 
+            error: "Seul un administrateur peut modifier les rôles" 
+          };
+        }
+        
+        // Procéder à la mise à jour
         const { data, error } = await supabase
           .from('users')
           .update(user)
@@ -123,10 +168,18 @@ export const createUsersService = (supabase: SupabaseClient<Database>) => {
     },
 
     /**
-     * Crée un nouvel utilisateur
+     * Crée un nouvel utilisateur - Réservé aux administrateurs
      */
-    createUser: async (user: Omit<User, 'id'>): Promise<ServiceResponse<User>> => {
+    createUser: async (user: Omit<User, 'id'>, currentUserRole: UserRole): Promise<ServiceResponse<User>> => {
       try {
+        // Vérifier si l'utilisateur courant est un administrateur
+        if (currentUserRole !== UserRole.ADMIN) {
+          return {
+            success: false,
+            error: "Seuls les administrateurs peuvent créer de nouveaux utilisateurs"
+          };
+        }
+        
         const { data, error } = await supabase
           .from('users')
           .insert(user)

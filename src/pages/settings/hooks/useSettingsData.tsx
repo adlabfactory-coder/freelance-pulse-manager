@@ -59,11 +59,16 @@ export const useSettingsData = () => {
       if (useMockData) {
         console.log("Utilisation des données de démonstration");
         const mockUsers = supabase.getMockUsers();
-        setUsers(mockUsers);
+        // Convertir explicitement les rôles string en UserRole
+        const typedMockUsers = mockUsers.map(user => ({
+          ...user,
+          role: user.role as UserRole
+        }));
+        setUsers(typedMockUsers);
         
         // Utiliser le premier utilisateur comme utilisateur actuel
-        if (mockUsers.length > 0) {
-          const user = mockUsers[0];
+        if (typedMockUsers.length > 0) {
+          const user = typedMockUsers[0];
           setCurrentUser(user);
           setSelectedUserId(user.id);
         }
@@ -93,10 +98,15 @@ export const useSettingsData = () => {
           
           // Utiliser les données de démonstration en cas d'erreur
           const mockUsers = supabase.getMockUsers();
-          setUsers(mockUsers);
+          // Convertir explicitement les rôles string en UserRole
+          const typedMockUsers = mockUsers.map(user => ({
+            ...user,
+            role: user.role as UserRole
+          }));
+          setUsers(typedMockUsers);
           
-          if (mockUsers.length > 0) {
-            const user = mockUsers[0];
+          if (typedMockUsers.length > 0) {
+            const user = typedMockUsers[0];
             setCurrentUser(user);
             setSelectedUserId(user.id);
           }
@@ -119,10 +129,16 @@ export const useSettingsData = () => {
       // Essayer quand même de charger les données de démonstration
       try {
         const mockUsers = supabase.getMockUsers();
-        if (mockUsers.length > 0) {
-          setCurrentUser(mockUsers[0]);
-          setSelectedUserId(mockUsers[0].id);
-          setUsers(mockUsers);
+        // Convertir explicitement les rôles string en UserRole
+        const typedMockUsers = mockUsers.map(user => ({
+          ...user,
+          role: user.role as UserRole
+        }));
+        
+        if (typedMockUsers.length > 0) {
+          setCurrentUser(typedMockUsers[0]);
+          setSelectedUserId(typedMockUsers[0].id);
+          setUsers(typedMockUsers);
           setHasError(false);
         }
       } catch (e) {
@@ -155,10 +171,16 @@ export const useSettingsData = () => {
         // Essayer quand même de charger les données de démonstration
         try {
           const mockUsers = supabase.getMockUsers();
-          if (mockUsers.length > 0) {
-            setCurrentUser(mockUsers[0]);
-            setSelectedUserId(mockUsers[0].id);
-            setUsers(mockUsers);
+          // Convertir explicitement les rôles string en UserRole
+          const typedMockUsers = mockUsers.map(user => ({
+            ...user,
+            role: user.role as UserRole
+          }));
+          
+          if (typedMockUsers.length > 0) {
+            setCurrentUser(typedMockUsers[0]);
+            setSelectedUserId(typedMockUsers[0].id);
+            setUsers(typedMockUsers);
             setHasError(false);
           }
         } catch (err) {

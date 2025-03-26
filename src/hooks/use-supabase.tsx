@@ -1,5 +1,6 @@
 
 import { createSupabaseService } from '@/services/supabase';
+import { User, UserRole } from '@/types';
 
 // Hook centralisé pour accéder aux services Supabase
 export const useSupabase = () => {
@@ -22,15 +23,14 @@ export const useSupabase = () => {
     fetchUserById: supabaseService.users.fetchUserById,
     updateUser: supabaseService.users.updateUser,
     
-    // Fonctions de conversion de données
-    getMockUsers: () => {
-      // Conserver la fonction pour la retrocompatibilité
+    // Fonctions de conversion de données - Avec UserRole explicite
+    getMockUsers: (): User[] => {
       return [
         {
           id: '1',
           name: 'Admin Démo',
           email: 'admin@example.com',
-          role: 'admin',
+          role: UserRole.ADMIN,
           avatar: null,
           calendly_enabled: true,
           calendly_url: 'https://calendly.com/admin-demo',
@@ -40,7 +40,7 @@ export const useSupabase = () => {
           id: '2',
           name: 'Commercial Démo',
           email: 'commercial@example.com',
-          role: 'freelancer',
+          role: UserRole.FREELANCER,
           avatar: null,
           calendly_enabled: true,
           calendly_url: 'https://calendly.com/commercial-demo',
@@ -50,7 +50,7 @@ export const useSupabase = () => {
           id: '3',
           name: 'Client Démo',
           email: 'client@example.com',
-          role: 'client',
+          role: UserRole.CLIENT,
           avatar: null,
           calendly_enabled: false,
           calendly_url: '',

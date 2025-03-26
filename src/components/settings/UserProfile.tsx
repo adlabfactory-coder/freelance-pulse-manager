@@ -45,6 +45,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
           const mockUsers = getMockUsers();
           userData = mockUsers.find(u => u.id === userId) || null;
           if (userData) {
+            // Convertir explicitement le rôle en UserRole
+            userData = {
+              ...userData,
+              role: userData.role as UserRole
+            };
             console.log("Utilisateur trouvé dans les données de démonstration:", userData);
           }
         }
@@ -96,6 +101,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
     
     setIsSubmitting(true);
     try {
+      // Préparation des données à mettre à jour
       const updatedUser = {
         id: userId,
         name,
@@ -103,23 +109,48 @@ const UserProfile: React.FC<UserProfileProps> = ({ userId, currentUser }) => {
         role
       };
       
-      const success = await supabase.updateUser(updatedUser);
-
-      if (success) {
+      // Vérifier si l'utilisateur est administrateur
+      const isAdmin = currentUser.role === UserRole.ADMIN;
+      
+      // Seuls les administrateurs peuvent effectuer certaines modifications
+      if (!isAdmin && currentUser.id !== userId) {
         toast({
-          title: "Profil mis à jour",
-          description: "Les informations du profil ont été enregistrées avec succès.",
+          variant: "destructive",
+          title: "Accès refusé",
+          description: "Vous n'avez pas les droits pour modifier cet utilisateur.",
         });
-        
-        // Update local user data
-        if (user) {
-          setUser({
-            ...user,
-            name,
-            email,
-            role
+        return;
+      }
+      
+      try {
+        // Tenter la mise à jour via Supabase
+        const { success } = await supabase.updateUser(updatedUser);
+
+        if (success) {
+          toast({
+            title: "Profil mis à jour",
+            description: "Les informations du profil ont été enregistrées avec succès.",
           });
+          
+          // Update local user data
+          if (user) {
+            setUser({
+              ...user,
+              name,
+              email,
+              role
+            });
+          }
+        } else {
+          throw new Error("Échec de la mise à jour du profil");
         }
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour du profil:", error);
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Une erreur est survenue lors de l'enregistrement du profil.",
+        });
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil:", error);
