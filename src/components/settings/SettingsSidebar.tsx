@@ -9,8 +9,7 @@ import {
   Briefcase,
   BarChart3,
   Key,
-  DollarSign,
-  UserCog
+  DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -81,18 +80,6 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ currentUser, isAdmin,
               to="/settings/users"
               label="Utilisateurs"
               icon={<Users className="h-5 w-5" />}
-            />
-            
-            <SettingsLink
-              to="/settings/roles"
-              label="Rôles & Permissions"
-              icon={<UserCog className="h-5 w-5" />}
-            />
-            
-            <SettingsLink
-              to="/settings/freelancers"
-              label="Freelances"
-              icon={<Briefcase className="h-5 w-5" />}
             />
             
             <SettingsLink

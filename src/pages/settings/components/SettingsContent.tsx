@@ -3,13 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import UserProfileTabs from "@/components/settings/tabs/UserTabs";
 import SecurityTab from "@/components/settings/tabs/SecurityTab";
-import UsersManagement from "@/components/settings/UsersManagement";
-import FreelancerManagement from "@/components/settings/FreelancerManagement";
+import UsersManagementTabs from "@/components/settings/UsersManagementTabs";
 import ServicesSettings from "@/components/settings/ServicesSettings";
 import DatabaseTab from "@/components/settings/DatabaseTab";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 import CommissionSettingsTab from "@/pages/settings/components/CommissionSettingsTab";
-import RoleSettingsTab from "@/pages/settings/components/RoleSettingsTab";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -71,11 +69,9 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
         {/* Admin & Super Admin routes */}
         {isAdminOrSuperAdmin && (
           <>
-            <Route path="users" element={<UsersManagement onSelectUser={onSelectUser} />} />
-            <Route path="freelancers" element={<FreelancerManagement />} />
+            <Route path="users" element={<UsersManagementTabs onSelectUser={onSelectUser} />} />
             <Route path="services" element={<ServicesSettings />} />
             <Route path="commissions" element={<CommissionSettingsTab />} />
-            <Route path="roles" element={<RoleSettingsTab />} />
           </>
         )}
         
