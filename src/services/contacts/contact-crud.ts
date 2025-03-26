@@ -50,7 +50,7 @@ import { toast } from 'sonner';
 
 // Pour rétrocompatibilité, on expose aussi les fonctions individuellement
 export const getContacts = contactCrudService.getContacts;
-export const addContact = contactCrudService.addContact;
+export const addContact = contactCreateUpdateService.addContact;
 export const getContactById = contactCrudService.getContactById;
 export const deleteContact = contactCrudService.deleteContact;
 export const updateContact = contactCrudService.updateContact;

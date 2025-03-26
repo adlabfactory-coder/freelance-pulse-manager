@@ -52,6 +52,11 @@ export const contactCreateUpdateService = {
     }
   },
 
+  // Alias for createContact (for backward compatibility)
+  async addContact(contactData: ContactFormInput): Promise<string | null> {
+    return this.createContact(contactData);
+  },
+
   // Update an existing contact
   async updateContact(id: string, contactData: Partial<ContactFormInput>): Promise<boolean> {
     try {

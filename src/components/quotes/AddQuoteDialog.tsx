@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Dialog,
@@ -5,36 +6,66 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import QuoteForm from "./form/QuoteForm";
-import { useQuoteForm } from "@/hooks/useQuoteForm";
+import { useQuoteForm } from "../quotes/hooks/useQuoteForm";
 
 interface AddQuoteDialogProps {
   onQuoteAdded?: () => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onQuoteCreated?: () => void;
+  initialContactId?: string;
 }
 
-export function AddQuoteDialog({ onQuoteAdded, trigger }: AddQuoteDialogProps) {
-  const [open, setOpen] = React.useState(false);
+export function AddQuoteDialog({ 
+  onQuoteAdded, 
+  trigger, 
+  open: controlledOpen, 
+  onOpenChange: setControlledOpen,
+  onQuoteCreated,
+  initialContactId
+}: AddQuoteDialogProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  
+  // Use either controlled or internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = setControlledOpen || setInternalOpen;
 
   const handleDiscard = () => {
     setOpen(false);
   };
 
-  const quoteForm = useQuoteForm({
-    onSuccess: () => {
-      setOpen(false);
-      if (onQuoteAdded) {
-        onQuoteAdded();
-      }
+  const handleSuccess = () => {
+    setOpen(false);
+    if (onQuoteAdded) {
+      onQuoteAdded();
     }
+    if (onQuoteCreated) {
+      onQuoteCreated();
+    }
+  };
+
+  const quoteForm = useQuoteForm({
+    onSuccess: handleSuccess,
+    onCloseDialog: setOpen
   });
 
-  const onCloseDialog = () => {
-    setOpen(false);
-  };
+  React.useEffect(() => {
+    if (open && initialContactId) {
+      quoteForm.setContactId(initialContactId);
+    }
+  }, [open, initialContactId]);
+
+  React.useEffect(() => {
+    if (open) {
+      quoteForm.loadData();
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -53,11 +84,8 @@ export function AddQuoteDialog({ onQuoteAdded, trigger }: AddQuoteDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <QuoteForm
-          form={quoteForm.form}
-          isSubmitting={quoteForm.isSubmitting}
-          onSubmit={quoteForm.onSubmit}
+          form={quoteForm}
           onDiscard={handleDiscard}
-          onCloseDialog={onCloseDialog}
         />
       </DialogContent>
     </Dialog>
