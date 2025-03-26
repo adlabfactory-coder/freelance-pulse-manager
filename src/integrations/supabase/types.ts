@@ -603,6 +603,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_appointment: {
+        Args: {
+          appointment_id: string
+          freelancer_id: string
+        }
+        Returns: undefined
+      }
       check_table_exists: {
         Args: {
           table_name: string
@@ -611,6 +618,24 @@ export type Database = {
       }
       clean_old_soft_deleted_records: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      create_appointment: {
+        Args: {
+          appointment_data: Json
+        }
+        Returns: Json
+      }
+      create_auto_assign_appointment: {
+        Args: {
+          appointment_data: Json
+        }
+        Returns: Json
+      }
+      decline_appointment: {
+        Args: {
+          appointment_id: string
+        }
         Returns: undefined
       }
       execute_sql: {

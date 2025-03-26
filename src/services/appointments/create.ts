@@ -123,11 +123,9 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       return null;
     }
     
-    // Remplacer la valeur spéciale freelancerId par null pour indiquer que c'est en attente d'attribution
+    // Préparer les données pour l'auto-assignation
     const autoAssignData = {
       ...appointmentData,
-      freelancerId: null, // Sera attribué lors de l'acceptation
-      status: 'pending' as Appointment['status'],
       date: appointmentDate.toISOString()
     };
     
