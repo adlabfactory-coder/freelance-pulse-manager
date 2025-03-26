@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CommissionRule, CommissionTier } from "@/types/commissions";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, MessageCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CommissionTiersProps {
@@ -87,8 +87,14 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         <div className="mt-6 text-sm text-muted-foreground">
           <p>Les commissions sont calculées à la fin de chaque mois en fonction du nombre de contrats validés.</p>
           <p className="mt-2">Pour chaque contrat validé dans un palier, une commission fixe est attribuée selon le montant unitaire de ce palier.</p>
-          <p className="mt-2 font-medium">Ce système a remplacé l'ancien mode de calcul par pourcentage du montant des contrats.</p>
         </div>
+        
+        <Alert className="mt-4 bg-blue-50 border-blue-100">
+          <MessageCircle className="h-4 w-4 text-blue-500" />
+          <AlertDescription>
+            Pour toute question concernant le calcul de vos commissions ou les règles applicables, veuillez contacter l'administrateur via le bouton WhatsApp en haut à droite.
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, AlertCircle } from "lucide-react";
+import { Info, AlertCircle, MessageCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const CommissionExplanation: React.FC = () => {
@@ -14,14 +14,6 @@ const CommissionExplanation: React.FC = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Alert className="mb-4 bg-primary/10 border-primary/30">
-          <AlertCircle className="h-4 w-4 text-primary" />
-          <AlertDescription>
-            Le nouveau système de commissionnement est passé d'un pourcentage du montant des contrats 
-            à un montant fixe par contrat validé, selon le palier atteint.
-          </AlertDescription>
-        </Alert>
-
         <div className="space-y-4 text-sm">
           <p>
             Les commissions sont calculées sur la base du nombre de contrats validés par mois. 
@@ -51,10 +43,12 @@ const CommissionExplanation: React.FC = () => {
             </div>
           </div>
           
-          <p className="italic text-muted-foreground mt-2">
-            Note: Pour toute question concernant le calcul de vos commissions ou les règles applicables, 
-            veuillez contacter votre responsable.
-          </p>
+          <Alert className="bg-blue-50 border-blue-100 mt-4">
+            <MessageCircle className="h-4 w-4 text-blue-500" />
+            <AlertDescription>
+              Pour toute question concernant vos commissions, veuillez contacter l'administrateur en utilisant le bouton WhatsApp en haut à droite de l'écran.
+            </AlertDescription>
+          </Alert>
         </div>
       </CardContent>
     </Card>
