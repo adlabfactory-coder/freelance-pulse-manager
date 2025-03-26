@@ -61,13 +61,13 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <ClientSelector
           contacts={contacts}
-          selectedContactId={quoteData.contactId}
+          contactId={quoteData.contactId}
           onSelect={(contactId) => onQuoteDataChange({ ...quoteData, contactId })}
         />
         
         <FreelancerSelector
           freelancers={freelancers}
-          selectedFreelancerId={quoteData.freelancerId}
+          freelancerId={quoteData.freelancerId}
           onSelect={(freelancerId) => onQuoteDataChange({ ...quoteData, freelancerId })}
         />
       </div>
