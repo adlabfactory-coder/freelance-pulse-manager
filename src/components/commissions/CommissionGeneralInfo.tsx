@@ -2,10 +2,11 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency, formatPeriod, getTierLabel } from "@/utils/commission";
+import { formatPeriod, getTierLabel } from "@/utils/commission";
 import { CommissionTier } from "@/types/commissions";
 import { User, DollarSign, Calendar } from "lucide-react";
 import { CommissionDetail } from "@/hooks/use-commission-detail";
+import { formatCurrency } from "@/utils/format";
 
 interface CommissionGeneralInfoProps {
   commission: CommissionDetail;

@@ -1,3 +1,4 @@
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
@@ -7,11 +8,11 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-// Fonction pour formatter un prix
+// Fonction pour formatter un prix (utilisant également MAD)
 export function formatPrice(price: number): string {
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
-    currency: 'EUR'
+    currency: 'MAD'
   }).format(price);
 }
 

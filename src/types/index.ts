@@ -1,3 +1,4 @@
+
 import { ContactStatus as ContactStatusEnum } from "@/types/database/enums";
 import { Commission, CommissionStatus, CommissionTier } from "./commissions";
 
@@ -46,6 +47,17 @@ export enum ServiceType {
   SERVICE = "service",
   PRODUCT = "product",
   SUBSCRIPTION = "subscription"
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar: string | null;
+  calendly_enabled: boolean;
+  calendly_url: string;
+  calendly_sync_email: string;
 }
 
 export interface Subscription {

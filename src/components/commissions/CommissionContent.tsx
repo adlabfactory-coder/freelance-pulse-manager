@@ -6,7 +6,8 @@ import CommissionTiers from "@/components/commissions/CommissionTiers";
 import CommissionsTable from "@/components/commissions/CommissionsTable";
 import CommissionToolbar from "@/components/commissions/CommissionToolbar";
 import CommissionStatusBadge from "@/components/commissions/CommissionStatusBadge";
-import { getTierLabel, formatCurrency, formatPeriod } from "@/utils/commission";
+import { formatPeriod } from "@/utils/commission";
+import { formatCurrency } from "@/utils/format";
 
 interface CommissionContentProps {
   commissions: Commission[];
@@ -42,7 +43,7 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
       <CommissionTiers 
         commissionRules={commissionRules} 
         formatCurrency={formatCurrency} 
-        getTierLabel={getTierLabel} 
+        getTierLabel={(tier) => tier} 
       />
 
       <CommissionToolbar />
@@ -62,7 +63,7 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
           requestPayment={requestPayment}
           approvePayment={approvePayment}
           isAdmin={isAdmin}
-          getTierLabel={getTierLabel}
+          getTierLabel={(tier) => tier}
           getStatusBadge={getStatusBadge}
           formatCurrency={formatCurrency}
           formatPeriod={formatPeriod}

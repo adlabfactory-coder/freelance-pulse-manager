@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Plus } from "lucide-react";
 import { QuoteItem } from "@/types";
 import { Service } from "@/types/services";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/utils/format";
 
 interface QuoteItemFormProps {
   currentItem: Partial<QuoteItem>;
@@ -82,7 +84,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
               <SelectItem value="custom">Personnalisé</SelectItem>
               {services.map(service => (
                 <SelectItem key={service.id} value={service.id}>
-                  {service.name} - {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(service.price)}
+                  {service.name} - {formatCurrency(service.price)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -113,7 +115,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="unitPrice">Prix unitaire (€)</Label>
+            <Label htmlFor="unitPrice">Prix unitaire (MAD)</Label>
             <Input
               id="unitPrice"
               type="number"

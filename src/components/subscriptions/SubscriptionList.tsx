@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Subscription } from "@/types";
 import SubscriptionStatusBadge from "./SubscriptionStatusBadge";
+import { formatCurrency } from "@/utils/format";
 
 interface SubscriptionListProps {
   subscriptions: Subscription[];
@@ -75,7 +76,7 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptions, load
               <TableRow key={subscription.id}>
                 <TableCell className="font-medium">{subscription.clientName || "Client inconnu"}</TableCell>
                 <TableCell>{subscription.name}</TableCell>
-                <TableCell>{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(subscription.price)}</TableCell>
+                <TableCell>{formatCurrency(subscription.price)}</TableCell>
                 <TableCell>
                   <SubscriptionStatusBadge status={subscription.status} />
                 </TableCell>
