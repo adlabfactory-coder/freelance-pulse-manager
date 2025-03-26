@@ -19,10 +19,22 @@ const ProtectedRoute: React.FC = () => {
         const demoUser = localStorage.getItem('demoUser');
         if (demoUser) {
           setIsAuthenticated(true);
+          setIsLoading(false);
           return;
         }
         
-        // Sinon, vérifier la session Supabase
+        // Set up auth state listener FIRST
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event, session) => {
+            // Ne pas modifier l'état si on est en mode démo
+            if (!localStorage.getItem('demoUser')) {
+              setIsAuthenticated(!!session);
+              setIsLoading(false);
+            }
+          }
+        );
+        
+        // THEN check for existing session
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -33,31 +45,24 @@ const ProtectedRoute: React.FC = () => {
             title: "Erreur d'authentification",
             description: "Une erreur est survenue lors de la vérification de votre session. Veuillez vous reconnecter."
           });
+          setIsLoading(false);
           return;
         }
         
         setIsAuthenticated(!!data.session);
+        setIsLoading(false);
       } catch (error) {
         console.error("Erreur lors de la vérification de l'authentification:", error);
         setIsAuthenticated(false);
-      } finally {
         setIsLoading(false);
       }
     };
     
     checkAuth();
     
-    // Écouter les changements d'état d'authentification Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Ne pas modifier l'état si on est en mode démo
-        if (!localStorage.getItem('demoUser')) {
-          setIsAuthenticated(!!session);
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
+    return () => {
+      // Aucun besoin de démonter l'écouteur car il est géré par Supabase
+    };
   }, []);
 
   if (isLoading || isAuthenticated === null) {
