@@ -20,61 +20,67 @@ export function replaceTemplateVariables(template: string, data: NotificationTem
   return result;
 }
 
-// Fonction pour envoyer un email via l'Edge Function de Supabase
+// Fonction pour envoyer un email via API simulée
 export async function sendEmail(to: string, subject: string, html: string, from?: string, fromName?: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.functions.invoke('send-email', {
-      body: { to, subject, html, from, fromName }
-    });
+    // Simuler un appel API (à remplacer par votre implémentation réelle)
+    console.log(`Envoi d'email à ${to} - Sujet: ${subject}`);
+    console.log(`De: ${fromName} <${from}>`);
+    console.log(`Contenu: ${html}`);
     
-    if (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
-      return false;
-    }
+    // Pour un vrai envoi, vous utiliseriez quelque chose comme ça:
+    // const response = await fetch('/api/send-email', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ to, subject, html, from, fromName })
+    // });
+    // return response.ok;
     
     return true;
   } catch (error) {
-    console.error('Erreur inattendue lors de l\'envoi de l\'email:', error);
+    console.error('Erreur lors de l\'envoi de l\'email:', error);
     return false;
   }
 }
 
-// Fonction pour envoyer un SMS via l'Edge Function de Supabase
+// Fonction pour envoyer un SMS via API simulée
 export async function sendSms(to: string, body: string, from?: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.functions.invoke('send-sms', {
-      body: { to, body, from }
-    });
+    // Simuler un appel API (à remplacer par votre implémentation réelle)
+    console.log(`Envoi de SMS à ${to} - De: ${from || 'default'}`);
+    console.log(`Message: ${body}`);
     
-    if (error) {
-      console.error('Erreur lors de l\'envoi du SMS:', error);
-      return false;
-    }
+    // Pour un vrai envoi, vous utiliseriez quelque chose comme ça:
+    // const response = await fetch('/api/send-sms', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ to, body, from })
+    // });
+    // return response.ok;
     
     return true;
   } catch (error) {
-    console.error('Erreur inattendue lors de l\'envoi du SMS:', error);
+    console.error('Erreur lors de l\'envoi du SMS:', error);
     return false;
   }
 }
+
+// Identifiant pour les paramètres stockés localement
+const STORAGE_KEY = 'adlab_notification_settings';
 
 // Fonction pour récupérer les paramètres de notification
 export async function getNotificationSettings(): Promise<NotificationSettings | null> {
   try {
-    // Récupérer les paramètres depuis la base de données
-    const { data, error } = await supabase
-      .from('notification_settings')
-      .select('*')
-      .single();
-    
-    if (error) {
-      console.error('Erreur lors de la récupération des paramètres de notification:', error);
-      return null;
+    // D'abord vérifier dans le stockage local
+    const storedSettings = localStorage.getItem(STORAGE_KEY);
+    if (storedSettings) {
+      return JSON.parse(storedSettings);
     }
     
-    return data as NotificationSettings;
+    // Si aucun paramètre n'est trouvé, retourner null pour permettre l'initialisation par défaut
+    return null;
   } catch (error) {
-    console.error('Erreur inattendue lors de la récupération des paramètres de notification:', error);
+    console.error('Erreur lors de la récupération des paramètres de notification:', error);
     return null;
   }
 }
@@ -82,34 +88,9 @@ export async function getNotificationSettings(): Promise<NotificationSettings | 
 // Fonction pour sauvegarder les paramètres de notification
 export async function saveNotificationSettings(settings: NotificationSettings): Promise<boolean> {
   try {
-    // Vérifier si un enregistrement existe déjà
-    const { data: existingData, error: checkError } = await supabase
-      .from('notification_settings')
-      .select('id')
-      .single();
-    
-    let result;
-    
-    if (existingData) {
-      // Mettre à jour l'enregistrement existant
-      const { error } = await supabase
-        .from('notification_settings')
-        .update(settings)
-        .eq('id', existingData.id);
-      
-      if (error) throw error;
-      result = true;
-    } else {
-      // Créer un nouvel enregistrement
-      const { error } = await supabase
-        .from('notification_settings')
-        .insert([settings]);
-      
-      if (error) throw error;
-      result = true;
-    }
-    
-    return result;
+    // Sauvegarder dans le stockage local
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    return true;
   } catch (error) {
     console.error('Erreur lors de la sauvegarde des paramètres de notification:', error);
     return false;

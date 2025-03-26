@@ -56,7 +56,7 @@ const FreelancerCommissionsList: React.FC<FreelancerCommissionsListProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {filteredCommissions.map(commission => (
+          {filteredCommissions.map((commission: CommissionWithDetails) => (
             <Link 
               key={commission.id} 
               to={`/commissions/${commission.id}`} 

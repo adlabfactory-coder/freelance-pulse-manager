@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,7 +16,6 @@ import { NotificationSettings as NotificationSettingsType, EmailConfig, SmsConfi
 import { getNotificationSettings, saveNotificationSettings } from "@/services/notification-service";
 import { AlertCircle, Check, Info, Mail, MessageSquare, Save } from "lucide-react";
 
-// Constantes pour les templates par défaut
 const DEFAULT_EMAIL_TEMPLATES: Record<NotificationType, string> = {
   [NotificationType.APPOINTMENT_CREATED]: `Nouveau rendez-vous planifié
 <h2>Un nouveau rendez-vous a été créé</h2>
@@ -75,7 +73,6 @@ const DEFAULT_SMS_TEMPLATES: Record<NotificationType, string> = {
   [NotificationType.SUBSCRIPTION_CANCELLED]: `AdLab Hub: L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.`
 };
 
-// Types de destinataires possibles
 const RECIPIENT_OPTIONS = [
   { value: "admin", label: "Administrateurs" },
   { value: "superadmin", label: "Super Administrateurs" },
@@ -84,7 +81,6 @@ const RECIPIENT_OPTIONS = [
   { value: "client", label: "Clients" }
 ];
 
-// Fonction utilitaire pour créer les règles par défaut
 const createDefaultRules = (): NotificationRule[] => {
   return Object.values(NotificationType).map(type => ({
     id: crypto.randomUUID(),
@@ -97,7 +93,6 @@ const createDefaultRules = (): NotificationRule[] => {
   }));
 };
 
-// Fonction utilitaire pour créer des paramètres par défaut
 const createDefaultSettings = (): NotificationSettingsType => {
   return {
     id: crypto.randomUUID(),
@@ -117,7 +112,6 @@ const createDefaultSettings = (): NotificationSettingsType => {
   };
 };
 
-// Fonction pour formater le nom du type de notification
 const formatNotificationType = (type: NotificationType): string => {
   const mapping: Record<NotificationType, string> = {
     [NotificationType.APPOINTMENT_CREATED]: "Création d'un rendez-vous",
@@ -146,20 +140,16 @@ const NotificationSettings: React.FC = () => {
   const [testTemplateTab, setTestTemplateTab] = useState("email");
   const supabase = useSupabase();
   
-  // Charger les paramètres au chargement
   useEffect(() => {
     const loadSettings = async () => {
       try {
         setLoading(true);
         const data = await getNotificationSettings();
         
-        // Si aucun paramètre n'existe, créer des paramètres par défaut
         if (!data) {
           setSettings(createDefaultSettings());
         } else {
-          // Si des paramètres existent, les utiliser
           setSettings(data);
-          // Si un type existe, sélectionner la première règle
           if (data.rules && data.rules.length > 0) {
             setSelectedRuleId(data.rules[0].id);
           }
@@ -179,7 +169,6 @@ const NotificationSettings: React.FC = () => {
     loadSettings();
   }, []);
   
-  // Sauvegarder les paramètres
   const handleSave = async () => {
     if (!settings) return;
     
@@ -208,7 +197,6 @@ const NotificationSettings: React.FC = () => {
     }
   };
   
-  // Mettre à jour les paramètres d'email
   const updateEmailSettings = (update: Partial<EmailConfig>) => {
     if (!settings) return;
     
@@ -221,7 +209,6 @@ const NotificationSettings: React.FC = () => {
     });
   };
   
-  // Mettre à jour les paramètres SMS
   const updateSmsSettings = (update: Partial<SmsConfig>) => {
     if (!settings) return;
     
@@ -234,7 +221,6 @@ const NotificationSettings: React.FC = () => {
     });
   };
   
-  // Mettre à jour une règle de notification
   const updateRule = (ruleId: string, update: Partial<NotificationRule>) => {
     if (!settings) return;
     
@@ -246,20 +232,16 @@ const NotificationSettings: React.FC = () => {
     });
   };
   
-  // Récupérer la règle sélectionnée
   const selectedRule = settings?.rules.find(rule => rule.id === selectedRuleId);
   
-  // Gérer la sélection des destinataires
   const handleRecipientsChange = (ruleId: string, value: string[]) => {
     updateRule(ruleId, { recipients: value });
   };
   
-  // Envoyer un email de test
   const sendTestEmail = async () => {
     if (!testTo || !settings || !selectedRule) return;
     
     try {
-      // Simuler des données de test pour le template
       const testData = {
         freelancerName: "John Doe",
         appointmentTitle: "Consultation initiale",
@@ -277,7 +259,6 @@ const NotificationSettings: React.FC = () => {
         subscriptionInterval: "mois"
       };
       
-      // Récupérer le template en fonction du type sélectionné
       const rule = settings.rules.find(r => r.type === testTemplateType);
       
       if (!rule) {
@@ -297,29 +278,30 @@ const NotificationSettings: React.FC = () => {
         subject = emailLines[0].trim();
         content = emailLines.slice(1).join('\n');
         
-        // Remplacer les variables
         Object.entries(testData).forEach(([key, value]) => {
           const regex = new RegExp(`{{${key}}}`, 'g');
           content = content.replace(regex, value);
         });
         
-        // Ajouter la signature si elle existe
         if (settings.email.signature) {
           content += `<br><br>${settings.email.signature}`;
         }
         
-        // Envoyer l'email via l'Edge Function
-        const { data, error } = await supabase.functions.invoke('send-email', {
-          body: { 
+        const response = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
             to: testTo, 
             subject, 
             html: content,
             from: settings.email.fromEmail,
             fromName: settings.email.fromName
-          }
+          }),
         });
         
-        if (error) throw error;
+        if (!response.ok) throw new Error('Erreur lors de l\'envoi de l\'email');
         
         toast({
           title: "Email envoyé",
@@ -328,22 +310,24 @@ const NotificationSettings: React.FC = () => {
       } else {
         content = rule.smsTemplate;
         
-        // Remplacer les variables
         Object.entries(testData).forEach(([key, value]) => {
           const regex = new RegExp(`{{${key}}}`, 'g');
           content = content.replace(regex, value);
         });
         
-        // Envoyer le SMS via l'Edge Function
-        const { data, error } = await supabase.functions.invoke('send-sms', {
-          body: { 
+        const response = await fetch('/api/send-sms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
             to: testTo, 
             body: content,
             from: settings.sms.fromNumber || undefined
-          }
+          }),
         });
         
-        if (error) throw error;
+        if (!response.ok) throw new Error('Erreur lors de l\'envoi du SMS');
         
         toast({
           title: "SMS envoyé",

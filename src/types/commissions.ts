@@ -1,7 +1,6 @@
-
 export type CommissionStatus = 'pending' | 'paid' | 'rejected' | 'processing';
 
-// Nous gardons l'énumération des paliers pour maintenir la compatibilité
+// We keep the enumeration of tiers for backward compatibility
 export enum CommissionTier {
   TIER_1 = 'bronze',
   TIER_2 = 'silver',
@@ -14,9 +13,9 @@ export interface CommissionRule {
   tier: CommissionTier;
   minContracts: number;
   maxContracts?: number | null;
-  // On ne calcule plus par pourcentage mais par montant fixe par contrat
-  unitAmount: number; // Montant fixe par contrat validé
-  percentage?: number; // Gardé pour compatibilité mais non utilisé
+  // We now calculate using a fixed amount per contract instead of a percentage
+  unitAmount: number; // Fixed amount per validated contract
+  percentage?: number; // Kept for compatibility but not used
 }
 
 export interface Commission {
@@ -31,11 +30,14 @@ export interface Commission {
   paidDate?: Date;
   paymentRequested: boolean;
   period?: string;
-  // Nouvelles propriétés pour détailler le calcul
-  contractsCount?: number; // Nombre de contrats dans cette période
-  unitAmount?: number; // Montant unitaire appliqué
+  // New properties to detail the calculation
+  contractsCount?: number; // Number of contracts in this period
+  unitAmount?: number; // Unit amount applied
+  subscriptionId?: string; // Add this to connect to subscription
+  quoteId?: string; // Add this to connect to quote
 }
 
+// Define a new interface for commission details including subscription information
 export interface CommissionDetails {
   subscriptionDetails?: {
     name?: string;
@@ -46,4 +48,5 @@ export interface CommissionDetails {
   };
 }
 
+// Create a combined type for commissions with details
 export type CommissionWithDetails = Commission & CommissionDetails;
