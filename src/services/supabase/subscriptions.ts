@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase-client';
 import { SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from '@/types';
 
@@ -91,10 +92,10 @@ export const createSubscriptionPlan = async (plan: Omit<SubscriptionPlan, 'id' |
       name: data.name,
       description: data.description,
       interval: data.interval as SubscriptionInterval,
-      price: plan.price,
-      isActive: plan.is_active,
-      code: plan.code,
-      features: plan.features,
+      price: data.price,
+      isActive: data.is_active,
+      code: data.code,
+      features: data.features,
       created_at: data.created_at ? new Date(data.created_at) : undefined,
       updated_at: data.updated_at ? new Date(data.updated_at) : undefined
     };

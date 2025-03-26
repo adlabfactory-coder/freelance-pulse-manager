@@ -8,7 +8,6 @@ import { createUsersService } from './users';
 import { createContactsService } from './contacts';
 import { createQuotesService } from './quotes';
 import { createCommissionsService } from './commissions';
-import { createSubscriptionsService } from './subscriptions';
 
 // Service centralisé pour Supabase
 export const createSupabaseService = () => {
@@ -18,7 +17,6 @@ export const createSupabaseService = () => {
   const contactsService = createContactsService(supabase as any);
   const quotesService = createQuotesService(supabase as any);
   const commissionsService = createCommissionsService(supabase as any);
-  const subscriptionsService = createSubscriptionsService();
 
   return {
     client: supabase,
@@ -32,7 +30,6 @@ export const createSupabaseService = () => {
     contacts: contactsService,
     quotes: quotesService,
     commissions: commissionsService,
-    subscriptions: subscriptionsService,
   };
 };
 
