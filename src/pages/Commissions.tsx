@@ -1,46 +1,45 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useCommissions } from "@/hooks/use-commissions";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FreelancerCommissionsList from "@/components/commissions/FreelancerCommissionsList";
 import { useAuth } from "@/hooks/use-auth";
-
-// Créons un composant séparé pour les commissions admin
-const AdminCommissionsContent: React.FC = () => {
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const { commissions, loading } = useCommissions();
-  
-  // Nous allons implémenter ce composant plus tard
-  return (
-    <div className="space-y-6">
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">Toutes les commissions</TabsTrigger>
-          <TabsTrigger value="summary">Résumé par commercial</TabsTrigger>
-        </TabsList>
-        <TabsContent value="all">
-          <div className="rounded-lg border p-4">
-            <p>Liste des commissions - {commissions.length} commissions trouvées</p>
-          </div>
-        </TabsContent>
-        <TabsContent value="summary">
-          <div className="rounded-lg border p-4">
-            <p>Aperçu des commissions par commercial - fonctionnalité à venir</p>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
+import AdminCommissionsContent from "@/components/commissions/AdminCommissionsContent";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Commissions: React.FC = () => {
-  const { isAdmin, isFreelancer } = useAuth();
+  const { isAdmin, isFreelancer, isAccountManager } = useAuth();
+  const { 
+    commissions, 
+    commissionRules, 
+    loading, 
+    requestingPayment, 
+    requestPayment,
+    approvePayment,
+    generateMonthlyCommissions
+  } = useCommissions();
+
+  // Si c'est un chargé d'affaires, afficher un message d'accès restreint
+  if (isAccountManager) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold tracking-tight">Commissions</h1>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Accès restreint</AlertTitle>
+          <AlertDescription>
+            En tant que chargé d'affaires, vous n'avez pas accès aux informations sur les commissions.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // Si c'est un freelancer, afficher la vue freelancer
   if (isFreelancer) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">Commissions</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Mes Commissions</h1>
         <FreelancerCommissionsList />
       </div>
     );
@@ -49,8 +48,16 @@ const Commissions: React.FC = () => {
   // Sinon, afficher la vue admin
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Commissions</h1>
-      <AdminCommissionsContent />
+      <h1 className="text-2xl font-bold tracking-tight">Gestion des Commissions</h1>
+      <AdminCommissionsContent 
+        commissions={commissions}
+        commissionRules={commissionRules}
+        loading={loading}
+        requestingPayment={requestingPayment}
+        requestPayment={requestPayment}
+        approvePayment={approvePayment}
+        generateMonthlyCommissions={generateMonthlyCommissions}
+      />
     </div>
   );
 };

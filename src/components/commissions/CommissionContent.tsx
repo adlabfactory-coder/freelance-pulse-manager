@@ -14,6 +14,8 @@ interface CommissionContentProps {
   loading: boolean;
   requestingPayment: boolean;
   requestPayment: (commissionId: string) => void;
+  approvePayment?: (commissionId: string) => void;
+  isAdmin?: boolean;
 }
 
 const CommissionContent: React.FC<CommissionContentProps> = ({
@@ -22,6 +24,8 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
   loading,
   requestingPayment,
   requestPayment,
+  approvePayment,
+  isAdmin = false,
 }) => {
   const navigate = useNavigate();
 
@@ -56,6 +60,8 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
           commissions={commissions}
           requestingPayment={requestingPayment}
           requestPayment={requestPayment}
+          approvePayment={approvePayment}
+          isAdmin={isAdmin}
           getTierLabel={getTierLabel}
           getStatusBadge={getStatusBadge}
           formatCurrency={formatCurrency}

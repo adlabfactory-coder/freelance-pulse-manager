@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   ColumnDef,
@@ -16,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Commission, CommissionTier } from "@/types/commissions";
-import { MoreHorizontal } from "lucide-react";
+import { CheckCircle, MoreHorizontal, XCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,8 @@ interface CommissionsTableProps {
   commissions: Commission[];
   requestingPayment: boolean;
   requestPayment: (commissionId: string) => void;
+  approvePayment?: (commissionId: string) => void;
+  isAdmin?: boolean;
   getTierLabel: (tier: CommissionTier) => string;
   getStatusBadge: (status: string, paymentRequested: boolean) => React.ReactNode;
   formatCurrency: (amount: number) => string;
@@ -40,6 +43,8 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
   commissions,
   requestingPayment,
   requestPayment,
+  approvePayment,
+  isAdmin = false,
   getTierLabel,
   getStatusBadge,
   formatCurrency,
@@ -96,12 +101,29 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
               Voir détails
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            
+            {/* Option pour demander le versement (visible par tous) */}
             <DropdownMenuItem
               onClick={() => requestPayment(row.original.id)}
-              disabled={row.original.paymentRequested || requestingPayment}
+              disabled={row.original.paymentRequested || requestingPayment || row.original.status === 'paid'}
             >
               Demander le versement
             </DropdownMenuItem>
+            
+            {/* Options réservées aux administrateurs */}
+            {isAdmin && approvePayment && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => approvePayment(row.original.id)}
+                  disabled={!row.original.paymentRequested || row.original.status === 'paid'}
+                  className="text-green-600"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Valider le paiement
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
