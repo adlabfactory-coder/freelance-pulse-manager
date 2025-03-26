@@ -1,44 +1,80 @@
 
-/**
- * Énumération des rôles utilisateurs dans l'application
- */
-export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
-  ADMIN = 'admin',
-  FREELANCER = 'freelancer',
-  ACCOUNT_MANAGER = 'account_manager',
-  CLIENT = 'client',
-}
+import { UserRole } from './index';
 
-/**
- * Constantes pour la gestion des rôles
- */
-export const USER_ROLE_LABELS = {
-  [UserRole.SUPER_ADMIN]: 'Super Administrateur',
-  [UserRole.ADMIN]: 'Administrateur',
-  [UserRole.FREELANCER]: 'Freelance',
-  [UserRole.ACCOUNT_MANAGER]: 'Chargé de compte',
-  [UserRole.CLIENT]: 'Client',
+// Définition des étiquettes des rôles pour l'affichage
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  'super_admin': 'Super Admin',
+  'admin': 'Administrateur',
+  'freelancer': 'Chargé(e) d\'affaires',
+  'account_manager': 'Chargé(e) de compte',
+  'client': 'Client'
 };
 
-/**
- * Hiérarchie des rôles (du plus élevé au moins élevé)
- */
-export const ROLE_HIERARCHY = [
+// Hiérarchie des rôles (du plus élevé au plus bas)
+export const ROLE_HIERARCHY: UserRole[] = [
   UserRole.SUPER_ADMIN,
   UserRole.ADMIN,
   UserRole.ACCOUNT_MANAGER,
   UserRole.FREELANCER,
-  UserRole.CLIENT,
+  UserRole.CLIENT
 ];
 
-/**
- * Vérifier si un rôle est au moins aussi élevé qu'un autre
- */
-export function hasMinimumRole(userRole: UserRole | string, requiredRole: UserRole | string): boolean {
-  const userRoleIndex = ROLE_HIERARCHY.indexOf(userRole as UserRole);
-  const requiredRoleIndex = ROLE_HIERARCHY.indexOf(requiredRole as UserRole);
-  
-  // Plus l'index est petit, plus le rôle est élevé
-  return userRoleIndex !== -1 && requiredRoleIndex !== -1 && userRoleIndex <= requiredRoleIndex;
+// Interface pour les permissions par rôle
+export interface RolePermission {
+  id: string;
+  name: string;
+  description: string;
+  roles: UserRole[];
 }
+
+// Permissions par défaut
+export const DEFAULT_PERMISSIONS: RolePermission[] = [
+  {
+    id: "manage_users",
+    name: "Gestion des utilisateurs",
+    description: "Créer, modifier et supprimer des utilisateurs",
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+  },
+  {
+    id: "manage_roles",
+    name: "Gestion des rôles",
+    description: "Définir les permissions pour chaque rôle",
+    roles: [UserRole.SUPER_ADMIN]
+  },
+  {
+    id: "manage_freelancers",
+    name: "Gestion des freelances",
+    description: "Ajouter et gérer des freelances",
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+  },
+  {
+    id: "view_commissions",
+    name: "Voir les commissions",
+    description: "Consulter toutes les commissions",
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER]
+  },
+  {
+    id: "manage_commissions",
+    name: "Gérer les commissions",
+    description: "Approuver et modifier les commissions",
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+  },
+  {
+    id: "manage_services",
+    name: "Gérer les services",
+    description: "Ajouter, modifier et supprimer des services",
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+  },
+  {
+    id: "database_access",
+    name: "Accès base de données",
+    description: "Accéder aux fonctionnalités avancées de la base de données",
+    roles: [UserRole.SUPER_ADMIN]
+  },
+  {
+    id: "manage_api_keys",
+    name: "Gérer les clés API",
+    description: "Créer et révoquer des clés API",
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
+  }
+];

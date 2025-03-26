@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,67 +7,17 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserRole, USER_ROLE_LABELS, ROLE_HIERARCHY } from "@/types/roles";
-import { Check, Info } from "lucide-react";
-
-interface RolePermission {
-  id: string;
-  name: string;
-  description: string;
-  roles: UserRole[];
-}
-
-const DEFAULT_PERMISSIONS: RolePermission[] = [
-  {
-    id: "manage_users",
-    name: "Gestion des utilisateurs",
-    description: "Créer, modifier et supprimer des utilisateurs",
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
-  },
-  {
-    id: "manage_freelancers",
-    name: "Gestion des freelances",
-    description: "Ajouter et gérer des freelances",
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
-  },
-  {
-    id: "view_commissions",
-    name: "Voir les commissions",
-    description: "Consulter toutes les commissions",
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER]
-  },
-  {
-    id: "approve_commissions",
-    name: "Approuver les commissions",
-    description: "Approuver les demandes de paiement de commission",
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
-  },
-  {
-    id: "manage_services",
-    name: "Gérer les services",
-    description: "Ajouter, modifier et supprimer des services",
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
-  },
-  {
-    id: "database_access",
-    name: "Accès base de données",
-    description: "Accéder aux fonctionnalités avancées de la base de données",
-    roles: [UserRole.SUPER_ADMIN]
-  },
-  {
-    id: "manage_api_keys",
-    name: "Gérer les clés API",
-    description: "Créer et révoquer des clés API",
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN]
-  }
-];
+import { Check, Info, ShieldAlert, Shield } from "lucide-react";
+import { UserRole } from "@/types";
+import { USER_ROLE_LABELS, ROLE_HIERARCHY, DEFAULT_PERMISSIONS, RolePermission } from "@/types/roles";
+import { toast } from "@/components/ui/use-toast";
 
 const RoleManagement: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [permissions, setPermissions] = useState<RolePermission[]>(DEFAULT_PERMISSIONS);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPermission, setEditingPermission] = useState<RolePermission | null>(null);
+  const [saveInProgress, setSaveInProgress] = useState(false);
 
   const handleRoleSelect = (role: UserRole) => {
     setSelectedRole(role);
@@ -85,6 +35,11 @@ const RoleManagement: React.FC = () => {
       ));
       setDialogOpen(false);
       setEditingPermission(null);
+      
+      toast({
+        title: "Permission mise à jour",
+        description: "La permission a été mise à jour avec succès.",
+      });
     }
   };
   
@@ -94,6 +49,11 @@ const RoleManagement: React.FC = () => {
     if (updatedPermission.roles.includes(role)) {
       // Ne pas permettre de retirer une permission au Super Admin
       if (role === UserRole.SUPER_ADMIN) {
+        toast({
+          title: "Action non autorisée",
+          description: "Les permissions du Super Admin ne peuvent pas être modifiées pour des raisons de sécurité.",
+          variant: "destructive",
+        });
         return;
       }
       updatedPermission.roles = updatedPermission.roles.filter(r => r !== role);
@@ -105,14 +65,38 @@ const RoleManagement: React.FC = () => {
       p.id === permission.id ? updatedPermission : p
     ));
   };
+  
+  const handleSaveAllChanges = () => {
+    setSaveInProgress(true);
+    
+    // Simulation d'un appel API pour enregistrer les permissions
+    setTimeout(() => {
+      toast({
+        title: "Configuration enregistrée",
+        description: "Les permissions des rôles ont été mises à jour avec succès.",
+      });
+      setSaveInProgress(false);
+    }, 1000);
+  };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Gestion des rôles et permissions</CardTitle>
-        <CardDescription>
-          Configurez les permissions pour chaque rôle utilisateur
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="flex items-center">
+            <Shield className="mr-2 h-5 w-5" />
+            Gestion des permissions
+          </CardTitle>
+          <CardDescription>
+            Configurez les permissions pour chaque rôle utilisateur
+          </CardDescription>
+        </div>
+        <Button 
+          onClick={handleSaveAllChanges}
+          disabled={saveInProgress}
+        >
+          {saveInProgress ? "Enregistrement..." : "Enregistrer les modifications"}
+        </Button>
       </CardHeader>
       <CardContent>
         <Alert className="mb-6">
@@ -124,13 +108,15 @@ const RoleManagement: React.FC = () => {
           </AlertDescription>
         </Alert>
         
-        <div className="flex space-x-2 mb-6">
+        <div className="flex space-x-2 mb-6 flex-wrap gap-2">
           {ROLE_HIERARCHY.map((role) => (
             <Button 
               key={role}
               variant={selectedRole === role ? "default" : "outline"} 
               onClick={() => handleRoleSelect(role)}
+              className={role === UserRole.SUPER_ADMIN ? "border-amber-500 text-amber-700" : ""}
             >
+              {role === UserRole.SUPER_ADMIN && <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" />}
               {USER_ROLE_LABELS[role]}
             </Button>
           ))}
@@ -140,8 +126,8 @@ const RoleManagement: React.FC = () => {
           <TableCaption>Liste des permissions par rôle</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead>Permission</TableHead>
-              <TableHead>Description</TableHead>
+              <TableHead className="w-[250px]">Permission</TableHead>
+              <TableHead className="w-[300px]">Description</TableHead>
               {ROLE_HIERARCHY.map((role) => (
                 <TableHead key={role} className="text-center">
                   {USER_ROLE_LABELS[role]}
@@ -163,7 +149,7 @@ const RoleManagement: React.FC = () => {
                       onClick={() => handleToggleRole(permission, role)}
                       disabled={role === UserRole.SUPER_ADMIN} // Super Admin a toujours toutes les permissions
                     >
-                      {permission.roles.includes(role) ? (
+                      {permission.roles.includes(role) || role === UserRole.SUPER_ADMIN ? (
                         <Check className="h-4 w-4 text-green-500" />
                       ) : (
                         <div className="h-4 w-4 rounded-full border border-gray-300"></div>
@@ -214,16 +200,20 @@ const RoleManagement: React.FC = () => {
                       <Button
                         key={role}
                         type="button"
-                        variant={editingPermission.roles.includes(role) ? "default" : "outline"}
+                        variant={editingPermission.roles.includes(role) || role === UserRole.SUPER_ADMIN ? "default" : "outline"}
                         size="sm"
                         onClick={() => {
+                          if (role === UserRole.SUPER_ADMIN) return; // Super Admin a toujours toutes les permissions
+                          
                           const updatedRoles = editingPermission.roles.includes(role)
                             ? editingPermission.roles.filter(r => r !== role)
                             : [...editingPermission.roles, role];
                           setEditingPermission({...editingPermission, roles: updatedRoles});
                         }}
                         disabled={role === UserRole.SUPER_ADMIN} // Super Admin a toujours toutes les permissions
+                        className={role === UserRole.SUPER_ADMIN ? "border-amber-500 text-amber-700" : ""}
                       >
+                        {role === UserRole.SUPER_ADMIN && <ShieldAlert className="mr-2 h-3 w-3 text-amber-500" />}
                         {USER_ROLE_LABELS[role]}
                       </Button>
                     ))}

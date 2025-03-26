@@ -1,13 +1,18 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoleManagement from "@/components/settings/roles/RoleManagement";
 import UsersByRole from "@/components/settings/roles/UsersByRole";
 import { useAuth } from "@/hooks/use-auth";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import useUsersDataLoader from "@/pages/settings/hooks/useUsersDataLoader";
 
 const RoleSettingsTab: React.FC = () => {
   const { isAdminOrSuperAdmin } = useAuth();
+  const { loading, error } = useUsersDataLoader();
+  const [activeTab, setActiveTab] = useState("users");
   
   if (!isAdminOrSuperAdmin) {
     return (
@@ -32,7 +37,17 @@ const RoleSettingsTab: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="users" className="space-y-4">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erreur de chargement</AlertTitle>
+              <AlertDescription>
+                Impossible de charger les données utilisateurs. Veuillez réessayer ultérieurement.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList>
               <TabsTrigger value="users">Utilisateurs par rôle</TabsTrigger>
               <TabsTrigger value="permissions">Permissions des rôles</TabsTrigger>
