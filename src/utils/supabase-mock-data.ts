@@ -19,8 +19,8 @@ export const MOCK_USERS: User[] = [
   },
   {
     id: '487fb1af-4396-49d1-ba36-8711facbb03c',
-    name: 'Commercial Démo',
-    email: 'commercial@example.com',
+    name: 'Freelancer Démo',
+    email: 'freelancer@example.com',
     role: UserRole.FREELANCER,
     avatar: null
   },
@@ -29,13 +29,6 @@ export const MOCK_USERS: User[] = [
     name: 'Chargé de Compte Démo',
     email: 'account@example.com',
     role: UserRole.ACCOUNT_MANAGER,
-    avatar: null
-  },
-  {
-    id: '2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda',
-    name: 'Client Démo',
-    email: 'client@example.com',
-    role: UserRole.CLIENT,
     avatar: null
   }
 ];
@@ -52,7 +45,6 @@ export const getMockUserById = (userId: string): User | null => {
     u.id === userId || 
     (userId === "1" && u.role === UserRole.ADMIN) ||
     (userId === "2" && u.role === UserRole.FREELANCER) ||
-    (userId === "3" && u.role === UserRole.CLIENT) ||
     (userId === "4" && u.role === UserRole.SUPER_ADMIN) ||
     (userId === "5" && u.role === UserRole.ACCOUNT_MANAGER)
   );

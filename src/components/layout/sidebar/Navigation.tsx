@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   BarChart,
@@ -71,10 +70,6 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
       "/appointments", 
       "/quotes",
       "/commissions",
-      "/settings"
-    ],
-    [UserRole.CLIENT]: [
-      "/dashboard", 
       "/settings"
     ]
   };

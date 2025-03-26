@@ -1,4 +1,3 @@
-
 import { createSupabaseService } from '@/services/supabase';
 import { User, UserRole } from '@/types';
 import { auditCreate, auditDelete, auditUpdate } from '@/services/audit-service';
@@ -84,8 +83,8 @@ export const useSupabase = () => {
         },
         {
           id: '487fb1af-4396-49d1-ba36-8711facbb03c',
-          name: 'Commercial Démo',
-          email: 'commercial@example.com',
+          name: 'Freelancer Démo',
+          email: 'freelancer@example.com',
           role: UserRole.FREELANCER,
           avatar: null
         },
@@ -94,13 +93,6 @@ export const useSupabase = () => {
           name: 'Chargé de Compte Démo',
           email: 'account@example.com',
           role: UserRole.ACCOUNT_MANAGER,
-          avatar: null
-        },
-        {
-          id: '2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda',
-          name: 'Client Démo',
-          email: 'client@example.com',
-          role: UserRole.CLIENT,
           avatar: null
         }
       ];

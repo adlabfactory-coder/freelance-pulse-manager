@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { User, UserRole } from "@/types";
@@ -11,6 +10,7 @@ import { RefreshCw } from "lucide-react";
 import { getMockUsers } from "@/utils/supabase-mock-data";
 import UserActions from "./UserActions";
 import { useAuth } from "@/hooks/use-auth";
+import { USER_ROLE_LABELS } from "@/types/roles";
 
 interface UsersManagementProps {
   onSelectUser: (userId: string) => void;
@@ -145,7 +145,6 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
               </TableHeader>
               <TableBody>
                 {users.map((user) => {
-                  // Trouver le superviseur de l'utilisateur s'il en a un
                   const supervisor = user.supervisor_id 
                     ? users.find(u => u.id === user.supervisor_id) 
                     : undefined;
@@ -158,16 +157,10 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
                     >
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        {user.role === UserRole.ADMIN 
-                          ? "Administrateur" 
-                          : user.role === UserRole.FREELANCER 
-                            ? "Chargé(e) d'affaires" 
-                            : "Client"}
-                      </TableCell>
+                      <TableCell>{USER_ROLE_LABELS[user.role]}</TableCell>
                       <TableCell>
                         {supervisor 
-                          ? `${supervisor.name} (${supervisor.role === UserRole.ADMIN ? "Admin" : supervisor.role})` 
+                          ? `${supervisor.name} (${USER_ROLE_LABELS[supervisor.role]})` 
                           : "Aucun"}
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -175,7 +168,13 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
                           user={user} 
                           currentUserRole={currentUserRole as UserRole}
                           onUserUpdated={handleRetry}
-                          supervisors={users.filter(u => u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN || u.role === UserRole.ACCOUNT_MANAGER)}
+                          supervisors={users.filter(u => 
+                            (user.role === UserRole.FREELANCER && 
+                              (u.role === UserRole.ACCOUNT_MANAGER || u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN)) ||
+                            (user.role === UserRole.ACCOUNT_MANAGER && 
+                              (u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN)) ||
+                            (user.role === UserRole.ADMIN && u.role === UserRole.SUPER_ADMIN)
+                          )}
                         />
                       </TableCell>
                     </TableRow>

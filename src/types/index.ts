@@ -1,4 +1,3 @@
-
 import { ContactStatus as ContactStatusEnum } from "@/types/database/enums";
 import { Commission, CommissionStatus, CommissionTier } from "./commissions";
 import { Service } from "./services";
@@ -7,7 +6,6 @@ export enum UserRole {
   ADMIN = "admin",
   SUPER_ADMIN = "super_admin",
   FREELANCER = "freelancer",
-  CLIENT = "client",
   ACCOUNT_MANAGER = "account_manager"
 }
 
@@ -130,8 +128,7 @@ export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): bool
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
     UserRole.ACCOUNT_MANAGER,
-    UserRole.FREELANCER,
-    UserRole.CLIENT
+    UserRole.FREELANCER
   ];
   
   const userRoleIndex = roles.indexOf(userRole);

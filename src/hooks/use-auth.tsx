@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isFreelancer: false,
   isAuthenticated: false,
-  signIn: async () => ({ id: "", name: "", email: "", role: UserRole.CLIENT, avatar: null }),
+  signIn: async () => ({ id: "", name: "", email: "", role: UserRole.ADMIN, avatar: null }),
   signOut: async () => {},
   logout: async () => {},
 });
@@ -43,13 +43,6 @@ const MOCK_USERS = [
     name: "Freelancer Test",
     email: "freelancer@example.com",
     role: UserRole.FREELANCER,
-    avatar: null
-  },
-  {
-    id: "2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda", // Remplacé ID "3"
-    name: "Client Test",
-    email: "client@example.com",
-    role: UserRole.CLIENT,
     avatar: null
   },
   {

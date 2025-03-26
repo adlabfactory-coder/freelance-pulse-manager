@@ -1,4 +1,3 @@
-
 import { UserRole } from './index';
 
 // Export UserRole for direct imports from this file
@@ -9,8 +8,7 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   'super_admin': 'Super Admin',
   'admin': 'Administrateur',
   'account_manager': 'Chargé(e) de compte',
-  'freelancer': 'Chargé(e) d\'affaires',
-  'client': 'Client'
+  'freelancer': 'Chargé(e) d\'affaires'
 };
 
 // Hiérarchie des rôles (du plus élevé au plus bas)
@@ -18,8 +16,7 @@ export const ROLE_HIERARCHY: UserRole[] = [
   UserRole.SUPER_ADMIN,
   UserRole.ADMIN,
   UserRole.ACCOUNT_MANAGER,
-  UserRole.FREELANCER,
-  UserRole.CLIENT
+  UserRole.FREELANCER
 ];
 
 // Helper function to check if one role is at least as high as another
@@ -143,7 +140,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Voir les rendez-vous",
     description: "Consulter les rendez-vous",
     category: PermissionCategory.APPOINTMENTS,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER, UserRole.CLIENT]
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
   },
   {
     id: "create_appointments",
@@ -171,7 +168,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Annuler des rendez-vous",
     description: "Annuler des rendez-vous existants",
     category: PermissionCategory.APPOINTMENTS,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER, UserRole.CLIENT]
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
   },
   {
     id: "view_all_appointments",
@@ -342,7 +339,7 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     name: "Modifier ses paramètres personnels",
     description: "Modifier ses propres paramètres",
     category: PermissionCategory.SETTINGS,
-    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER, UserRole.CLIENT]
+    roles: [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.ACCOUNT_MANAGER, UserRole.FREELANCER]
   },
   {
     id: "manage_services",
