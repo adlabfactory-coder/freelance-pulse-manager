@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { QuoteItem, QuoteStatus, Quote } from "@/types";
 import { Contact } from "@/services/contacts/types";
 import { Service } from "@/types/services";

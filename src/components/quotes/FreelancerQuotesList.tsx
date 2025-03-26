@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Quote, QuoteStatus } from "@/types";
 import { fetchQuotes } from "@/services/quote-service";
 import { useAuth } from "@/hooks/use-auth";

@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ContactDetail from "@/components/contacts/ContactDetail";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const ContactDetailPage: React.FC = () => {
   const { contactId } = useParams<{ contactId: string }>();

@@ -1,9 +1,7 @@
-
 import { supabase } from '@/lib/supabase';
 import { Service, ServiceType } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
-// Ensure we're using the correct type
 const ensureServiceType = (type: string): ServiceType => {
   if (type === 'service' || type === 'pack') {
     return type;
@@ -23,7 +21,6 @@ export const fetchServices = async (): Promise<Service[]> => {
       return [];
     }
 
-    // Transform and type-cast the data properly
     return data.map(service => ({
       id: service.id,
       name: service.name,
@@ -71,7 +68,6 @@ export const getServiceById = async (id: string): Promise<Service | null> => {
 
 export const createService = async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<Service | null> => {
   try {
-    // Map our Service type to the database schema
     const dbService = {
       name: service.name,
       description: service.description,
@@ -156,5 +152,4 @@ export const deleteService = async (id: string): Promise<boolean> => {
   }
 };
 
-// Export the Service type to make it available for importing
 export type { Service, ServiceType };

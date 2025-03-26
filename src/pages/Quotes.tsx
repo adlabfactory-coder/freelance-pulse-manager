@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Quote } from "@/types";
 import { fetchQuotes } from "@/services/quote-service";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import QuotesHeader from "@/components/quotes/QuotesHeader";
 import QuotesToolbar from "@/components/quotes/QuotesToolbar";

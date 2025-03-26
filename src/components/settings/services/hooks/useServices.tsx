@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Service } from "@/types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { 
   fetchServices, 
   createService, 
