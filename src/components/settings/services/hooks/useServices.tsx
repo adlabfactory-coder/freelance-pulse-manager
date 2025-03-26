@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Service, ServiceType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -74,8 +75,8 @@ export const useServices = () => {
 
     try {
       if (selectedService.id) {
-        // Update existing service
-        const result = await updateService(selectedService as Service);
+        // Update existing service - pass id and service separately
+        const result = await updateService(selectedService.id, selectedService as Service);
         toast({
           title: "Service mis à jour",
           description: `Le service "${selectedService.name}" a été mis à jour avec succès.`,

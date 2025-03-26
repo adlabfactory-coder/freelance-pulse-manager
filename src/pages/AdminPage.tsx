@@ -111,9 +111,10 @@ const AdminPage: React.FC = () => {
           description: "L'utilisateur a été mis à jour avec succès",
         });
       } else {
-        const newUser = await supabase.createUser(currentUser as Omit<User, "id">);
-        if (newUser) {
-          setUsers([...users, newUser as User]);
+        const result = await supabase.createUser(currentUser as Omit<User, "id">);
+        if (result && 'data' in result) {
+          const newUser = result.data as User;
+          setUsers([...users, newUser]);
           toast({
             title: "Utilisateur créé",
             description: "Le nouvel utilisateur a été créé avec succès",
@@ -305,3 +306,4 @@ const formatRole = (role: UserRole | string): string => {
 };
 
 export default AdminPage;
+

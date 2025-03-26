@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { QuoteItem, QuoteStatus, Quote } from "@/types";
 import { Contact } from "@/services/contacts/types";
-import { Service } from "@/types/services";
+import { Service } from "@/types";
 import { User } from "@/types";
 import { addDays } from "date-fns";
 import { createQuote } from "@/services/quote-service";
@@ -149,7 +149,7 @@ export const useQuoteForm = ({ onCloseDialog, onQuoteCreated }: UseQuoteFormProp
       
       const result = await createQuote(completeQuote);
       
-      if (result.success) {
+      if (result) { // Changed from result.success to just result check
         toast({
           title: "Succès",
           description: "Le devis a été créé avec succès.",

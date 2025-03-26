@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Quote, QuoteItem, QuoteStatus } from "@/types";
 import { format } from "date-fns";
@@ -73,8 +74,8 @@ export const createQuote = async (quote: Omit<Quote, 'id' | 'createdAt' | 'updat
       status: data.status as QuoteStatus,
       notes: data.notes || "",
       items: [],
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      createdAt: new Date(data.createdAt),
+      updatedAt: new Date(data.updatedAt)
     };
   } catch (error) {
     console.error("Error creating quote:", error);

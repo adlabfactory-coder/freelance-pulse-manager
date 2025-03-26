@@ -88,7 +88,7 @@ export const createSubscriptionPlan = async (plan: Omit<SubscriptionPlan, 'id' |
       id: data.id,
       name: data.name,
       description: data.description,
-      interval: data.interval,
+      interval: data.interval as SubscriptionInterval,
       price: data.price,
       isActive: data.is_active,
       code: data.code,
