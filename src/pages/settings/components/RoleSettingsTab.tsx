@@ -7,11 +7,11 @@ import UsersByRole from "@/components/settings/roles/UsersByRole";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import useUsersDataLoader from "@/pages/settings/hooks/useUsersDataLoader";
+import { useUsersDataLoader } from "@/pages/settings/hooks/useUsersDataLoader";
 
 const RoleSettingsTab: React.FC = () => {
   const { isAdminOrSuperAdmin } = useAuth();
-  const { loading, error } = useUsersDataLoader();
+  const { loading, error, users } = useUsersDataLoader();
   const [activeTab, setActiveTab] = useState("users");
   
   if (!isAdminOrSuperAdmin) {
@@ -54,7 +54,7 @@ const RoleSettingsTab: React.FC = () => {
             </TabsList>
             
             <TabsContent value="users">
-              <UsersByRole />
+              <UsersByRole forceUsers={users} />
             </TabsContent>
             
             <TabsContent value="permissions">

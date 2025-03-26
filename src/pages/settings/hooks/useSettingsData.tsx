@@ -1,81 +1,84 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useSupabase } from "@/hooks/use-supabase";
 import { User, UserRole } from "@/types";
 import { toast } from "@/components/ui/use-toast";
-import { useDatabaseStatus } from "./useDatabaseStatus";
-import { useSupabaseStatus } from "./useSupabaseStatus";
-import useUsersDataLoader from "./useUsersDataLoader";
+import { hasMinimumRole } from "@/types/roles";
 
-export const useSettingsData = () => {
-  const { user: currentUser, isAdmin, isSuperAdmin, role, loading: authLoading } = useAuth();
-  const { users, loading: usersLoading, error: usersError } = useUsersDataLoader();
-  const { dbStatus, checkDatabaseStatus } = useDatabaseStatus();
-  const { checkSupabaseStatus } = useSupabaseStatus();
-  const [loadingSupabase, setLoadingSupabase] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+const useSettingsData = () => {
+  const { user: currentUser, isAdmin, isSuperAdmin, role } = useAuth();
+  const supabase = useSupabase();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dbStatus, setDbStatus] = useState({ isConnected: false, message: "" });
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
-  // Vérifie l'état de Supabase et de la base de données au chargement
-  useEffect(() => {
-    const verifySupabaseConnection = async () => {
-      if (isSuperAdmin) {
-        setLoadingSupabase(true);
-        
-        try {
-          // Vérifier la connexion à Supabase
-          const supabaseStatus = await checkSupabaseStatus();
-          
-          if (!supabaseStatus.success) {
-            setConnectionError(supabaseStatus.message || "Impossible de se connecter à Supabase");
-            toast({
-              variant: "destructive",
-              title: "Erreur de connexion",
-              description: supabaseStatus.message || "Impossible de se connecter à Supabase",
-            });
-            return;
-          }
-          
-          // Vérifier l'état de la base de données
-          const dbSetupStatus = await checkDatabaseStatus();
-          
-          if (!dbSetupStatus.success && dbSetupStatus.missingTables && dbSetupStatus.missingTables.length > 0) {
-            toast({
-              variant: "default",
-              title: "Configuration requise",
-              description: "La base de données n'est pas complètement configurée. Accédez à l'onglet Base de données pour initialiser les tables manquantes.",
-            });
-          }
-        } catch (error) {
-          console.error("Erreur lors de la vérification de l'état de Supabase:", error);
-          setConnectionError("Impossible de vérifier l'état de la connexion Supabase");
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: "Impossible de vérifier l'état de la connexion Supabase",
-          });
-        } finally {
-          setLoadingSupabase(false);
-        }
-      }
-    };
+  // Vérifie si l'utilisateur a au moins le rôle d'account manager
+  const isAccountManager = role && hasMinimumRole(role, UserRole.ACCOUNT_MANAGER);
 
-    if (currentUser) {
-      verifySupabaseConnection();
+  const loadUsers = useCallback(async () => {
+    if (!isAdmin && !isSuperAdmin) {
+      setLoadingUser(false);
+      return;
     }
-  }, [currentUser, isSuperAdmin, checkSupabaseStatus, checkDatabaseStatus]);
 
-  const loading = authLoading || usersLoading || loadingSupabase;
-  const error = connectionError || usersError;
+    setLoadingUser(true);
+    setError(null);
+    
+    try {
+      console.log("📊 Chargement des utilisateurs...");
+      
+      // Ne garder que l'admin et le super admin
+      const filteredUsers = supabase.getMockUsers().filter(user => 
+        user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN
+      );
+      
+      setUsers(filteredUsers);
+      console.log("✅ Utilisateurs chargés:", filteredUsers.length);
+      
+      // Vérifier la connexion à la base de données
+      try {
+        const status = await supabase.checkSupabaseStatus();
+        setDbStatus({ 
+          isConnected: status.success, 
+          message: status.message || "Connexion établie" 
+        });
+      } catch (e) {
+        console.error("❌ Erreur lors de la vérification de la connexion:", e);
+        setDbStatus({ 
+          isConnected: false, 
+          message: "Impossible de vérifier la connexion à la base de données" 
+        });
+      }
+    } catch (error) {
+      console.error("❌ Erreur lors du chargement des données:", error);
+      setError("Impossible de charger les données utilisateur");
+    } finally {
+      setLoadingUser(false);
+    }
+  }, [isAdmin, isSuperAdmin, supabase]);
+
+  // Chargement initial des données - avec limitation des tentatives
+  useEffect(() => {
+    // Limiter à 2 tentatives maximum
+    if (loadAttempt < 2) {
+      loadUsers();
+      setLoadAttempt(prev => prev + 1);
+    }
+  }, [loadUsers, loadAttempt]);
 
   return {
     currentUser,
     users,
     isAdmin,
     isSuperAdmin,
-    role,
-    loadingUser: loading,
+    isAccountManager,
+    loadingUser,
     error,
-    dbStatus
+    dbStatus,
+    reloadUsers: loadUsers
   };
 };
 

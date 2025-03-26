@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,8 +11,13 @@ import useUsersDataLoader from "@/pages/settings/hooks/useUsersDataLoader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-const UsersByRole: React.FC = () => {
-  const { users, loading, error, loadUsers } = useUsersDataLoader();
+interface UsersByRoleProps {
+  forceUsers?: User[];
+}
+
+const UsersByRole: React.FC<UsersByRoleProps> = ({ forceUsers }) => {
+  const { users: fetchedUsers, loading, error, loadUsers } = useUsersDataLoader();
+  const users = forceUsers || fetchedUsers;
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -57,7 +61,7 @@ const UsersByRole: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !forceUsers) {
     return (
       <Card>
         <CardHeader>
@@ -73,7 +77,7 @@ const UsersByRole: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && !forceUsers) {
     return (
       <Card>
         <CardHeader>
