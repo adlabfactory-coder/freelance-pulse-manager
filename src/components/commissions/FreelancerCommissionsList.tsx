@@ -59,7 +59,7 @@ const FreelancerCommissionsList: React.FC = () => {
         const transformedData = data.map(item => ({
           id: item.id,
           freelancerId: item.freelancerId,
-          freelancerName: user?.name || "Freelancer inconnu", // Add the missing freelancerName property
+          freelancerName: user?.email?.split('@')[0] || "Freelancer inconnu", // Using email as fallback
           amount: item.amount,
           tier: item.tier,
           periodStart: new Date(item.periodStart),
@@ -86,7 +86,7 @@ const FreelancerCommissionsList: React.FC = () => {
     if (user?.id) {
       loadCommissions();
     }
-  }, [user?.id, toast]);
+  }, [user?.id, toast, user?.email]);
 
   const handleViewCommission = (commissionId: string) => {
     navigate(`/commissions/${commissionId}`);

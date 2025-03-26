@@ -4,30 +4,26 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Quote, QuoteStatus, Contact, User } from '@/types';
+import { Quote, QuoteStatus } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Loader2, Check, X, Send, FileText } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/utils/format';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/use-auth';
-import { updateQuoteStatus } from '@/services/quote-service';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 const QuoteDetailPage: React.FC = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isAdmin, isFreelancer } = useAuth();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const fetchQuote = async () => {
       if (!quoteId) return;
       
+      setLoading(true);
       try {
-        setLoading(true);
         const { data, error } = await supabase
           .from('quotes')
           .select(`
@@ -43,28 +39,43 @@ const QuoteDetailPage: React.FC = () => {
           throw error;
         }
 
+        // Transform the data to the required format
         const quoteData: Quote = {
           id: data.id,
           contactId: data.contactId,
           freelancerId: data.freelancerId,
-          totalAmount: data.totalAmount,
           status: data.status as QuoteStatus,
-          validUntil: new Date(data.validUntil),
           notes: data.notes,
+          validUntil: new Date(data.validUntil),
+          totalAmount: data.totalAmount,
           items: data.items,
           createdAt: new Date(data.createdAt),
           updatedAt: new Date(data.updatedAt),
-          contact: data.contact as Contact, // This ensures all properties from Contact type are included
-          freelancer: data.freelancer as User // This ensures all properties from User type are included
+          contact: {
+            id: data.contact.id,
+            name: data.contact.name,
+            email: data.contact.email,
+            phone: data.contact.phone,
+            company: data.contact.company,
+            status: data.contact.status,
+            createdAt: new Date(data.contact.createdAt),
+            updatedAt: new Date(data.contact.updatedAt)
+          },
+          freelancer: {
+            id: data.freelancer.id,
+            email: data.freelancer.email,
+            name: data.freelancer.name || data.freelancer.email.split('@')[0],
+            role: data.freelancer.role
+          }
         };
 
         setQuote(quoteData);
       } catch (error) {
-        console.error('Erreur lors de la récupération du devis:', error);
+        console.error("Error fetching quote:", error);
         toast({
-          variant: 'destructive',
-          title: 'Erreur',
-          description: 'Impossible de charger les détails du devis'
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load quote details. Please try again.",
         });
       } finally {
         setLoading(false);
@@ -74,67 +85,48 @@ const QuoteDetailPage: React.FC = () => {
     fetchQuote();
   }, [quoteId, toast]);
 
-  const handleChangeStatus = async (status: QuoteStatus) => {
-    if (!quote?.id) return;
+  const handleUpdateStatus = async (newStatus: QuoteStatus) => {
+    if (!quote) return;
     
     try {
-      setUpdating(true);
-      const success = await updateQuoteStatus(quote.id, status);
+      const { error } = await supabase
+        .from('quotes')
+        .update({ status: newStatus })
+        .eq('id', quote.id);
       
-      if (success) {
-        setQuote(prev => prev ? { ...prev, status } : null);
-        toast({
-          title: 'Statut mis à jour',
-          description: `Le devis est maintenant ${status === QuoteStatus.ACCEPTED ? 'accepté' : status === QuoteStatus.REJECTED ? 'rejeté' : status}`
-        });
-      }
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du statut:', error);
+      if (error) throw error;
+      
+      setQuote({...quote, status: newStatus});
+      
       toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible de mettre à jour le statut du devis'
+        variant: "default",
+        title: "Success",
+        description: `Quote marked as ${newStatus}`,
       });
-    } finally {
-      setUpdating(false);
+    } catch (error) {
+      console.error("Error updating quote status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update quote status",
+      });
     }
   };
-
-  const getStatusBadge = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.DRAFT:
-        return <Badge variant="outline">Brouillon</Badge>;
-      case QuoteStatus.SENT:
-        return <Badge variant="secondary">Envoyé</Badge>;
-      case QuoteStatus.ACCEPTED:
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Accepté</Badge>;
-      case QuoteStatus.REJECTED:
-        return <Badge variant="destructive">Rejeté</Badge>;
-      case QuoteStatus.EXPIRED:
-        return <Badge variant="outline" className="text-muted-foreground">Expiré</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-
+  
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Chargement des détails du devis...</p>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin" />
       </div>
     );
   }
-
+  
   if (!quote) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Devis non trouvé</h2>
-        <p className="text-muted-foreground mb-4">Ce devis n'existe pas ou a été supprimé.</p>
-        <Button onClick={() => navigate('/quotes')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour aux devis
+      <div className="flex flex-col items-center justify-center h-64">
+        <h2 className="text-xl font-medium">Quote not found</h2>
+        <Button variant="link" onClick={() => navigate('/quotes')}>
+          Back to Quotes
         </Button>
       </div>
     );
@@ -143,166 +135,123 @@ const QuoteDetailPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={() => navigate('/quotes')}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to quotes
+        </Button>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="icon" onClick={() => navigate('/quotes')}>
-            <ArrowLeft className="h-4 w-4" />
+          <Button
+            variant="outline"
+            className="flex items-center"
+            onClick={() => {/* Implement print functionality */}}
+          >
+            <FileText className="mr-2 h-4 w-4" /> Print
           </Button>
-          <h1 className="text-2xl font-bold tracking-tight">Détails du devis</h1>
-          {getStatusBadge(quote.status)}
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          {quote.status === QuoteStatus.DRAFT && (
-            <Button 
-              onClick={() => handleChangeStatus(QuoteStatus.SENT)}
-              disabled={updating}
-            >
-              {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-              Envoyer
-            </Button>
-          )}
-          {quote.status === QuoteStatus.SENT && isAdmin && (
+          
+          <Button
+            variant="outline"
+            className="flex items-center"
+            onClick={() => {/* Implement send to client functionality */}}
+          >
+            <Send className="mr-2 h-4 w-4" /> Send to client
+          </Button>
+          
+          {quote.status === 'pending' && (
             <>
-              <Button 
-                variant="outline" 
-                onClick={() => handleChangeStatus(QuoteStatus.REJECTED)}
-                disabled={updating}
+              <Button
+                variant="outline"
+                className="flex items-center text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+                onClick={() => handleUpdateStatus('accepted')}
               >
-                {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
-                Rejeter
+                <Check className="mr-2 h-4 w-4" /> Accept
               </Button>
-              <Button 
-                variant="default" 
-                onClick={() => handleChangeStatus(QuoteStatus.ACCEPTED)}
-                disabled={updating}
+              <Button
+                variant="outline"
+                className="flex items-center text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={() => handleUpdateStatus('rejected')}
               >
-                {updating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
-                Accepter
+                <X className="mr-2 h-4 w-4" /> Reject
               </Button>
             </>
           )}
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations client</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-muted-foreground">Nom</p>
-                <p className="font-medium">{quote.contact?.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{quote.contact?.email}</p>
-              </div>
-              {quote.contact?.phone && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Téléphone</p>
-                  <p className="font-medium">{quote.contact.phone}</p>
-                </div>
-              )}
-              {quote.contact?.company && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Entreprise</p>
-                  <p className="font-medium">{quote.contact.company}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Détails du devis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-muted-foreground">Référence</p>
-                <p className="font-medium">{quote.id}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Date de création</p>
-                <p className="font-medium">{formatDate(quote.createdAt)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Valide jusqu'au</p>
-                <p className="font-medium">{formatDate(quote.validUntil)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Commercial</p>
-                <p className="font-medium">{quote.freelancer?.name}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Montant</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm text-muted-foreground">Total HT</p>
-                <p className="text-2xl font-bold">{formatCurrency(quote.totalAmount)}</p>
-              </div>
-              {quote.notes && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Notes</p>
-                  <p className="font-medium">{quote.notes}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
+      
       <Card>
-        <CardHeader>
-          <CardTitle>Détail des prestations</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-2xl">Quote #{quote.id.substring(0, 8)}</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Created: {formatDate(quote.createdAt)}
+            </p>
+          </div>
+          <Badge variant="outline" className="capitalize">
+            {quote.status}
+          </Badge>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-3 text-left font-medium">Description</th>
-                  <th className="py-3 text-right font-medium">Quantité</th>
-                  <th className="py-3 text-right font-medium">Prix unitaire</th>
-                  <th className="py-3 text-right font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {quote.items && quote.items.length > 0 ? (
-                  quote.items.map((item, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-3">{item.description}</td>
-                      <td className="py-3 text-right">{item.quantity}</td>
-                      <td className="py-3 text-right">{formatCurrency(item.unitPrice)}</td>
-                      <td className="py-3 text-right">{formatCurrency(item.quantity * item.unitPrice)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-4 text-center text-muted-foreground">
-                      Aucun élément dans ce devis
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={3} className="py-3 text-right font-medium">Total HT</td>
-                  <td className="py-3 text-right font-bold">{formatCurrency(quote.totalAmount)}</td>
-                </tr>
-              </tfoot>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Client Information</h3>
+              <div className="space-y-1">
+                <p><strong>Name:</strong> {quote.contact.name}</p>
+                <p><strong>Email:</strong> {quote.contact.email}</p>
+                <p><strong>Phone:</strong> {quote.contact.phone}</p>
+                <p><strong>Company:</strong> {quote.contact.company}</p>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium mb-2">Quote Details</h3>
+              <div className="space-y-1">
+                <p><strong>Valid Until:</strong> {formatDate(quote.validUntil)}</p>
+                <p><strong>Freelancer:</strong> {quote.freelancer.name}</p>
+                <p><strong>Total Amount:</strong> {formatCurrency(quote.totalAmount)}</p>
+              </div>
+            </div>
           </div>
+          
+          <Separator className="my-6" />
+          
+          <div>
+            <h3 className="text-lg font-medium mb-4">Quote Items</h3>
+            <div className="border rounded-md">
+              <table className="min-w-full divide-y divide-border">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="px-4 py-3 text-left text-sm font-medium">Description</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Quantity</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Unit Price</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {quote.items.map((item, index) => (
+                    <tr key={index}>
+                      <td className="px-4 py-3 text-sm">{item.description}</td>
+                      <td className="px-4 py-3 text-sm text-right">{item.quantity}</td>
+                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.unitPrice)}</td>
+                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(item.quantity * item.unitPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="font-medium">
+                    <td colSpan={3} className="px-4 py-3 text-right">Total</td>
+                    <td className="px-4 py-3 text-right">{formatCurrency(quote.totalAmount)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+          
+          {quote.notes && (
+            <>
+              <Separator className="my-6" />
+              <div>
+                <h3 className="text-lg font-medium mb-2">Notes</h3>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{quote.notes}</p>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

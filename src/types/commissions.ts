@@ -1,29 +1,22 @@
 
-import { CommissionTier } from "@/types";
+export type CommissionStatus = 'pending' | 'paid' | 'rejected' | 'processing';
+
+export interface CommissionRule {
+  id: string;
+  tier: string;
+  minContracts: number;
+  percentage: number;
+}
 
 export interface Commission {
   id: string;
   freelancerId: string;
   freelancerName: string;
   amount: number;
-  tier: CommissionTier;
-  period?: {
-    startDate: Date;
-    endDate: Date;
-  };
-  periodStart?: Date;
-  periodEnd?: Date;
-  status: string;
+  tier: string;
+  periodStart: Date;
+  periodEnd: Date;
+  status: CommissionStatus;
   paidDate?: Date;
   paymentRequested: boolean;
 }
-
-export interface CommissionRule {
-  tier: CommissionTier;
-  minContracts: number;
-  maxContracts: number | null;
-  amount: number;
-}
-
-// Re-export the CommissionTier enum for convenience
-export { CommissionTier } from "@/types";
