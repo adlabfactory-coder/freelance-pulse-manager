@@ -60,12 +60,12 @@ const useSettingsData = () => {
     }
   }, [isAdmin, isSuperAdmin, supabase]);
 
-  // Chargement initial des données - avec limitation des tentatives
+  // Chargement initial des données - avec limitation à une seule tentative
   useEffect(() => {
-    // Limiter à 2 tentatives maximum
-    if (loadAttempt < 2) {
+    // Limiter à 1 tentative maximum
+    if (loadAttempt === 0) {
       loadUsers();
-      setLoadAttempt(prev => prev + 1);
+      setLoadAttempt(1);
     }
   }, [loadUsers, loadAttempt]);
 

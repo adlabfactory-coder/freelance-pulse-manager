@@ -13,14 +13,14 @@ const useUsersDataLoader = () => {
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   const loadUsers = useCallback(async () => {
-    // Si déjà tenté plusieurs fois, ne pas retenter infiniment
-    if (loadAttempt > 2) {
-      console.log("📊 Trop de tentatives de chargement, utilisation des données en cache");
+    // Limiter à une seule tentative
+    if (loadAttempt > 0) {
+      console.log("📊 Une tentative déjà effectuée, utilisation des données en cache");
       setLoading(false);
       return;
     }
     
-    setLoadAttempt(prev => prev + 1);
+    setLoadAttempt(1);
     setLoading(true);
     setError(null);
     
