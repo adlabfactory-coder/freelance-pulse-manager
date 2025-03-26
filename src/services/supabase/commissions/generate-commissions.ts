@@ -98,7 +98,9 @@ export async function generateMonthlyCommissions(
             periodStart: startDate.toISOString(),
             periodEnd: endDate.toISOString(),
             status: 'pending',
-            payment_requested: false
+            payment_requested: false,
+            contracts_count: contractsCount,
+            unit_amount: unitAmount
           });
         
         if (insertError) {

@@ -40,19 +40,22 @@ export const useCommissionRules = () => {
             id: "mock-rule-1",
             tier: CommissionTier.TIER_1,
             minContracts: 1,
-            percentage: 5
+            percentage: 5,
+            unitAmount: 500 // Ajout de la propriété manquante
           },
           {
             id: "mock-rule-2",
             tier: CommissionTier.TIER_2,
             minContracts: 5,
-            percentage: 10
+            percentage: 10,
+            unitAmount: 1000 // Ajout de la propriété manquante
           },
           {
             id: "mock-rule-3",
             tier: CommissionTier.TIER_3,
             minContracts: 10,
-            percentage: 15
+            percentage: 15,
+            unitAmount: 1500 // Ajout de la propriété manquante
           }
         ]);
       } finally {

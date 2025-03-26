@@ -50,7 +50,7 @@ const CommissionSettings: React.FC = () => {
         setTiers(data.map(rule => ({
           ...rule,
           minContracts: rule.minContracts || 0,
-          unitAmount: rule.unit_amount || rule.amount || 0,
+          unitAmount: rule.unit_amount || 0, // Correction ici: utiliser unit_amount au lieu de amount
           tier: mapTierToEnum(rule.tier)
         })));
       }
@@ -139,7 +139,7 @@ const CommissionSettings: React.FC = () => {
           tier: tier.tier,
           minContracts: tier.minContracts,
           maxContracts: tier.maxContracts,
-          unit_amount: tier.unitAmount,
+          unit_amount: tier.unitAmount, // Correction ici: mapper unitAmount vers unit_amount
           percentage: 0 // Non utilisé dans la nouvelle logique
         })));
 
