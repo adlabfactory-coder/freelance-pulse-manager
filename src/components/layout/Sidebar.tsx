@@ -20,13 +20,13 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
 
   return (
     <TooltipProvider>
-      <div
+      <aside
         className={cn(
-          "flex flex-col h-screen bg-sidebar sticky top-0 border-r border-sidebar-border transition-all duration-300 ease-in-out z-50",
+          "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out z-30",
           collapsed 
             ? "w-[70px]" 
             : isMobile 
-              ? "w-[250px] absolute" 
+              ? "w-[250px] fixed left-0" 
               : "w-[250px]"
         )}
         style={{ 
@@ -40,12 +40,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
         </div>
 
         <SidebarFooter collapsed={collapsed} renderIcon={renderIcon} />
-      </div>
+      </aside>
       
       {/* Overlay pour mobile quand sidebar est ouverte */}
       {isMobile && !collapsed && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40" 
+          className="fixed inset-0 bg-black/50 z-20" 
           onClick={onToggle}
           aria-hidden="true"
         />

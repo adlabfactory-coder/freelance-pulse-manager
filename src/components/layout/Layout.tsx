@@ -45,14 +45,14 @@ const Layout: React.FC = () => {
         collapsed={sidebarCollapsed} 
         onToggle={toggleSidebar} 
       />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header 
           toggleSidebar={toggleSidebar} 
           isDarkMode={theme === 'dark'} 
           toggleDarkMode={toggleDarkMode} 
           sidebarCollapsed={sidebarCollapsed}
         />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto w-full">
           <div className={`container mx-auto ${isMobile ? 'px-2 py-3 pb-20' : 'p-4 md:p-6'} animate-scale-in`}>
             <Outlet />
           </div>

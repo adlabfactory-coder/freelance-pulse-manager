@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useLocation } from "react-router-dom";
 import {
   BarChart,
   Calendar,
@@ -33,51 +32,21 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     { title: "Paramètres", href: "/settings", icon: Settings },
   ];
   
-  // Pas de filtrage pour les administrateurs
-  if (isAdmin) {
-    return (
-      <nav className="space-y-1 px-2">
-        {allNavItems.map((item) => (
-          <NavItem 
-            key={item.href} 
-            item={item} 
-            collapsed={collapsed} 
-            renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
-          />
-        ))}
-      </nav>
-    );
-  }
+  // Déterminer les éléments à afficher en fonction du rôle
+  let visibleItems = allNavItems;
   
-  // Filtrage pour les freelancers
   if (isFreelancer) {
     const freelancerItems = [
       "/dashboard",
       "/contacts",
-      "/appointments",
+      "/appointments", 
       "/quotes",
       "/commissions",
       "/settings"
     ];
     
-    return (
-      <nav className="space-y-1 px-2">
-        {allNavItems
-          .filter(item => freelancerItems.includes(item.href))
-          .map((item) => (
-            <NavItem 
-              key={item.href} 
-              item={item} 
-              collapsed={collapsed} 
-              renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
-            />
-          ))}
-      </nav>
-    );
-  }
-  
-  // Filtrage pour les chargés d'affaires
-  if (isAccountManager) {
+    visibleItems = allNavItems.filter(item => freelancerItems.includes(item.href));
+  } else if (isAccountManager) {
     const accountManagerItems = [
       "/dashboard",
       "/appointments",
@@ -86,35 +55,22 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
       "/settings"
     ];
     
-    return (
-      <nav className="space-y-1 px-2">
-        {allNavItems
-          .filter(item => accountManagerItems.includes(item.href))
-          .map((item) => (
-            <NavItem 
-              key={item.href} 
-              item={item} 
-              collapsed={collapsed} 
-              renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
-            />
-          ))}
-      </nav>
-    );
+    visibleItems = allNavItems.filter(item => accountManagerItems.includes(item.href));
+  } else if (!isAdmin) {
+    // Accès de base pour les autres rôles (minimum dashboard et settings)
+    visibleItems = allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
   }
   
-  // Accès de base pour les autres rôles (minimum dashboard et settings)
   return (
     <nav className="space-y-1 px-2">
-      {allNavItems
-        .filter(item => ["/dashboard", "/settings"].includes(item.href))
-        .map((item) => (
-          <NavItem 
-            key={item.href} 
-            item={item} 
-            collapsed={collapsed} 
-            renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
-          />
-        ))}
+      {visibleItems.map((item) => (
+        <NavItem 
+          key={item.href} 
+          item={item} 
+          collapsed={collapsed} 
+          renderIcon={(Icon) => <Icon className="h-5 w-5" aria-hidden="true" />} 
+        />
+      ))}
     </nav>
   );
 };

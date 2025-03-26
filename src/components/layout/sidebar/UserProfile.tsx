@@ -3,7 +3,6 @@ import React from "react";
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { User as AppUser } from "@/types"; // Import our custom User type
 
 interface UserProfileProps {
   collapsed: boolean;
@@ -16,14 +15,41 @@ const UserProfile: React.FC<UserProfileProps> = ({
 }) => {
   const { user } = useAuth();
   
-  // Safety check for user object and its properties
-  const displayName = user ? (
-    'name' in user ? user.name : (user as any).user_metadata?.name || "Utilisateur"
-  ) : "Utilisateur";
+  // Obtenir le nom d'utilisateur à afficher
+  const getUserDisplayName = () => {
+    if (!user) return "Utilisateur";
+    
+    if (typeof user === 'object') {
+      // Vérifier d'abord les propriétés directes
+      if ('name' in user && user.name) return user.name;
+      
+      // Ensuite vérifier les métadonnées (structure Supabase)
+      if ('user_metadata' in user && user.user_metadata?.name) {
+        return user.user_metadata.name;
+      }
+      
+      // Essayer d'utiliser l'email comme fallback
+      if ('email' in user && user.email) {
+        return user.email.split('@')[0];
+      }
+    }
+    
+    return "Utilisateur";
+  };
   
-  const displayEmail = user ? (
-    'email' in user ? user.email : (user as any).email || "Connecté"
-  ) : "Connecté";
+  // Obtenir l'email ou un autre identifiant
+  const getUserEmail = () => {
+    if (!user) return "Connecté";
+    
+    if (typeof user === 'object' && 'email' in user && user.email) {
+      return user.email;
+    }
+    
+    return "Utilisateur connecté";
+  };
+  
+  const displayName = getUserDisplayName();
+  const displayEmail = getUserEmail();
   
   return (
     <div
@@ -41,10 +67,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
           collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
         )}
       >
-        <div className="font-medium text-sidebar-foreground">
+        <div className="font-medium text-sidebar-foreground truncate max-w-[140px]">
           {displayName}
         </div>
-        <div className="text-xs">{displayEmail}</div>
+        <div className="text-xs truncate max-w-[140px]">{displayEmail}</div>
       </div>
     </div>
   );

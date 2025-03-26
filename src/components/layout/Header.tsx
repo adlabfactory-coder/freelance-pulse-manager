@@ -77,8 +77,8 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="flex h-16 items-center justify-between px-4 border-b">
-      <div className="flex-1">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between px-4 border-b bg-background">
+      <div className="flex items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -113,8 +113,10 @@ const Header: React.FC<HeaderProps> = ({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="" alt={user.email || 'User avatar'} />
-                  <AvatarFallback>{user.email ? getInitials(user.email.split('@')[0]) : 'U'}</AvatarFallback>
+                  <AvatarImage src="" alt="Avatar utilisateur" />
+                  <AvatarFallback>
+                    {user.email ? getInitials(user.email.split('@')[0]) : 'U'}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
