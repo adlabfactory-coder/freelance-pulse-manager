@@ -151,10 +151,38 @@ const UserTable: React.FC<UserTableProps> = ({
   allUsers,
   emptyMessage = "Aucun utilisateur trouvé" 
 }) => {
-  // Filtrer pour obtenir des superviseurs potentiels (admin ou super_admin)
-  const potentialSupervisors = allUsers.filter(
-    user => user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ACCOUNT_MANAGER
-  );
+  // Obtenir tous les superviseurs potentiels selon la hiérarchie
+  const getPotentialSupervisors = (userRole: UserRole) => {
+    switch (userRole) {
+      case UserRole.FREELANCER:
+        // Freelancers peuvent être supervisés par: Chargés de comptes, Admins, Super Admins
+        return allUsers.filter(u => 
+          u.role === UserRole.ACCOUNT_MANAGER || 
+          u.role === UserRole.ADMIN || 
+          u.role === UserRole.SUPER_ADMIN
+        );
+      
+      case UserRole.ACCOUNT_MANAGER:
+        // Chargés de comptes peuvent être supervisés par: Admins, Super Admins
+        return allUsers.filter(u => 
+          u.role === UserRole.ADMIN || 
+          u.role === UserRole.SUPER_ADMIN
+        );
+      
+      case UserRole.ADMIN:
+        // Admins sont supervisés par: Super Admin uniquement
+        return allUsers.filter(u => 
+          u.role === UserRole.SUPER_ADMIN
+        );
+      
+      case UserRole.SUPER_ADMIN:
+        // Super Admin n'a pas de superviseur
+        return [];
+      
+      default:
+        return allUsers;
+    }
+  };
   
   return (
     <Table>
@@ -184,6 +212,8 @@ const UserTable: React.FC<UserTableProps> = ({
               ? allUsers.find(u => u.id === user.supervisor_id) 
               : undefined;
               
+            const potentialSupervisors = getPotentialSupervisors(user.role as UserRole);
+              
             return (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
@@ -192,7 +222,9 @@ const UserTable: React.FC<UserTableProps> = ({
                 <TableCell>
                   {supervisor 
                     ? `${supervisor.name} (${USER_ROLE_LABELS[supervisor.role as UserRole]})` 
-                    : "Aucun"}
+                    : user.role === UserRole.SUPER_ADMIN 
+                      ? "Non applicable" 
+                      : "Aucun"}
                 </TableCell>
                 <TableCell className="text-right">
                   <UserActions 

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { deleteUser } from "@/services/user";
 import { updateUser } from "@/services/user/update-user";
+import { hasMinimumRole } from "@/types/roles";
 
 interface UserActionsProps {
   user: User;
@@ -31,6 +32,47 @@ const UserActions: React.FC<UserActionsProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const canManageUsers = currentUserRole === UserRole.ADMIN || currentUserRole === UserRole.SUPER_ADMIN;
+  
+  // Filtrer les superviseurs potentiels en fonction du rôle de l'utilisateur
+  const getPotentialSupervisors = () => {
+    if (!supervisors || supervisors.length === 0) return [];
+    
+    // Règles spécifiques en fonction du rôle
+    switch (user.role) {
+      case UserRole.FREELANCER:
+        // Freelancers peuvent être supervisés par: Chargés de comptes, Admins, Super Admins
+        return supervisors.filter(s => 
+          s.id !== user.id && 
+          (s.role === UserRole.ACCOUNT_MANAGER || 
+           s.role === UserRole.ADMIN || 
+           s.role === UserRole.SUPER_ADMIN)
+        );
+      
+      case UserRole.ACCOUNT_MANAGER:
+        // Chargés de comptes peuvent être supervisés par: Admins, Super Admins
+        return supervisors.filter(s => 
+          s.id !== user.id && 
+          (s.role === UserRole.ADMIN || 
+           s.role === UserRole.SUPER_ADMIN)
+        );
+      
+      case UserRole.ADMIN:
+        // Admins sont supervisés par: Super Admin uniquement
+        return supervisors.filter(s => 
+          s.id !== user.id && 
+          s.role === UserRole.SUPER_ADMIN
+        );
+      
+      case UserRole.SUPER_ADMIN:
+        // Super Admin n'a pas de superviseur
+        return [];
+      
+      default:
+        return supervisors.filter(s => s.id !== user.id);
+    }
+  };
+  
+  const filteredSupervisors = getPotentialSupervisors();
   
   const handleDeleteUser = async () => {
     if (!canManageUsers) {
@@ -72,11 +114,31 @@ const UserActions: React.FC<UserActionsProps> = ({
   };
   
   const handleAssignSupervisor = async () => {
-    if (!canManageUsers) {
+    if (!canManageUsers && currentUserRole !== UserRole.ACCOUNT_MANAGER) {
       toast({
         variant: "destructive",
         title: "Accès refusé",
         description: "Vous n'avez pas les droits pour assigner un superviseur."
+      });
+      return;
+    }
+    
+    // Vérifier si l'utilisateur actuel peut assigner un superviseur à cet utilisateur
+    if (user.role === UserRole.ADMIN && currentUserRole !== UserRole.SUPER_ADMIN) {
+      toast({
+        variant: "destructive",
+        title: "Accès refusé",
+        description: "Seul un Super Admin peut assigner un superviseur à un Admin."
+      });
+      return;
+    }
+    
+    // Les chargés de compte ne peuvent superviser que les freelancers
+    if (currentUserRole === UserRole.ACCOUNT_MANAGER && user.role !== UserRole.FREELANCER) {
+      toast({
+        variant: "destructive",
+        title: "Accès refusé",
+        description: "Les chargés de compte ne peuvent superviser que les freelancers."
       });
       return;
     }
@@ -113,6 +175,26 @@ const UserActions: React.FC<UserActionsProps> = ({
     }
   };
   
+  const canAssignSupervisor = () => {
+    // Super Admin peut assigner des superviseurs à tous les rôles sauf Super Admin
+    if (currentUserRole === UserRole.SUPER_ADMIN && user.role !== UserRole.SUPER_ADMIN) {
+      return true;
+    }
+    
+    // Admin peut assigner des superviseurs aux Chargés de compte et Freelancers
+    if (currentUserRole === UserRole.ADMIN && 
+        (user.role === UserRole.ACCOUNT_MANAGER || user.role === UserRole.FREELANCER)) {
+      return true;
+    }
+    
+    // Chargé de compte peut assigner uniquement pour les Freelancers
+    if (currentUserRole === UserRole.ACCOUNT_MANAGER && user.role === UserRole.FREELANCER) {
+      return true;
+    }
+    
+    return false;
+  };
+  
   return (
     <>
       <DropdownMenu>
@@ -127,17 +209,23 @@ const UserActions: React.FC<UserActionsProps> = ({
             <Edit className="mr-2 h-4 w-4" />
             Modifier
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsAssignDialogOpen(true)}>
-            <UserCheck className="mr-2 h-4 w-4" />
-            Assigner un superviseur
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Supprimer
-          </DropdownMenuItem>
+          
+          {canAssignSupervisor() && (
+            <DropdownMenuItem onClick={() => setIsAssignDialogOpen(true)}>
+              <UserCheck className="mr-2 h-4 w-4" />
+              Assigner un superviseur
+            </DropdownMenuItem>
+          )}
+          
+          {canManageUsers && (
+            <DropdownMenuItem 
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Supprimer
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       
@@ -148,41 +236,48 @@ const UserActions: React.FC<UserActionsProps> = ({
             <DialogTitle>Assigner un superviseur</DialogTitle>
             <DialogDescription>
               Sélectionnez un superviseur pour {user.name}.
+              {user.role === UserRole.SUPER_ADMIN && (
+                <div className="mt-2 text-amber-500">
+                  Les Super Admin ne peuvent pas avoir de superviseur.
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="supervisor">Superviseur</Label>
-              <Select 
-                value={selectedSupervisorId} 
-                onValueChange={setSelectedSupervisorId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un superviseur" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Aucun superviseur</SelectItem>
-                  {supervisors
-                    .filter(s => s.id !== user.id) // Éviter l'auto-assignation
-                    .map(supervisor => (
+          {user.role !== UserRole.SUPER_ADMIN && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="supervisor">Superviseur</Label>
+                <Select 
+                  value={selectedSupervisorId} 
+                  onValueChange={setSelectedSupervisorId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un superviseur" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Aucun superviseur</SelectItem>
+                    {filteredSupervisors.map(supervisor => (
                       <SelectItem key={supervisor.id} value={supervisor.id}>
                         {supervisor.name} ({supervisor.role})
                       </SelectItem>
                     ))}
-                </SelectContent>
-              </Select>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
               Annuler
             </Button>
-            <Button 
-              onClick={handleAssignSupervisor} 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Assignation..." : "Assigner"}
-            </Button>
+            {user.role !== UserRole.SUPER_ADMIN && (
+              <Button 
+                onClick={handleAssignSupervisor} 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Assignation..." : "Assigner"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
