@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { UserRole } from "@/types";
@@ -43,11 +43,16 @@ const CreateFreelancerForm: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // 1. Créer un utilisateur dans Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Créer un utilisateur dans Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        email_confirm: true,
+        options: {
+          data: {
+            name: data.name,
+            role: UserRole.FREELANCER
+          },
+        }
       });
       
       if (authError) throw authError;
@@ -56,21 +61,11 @@ const CreateFreelancerForm: React.FC = () => {
         throw new Error("Impossible de créer l'utilisateur");
       }
       
-      // 2. Ajouter l'utilisateur dans la table users avec le rôle "freelancer"
-      const { error: profileError } = await supabase
-        .from("users")
-        .insert({
-          id: authData.user.id,
-          name: data.name,
-          email: data.email,
-          role: UserRole.FREELANCER,
-        });
+      // Notre déclencheur handle_new_user se chargera automatiquement d'ajouter l'utilisateur
+      // dans la table users avec le rôle "freelancer"
       
-      if (profileError) throw profileError;
-      
-      toast({
-        title: "Freelance créé avec succès",
-        description: `${data.name} (${data.email}) a été ajouté avec le rôle de commercial`,
+      toast("Freelance créé avec succès", {
+        description: `${data.name} (${data.email}) a été ajouté avec le rôle de commercial`
       });
       
       // Réinitialiser le formulaire
@@ -79,10 +74,9 @@ const CreateFreelancerForm: React.FC = () => {
     } catch (error: any) {
       console.error("Erreur lors de la création du freelance:", error);
       
-      toast({
-        variant: "destructive",
-        title: "Erreur",
+      toast("Erreur", {
         description: error.message || "Une erreur est survenue lors de la création du compte freelance",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
