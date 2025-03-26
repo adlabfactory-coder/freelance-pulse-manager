@@ -8,15 +8,20 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import QuotesHeader from "@/components/quotes/QuotesHeader";
 import QuotesToolbar from "@/components/quotes/QuotesToolbar";
 import QuotesTable from "@/components/quotes/QuotesTable";
+import FreelancerQuotesList from "@/components/quotes/FreelancerQuotesList";
+import { useAuth } from "@/hooks/use-auth";
 
 const Quotes: React.FC = () => {
   const { toast } = useToast();
+  const { isAdmin, isFreelancer } = useAuth();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   
   const loadQuotes = async () => {
+    if (!isAdmin) return; // Ne charger pour l'admin uniquement
+    
     setLoading(true);
     try {
       const data = await fetchQuotes();
@@ -34,8 +39,10 @@ const Quotes: React.FC = () => {
   };
   
   useEffect(() => {
-    loadQuotes();
-  }, []);
+    if (isAdmin) {
+      loadQuotes();
+    }
+  }, [isAdmin]);
   
   const filteredQuotes = quotes.filter(quote => {
     if (!searchTerm) return true;
@@ -50,6 +57,24 @@ const Quotes: React.FC = () => {
 
   const handleAddClick = () => setAddDialogOpen(true);
 
+  // Si c'est un freelancer, afficher la vue freelancer
+  if (isFreelancer) {
+    return (
+      <TooltipProvider>
+        <div className="space-y-6">
+          <QuotesHeader onAddClick={handleAddClick} />
+          <FreelancerQuotesList />
+          <AddQuoteDialog 
+            open={addDialogOpen} 
+            onOpenChange={setAddDialogOpen} 
+            onQuoteCreated={() => {}} 
+          />
+        </div>
+      </TooltipProvider>
+    );
+  }
+
+  // Sinon, afficher la vue admin
   return (
     <TooltipProvider>
       <div className="space-y-6">

@@ -7,14 +7,19 @@ import ContactsHeader from "./ContactsHeader";
 import ContactsSearchFilter from "./ContactsSearchFilter";
 import ContactsImportExport from "./ContactsImportExport";
 import ContactsTable from "./ContactsTable";
+import FreelancerContactsList from "@/components/contacts/FreelancerContactsList";
+import { useAuth } from "@/hooks/use-auth";
 
 const Contacts: React.FC = () => {
+  const { isAdmin, isFreelancer } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
   
   const fetchContacts = async () => {
+    if (!isAdmin) return; // Ne charger pour l'admin uniquement
+    
     setLoading(true);
     const data = await contactService.getContacts();
     setContacts(data);
@@ -22,8 +27,10 @@ const Contacts: React.FC = () => {
   };
   
   useEffect(() => {
-    fetchContacts();
-  }, []);
+    if (isAdmin) {
+      fetchContacts();
+    }
+  }, [isAdmin]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -33,6 +40,17 @@ const Contacts: React.FC = () => {
     setStatusFilter(status);
   };
 
+  // Si c'est un freelancer, afficher la vue freelancer
+  if (isFreelancer) {
+    return (
+      <div className="space-y-6">
+        <ContactsHeader onContactAdded={() => {}} />
+        <FreelancerContactsList />
+      </div>
+    );
+  }
+
+  // Sinon, afficher la vue admin
   return (
     <div className="space-y-6">
       <ContactsHeader onContactAdded={fetchContacts} />

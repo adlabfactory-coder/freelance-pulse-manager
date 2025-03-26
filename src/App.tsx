@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
@@ -8,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
 import Appointments from "./pages/Appointments";
 import Quotes from "./pages/Quotes";
+import QuoteDetailPage from "./pages/quotes/QuoteDetailPage";
 import Subscriptions from "./pages/Subscriptions";
 import Reports from "./pages/Reports";
 import Commissions from "./pages/Commissions";
@@ -30,6 +32,7 @@ function App() {
             <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/quotes" element={<Quotes />} />
+            <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/commissions" element={<Commissions />} />
