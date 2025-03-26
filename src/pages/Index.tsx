@@ -3,9 +3,11 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { LogOut } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
@@ -13,6 +15,22 @@ const Index = () => {
       navigate("/dashboard");
     } else {
       navigate("/auth/login");
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        description: "Vous êtes déconnecté avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de vous déconnecter. Veuillez réessayer.",
+      });
     }
   };
 
@@ -24,7 +42,17 @@ const Index = () => {
         </div>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           {!loading && user ? (
-            <Button onClick={() => navigate("/dashboard")}>Dashboard</Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => navigate("/dashboard")}>Dashboard</Button>
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Se déconnecter
+              </Button>
+            </div>
           ) : (
             <Button onClick={() => navigate("/auth/login")}>Se connecter</Button>
           )}
