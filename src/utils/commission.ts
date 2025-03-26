@@ -9,13 +9,13 @@ import { CommissionStatus, CommissionTier } from "@/types/commissions";
 export const getTierLabel = (tier: CommissionTier): string => {
   switch (tier) {
     case CommissionTier.TIER_1:
-      return "Palier 1 (1-10 devis)";
+      return "Bronze (1-10 contrats)";
     case CommissionTier.TIER_2:
-      return "Palier 2 (11-20 devis)";
+      return "Argent (11-20 contrats)";
     case CommissionTier.TIER_3:
-      return "Palier 3 (21-30 devis)";
+      return "Or (21-30 contrats)";
     case CommissionTier.TIER_4:
-      return "Palier 4 (31+ devis)";
+      return "Platine (31+ contrats)";
     default:
       return "Inconnu";
   }

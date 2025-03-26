@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Commission, CommissionRule } from "@/types/commissions";
+import { Commission, CommissionRule, CommissionTier } from "@/types/commissions";
 import CommissionTiers from "@/components/commissions/CommissionTiers";
 import CommissionsTable from "@/components/commissions/CommissionsTable";
 import CommissionToolbar from "@/components/commissions/CommissionToolbar";

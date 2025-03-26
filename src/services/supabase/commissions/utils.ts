@@ -10,7 +10,7 @@ import { UserRole } from '@/types';
 export const mapTierToDb = (tier: CommissionTier): string => {
   switch (tier) {
     case CommissionTier.TIER_1: return 'bronze';
-    case CommissionTier.TIER_2: return 'silver';
+    case CommissionTier.TIER_2: return 'silver'; 
     case CommissionTier.TIER_3: return 'gold';
     case CommissionTier.TIER_4: return 'platinum';
     default: return 'bronze';

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CommissionTier } from "@/types/commissions";
 import { CommissionRuleForm } from "./types";
+import { getTierLabel } from "./TierMapper";
 
 interface CommissionTierRowProps {
   tier: CommissionRuleForm;
@@ -16,17 +17,6 @@ const CommissionTierRow: React.FC<CommissionTierRowProps> = ({
   index, 
   onInputChange 
 }) => {
-  // Détermine le titre du palier en fonction de l'énumération
-  const getTierTitle = (tierValue: string) => {
-    switch(tierValue) {
-      case CommissionTier.TIER_1: return 'Palier 1 (Bronze)';
-      case CommissionTier.TIER_2: return 'Palier 2 (Silver)';
-      case CommissionTier.TIER_3: return 'Palier 3 (Gold)';
-      case CommissionTier.TIER_4: return 'Palier 4 (Platinum)';
-      default: return 'Palier inconnu';
-    }
-  };
-
   // Vérifie si c'est le dernier palier (pour désactiver le champ max si nécessaire)
   const isLastTier = tier.tier === CommissionTier.TIER_4;
 
@@ -34,7 +24,7 @@ const CommissionTierRow: React.FC<CommissionTierRowProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b pb-4">
       <div>
         <Label className="text-base font-medium">
-          {getTierTitle(tier.tier)}
+          {getTierLabel(tier.tier)}
         </Label>
       </div>
       

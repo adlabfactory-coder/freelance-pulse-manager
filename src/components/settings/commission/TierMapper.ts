@@ -40,16 +40,16 @@ export const mapEnumToTier = (tierEnum: string): string => {
   if (!tierEnum) return 'bronze';
   
   // Normalisation du tier
-  const normalizedTier = tierEnum.toUpperCase();
+  const normalizedTier = tierEnum.toLowerCase();
   
   switch(normalizedTier) {
-    case CommissionTier.TIER_1:
+    case CommissionTier.TIER_1.toLowerCase():
       return 'bronze';
-    case CommissionTier.TIER_2:
+    case CommissionTier.TIER_2.toLowerCase():
       return 'silver';
-    case CommissionTier.TIER_3:
+    case CommissionTier.TIER_3.toLowerCase():
       return 'gold';
-    case CommissionTier.TIER_4:
+    case CommissionTier.TIER_4.toLowerCase():
       return 'platinum';
     default:
       // Si c'est déjà une valeur de base de données, la renvoyer telle quelle en minuscules

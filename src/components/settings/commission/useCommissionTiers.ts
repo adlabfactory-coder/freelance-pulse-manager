@@ -36,14 +36,37 @@ export const useCommissionTiers = () => {
       if (data && data.length > 0) {
         console.log("Data received from DB:", data);
         
-        setTiers(data.map(rule => ({
-          ...rule,
-          id: rule.id,
-          minContracts: rule.minContracts || 0,
-          unitAmount: rule.unit_amount || 0,
-          maxContracts: rule.maxContracts || null,
-          tier: mapTierToEnum(rule.tier)
-        })));
+        // Créer un mappage des paliers existants dans la DB
+        const existingTiers: Record<string, CommissionRuleForm> = {};
+        
+        data.forEach(rule => {
+          const mappedTier = mapTierToEnum(rule.tier);
+          existingTiers[mappedTier] = {
+            id: rule.id,
+            minContracts: rule.minContracts || 0,
+            unitAmount: rule.unit_amount || 0,
+            maxContracts: rule.maxContracts || null,
+            tier: mappedTier
+          };
+        });
+        
+        // Assurer que tous les 4 paliers sont présents
+        const updatedTiers: CommissionRuleForm[] = [];
+        
+        // Pour chaque palier attendu, utiliser le palier existant ou créer un par défaut
+        [CommissionTier.TIER_1, CommissionTier.TIER_2, CommissionTier.TIER_3, CommissionTier.TIER_4].forEach((tier) => {
+          if (existingTiers[tier]) {
+            updatedTiers.push(existingTiers[tier]);
+          } else {
+            // Ajouter un palier par défaut si manquant
+            updatedTiers.push(getDefaultTier(tier));
+          }
+        });
+        
+        // Trier par nombre minimum de contrats
+        updatedTiers.sort((a, b) => a.minContracts - b.minContracts);
+        
+        setTiers(updatedTiers);
       }
     } catch (error) {
       console.error("Erreur lors du chargement des règles de commission:", error);
@@ -54,6 +77,21 @@ export const useCommissionTiers = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getDefaultTier = (tier: CommissionTier): CommissionRuleForm => {
+    switch (tier) {
+      case CommissionTier.TIER_1:
+        return { tier: CommissionTier.TIER_1, minContracts: 0, unitAmount: 500, maxContracts: 10 };
+      case CommissionTier.TIER_2:
+        return { tier: CommissionTier.TIER_2, minContracts: 11, unitAmount: 1000, maxContracts: 20 };
+      case CommissionTier.TIER_3:
+        return { tier: CommissionTier.TIER_3, minContracts: 21, unitAmount: 1500, maxContracts: 30 };
+      case CommissionTier.TIER_4:
+        return { tier: CommissionTier.TIER_4, minContracts: 31, unitAmount: 2000 };
+      default:
+        return { tier: CommissionTier.TIER_1, minContracts: 0, unitAmount: 500, maxContracts: 10 };
     }
   };
 
