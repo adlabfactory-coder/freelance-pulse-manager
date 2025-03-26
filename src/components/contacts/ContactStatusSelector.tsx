@@ -43,10 +43,14 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
 
   const handleStatusChange = async (status: ContactStatus) => {
     if (contactId) {
-      // Use updateContact instead of updateContactStatus
-      const result = await contactService.updateContact(contactId, { status });
-      if (result && handleChange) {
-        handleChange(status);
+      try {
+        // Use updateContact instead of updateContactStatus
+        await contactService.updateContact(contactId, { status });
+        if (handleChange) {
+          handleChange(status);
+        }
+      } catch (error) {
+        console.error("Error updating contact status:", error);
       }
     } else if (handleChange) {
       handleChange(status);

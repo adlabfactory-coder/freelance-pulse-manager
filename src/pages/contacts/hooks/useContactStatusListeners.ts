@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Contact } from "@/services/contacts/types";
 import { ContactStatus } from "@/types/database/enums";
@@ -9,40 +8,39 @@ import { toast } from "sonner";
 export function useContactStatusListeners(contacts: Contact[]) {
   const updateContactStatus = useCallback(async (contactId: string, newStatus: ContactStatus) => {
     try {
-      const result = await contactService.updateContact(contactId, { status: newStatus });
-      if (result) {
-        // Message de confirmation basé sur le statut
-        let statusMessage = "";
-        switch (newStatus) {
-          case "prospect":
-            statusMessage = "Le contact est maintenant un prospect suite à un rendez-vous validé.";
-            break;
-          case "negotiation":
-            statusMessage = "Le contact est maintenant en négociation suite à la génération d'un devis.";
-            break;
-          case "signed":
-            statusMessage = "Le contact est maintenant au statut signé suite à la validation du paiement.";
-            break;
-          case "lost":
-            statusMessage = "Le contact a été marqué comme perdu.";
-            break;
-          default:
-            statusMessage = `Le statut du contact a été mis à jour: ${newStatus}`;
-        }
-        
-        toast.success("Statut mis à jour", {
-          description: statusMessage
-        });
-        
-        return true;
+      await contactService.updateContact(contactId, { status: newStatus });
+      
+      // Message de confirmation basé sur le statut
+      let statusMessage = "";
+      switch (newStatus) {
+        case "prospect":
+          statusMessage = "Le contact est maintenant un prospect suite à un rendez-vous validé.";
+          break;
+        case "negotiation":
+          statusMessage = "Le contact est maintenant en négociation suite à la génération d'un devis.";
+          break;
+        case "signed":
+          statusMessage = "Le contact est maintenant au statut signé suite à la validation du paiement.";
+          break;
+        case "lost":
+          statusMessage = "Le contact a été marqué comme perdu.";
+          break;
+        default:
+          statusMessage = `Le statut du contact a été mis à jour: ${newStatus}`;
       }
+      
+      toast.success("Statut mis à jour", {
+        description: statusMessage
+      });
+      
+      return true;
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       toast.error("Erreur", {
         description: "Impossible de mettre à jour le statut du contact"
       });
+      return false;
     }
-    return false;
   }, []);
 
   // Écouteur d'événements pour les rendez-vous validés
