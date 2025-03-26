@@ -18,7 +18,7 @@ const ContactEditForm: React.FC<ContactEditFormProps> = ({
 }) => {
   const { user } = useAuth();
   
-  // Faire une copie du contact existant sans modifier son assignedTo
+  // Faire une copie du contact existant avec son assignedTo
   const contactWithAssignedTo = {
     ...contact,
     assignedTo: contact.assignedTo || user?.id || ""

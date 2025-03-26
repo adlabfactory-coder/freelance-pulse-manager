@@ -23,9 +23,15 @@ const ContactForm: React.FC<ContactFormProps> = ({
   submitLabel,
   onCancel
 }) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submission triggered");
+    await onSubmit();
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <ContactFormFields form={form} isEditing={isEditing} />
 
         <div className="flex justify-end space-x-2 pt-4">

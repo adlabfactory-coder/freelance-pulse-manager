@@ -20,16 +20,15 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
-    defaultValues: initialData || {
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      position: "",
-      address: "",
-      status: "lead",
-      notes: "",
-      // Utilisez l'ID de l'utilisateur connecté s'il existe, sinon une chaîne vide
+    defaultValues: {
+      name: initialData?.name || "",
+      email: initialData?.email || "",
+      phone: initialData?.phone || "",
+      company: initialData?.company || "",
+      position: initialData?.position || "",
+      address: initialData?.address || "",
+      status: initialData?.status || "lead",
+      notes: initialData?.notes || "",
       assignedTo: initialData?.assignedTo || user?.id || "",
     },
   });

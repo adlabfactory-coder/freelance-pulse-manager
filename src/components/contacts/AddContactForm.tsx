@@ -17,7 +17,6 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
     onSuccess,
     isEditing: false,
     initialData: {
-      // Ne pas définir assignedTo ici, ce sera fait dans le hook lors de la soumission
       assignedTo: user?.id || ""
     }
   });
