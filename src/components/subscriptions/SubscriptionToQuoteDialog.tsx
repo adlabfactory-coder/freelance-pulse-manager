@@ -48,7 +48,8 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     setFreelancerId: setFormFreelancerId,
     setValidUntil: setFormValidUntil,
     setStatus: setFormStatus,
-    addItem,
+    setCurrentItem,
+    handleAddItem,
     loadData
   } = useQuoteForm({
     onCloseDialog: handleCloseDialog,
@@ -85,7 +86,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     
     try {
       // First set up the item in the hook's state
-      addItem({
+      setCurrentItem({
         description: `Abonnement ${plan.name}`,
         quantity: 1,
         unitPrice: plan.price,
@@ -93,7 +94,8 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         discount: 0
       });
       
-      // Then submit the form
+      // Then add the item and submit the form
+      handleAddItem();
       await formHandleSubmit();
       
     } catch (error) {
