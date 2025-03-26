@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { useContactForm } from './hooks/useContactForm';
-import { Contact } from '@/services/contacts/types';
-import ContactForm from './ContactForm';
+import React from "react";
+import { useContactForm } from "@/hooks/useContactForm";
+import { Contact } from "@/services/contacts/types";
+import ContactForm from "./ContactForm";
 
 interface ContactEditFormProps {
   contact: Contact;

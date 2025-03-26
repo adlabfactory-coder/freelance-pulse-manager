@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   BarChart,
@@ -43,7 +44,7 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     );
   }
   
-  // Configuration des accès par rôle
+  // Configuration des accès par rôle - Make sure all roles have access to contacts
   const roleAccess: Record<UserRole, string[]> = {
     [UserRole.SUPER_ADMIN]: allNavItems.map(item => item.href), // Accès complet
     [UserRole.ADMIN]: [
@@ -81,8 +82,8 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     const allowedPaths = roleAccess[role] || ["/dashboard", "/settings"];
     visibleItems = allNavItems.filter(item => allowedPaths.includes(item.href));
   } else {
-    // Fallback - accès minimum
-    visibleItems = allNavItems.filter(item => ["/dashboard", "/settings"].includes(item.href));
+    // Fallback - accès minimum avec contacts toujours inclus
+    visibleItems = allNavItems.filter(item => ["/dashboard", "/contacts", "/settings"].includes(item.href));
   }
   
   return (

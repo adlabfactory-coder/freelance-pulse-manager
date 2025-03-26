@@ -1,6 +1,7 @@
 
 import React from "react";
-import { useContactForm } from "./hooks/useContactForm";
+import { Button } from "@/components/ui/button";
+import { useContactForm } from "@/hooks/useContactForm";
 import ContactForm from "./ContactForm";
 
 interface AddContactFormProps {
@@ -8,8 +9,8 @@ interface AddContactFormProps {
   onCancel?: () => void;
 }
 
-export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
-  const { form, isSubmitting, onSubmit } = useContactForm({ 
+const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) => {
+  const { form, isSubmitting, onSubmit } = useContactForm({
     onSuccess,
     isEditing: false
   });
@@ -24,6 +25,6 @@ export function AddContactForm({ onSuccess, onCancel }: AddContactFormProps) {
       onCancel={onCancel}
     />
   );
-}
+};
 
 export default AddContactForm;
