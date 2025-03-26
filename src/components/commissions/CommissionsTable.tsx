@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   ColumnDef,
@@ -70,10 +69,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
       accessorKey: "period",
       header: "Période",
       cell: ({ row }) => {
-        // Handle both period object and separate periodStart/periodEnd properties
-        if (row.original.period) {
-          return formatPeriod(row.original.period.startDate, row.original.period.endDate);
-        } else if (row.original.periodStart && row.original.periodEnd) {
+        if (row.original.periodStart && row.original.periodEnd) {
           return formatPeriod(row.original.periodStart, row.original.periodEnd);
         }
         return "";

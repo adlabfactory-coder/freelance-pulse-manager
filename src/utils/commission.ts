@@ -1,5 +1,5 @@
 
-import { CommissionTier } from "@/types/commissions";
+import { CommissionStatus, CommissionTier } from "@/types/commissions";
 
 /**
  * Obtient le libellé pour un niveau de commission
@@ -66,7 +66,7 @@ export const formatCurrency = (amount: number): string => {
  * @returns Montant de commission calculé
  */
 export const calculateCommissionAmount = (amount: number, tier: CommissionTier): number => {
-  const percentages = {
+  const percentages: Record<CommissionTier, number> = {
     [CommissionTier.TIER_1]: 0.05,
     [CommissionTier.TIER_2]: 0.10,
     [CommissionTier.TIER_3]: 0.15,

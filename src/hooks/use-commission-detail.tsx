@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { toast } from "@/components/ui/use-toast";
-import { Commission, CommissionTier } from "@/types/commissions";
+import { Commission, CommissionStatus, CommissionTier } from "@/types/commissions";
 
 // Define an extended type for commission detail which includes additional fields
 export interface CommissionDetail extends Omit<Commission, 'period'> {
@@ -53,13 +53,24 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
       }
 
       // Map the data
-      const tierValue = commissionData.tier as string;
-      const tierEnum: CommissionTier = 
-        tierValue === 'tier_1' ? CommissionTier.TIER_1 :
-        tierValue === 'tier_2' ? CommissionTier.TIER_2 :
-        tierValue === 'tier_3' ? CommissionTier.TIER_3 :
-        tierValue === 'tier_4' ? CommissionTier.TIER_4 :
-        CommissionTier.TIER_1;
+      let tierEnum: CommissionTier;
+      
+      switch(commissionData.tier) {
+        case 'bronze':
+          tierEnum = CommissionTier.TIER_1;
+          break;
+        case 'silver':
+          tierEnum = CommissionTier.TIER_2;
+          break;
+        case 'gold':
+          tierEnum = CommissionTier.TIER_3;
+          break;
+        case 'platinum':
+          tierEnum = CommissionTier.TIER_4;
+          break;
+        default:
+          tierEnum = CommissionTier.TIER_1;
+      }
 
       const mappedCommission: CommissionDetail = {
         id: commissionData.id,
@@ -69,9 +80,9 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
         tier: tierEnum,
         periodStart: new Date(commissionData.periodStart),
         periodEnd: new Date(commissionData.periodEnd),
-        status: commissionData.status,
+        status: commissionData.status as CommissionStatus,
         paidDate: commissionData.paidDate ? new Date(commissionData.paidDate) : undefined,
-        paymentRequested: commissionData.payment_requested || false, // Map from payment_requested to paymentRequested
+        paymentRequested: commissionData.payment_requested || false,
         createdAt: new Date(commissionData.createdAt || Date.now()),
       };
 

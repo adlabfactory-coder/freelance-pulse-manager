@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Commission, CommissionRule, CommissionTier } from "@/types/commissions";
+import { Commission, CommissionRule, CommissionStatus, CommissionTier } from "@/types/commissions";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -35,13 +35,24 @@ export const useCommissions = () => {
       }
       
       const mappedCommissions: Commission[] = data.map((item) => {
-        const tierValue = item.tier as string;
-        const tierEnum = 
-          tierValue === 'tier_1' ? CommissionTier.TIER_1 :
-          tierValue === 'tier_2' ? CommissionTier.TIER_2 :
-          tierValue === 'tier_3' ? CommissionTier.TIER_3 :
-          tierValue === 'tier_4' ? CommissionTier.TIER_4 :
-          CommissionTier.TIER_1;
+        let tierEnum: CommissionTier;
+        
+        switch(item.tier) {
+          case 'bronze':
+            tierEnum = CommissionTier.TIER_1;
+            break;
+          case 'silver':
+            tierEnum = CommissionTier.TIER_2;
+            break;
+          case 'gold':
+            tierEnum = CommissionTier.TIER_3;
+            break;
+          case 'platinum':
+            tierEnum = CommissionTier.TIER_4;
+            break;
+          default:
+            tierEnum = CommissionTier.TIER_1;
+        }
           
         return {
           id: item.id,
@@ -51,7 +62,7 @@ export const useCommissions = () => {
           tier: tierEnum,
           periodStart: new Date(item.periodStart),
           periodEnd: new Date(item.periodEnd),
-          status: item.status,
+          status: item.status as CommissionStatus,
           paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
           paymentRequested: item.payment_requested || false,
         };
@@ -82,18 +93,31 @@ export const useCommissions = () => {
       }
       
       const mappedRules: CommissionRule[] = data.map((rule) => {
-        const tierValue = rule.tier as string;
-        const tierEnum = 
-          tierValue === 'tier_1' ? CommissionTier.TIER_1 :
-          tierValue === 'tier_2' ? CommissionTier.TIER_2 :
-          tierValue === 'tier_3' ? CommissionTier.TIER_3 :
-          tierValue === 'tier_4' ? CommissionTier.TIER_4 :
-          CommissionTier.TIER_1;
+        let tierEnum: CommissionTier;
+        
+        switch(rule.tier) {
+          case 'bronze':
+            tierEnum = CommissionTier.TIER_1;
+            break;
+          case 'silver':
+            tierEnum = CommissionTier.TIER_2;
+            break;
+          case 'gold':
+            tierEnum = CommissionTier.TIER_3;
+            break;
+          case 'platinum':
+            tierEnum = CommissionTier.TIER_4;
+            break;
+          default:
+            tierEnum = CommissionTier.TIER_1;
+        }
           
         return {
+          id: rule.id,
           tier: tierEnum,
           minContracts: rule.minContracts,
           maxContracts: null,
+          percentage: rule.percentage,
           amount: rule.percentage,
         };
       });

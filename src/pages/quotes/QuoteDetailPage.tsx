@@ -4,9 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Contact } from "@/types/contacts";
-import { User } from "@/types/database/users";
-import { Quote, QuoteStatus, QuoteItem } from "@/types"; // Import the correct types
+import { Quote, QuoteStatus, QuoteItem } from "@/types";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,30 +76,14 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
       id: data.id,
       contactId: data.contactId,
       freelancerId: data.freelancerId,
-      status: data.status as QuoteStatus, // Cast to QuoteStatus
+      status: data.status as QuoteStatus,
       notes: data.notes,
       totalAmount: data.totalAmount,
       validUntil: new Date(data.validUntil),
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
-      // Proper type casting for Contact
-      contact: {
-        id: data.contact?.id,
-        status: data.contact?.status || 'active', // Provide a default value
-        name: data.contact?.name,
-        email: data.contact?.email,
-        phone: data.contact?.phone,
-        company: data.contact?.company,
-        createdAt: new Date(data.contact?.created_at),
-        updatedAt: new Date(data.contact?.updated_at)
-      } as Contact,
-      // Proper type casting for User
-      freelancer: {
-        id: data.freelancer?.id,
-        role: data.freelancer?.role || 'freelancer', // Provide a default value
-        name: data.freelancer?.name,
-        email: data.freelancer?.email
-      } as User,
+      contact: data.contact,
+      freelancer: data.freelancer,
       items: data.items || []
     };
   };
@@ -146,7 +128,7 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
       setUpdating(true);
       const { error } = await supabase
         .from('quotes')
-        .update({ status: 'accepted' as QuoteStatus }) // Cast to QuoteStatus
+        .update({ status: 'accepted' })
         .eq('id', id);
 
       if (error) {
@@ -155,7 +137,7 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
 
       setQuote((prevQuote) => {
         if (prevQuote) {
-          return { ...prevQuote, status: 'accepted' };
+          return { ...prevQuote, status: 'accepted' as QuoteStatus };
         }
         return prevQuote;
       });
@@ -181,7 +163,7 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
       setUpdating(true);
       const { error } = await supabase
         .from('quotes')
-        .update({ status: 'rejected' as QuoteStatus }) // Cast to QuoteStatus
+        .update({ status: 'rejected' })
         .eq('id', id);
 
       if (error) {
@@ -190,7 +172,7 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
 
       setQuote((prevQuote) => {
         if (prevQuote) {
-          return { ...prevQuote, status: 'rejected' };
+          return { ...prevQuote, status: 'rejected' as QuoteStatus };
         }
         return prevQuote;
       });
@@ -265,7 +247,7 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
               <ul>
                 {quote.items.map((item: QuoteItem) => (
                   <li key={item.id}>
-                    {item.name} - {formatCurrency(item.amount)}
+                    {item.description} - {formatCurrency(item.unitPrice * item.quantity)}
                   </li>
                 ))}
               </ul>
@@ -274,7 +256,7 @@ const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
             )}
           </div>
           
-          {quote.status === 'pending' as any && ( // Use type assertion for comparison
+          {quote.status === 'pending' && (
             <div className="flex space-x-4 mt-4">
               <Button 
                 onClick={handleAcceptQuote}

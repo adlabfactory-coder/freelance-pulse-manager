@@ -1,33 +1,37 @@
 
 export type CommissionStatus = 'pending' | 'paid' | 'rejected' | 'processing';
 
-// Add CommissionTier type
-export type CommissionTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+// Update CommissionTier to be a string enum, not just a type
+export enum CommissionTier {
+  TIER_1 = 'bronze',
+  TIER_2 = 'silver',
+  TIER_3 = 'gold',
+  TIER_4 = 'platinum'
+}
 
 export interface CommissionRule {
   id: string;
-  tier: string;
+  tier: CommissionTier;
   minContracts: number;
-  maxContracts?: number; // Make maxContracts optional
+  maxContracts?: number;
   percentage: number;
-  amount?: number; // Add amount property as optional
+  amount?: number;
 }
 
 export interface Commission {
   id: string;
   freelancerId: string;
-  freelancerName: string; // Add freelancerName property
+  freelancerName: string;
   amount: number;
-  tier: string;
+  tier: CommissionTier;
   periodStart: Date;
   periodEnd: Date;
   status: CommissionStatus;
   paidDate?: Date;
   paymentRequested: boolean;
-  period?: string; // Add period property as optional
+  period?: string;
 }
 
-// Add CommissionDetails interface to handle subscription details
 export interface CommissionDetails {
   subscriptionDetails?: {
     name?: string;
@@ -38,5 +42,4 @@ export interface CommissionDetails {
   };
 }
 
-// Create a combined type for commissions with details
 export type CommissionWithDetails = Commission & CommissionDetails;

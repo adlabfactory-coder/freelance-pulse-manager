@@ -22,5 +22,5 @@ export function formatDate(date: Date): string {
   }
 }
 
-// Add formatMoney function as an alias to formatCurrency for backward compatibility
+// Export formatMoney function as an alias to formatCurrency
 export const formatMoney = formatCurrency;

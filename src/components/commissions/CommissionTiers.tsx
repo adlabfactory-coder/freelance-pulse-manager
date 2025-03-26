@@ -35,7 +35,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(rule.amount)}</div>
+            <div className="text-3xl font-bold">{formatCurrency(rule.amount || 0)}</div>
             <p className="text-sm text-muted-foreground mt-1">
               par contrat
             </p>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { Commission, CommissionWithDetails } from "@/types/commissions";
+import { Commission, CommissionStatus, CommissionWithDetails } from "@/types/commissions";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +46,7 @@ const FreelancerCommissionsList: React.FC = () => {
         const transformedData: CommissionWithDetails[] = data.map(item => ({
           id: item.id,
           freelancerId: item.freelancerId,
-          freelancerName: user?.email?.split('@')[0] || "Freelancer inconnu", // Using email as fallback
+          freelancerName: user?.email?.split('@')[0] || "Freelancer inconnu",
           amount: item.amount,
           tier: item.tier,
           periodStart: new Date(item.periodStart),
@@ -54,7 +54,13 @@ const FreelancerCommissionsList: React.FC = () => {
           status: item.status as CommissionStatus,
           paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
           paymentRequested: item.payment_requested || false,
-          subscriptionDetails: item.subscription
+          subscriptionDetails: {
+            name: item.subscription?.name,
+            clientId: item.subscription?.clientId,
+            client: {
+              name: item.subscription?.client?.name
+            }
+          }
         }));
 
         setCommissions(transformedData);
