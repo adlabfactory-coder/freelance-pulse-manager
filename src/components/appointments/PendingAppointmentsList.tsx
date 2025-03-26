@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,12 +10,14 @@ import { Appointment } from "@/types/appointment";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchAppointments } from "@/services/appointments";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 const PendingAppointmentsList: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [contacts, setContacts] = useState<{[key: string]: string}>({});
   const [processingIds, setProcessingIds] = useState<string[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadAppointments = async () => {
@@ -64,15 +65,13 @@ const PendingAppointmentsList: React.FC = () => {
     
     try {
       const { supabase } = await import('@/lib/supabase');
-      const { auth } = await import('@/hooks/use-auth');
       
-      const session = await auth.getSession();
-      if (!session?.user?.id) {
+      if (!user?.id) {
         toast.error("Vous devez être connecté pour accepter un rendez-vous");
         return;
       }
       
-      const userId = session.user.id;
+      const userId = user.id;
       
       // Mettre à jour le rendez-vous
       const { error: appointmentError } = await supabase

@@ -10,8 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
-import { useSupabase } from "@/hooks/use-supabase";
+import { toast } from "sonner";
 import { NotificationSettings as NotificationSettingsType, EmailConfig, SmsConfig, NotificationType, NotificationRule } from "@/types/notification-settings";
 import { getNotificationSettings, saveNotificationSettings } from "@/services/notification-service";
 import { AlertCircle, Check, Info, Mail, MessageSquare, Save } from "lucide-react";
@@ -57,7 +56,27 @@ const DEFAULT_EMAIL_TEMPLATES: Record<NotificationType, string> = {
   
   [NotificationType.SUBSCRIPTION_CANCELLED]: `Abonnement annulé
 <h2>Un abonnement a été annulé</h2>
-<p>L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.</p>`
+<p>L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.</p>`,
+
+  [NotificationType.LEAD_CREATED]: `Nouveau lead créé
+<h2>Un nouveau lead a été créé</h2>
+<p>Un nouveau lead nommé {{clientName}} a été ajouté à la base de données.</p>`,
+
+  [NotificationType.LEAD_CONVERTED]: `Lead converti
+<h2>Un lead a été converti</h2>
+<p>Le lead {{clientName}} a été converti en prospect.</p>`,
+
+  [NotificationType.APPOINTMENT_PENDING_ASSIGNMENT]: `Rendez-vous en attente d'attribution
+<h2>Un rendez-vous attend d'être attribué</h2>
+<p>Un rendez-vous "{{appointmentTitle}}" prévu le {{appointmentDate}} à {{appointmentTime}} est en attente d'attribution à un chargé de compte.</p>`,
+
+  [NotificationType.PAYMENT_RECEIVED]: `Paiement reçu
+<h2>Un paiement a été reçu</h2>
+<p>Un paiement de {{paymentAmount}}€ a été reçu de {{clientName}}.</p>`,
+
+  [NotificationType.CONTRACT_SIGNED]: `Contrat signé
+<h2>Un contrat a été signé</h2>
+<p>Le contrat #{{contractId}} a été signé par {{clientName}}.</p>`
 };
 
 const DEFAULT_SMS_TEMPLATES: Record<NotificationType, string> = {
@@ -70,7 +89,12 @@ const DEFAULT_SMS_TEMPLATES: Record<NotificationType, string> = {
   [NotificationType.COMMISSION_PAID]: `AdLab Hub: Commission de {{commissionAmount}}€ payée pour la période du {{periodStart}} au {{periodEnd}}.`,
   [NotificationType.SUBSCRIPTION_CREATED]: `AdLab Hub: {{clientName}} a souscrit à {{subscriptionName}} ({{subscriptionAmount}}€/{{subscriptionInterval}}).`,
   [NotificationType.SUBSCRIPTION_RENEWED]: `AdLab Hub: L'abonnement {{subscriptionName}} de {{clientName}} a été renouvelé ({{subscriptionAmount}}€).`,
-  [NotificationType.SUBSCRIPTION_CANCELLED]: `AdLab Hub: L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.`
+  [NotificationType.SUBSCRIPTION_CANCELLED]: `AdLab Hub: L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.`,
+  [NotificationType.LEAD_CREATED]: `AdLab Hub: Nouveau lead créé: {{clientName}}.`,
+  [NotificationType.LEAD_CONVERTED]: `AdLab Hub: Le lead {{clientName}} a été converti en prospect.`,
+  [NotificationType.APPOINTMENT_PENDING_ASSIGNMENT]: `AdLab Hub: RDV "{{appointmentTitle}}" du {{appointmentDate}} à {{appointmentTime}} en attente d'attribution.`,
+  [NotificationType.PAYMENT_RECEIVED]: `AdLab Hub: Paiement de {{paymentAmount}}€ reçu de {{clientName}}.`,
+  [NotificationType.CONTRACT_SIGNED]: `AdLab Hub: Contrat #{{contractId}} signé par {{clientName}}.`
 };
 
 const RECIPIENT_OPTIONS = [
@@ -123,7 +147,12 @@ const formatNotificationType = (type: NotificationType): string => {
     [NotificationType.COMMISSION_PAID]: "Paiement d'une commission",
     [NotificationType.SUBSCRIPTION_CREATED]: "Création d'un abonnement",
     [NotificationType.SUBSCRIPTION_RENEWED]: "Renouvellement d'un abonnement",
-    [NotificationType.SUBSCRIPTION_CANCELLED]: "Annulation d'un abonnement"
+    [NotificationType.SUBSCRIPTION_CANCELLED]: "Annulation d'un abonnement",
+    [NotificationType.LEAD_CREATED]: "Création d'un lead",
+    [NotificationType.LEAD_CONVERTED]: "Conversion d'un lead",
+    [NotificationType.APPOINTMENT_PENDING_ASSIGNMENT]: "Rendez-vous en attente d'attribution",
+    [NotificationType.PAYMENT_RECEIVED]: "Paiement reçu",
+    [NotificationType.CONTRACT_SIGNED]: "Contrat signé"
   };
   
   return mapping[type] || type;
@@ -138,7 +167,6 @@ const NotificationSettings: React.FC = () => {
   const [testTo, setTestTo] = useState("");
   const [testTemplateType, setTestTemplateType] = useState<NotificationType>(NotificationType.APPOINTMENT_CREATED);
   const [testTemplateTab, setTestTemplateTab] = useState("email");
-  const supabase = useSupabase();
   
   useEffect(() => {
     const loadSettings = async () => {
@@ -156,11 +184,7 @@ const NotificationSettings: React.FC = () => {
         }
       } catch (error) {
         console.error("Erreur lors du chargement des paramètres de notification:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les paramètres de notification."
-        });
+        toast.error("Impossible de charger les paramètres de notification.");
       } finally {
         setLoading(false);
       }
@@ -178,20 +202,13 @@ const NotificationSettings: React.FC = () => {
       const success = await saveNotificationSettings(settings);
       
       if (success) {
-        toast({
-          title: "Paramètres sauvegardés",
-          description: "Les paramètres de notification ont été sauvegardés avec succès."
-        });
+        toast.success("Paramètres sauvegardés avec succès.");
       } else {
         throw new Error("Échec de la sauvegarde");
       }
     } catch (error) {
       console.error("Erreur lors de la sauvegarde des paramètres de notification:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de sauvegarder les paramètres de notification."
-      });
+      toast.error("Impossible de sauvegarder les paramètres de notification.");
     } finally {
       setSaving(false);
     }
@@ -256,17 +273,15 @@ const NotificationSettings: React.FC = () => {
         periodEnd: "31/01/2023",
         subscriptionName: "Plan Entreprise",
         subscriptionAmount: "99",
-        subscriptionInterval: "mois"
+        subscriptionInterval: "mois",
+        paymentAmount: "500",
+        contractId: "C-12345"
       };
       
       const rule = settings.rules.find(r => r.type === testTemplateType);
       
       if (!rule) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Type de notification non trouvé."
-        });
+        toast.error("Type de notification non trouvé.");
         return;
       }
       
@@ -303,10 +318,7 @@ const NotificationSettings: React.FC = () => {
         
         if (!response.ok) throw new Error('Erreur lors de l\'envoi de l\'email');
         
-        toast({
-          title: "Email envoyé",
-          description: `Un email de test a été envoyé à ${testTo}`
-        });
+        toast.success(`Un email de test a été envoyé à ${testTo}`);
       } else {
         content = rule.smsTemplate;
         
@@ -329,18 +341,11 @@ const NotificationSettings: React.FC = () => {
         
         if (!response.ok) throw new Error('Erreur lors de l\'envoi du SMS');
         
-        toast({
-          title: "SMS envoyé",
-          description: `Un SMS de test a été envoyé à ${testTo}`
-        });
+        toast.success(`Un SMS de test a été envoyé à ${testTo}`);
       }
     } catch (error: any) {
       console.error("Erreur lors de l'envoi du message de test:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: error.message || "Impossible d'envoyer le message de test."
-      });
+      toast.error(error.message || "Impossible d'envoyer le message de test.");
     }
   };
   
