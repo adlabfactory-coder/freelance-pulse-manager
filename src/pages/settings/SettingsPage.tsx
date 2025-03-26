@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSettingsData } from "@/pages/settings/hooks/useSettingsData";
 import { UserRole } from "@/types";
-import { SettingsSidebar } from "@/components/settings/SettingsSidebar";
+import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import UserProfile from "@/components/settings/UserProfile";
 import CompanySettings from "@/components/settings/CompanySettings";
 import FreelancerManagement from "@/components/settings/FreelancerManagement";
@@ -11,7 +11,7 @@ import UsersManagement from "@/components/settings/UsersManagement";
 import DatabaseTab from "@/components/settings/DatabaseTab";
 import ScheduleSettings from "@/components/settings/ScheduleSettings";
 import ServicesSettings from "@/components/settings/ServicesSettings";
-import CommissionSettingsTab from "@/components/settings/components/CommissionSettingsTab";
+import CommissionSettingsTab from "@/pages/settings/components/CommissionSettingsTab";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 
 export const SettingsPage: React.FC = () => {

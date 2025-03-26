@@ -5,7 +5,7 @@ import { fetchCommissions } from './fetch-commissions';
 import { fetchCommissionRules } from './fetch-rules';
 import { requestPayment, approvePayment } from './payment-operations';
 import { generateMonthlyCommissions } from './generate-commissions';
-import { CommissionServiceOptions } from './types';
+import { CommissionServiceOptions } from './utils';
 
 export const createCommissionsService = (supabase: SupabaseClient<Database>) => {
   return {
