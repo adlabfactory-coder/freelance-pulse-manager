@@ -38,7 +38,7 @@ export const formatPeriod = (startDate: Date, endDate: Date): string => {
  */
 export const formatDate = (date: Date | undefined): string => {
   if (!date) return "N/A";
-  return date.toLocaleDateString("fr-FR", {
+  return date.toLocaleDateString("fr-MA", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
@@ -51,7 +51,7 @@ export const formatDate = (date: Date | undefined): string => {
  * @returns Montant formaté
  */
 export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("fr-FR", {
+  return new Intl.NumberFormat("fr-MA", {
     style: "currency",
     currency: "MAD",
     minimumFractionDigits: 0,

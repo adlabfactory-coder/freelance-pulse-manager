@@ -1,286 +1,358 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { Quote, QuoteStatus, QuoteItem } from "@/types";
-import { formatCurrency, formatDate } from "@/utils/format";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeft, ChevronRight, Download, Send, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { formatCurrency } from "@/utils/format";
+import Layout from "@/components/layout/Layout";
+import { toast } from "@/components/ui/use-toast";
 
-interface QuoteDetailPageProps {}
+type QuoteStatus = "draft" | "pending" | "accepted" | "rejected" | "expired";
 
-const QuoteDetailPage: React.FC<QuoteDetailPageProps> = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+interface QuoteItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  tax?: number;
+}
 
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
+interface Quote {
+  id: string;
+  contactId: string;
+  contactName: string;
+  contactEmail: string;
+  freelancerId: string;
+  freelancerName: string;
+  totalAmount: number;
+  status: QuoteStatus;
+  validUntil: Date;
+  notes?: string;
+  items: QuoteItem[];
+  createdAt: Date;
+}
 
-  useEffect(() => {
-    const loadQuote = async () => {
-      setLoading(true);
-      try {
-        if (!id) {
-          throw new Error("Missing quote ID");
-        }
+// Helper function to get the badge variant based on status
+const getStatusBadgeVariant = (status: QuoteStatus) => {
+  switch (status) {
+    case "draft":
+      return "secondary";
+    case "pending":
+      return "warning";
+    case "accepted":
+      return "success";
+    case "rejected":
+      return "destructive";
+    case "expired":
+      return "outline";
+    default:
+      return "default";
+  }
+};
 
-        const { data, error } = await supabase
-          .from('quotes')
-          .select(`
-            *,
-            contact: contacts(*),
-            freelancer: users(*)
-          `)
-          .eq('id', id)
-          .single();
+// Helper function to get the status label
+const getStatusLabel = (status: QuoteStatus) => {
+  switch (status) {
+    case "draft":
+      return "Brouillon";
+    case "pending":
+      return "En attente";
+    case "accepted":
+      return "Accepté";
+    case "rejected":
+      return "Rejeté";
+    case "expired":
+      return "Expiré";
+    default:
+      return status;
+  }
+};
 
-        if (error) {
-          throw error;
-        }
+// Helper function to get the status icon
+const StatusIcon = ({ status }: { status: QuoteStatus }) => {
+  switch (status) {
+    case "pending":
+      return <Clock className="h-4 w-4 text-warning" />;
+    case "accepted":
+      return <CheckCircle className="h-4 w-4 text-success" />;
+    case "rejected":
+      return <XCircle className="h-4 w-4 text-destructive" />;
+    case "expired":
+      return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
+    default:
+      return null;
+  }
+};
 
-        if (data) {
-          // Transform received data into the expected Quote format with proper type casting
-          const transformedQuote = transformQuoteData(data);
-          setQuote(transformedQuote);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: "Devis non trouvé.",
-          });
-          navigate('/quotes');
-        }
-      } catch (error: any) {
-        console.error("Erreur lors du chargement du devis:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger le devis. Veuillez réessayer plus tard.",
-        });
-        navigate('/quotes');
-      } finally {
-        setLoading(false);
+// Mock data for the specific quote
+const getMockQuote = (id: string): Quote => {
+  return {
+    id,
+    contactId: "1",
+    contactName: "Client Démo",
+    contactEmail: "client@example.com",
+    freelancerId: "2",
+    freelancerName: "Commercial Démo",
+    totalAmount: 12500,
+    status: "pending",
+    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    notes: "Ce devis inclut tous les services discutés lors de notre dernière réunion.",
+    items: [
+      {
+        id: "1",
+        description: "Développement de site web",
+        quantity: 1,
+        unitPrice: 8000,
+      },
+      {
+        id: "2",
+        description: "Optimisation SEO",
+        quantity: 1,
+        unitPrice: 2500,
+      },
+      {
+        id: "3",
+        description: "Maintenance mensuelle",
+        quantity: 1,
+        unitPrice: 2000,
       }
-    };
-
-    loadQuote();
-  }, [id, navigate, toast]);
-
-  // Transform received data into the expected Quote format with proper type casting
-  const transformQuoteData = (data: any): Quote => {
-    return {
-      id: data.id,
-      contactId: data.contactId,
-      freelancerId: data.freelancerId,
-      status: data.status as QuoteStatus,
-      notes: data.notes,
-      totalAmount: data.totalAmount,
-      validUntil: new Date(data.validUntil),
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
-      contact: data.contact,
-      freelancer: data.freelancer,
-      items: data.items || []
-    };
+    ],
+    createdAt: new Date()
   };
+};
 
-  const handleStatusChange = async (newStatus: QuoteStatus) => {
-    try {
-      setUpdating(true);
-      const { error } = await supabase
-        .from('quotes')
-        .update({ status: newStatus })
-        .eq('id', id);
-
-      if (error) {
-        throw error;
-      }
-
-      setQuote((prevQuote) => {
-        if (prevQuote) {
-          return { ...prevQuote, status: newStatus };
-        }
-        return prevQuote;
-      });
-
-      toast({
-        title: "Succès",
-        description: `Devis mis à jour à l'état : ${newStatus}.`,
-      });
-    } catch (error: any) {
-      console.error("Erreur lors de la mise à jour du statut du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut du devis. Veuillez réessayer plus tard.",
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
+const QuoteDetailPage: React.FC = () => {
+  const { quoteId } = useParams<{ quoteId: string }>();
+  const [quote, setQuote] = useState<Quote | null>(quoteId ? getMockQuote(quoteId) : null);
   
-  const handleAcceptQuote = async () => {
-    try {
-      setUpdating(true);
-      const { error } = await supabase
-        .from('quotes')
-        .update({ status: 'accepted' })
-        .eq('id', id);
-
-      if (error) {
-        throw error;
-      }
-
-      setQuote((prevQuote) => {
-        if (prevQuote) {
-          return { ...prevQuote, status: 'accepted' as QuoteStatus };
-        }
-        return prevQuote;
-      });
-
-      toast({
-        title: "Succès",
-        description: "Devis accepté avec succès.",
-      });
-    } catch (error: any) {
-      console.error("Erreur lors de l'acceptation du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible d'accepter le devis. Veuillez réessayer plus tard.",
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleRejectQuote = async () => {
-    try {
-      setUpdating(true);
-      const { error } = await supabase
-        .from('quotes')
-        .update({ status: 'rejected' })
-        .eq('id', id);
-
-      if (error) {
-        throw error;
-      }
-
-      setQuote((prevQuote) => {
-        if (prevQuote) {
-          return { ...prevQuote, status: 'rejected' as QuoteStatus };
-        }
-        return prevQuote;
-      });
-
-      toast({
-        title: "Succès",
-        description: "Devis rejeté avec succès.",
-      });
-    } catch (error: any) {
-      console.error("Erreur lors du rejet du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de rejeter le devis. Veuillez réessayer plus tard.",
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  if (loading) {
+  if (!quoteId || !quote) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="ml-2">Chargement du devis...</span>
-      </div>
+      <Layout>
+        <div className="container mx-auto py-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Devis non trouvé</h2>
+            <p className="mt-2">Le devis que vous recherchez n'existe pas ou a été supprimé.</p>
+            <Button asChild className="mt-4">
+              <Link to="/quotes">Retour aux devis</Link>
+            </Button>
+          </div>
+        </div>
+      </Layout>
     );
   }
 
-  if (!quote) {
-    return <div className="p-4">Devis non trouvé.</div>;
-  }
+  // Calculate subtotal
+  const subtotal = quote.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+
+  // Handle quote actions
+  const handleSendQuote = () => {
+    // In a real app, this would send the quote via email
+    toast({
+      title: "Devis envoyé",
+      description: `Le devis a été envoyé à ${quote.contactEmail}.`
+    });
+  };
+
+  const handleDownloadQuote = () => {
+    // In a real app, this would generate and download a PDF
+    toast({
+      title: "Téléchargement du devis",
+      description: "Le devis a été téléchargé en format PDF."
+    });
+  };
+
+  const handleAcceptQuote = () => {
+    // In a real app, this would update the quote status in the database
+    setQuote({
+      ...quote,
+      status: "accepted"
+    });
+    
+    toast({
+      title: "Devis accepté",
+      description: "Le devis a été marqué comme accepté."
+    });
+  };
+
+  const handleRejectQuote = () => {
+    // In a real app, this would update the quote status in the database
+    setQuote({
+      ...quote,
+      status: "rejected"
+    });
+    
+    toast({
+      title: "Devis rejeté",
+      description: "Le devis a été marqué comme rejeté."
+    });
+  };
 
   return (
-    <div className="container mx-auto mt-8 p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            Devis #{quote.id}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Informations du contact</h3>
-              <p>Nom: {quote.contact?.name}</p>
-              <p>Email: {quote.contact?.email}</p>
-              <p>Téléphone: {quote.contact?.phone}</p>
-              <p>Entreprise: {quote.contact?.company}</p>
+    <Layout>
+      <div className="container mx-auto py-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild className="mb-2 sm:mb-0">
+              <Link to="/quotes">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Link>
+            </Button>
+            <div className="flex items-center">
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <h1 className="text-xl font-semibold ml-2">Détails du devis #{quoteId}</h1>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold">Informations du freelance</h3>
-              <p>Nom: {quote.freelancer?.name}</p>
-              <p>Email: {quote.freelancer?.email}</p>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Détails du devis</h3>
-            <p>Date de création: {formatDate(quote.createdAt)}</p>
-            <p>Valide jusqu'au: {formatDate(quote.validUntil)}</p>
-            <p>Montant total: {formatCurrency(quote.totalAmount)}</p>
-            <p>Notes: {quote.notes || "Aucune note"}</p>
-            <div>
-              Statut: <Badge>{quote.status}</Badge>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold">Items</h3>
-            {quote.items.length > 0 ? (
-              <ul>
-                {quote.items.map((item: QuoteItem) => (
-                  <li key={item.id}>
-                    {item.description} - {formatCurrency(item.unitPrice * item.quantity)}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>Aucun item.</p>
-            )}
           </div>
           
-          {quote.status === 'pending' && (
-            <div className="flex space-x-4 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4 sm:mt-0">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDownloadQuote}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Télécharger PDF
+            </Button>
+            {quote.status === "pending" && (
               <Button 
-                onClick={handleAcceptQuote}
-                variant="outline"
-                className="flex items-center"
-                disabled={updating}
+                size="sm" 
+                onClick={handleSendQuote}
               >
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Accepter
+                <Send className="h-4 w-4 mr-2" />
+                Envoyer
               </Button>
-              <Button
-                onClick={handleRejectQuote}
-                variant="outline" 
-                className="flex items-center"
-                disabled={updating}
-              >
-                <X className="mr-2 h-4 w-4 text-red-500" />
-                Rejeter
-              </Button>
+            )}
+          </div>
+        </div>
+        
+        {/* Quote Summary */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle>Devis #{quoteId}</CardTitle>
+                <CardDescription>
+                  Créé le {quote.createdAt.toLocaleDateString()}
+                </CardDescription>
+              </div>
+              <Badge variant={getStatusBadgeVariant(quote.status)}>
+                {quote.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
+                {getStatusLabel(quote.status)}
+              </Badge>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">Client</h3>
+                <p className="font-medium">{quote.contactName}</p>
+                <p className="text-sm">{quote.contactEmail}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">Commercial</h3>
+                <p className="font-medium">{quote.freelancerName}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">Montant total</h3>
+                <p className="font-bold text-xl">{formatCurrency(quote.totalAmount)}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-sm text-muted-foreground mb-2">Valide jusqu'au</h3>
+                <p className="font-medium">{quote.validUntil.toLocaleDateString()}</p>
+              </div>
+            </div>
+            
+            {quote.status === "pending" && (
+              <div className="mt-6 flex gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">Rejeter</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action ne peut pas être annulée. Cela marquera le devis comme rejeté.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRejectQuote}>Continuer</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                
+                <Button 
+                  variant="success" 
+                  onClick={handleAcceptQuote}
+                >
+                  Accepter
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Quote Items */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Détails du devis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4">Description</th>
+                    <th className="text-right py-3 px-4">Quantité</th>
+                    <th className="text-right py-3 px-4">Prix unitaire</th>
+                    <th className="text-right py-3 px-4">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quote.items.map((item) => (
+                    <tr key={item.id} className="border-b">
+                      <td className="py-3 px-4">{item.description}</td>
+                      <td className="text-right py-3 px-4">{item.quantity}</td>
+                      <td className="text-right py-3 px-4">{formatCurrency(item.unitPrice)}</td>
+                      <td className="text-right py-3 px-4">{formatCurrency(item.quantity * item.unitPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={3} className="text-right py-4 px-4 font-medium">Sous-total</td>
+                    <td className="text-right py-4 px-4 font-medium">{formatCurrency(subtotal)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={3} className="text-right py-4 px-4 font-bold">Total</td>
+                    <td className="text-right py-4 px-4 font-bold text-lg">{formatCurrency(quote.totalAmount)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Notes */}
+        {quote.notes && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-line">{quote.notes}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </Layout>
   );
 };
 

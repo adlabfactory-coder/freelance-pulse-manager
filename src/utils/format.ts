@@ -1,8 +1,10 @@
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
-    currency: 'EUR'
+    currency: 'MAD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount);
 }
 
@@ -11,7 +13,7 @@ export function formatDate(date: Date): string {
   if (!date) return 'N/A';
   
   try {
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat('fr-MA', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'

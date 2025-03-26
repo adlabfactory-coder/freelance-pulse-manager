@@ -1,177 +1,136 @@
-import React, { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { Commission, CommissionStatus, CommissionWithDetails } from "@/types/commissions";
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CommissionStatus, CommissionTier, CommissionWithDetails } from "@/types/commissions";
 import { formatCurrency, formatDate } from "@/utils/format";
-import CommissionStatusBadge from "@/components/commissions/CommissionStatusBadge";
+import { Link } from "react-router-dom";
 
-const FreelancerCommissionsList: React.FC = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [commissions, setCommissions] = useState<CommissionWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadCommissions = async () => {
-      setLoading(true);
-      try {
-        // Récupérer les commissions pour ce freelancer
-        const { data, error } = await supabase
-          .from('commissions')
-          .select(`
-            *,
-            subscription:subscriptions(name, clientId, client:clientId(name))
-          `)
-          .eq('freelancerId', user?.id)
-          .order('periodStart', { ascending: false });
-
-        if (error) {
-          throw error;
+// Mock data for freelancer commissions
+const getMockCommissions = (): CommissionWithDetails[] => {
+  return [
+    {
+      id: "1",
+      freelancerId: "2",
+      freelancerName: "Commercial Démo",
+      amount: 1500,
+      tier: CommissionTier.TIER_2,
+      periodStart: new Date("2023-01-01"),
+      periodEnd: new Date("2023-01-31"),
+      status: "pending" as CommissionStatus,
+      paidDate: undefined,
+      paymentRequested: true,
+      subscriptionDetails: {
+        name: "Pack Enterprise",
+        clientId: "3",
+        client: {
+          name: "Client Démo"
         }
-
-        // Transformer les données pour correspondre à notre interface
-        const transformedData: CommissionWithDetails[] = data.map(item => ({
-          id: item.id,
-          freelancerId: item.freelancerId,
-          freelancerName: user?.email?.split('@')[0] || "Freelancer inconnu",
-          amount: item.amount,
-          tier: item.tier,
-          periodStart: new Date(item.periodStart),
-          periodEnd: new Date(item.periodEnd),
-          status: item.status as CommissionStatus,
-          paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
-          paymentRequested: item.payment_requested || false,
-          subscriptionDetails: {
-            name: item.subscription?.name,
-            clientId: item.subscription?.clientId,
-            client: {
-              name: item.subscription?.client?.name
-            }
-          }
-        }));
-
-        setCommissions(transformedData);
-      } catch (error) {
-        console.error("Erreur lors du chargement des commissions:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger vos commissions. Veuillez réessayer plus tard.",
-        });
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (user?.id) {
-      loadCommissions();
+    },
+    {
+      id: "2",
+      freelancerId: "2",
+      freelancerName: "Commercial Démo",
+      amount: 2000,
+      tier: CommissionTier.TIER_3,
+      periodStart: new Date("2023-02-01"),
+      periodEnd: new Date("2023-02-28"),
+      status: "processing" as CommissionStatus,
+      paidDate: undefined,
+      paymentRequested: true,
+      subscriptionDetails: {
+        name: "Pack Premium",
+        clientId: "3",
+        client: {
+          name: "Client Démo"
+        }
+      }
     }
-  }, [user?.id, toast, user?.email]);
+  ];
+};
 
-  const handleViewCommission = (commissionId: string) => {
-    navigate(`/commissions/${commissionId}`);
-  };
+interface FreelancerCommissionsListProps {
+  freelancerId?: string;
+}
 
-  const getTotalCommissions = () => {
-    return commissions.reduce((total, commission) => total + Number(commission.amount), 0);
-  };
+const FreelancerCommissionsList: React.FC<FreelancerCommissionsListProps> = ({ 
+  freelancerId 
+}) => {
+  // In a real app, this would fetch from the API based on freelancerId
+  const commissions = getMockCommissions();
+  
+  // Filter commissions by freelancerId if provided
+  const filteredCommissions = freelancerId 
+    ? commissions.filter(comm => comm.freelancerId === freelancerId)
+    : commissions;
 
-  if (loading) {
+  if (filteredCommissions.length === 0) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <span className="ml-2">Chargement des commissions...</span>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Commissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">Aucune commission trouvée.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-lg border p-4 bg-card">
-          <h3 className="text-sm font-medium text-muted-foreground">Commissions totales</h3>
-          <p className="text-2xl font-bold mt-1">{formatCurrency(getTotalCommissions())}</p>
-        </div>
-        <div className="rounded-lg border p-4 bg-card">
-          <h3 className="text-sm font-medium text-muted-foreground">En attente</h3>
-          <p className="text-2xl font-bold mt-1">
-            {formatCurrency(
-              commissions
-                .filter(c => c.status === 'pending')
-                .reduce((sum, c) => sum + Number(c.amount), 0)
-            )}
-          </p>
-        </div>
-        <div className="rounded-lg border p-4 bg-card">
-          <h3 className="text-sm font-medium text-muted-foreground">Niveau actuel</h3>
-          <p className="text-2xl font-bold mt-1">
-            {commissions.length > 0 ? commissions[0].tier : 'N/A'}
-          </p>
-        </div>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Période</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Niveau</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {commissions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-6">
-                  Vous n'avez pas encore de commissions.
-                </TableCell>
-              </TableRow>
-            ) : (
-              commissions.map((commission) => (
-                <TableRow key={commission.id}>
-                  <TableCell>
+    <Card>
+      <CardHeader>
+        <CardTitle>Commissions récentes</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {filteredCommissions.map(commission => (
+            <Link 
+              key={commission.id} 
+              to={`/commissions/${commission.id}`} 
+              className="block"
+            >
+              <div className="border rounded-lg p-4 hover:bg-accent transition-colors">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-semibold">
+                      {commission.subscriptionDetails?.name || "Commission"} 
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {commission.subscriptionDetails?.client?.name ? (
+                        `Client: ${commission.subscriptionDetails.client.name}`
+                      ) : "Client non spécifié"}
+                    </p>
+                  </div>
+                  <Badge 
+                    variant={
+                      commission.status === "paid" ? "success" : 
+                      commission.status === "pending" ? "warning" : 
+                      commission.status === "processing" ? "default" : 
+                      "destructive"
+                    }
+                  >
+                    {commission.status === "paid" ? "Payée" : 
+                     commission.status === "pending" ? "En attente" : 
+                     commission.status === "processing" ? "En traitement" : 
+                     "Rejetée"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-end">
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(commission.amount)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
                     {formatDate(commission.periodStart)} - {formatDate(commission.periodEnd)}
-                  </TableCell>
-                  <TableCell>
-                    {commission.subscriptionDetails?.client?.name || 'Client inconnu'}
-                  </TableCell>
-                  <TableCell>{formatCurrency(commission.amount)}</TableCell>
-                  <TableCell>
-                    <CommissionStatusBadge status={commission.status} />
-                  </TableCell>
-                  <TableCell>{commission.tier}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewCommission(commission.id)}
-                    >
-                      Détails
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
