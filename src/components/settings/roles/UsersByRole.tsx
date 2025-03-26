@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, UserPlus, RefreshCw } from "lucide-react";
+import { UserPlus, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { User, UserRole } from "@/types";
 import { USER_ROLE_LABELS } from "@/types/roles";
 import useUsersDataLoader from "@/pages/settings/hooks/useUsersDataLoader";
+import UserActions from "@/components/settings/UserActions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/use-auth";
 
 interface UsersByRoleProps {
   forceUsers?: User[];
@@ -17,17 +19,14 @@ interface UsersByRoleProps {
 
 const UsersByRole: React.FC<UsersByRoleProps> = ({ forceUsers }) => {
   const { users: fetchedUsers, loading, error, loadUsers } = useUsersDataLoader();
-  const users = forceUsers || fetchedUsers;
   const [selectedRole, setSelectedRole] = useState<string>("all");
+  const { role: currentUserRole } = useAuth();
+  const users = forceUsers || fetchedUsers;
   const navigate = useNavigate();
   const { toast } = useToast();
-
+  
   const getUsersByRole = (role: UserRole): User[] => {
     return users.filter(user => user.role === role);
-  };
-
-  const handleEditUser = (userId: string) => {
-    navigate(`/settings/users/edit/${userId}`);
   };
 
   const handleAddUser = () => {
@@ -41,24 +40,9 @@ const UsersByRole: React.FC<UsersByRoleProps> = ({ forceUsers }) => {
       description: "Récupération des utilisateurs en cours...",
     });
   };
-
-  const handleDeleteUser = async (userId: string) => {
-    try {
-      // Simulation de suppression pour la démo
-      toast({
-        title: "Utilisateur supprimé",
-        description: "L'utilisateur a été supprimé avec succès (simulation)",
-      });
-      // Dans une implémentation réelle, il faudrait appeler l'API
-      await loadUsers(); // Recharger la liste après suppression
-    } catch (error) {
-      console.error("Erreur lors de la suppression de l'utilisateur:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de supprimer l'utilisateur.",
-      });
-    }
+  
+  const handleUserUpdated = () => {
+    loadUsers();
   };
 
   if (loading && !forceUsers) {
@@ -127,15 +111,21 @@ const UsersByRole: React.FC<UsersByRoleProps> = ({ forceUsers }) => {
           </TabsList>
 
           <TabsContent value="all">
-            <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} />
+            <UserTable 
+              users={users} 
+              currentUserRole={currentUserRole as UserRole} 
+              onUserUpdated={handleUserUpdated}
+              allUsers={users}
+            />
           </TabsContent>
 
           {Object.values(UserRole).map(role => (
             <TabsContent key={role} value={role}>
               <UserTable 
                 users={getUsersByRole(role)} 
-                onEdit={handleEditUser}
-                onDelete={handleDeleteUser}
+                currentUserRole={currentUserRole as UserRole}
+                onUserUpdated={handleUserUpdated}
+                allUsers={users}
                 emptyMessage={`Aucun utilisateur avec le rôle ${USER_ROLE_LABELS[role]}`}
               />
             </TabsContent>
@@ -148,17 +138,24 @@ const UsersByRole: React.FC<UsersByRoleProps> = ({ forceUsers }) => {
 
 interface UserTableProps {
   users: User[];
-  onEdit: (userId: string) => void;
-  onDelete: (userId: string) => void;
+  currentUserRole: UserRole;
+  onUserUpdated: () => void;
+  allUsers: User[];
   emptyMessage?: string;
 }
 
 const UserTable: React.FC<UserTableProps> = ({ 
   users, 
-  onEdit, 
-  onDelete,
+  currentUserRole,
+  onUserUpdated,
+  allUsers,
   emptyMessage = "Aucun utilisateur trouvé" 
 }) => {
+  // Filtrer pour obtenir des superviseurs potentiels (admin ou super_admin)
+  const potentialSupervisors = allUsers.filter(
+    user => user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ACCOUNT_MANAGER
+  );
+  
   return (
     <Table>
       <TableCaption>
@@ -169,58 +166,45 @@ const UserTable: React.FC<UserTableProps> = ({
           <TableHead>Nom</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Rôle</TableHead>
+          <TableHead>Superviseur</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {users.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center h-24">
+            <TableCell colSpan={5} className="text-center h-24">
               {emptyMessage}
             </TableCell>
           </TableRow>
         ) : (
-          users.map(user => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{USER_ROLE_LABELS[user.role as UserRole]}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onEdit(user.id)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-destructive hover:text-destructive/90"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action ne peut pas être annulée.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(user.id)}>Supprimer</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))
+          users.map(user => {
+            // Trouver le superviseur de l'utilisateur s'il en a un
+            const supervisor = user.supervisor_id 
+              ? allUsers.find(u => u.id === user.supervisor_id) 
+              : undefined;
+              
+            return (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{USER_ROLE_LABELS[user.role as UserRole]}</TableCell>
+                <TableCell>
+                  {supervisor 
+                    ? `${supervisor.name} (${USER_ROLE_LABELS[supervisor.role as UserRole]})` 
+                    : "Aucun"}
+                </TableCell>
+                <TableCell className="text-right">
+                  <UserActions 
+                    user={user} 
+                    currentUserRole={currentUserRole}
+                    onUserUpdated={onUserUpdated}
+                    supervisors={potentialSupervisors}
+                  />
+                </TableCell>
+              </TableRow>
+            );
+          })
         )}
       </TableBody>
     </Table>

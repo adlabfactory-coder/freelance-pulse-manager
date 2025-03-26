@@ -9,6 +9,8 @@ import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { getMockUsers } from "@/utils/supabase-mock-data";
+import UserActions from "./UserActions";
+import { useAuth } from "@/hooks/use-auth";
 
 interface UsersManagementProps {
   onSelectUser: (userId: string) => void;
@@ -26,12 +28,12 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
   isLoading: externalLoading
 }) => {
   const { fetchUsers } = useSupabase();
+  const { role: currentUserRole } = useAuth();
   const [users, setUsers] = useState<User[]>(externalUsers || []);
   const [isLoading, setIsLoading] = useState(externalLoading !== undefined ? externalLoading : true);
   const [hasError, setHasError] = useState(false);
 
   const fetchUsersData = async () => {
-    // If external users are provided, use them
     if (externalUsers && externalUsers.length > 0) {
       setUsers(externalUsers);
       setIsLoading(false);
@@ -41,14 +43,12 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
     setIsLoading(true);
     setHasError(false);
     try {
-      // Tentative de récupération depuis Supabase
       const fetchedUsers = await fetchUsers();
       console.info("Utilisateurs récupérés:", fetchedUsers);
       
       if (fetchedUsers && fetchedUsers.length > 0) {
         setUsers(fetchedUsers);
       } else {
-        // Utilisation des données de démo en cas d'échec ou pas de données
         const demoUsers = getMockUsers();
         setUsers(demoUsers);
         toast({
@@ -59,7 +59,6 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des utilisateurs:", error);
-      // Fallback vers les données de démo
       const demoUsers = getMockUsers();
       setUsers(demoUsers);
       setHasError(true);
@@ -74,13 +73,11 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
   };
 
   useEffect(() => {
-    // Only fetch data if no external users provided
     if (!externalUsers) {
       fetchUsersData();
     }
   }, [externalUsers]);
 
-  // Update local state if external users or loading state changes
   useEffect(() => {
     if (externalUsers) {
       setUsers(externalUsers);
@@ -142,28 +139,48 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
                   <TableHead>Nom</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Rôle</TableHead>
-                  <TableHead>Calendly</TableHead>
+                  <TableHead>Superviseur</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow 
-                    key={user.id} 
-                    onClick={() => handleUserClick(user)} 
-                    className={`cursor-pointer hover:bg-muted ${selectedUserId === user.id ? 'bg-muted' : ''}`}
-                  >
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      {user.role === UserRole.ADMIN 
-                        ? "Administrateur" 
-                        : user.role === UserRole.FREELANCER 
-                          ? "Chargé(e) d'affaires" 
-                          : "Client"}
-                    </TableCell>
-                    <TableCell>{user.calendly_enabled ? "Activé" : "Désactivé"}</TableCell>
-                  </TableRow>
-                ))}
+                {users.map((user) => {
+                  // Trouver le superviseur de l'utilisateur s'il en a un
+                  const supervisor = user.supervisor_id 
+                    ? users.find(u => u.id === user.supervisor_id) 
+                    : undefined;
+                    
+                  return (
+                    <TableRow 
+                      key={user.id} 
+                      onClick={() => handleUserClick(user)} 
+                      className={`cursor-pointer hover:bg-muted ${selectedUserId === user.id ? 'bg-muted' : ''}`}
+                    >
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {user.role === UserRole.ADMIN 
+                          ? "Administrateur" 
+                          : user.role === UserRole.FREELANCER 
+                            ? "Chargé(e) d'affaires" 
+                            : "Client"}
+                      </TableCell>
+                      <TableCell>
+                        {supervisor 
+                          ? `${supervisor.name} (${supervisor.role === UserRole.ADMIN ? "Admin" : supervisor.role})` 
+                          : "Aucun"}
+                      </TableCell>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <UserActions 
+                          user={user} 
+                          currentUserRole={currentUserRole as UserRole}
+                          onUserUpdated={handleRetry}
+                          supervisors={users.filter(u => u.role === UserRole.ADMIN || u.role === UserRole.SUPER_ADMIN || u.role === UserRole.ACCOUNT_MANAGER)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </ScrollArea>

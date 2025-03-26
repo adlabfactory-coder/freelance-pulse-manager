@@ -12,9 +12,7 @@ export interface UsersTable {
       schedule_enabled: boolean
       daily_availability: Json | null
       weekly_availability: Json | null
-      calendly_enabled?: boolean
-      calendly_url?: string | null
-      calendly_sync_email?: string | null
+      supervisor_id?: string | null
     }
     Insert: {
       id?: string
@@ -25,9 +23,7 @@ export interface UsersTable {
       schedule_enabled?: boolean
       daily_availability?: Json | null
       weekly_availability?: Json | null
-      calendly_enabled?: boolean
-      calendly_url?: string | null
-      calendly_sync_email?: string | null
+      supervisor_id?: string | null
     }
     Update: {
       id?: string
@@ -38,9 +34,7 @@ export interface UsersTable {
       schedule_enabled?: boolean
       daily_availability?: Json | null
       weekly_availability?: Json | null
-      calendly_enabled?: boolean
-      calendly_url?: string | null
-      calendly_sync_email?: string | null
+      supervisor_id?: string | null
     }
   }
 }

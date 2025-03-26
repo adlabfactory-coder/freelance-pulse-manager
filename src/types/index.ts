@@ -1,3 +1,4 @@
+
 import { ContactStatus as ContactStatusEnum } from "@/types/database/enums";
 import { Commission, CommissionStatus, CommissionTier } from "./commissions";
 import { Service } from "./services";
@@ -55,9 +56,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatar: string | null;
-  calendly_enabled: boolean;
-  calendly_url: string;
-  calendly_sync_email: string;
+  supervisor_id?: string;
+  supervisor_name?: string;
 }
 
 export interface Subscription {
