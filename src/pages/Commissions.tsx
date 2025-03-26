@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useCommissions } from "@/hooks/use-commissions";
+import { useCommissions } from "@/hooks/commission";
 import FreelancerCommissionsList from "@/components/commissions/FreelancerCommissionsList";
 import { useAuth } from "@/hooks/use-auth";
 import AdminCommissionsContent from "@/components/commissions/AdminCommissionsContent";
@@ -14,6 +14,7 @@ const Commissions: React.FC = () => {
     commissionRules, 
     loading, 
     requestingPayment, 
+    error,
     requestPayment,
     approvePayment,
     generateMonthlyCommissions
@@ -54,6 +55,7 @@ const Commissions: React.FC = () => {
         commissionRules={commissionRules}
         loading={loading}
         requestingPayment={requestingPayment}
+        error={error}
         requestPayment={requestPayment}
         approvePayment={approvePayment}
         generateMonthlyCommissions={generateMonthlyCommissions}

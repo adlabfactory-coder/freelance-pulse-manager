@@ -20,6 +20,7 @@ interface AdminCommissionsContentProps {
   error?: string | null;
   approvePayment: (commissionId: string) => void;
   generateMonthlyCommissions: (month: Date) => void;
+  requestPayment: (commissionId: string) => void; // Added this prop
 }
 
 const AdminCommissionsContent: React.FC<AdminCommissionsContentProps> = ({
@@ -29,7 +30,8 @@ const AdminCommissionsContent: React.FC<AdminCommissionsContentProps> = ({
   requestingPayment,
   error,
   approvePayment,
-  generateMonthlyCommissions
+  generateMonthlyCommissions,
+  requestPayment // Added this prop
 }) => {
   const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
   const [isGenerating, setIsGenerating] = useState(false);
@@ -108,7 +110,7 @@ const AdminCommissionsContent: React.FC<AdminCommissionsContentProps> = ({
         commissionRules={commissionRules}
         loading={loading}
         requestingPayment={requestingPayment}
-        requestPayment={() => {}}
+        requestPayment={requestPayment}
         approvePayment={approvePayment}
         isAdmin={true}
       />
