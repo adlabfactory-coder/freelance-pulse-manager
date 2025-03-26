@@ -1,6 +1,6 @@
 
 // Import the correct toast from hooks
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Appointment, AppointmentStatusFromDB } from "@/types/appointment";
 import { processNotification } from "@/services/notification-service";
@@ -57,19 +57,31 @@ export const fetchAppointmentById = async (id: string): Promise<Appointment | nu
 // Function to create a new appointment
 export const createAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
   try {
+    // Vérifier que la date est valide avant d'envoyer à la base de données
+    const appointmentDate = new Date(appointmentData.date);
+    if (isNaN(appointmentDate.getTime())) {
+      console.error('Invalid date for appointment:', appointmentData.date);
+      toast.error("La date du rendez-vous est invalide");
+      return null;
+    }
+
+    console.log('Creating appointment with data:', {
+      ...appointmentData,
+      date: appointmentDate.toISOString()
+    });
+    
     const { data, error } = await supabase
       .from('appointments')
-      .insert([appointmentData])
+      .insert([{
+        ...appointmentData,
+        date: appointmentDate.toISOString() // Standardiser le format de date
+      }])
       .select()
       .single();
 
     if (error) {
       console.error('Error creating appointment:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de créer le rendez-vous. " + error.message
-      });
+      toast.error("Impossible de créer le rendez-vous. " + error.message);
       return null;
     }
 
@@ -110,21 +122,14 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       // We don't throw here to not break the appointment creation flow
     }
 
-    toast({
-      title: "Succès",
-      description: "Le rendez-vous a été créé avec succès"
-    });
+    toast.success("Le rendez-vous a été créé avec succès");
     return {
       ...data,
       status: data.status as Appointment['status']
     };
   } catch (err) {
     console.error('Unexpected error when creating appointment:', err);
-    toast({
-      variant: "destructive",
-      title: "Erreur",
-      description: "Une erreur inattendue s'est produite lors de la création du rendez-vous"
-    });
+    toast.error("Une erreur inattendue s'est produite lors de la création du rendez-vous");
     return null;
   }
 };
@@ -132,6 +137,19 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
 // Function to update an appointment
 export const updateAppointment = async (id: string, appointmentData: Partial<Appointment>) => {
   try {
+    // Vérifier que la date est valide si elle est fournie
+    if (appointmentData.date) {
+      const appointmentDate = new Date(appointmentData.date);
+      if (isNaN(appointmentDate.getTime())) {
+        console.error('Invalid date for appointment update:', appointmentData.date);
+        toast.error("La date du rendez-vous est invalide");
+        return null;
+      }
+      
+      // Standardiser le format de date
+      appointmentData.date = appointmentDate.toISOString();
+    }
+    
     const { data, error } = await supabase
       .from('appointments')
       .update(appointmentData)
@@ -141,29 +159,18 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
 
     if (error) {
       console.error('Error updating appointment:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de mettre à jour le rendez-vous. " + error.message
-      });
+      toast.error("Impossible de mettre à jour le rendez-vous. " + error.message);
       return null;
     }
 
-    toast({
-      title: "Succès",
-      description: "Le rendez-vous a été mis à jour avec succès"
-    });
+    toast.success("Le rendez-vous a été mis à jour avec succès");
     return {
       ...data,
       status: data.status as Appointment['status']
     };
   } catch (err) {
     console.error('Unexpected error when updating appointment:', err);
-    toast({
-      variant: "destructive",
-      title: "Erreur",
-      description: "Une erreur inattendue s'est produite lors de la mise à jour du rendez-vous"
-    });
+    toast.error("Une erreur inattendue s'est produite lors de la mise à jour du rendez-vous");
     return null;
   }
 };
@@ -178,26 +185,15 @@ export const deleteAppointment = async (id: string) => {
 
     if (error) {
       console.error('Error deleting appointment:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de supprimer le rendez-vous. " + error.message
-      });
+      toast.error("Impossible de supprimer le rendez-vous. " + error.message);
       return false;
     }
 
-    toast({
-      title: "Succès",
-      description: "Le rendez-vous a été supprimé avec succès"
-    });
+    toast.success("Le rendez-vous a été supprimé avec succès");
     return true;
   } catch (err) {
     console.error('Unexpected error when deleting appointment:', err);
-    toast({
-      variant: "destructive",
-      title: "Erreur",
-      description: "Une erreur inattendue s'est produite lors de la suppression du rendez-vous"
-    });
+    toast.error("Une erreur inattendue s'est produite lors de la suppression du rendez-vous");
     return false;
   }
 };

@@ -1,7 +1,8 @@
 
-import { useState } from "react";
-import { toast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale"; 
 import { useAuth } from "@/hooks/use-auth";
 import * as appointmentService from "@/services/appointments";
 
@@ -23,7 +24,7 @@ export type AppointmentFormData = {
 };
 
 export const useAppointmentForm = (
-  selectedDate?: Date, 
+  selectedDate?: Date | undefined, 
   onClose?: () => void,
   contactId?: string
 ) => {
@@ -38,6 +39,13 @@ export const useAppointmentForm = (
   
   const { user } = useAuth();
 
+  // Mise à jour de la date quand selectedDate change
+  useEffect(() => {
+    if (selectedDate) {
+      setDate(selectedDate);
+    }
+  }, [selectedDate]);
+
   // Fonction de soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +54,7 @@ export const useAppointmentForm = (
       APPOINTMENT_TITLE_OPTIONS.find(option => option.value === titleOption)?.label || "";
     
     if (!date || !title) {
-      toast({
-        variant: "destructive",
-        title: "Informations manquantes",
-        description: "Veuillez remplir tous les champs obligatoires.",
-      });
+      toast.error("Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
@@ -59,26 +63,27 @@ export const useAppointmentForm = (
     try {
       // Vérifier que l'utilisateur est connecté
       if (!user || !user.id) {
-        toast({
-          variant: "destructive", 
-          title: "Erreur",
-          description: "Vous devez être connecté pour effectuer cette action"
-        });
+        toast.error("Vous devez être connecté pour effectuer cette action");
         return;
       }
-      
-      // Créer le format de date pour la base de données
-      const dateTimeString = format(date, "yyyy-MM-dd") + "T" + time;
-      const appointmentDateTime = new Date(dateTimeString);
       
       // S'assurer qu'un ID de contact valide est disponible
       if (!contactId) {
         console.error("ID de contact manquant pour la création du rendez-vous");
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Le contact pour ce rendez-vous n'est pas spécifié"
-        });
+        toast.error("Le contact pour ce rendez-vous n'est pas spécifié");
+        return;
+      }
+      
+      // Créer le format de date pour la base de données
+      // Nous utilisons une nouvelle instance de Date pour éviter les problèmes de référence
+      const dateObj = new Date(date.getTime());
+      const [hours, minutes] = time.split(':').map(Number);
+      
+      dateObj.setHours(hours, minutes, 0, 0);
+      
+      // Vérifier que la date est valide
+      if (isNaN(dateObj.getTime())) {
+        toast.error("La date ou l'heure spécifiée n'est pas valide");
         return;
       }
       
@@ -86,7 +91,7 @@ export const useAppointmentForm = (
       const appointmentData = {
         title,
         description,
-        date: appointmentDateTime.toISOString(),
+        date: dateObj.toISOString(),
         duration: parseInt(duration),
         status: "scheduled" as const,
         freelancerId: user.id,
@@ -105,10 +110,7 @@ export const useAppointmentForm = (
       }
       
       // Message de succès
-      toast({
-        title: "Rendez-vous planifié",
-        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm")}`,
-      });
+      toast.success(`${title} planifié le ${format(dateObj, "dd/MM/yyyy à HH:mm", { locale: fr })}`);
       
       // Réinitialiser le formulaire et fermer la boîte de dialogue
       resetForm();
@@ -123,11 +125,7 @@ export const useAppointmentForm = (
       
     } catch (error: any) {
       console.error("Erreur lors de la planification du rendez-vous:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de la planification du rendez-vous.",
-      });
+      toast.error(error.message || "Une erreur est survenue lors de la planification du rendez-vous.");
     } finally {
       setIsSubmitting(false);
     }
@@ -138,6 +136,7 @@ export const useAppointmentForm = (
     setTitleOption("consultation-initiale");
     setCustomTitle("");
     setDescription("");
+    setDate(new Date());
     setTime("09:00");
     setDuration("60");
   };

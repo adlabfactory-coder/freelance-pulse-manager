@@ -23,7 +23,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   contactName,
   initialType = "consultation-initiale"
 }) => {
-  // Utiliser le hook de formulaire pour les rendez-vous
+  // Utiliser le hook de formulaire pour les rendez-vous avec données explicites
   const {
     titleOption,
     setTitleOption,
@@ -40,17 +40,27 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     isSubmitting,
     handleSubmit
   } = useAppointmentForm(
-    new Date(), 
+    open ? new Date() : undefined, // Réinitialiser la date à chaque ouverture du dialogue
     () => onOpenChange(false), 
     contactId
   );
 
-  // Définir le type initial (consultation initiale par défaut)
+  // Définir le type initial lors de l'ouverture du dialogue
   React.useEffect(() => {
-    if (initialType) {
+    if (open && initialType) {
       setTitleOption(initialType);
     }
-  }, [initialType, setTitleOption]);
+  }, [open, initialType, setTitleOption]);
+
+  // Gérer la soumission du formulaire en incluant l'ID du contact
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactId) {
+      console.error("ID de contact manquant pour la création du rendez-vous");
+      return;
+    }
+    handleSubmit(e);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,7 +72,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleFormSubmit}>
           <div className="grid gap-4 py-4">
             <AppointmentTypeSelect
               titleOption={titleOption}
