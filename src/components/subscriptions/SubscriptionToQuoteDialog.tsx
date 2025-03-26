@@ -85,6 +85,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     
     try {
       // Créer le devis avec un seul élément basé sur le plan d'abonnement
+      // Use the addItem function properly by calling it with the item object
       addItem({
         description: `Abonnement ${plan.name}`,
         quantity: 1,
