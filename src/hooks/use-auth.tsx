@@ -1,156 +1,128 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { User, UserRole, hasMinimumRole } from "@/types";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { User, UserRole } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "./use-toast";
 
-// Mock data for demonstration purposes
-const MOCK_USER: User = {
-  id: "1",
-  name: "Admin Démo",
-  email: "admin@example.com",
-  role: UserRole.ADMIN,
-  avatar: null,
-  calendly_enabled: false,
-  calendly_url: "",
-  calendly_sync_email: ""
-};
+// Helper function to check if one role is at least as high as another
+export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): boolean {
+  // Ordre des rôles du plus élevé au plus bas
+  const roles = [
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.ACCOUNT_MANAGER,
+    UserRole.FREELANCER,
+    UserRole.CLIENT
+  ];
+  
+  const userRoleIndex = roles.indexOf(userRole);
+  const requiredRoleIndex = roles.indexOf(requiredRole);
+  
+  // Plus l'index est bas, plus le rôle est élevé
+  return userRoleIndex <= requiredRoleIndex && userRoleIndex !== -1 && requiredRoleIndex !== -1;
+}
 
-// Context pour l'authentification
-type AuthContextType = {
+// Mock authentication pour le développement
+const MOCK_USERS = [
+  {
+    id: "1",
+    name: "Admin Test",
+    email: "admin@example.com",
+    role: UserRole.ADMIN,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "2",
+    name: "Freelancer Test",
+    email: "freelancer@example.com",
+    role: UserRole.FREELANCER,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: "https://calendly.com/freelancer-test",
+    calendly_sync_email: "freelancer@example.com"
+  },
+  {
+    id: "3",
+    name: "Client Test",
+    email: "client@example.com",
+    role: UserRole.CLIENT,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  }
+];
+
+interface AuthContextType {
   user: User | null;
-  isAuthenticated: boolean;
+  loading: boolean;
   isAdmin: boolean;
-  isSuperAdmin: boolean;
   isFreelancer: boolean;
-  isAccountManager: boolean;
-  isClient: boolean;
-  isAdminOrSuperAdmin: boolean;
-  role: UserRole | null;
-  hasMinimumRole: (requiredRole: UserRole | string) => boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-};
+  signIn: (email: string, password: string) => Promise<User>;
+  signOut: () => Promise<void>;
+}
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  isAdmin: false,
+  isFreelancer: false,
+  signIn: async () => ({ id: "", name: "", email: "", role: UserRole.CLIENT, avatar: null, calendly_enabled: false, calendly_url: "", calendly_sync_email: "" }),
+  signOut: async () => {}
+});
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(MOCK_USER);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Démo: simuler une vérification de session initiale
+  // En mode développement, auto-connecter l'utilisateur
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        // Dans un environnement réel, on vérifierait la session avec Supabase
-        // const { data: { session } } = await supabase.auth.getSession();
-        // setUser(session ? session.user : null);
-        
-        // Vérifier d'abord si un utilisateur de démo est stocké
-        const demoUser = localStorage.getItem('demoUser');
-        if (demoUser) {
-          setUser(JSON.parse(demoUser));
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        console.error("Erreur lors de la vérification de la session:", error);
-        setUser(null);
-        setLoading(false);
-      }
-    };
-
-    checkSession();
+    // Vérifier si l'utilisateur est déjà connecté
+    const currentUser = localStorage.getItem("currentUser");
+    if (currentUser) {
+      setUser(JSON.parse(currentUser));
+    } else {
+      // Auto-connecter comme admin
+      const adminUser = MOCK_USERS[0];
+      setUser(adminUser);
+      localStorage.setItem("currentUser", JSON.stringify(adminUser));
+    }
+    setLoading(false);
   }, []);
 
-  // Détermine si l'utilisateur a un certain rôle minimum
-  const checkMinimumRole = (requiredRole: UserRole | string): boolean => {
-    if (!user) return false;
-    return hasMinimumRole(user.role, requiredRole);
-  };
-
-  // Propriétés calculées pour les vérifications de rôle courantes
-  const isAdmin = !!user && user.role === UserRole.ADMIN;
-  const isSuperAdmin = !!user && user.role === UserRole.SUPER_ADMIN;
-  const isFreelancer = !!user && user.role === UserRole.FREELANCER;
-  const isAccountManager = !!user && user.role === UserRole.ACCOUNT_MANAGER;
-  const isClient = !!user && user.role === UserRole.CLIENT;
-  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
-  const isAuthenticated = !!user;
-  const role = user?.role as UserRole || null;
-
-  // Fonctions d'authentification (simulations pour démo)
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      // Dans un environnement réel, on utiliserait Supabase
-      // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      // if (error) throw error;
-      // setUser(data.user);
-      setUser(MOCK_USER);
-      localStorage.setItem('demoUser', JSON.stringify(MOCK_USER));
-      
-      toast({
-        title: "Connexion réussie",
-        description: "Vous êtes maintenant connecté",
-      });
-    } catch (error: any) {
-      console.error("Erreur de connexion:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de connexion",
-        description: error.message || "Une erreur s'est produite lors de la connexion"
-      });
-      throw error;
+  const signIn = async (email: string, password: string): Promise<User> => {
+    // Logique de connexion mockée
+    const matchedUser = MOCK_USERS.find(u => u.email === email);
+    
+    if (matchedUser) {
+      setUser(matchedUser);
+      localStorage.setItem("currentUser", JSON.stringify(matchedUser));
+      return matchedUser;
+    } else {
+      // Simulation d'échec de connexion
+      throw new Error("Identifiants invalides");
     }
   };
 
-  const logout = async (): Promise<void> => {
-    try {
-      // Dans un environnement réel: await supabase.auth.signOut();
-      setUser(null);
-      localStorage.removeItem('demoUser');
-      
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès",
-      });
-    } catch (error: any) {
-      console.error("Erreur de déconnexion:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur de déconnexion",
-        description: error.message || "Une erreur s'est produite lors de la déconnexion"
-      });
-      throw error;
-    }
+  const signOut = async () => {
+    // Logique de déconnexion
+    setUser(null);
+    localStorage.removeItem("currentUser");
   };
 
-  const value = {
-    user,
-    isAuthenticated,
-    isAdmin,
-    isSuperAdmin,
-    isFreelancer,
-    isAccountManager,
-    isClient,
-    isAdminOrSuperAdmin,
-    role,
-    hasMinimumRole: checkMinimumRole,
-    login,
-    logout
-  };
+  // Vérifier si l'utilisateur est admin
+  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
+  
+  // Vérifier si l'utilisateur est freelancer
+  const isFreelancer = user?.role === UserRole.FREELANCER;
 
-  if (loading) {
-    return <div>Chargement...</div>;
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, loading, isAdmin, isFreelancer, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);

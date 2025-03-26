@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Service, ServiceType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -81,8 +82,14 @@ export const useServices = () => {
           description: `Le service "${selectedService.name}" a été mis à jour avec succès.`,
         });
       } else {
-        // Create new service
-        await createService(selectedService as Omit<Service, "id" | "created_at" | "updated_at">, "service");
+        // Create new service - pass only one argument as expected by the function
+        await createService({
+          name: selectedService.name,
+          description: selectedService.description,
+          type: selectedService.type || ServiceType.SERVICE,
+          price: selectedService.price,
+          isActive: selectedService.isActive !== false
+        });
         toast({
           title: "Service créé",
           description: `Le service "${selectedService.name}" a été créé avec succès.`,

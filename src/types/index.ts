@@ -1,5 +1,4 @@
-
-import { ContactStatus as ContactStatusEnum, ContactType } from "@/types/database/enums";
+import { ContactStatus as ContactStatusEnum } from "@/types/database/enums";
 import { Commission, CommissionStatus, CommissionTier } from "./commissions";
 
 export enum UserRole {
@@ -116,6 +115,7 @@ export interface NavItem {
   icon?: React.ComponentType<any>;
   children?: NavItem[];
   role?: UserRole;
+  disabled?: boolean;  // Added disabled property
 }
 
 // Fonction pour vérifier les rôles
@@ -154,5 +154,6 @@ export interface Contact {
 }
 
 // Ré-exporter les types des autres fichiers pour centraliser l'accès
-export type { ContactStatusEnum as ContactStatus, ContactType };
+export type { ContactStatusEnum as ContactStatus };
+// Removing ContactType export as it doesn't exist in the imported module
 export type { Commission, CommissionStatus, CommissionTier };

@@ -108,7 +108,7 @@ const FreelancerQuotesList: React.FC = () => {
                   <TableCell className="font-medium">
                     {quote.id?.substring(0, 8)}...
                   </TableCell>
-                  <TableCell>{quote.contact?.name}</TableCell>
+                  <TableCell>{quote.contactId}</TableCell>
                   <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
                   <TableCell>{formatDate(quote.createdAt)}</TableCell>
                   <TableCell>{formatDate(quote.validUntil)}</TableCell>

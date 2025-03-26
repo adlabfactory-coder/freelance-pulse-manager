@@ -49,8 +49,8 @@ const Quotes: React.FC = () => {
     
     const searchTermLower = searchTerm.toLowerCase();
     return (
-      (quote.contact?.name?.toLowerCase().includes(searchTermLower)) ||
-      (quote.freelancer?.name?.toLowerCase().includes(searchTermLower)) ||
+      (quote.contactId?.toLowerCase().includes(searchTermLower)) ||
+      (quote.freelancerId?.toLowerCase().includes(searchTermLower)) ||
       (quote.status.toLowerCase().includes(searchTermLower))
     );
   });

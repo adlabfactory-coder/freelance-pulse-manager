@@ -1,284 +1,173 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { Loader2, MessageCircle, Moon, Sun, Key, AlertCircle } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { Card as LogoCard } from "@/components/ui/card";
-import { mockSignIn } from "@/utils/supabase-mock-data";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { checkSupabaseConnection } from "@/lib/supabase";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
+import { useAuth } from "@/hooks/use-auth";
 
-const Login: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [demoMode, setDemoMode] = useState(true);
-  const [supabaseStatus, setSupabaseStatus] = useState<{success: boolean, message?: string}>({success: true});
-  
+// Define form schema
+const formSchema = z.object({
+  email: z.string().email("Email invalide").min(1, "L'email est requis"),
+  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
+const LoginPage: React.FC = () => {
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const checkDatabaseConnection = async () => {
-      try {
-        const status = await checkSupabaseConnection();
-        setSupabaseStatus(status);
-        if (!status.success) {
-          console.warn("Problème de connexion à Supabase:", status.message);
-          toast({
-            variant: "default",
-            title: "Mode démo activé",
-            description: "La connexion à Supabase n'est pas disponible. Utilisation du mode démo.",
-          });
-          setDemoMode(true);
-        }
-      } catch (error) {
-        console.error("Erreur lors de la vérification de la connexion à Supabase:", error);
-        setSupabaseStatus({success: false, message: "Erreur de connexion"});
-        setDemoMode(true);
-      }
-    };
+  // Initialize form
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
-    const checkSession = async () => {
-      try {
-        const demoUser = localStorage.getItem('demoUser');
-        
-        if (demoUser) {
-          navigate("/dashboard");
-          return;
-        }
-        
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          navigate("/dashboard");
-        }
-      } catch (error) {
-        console.error("Erreur lors de la vérification de la session:", error);
-      } finally {
-        setCheckingSession(false);
-      }
-    };
-    
-    checkDatabaseConnection();
-    checkSession();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session) {
-          navigate("/dashboard");
-        }
-      }
-    );
-    
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  // Mock login data for demo purposes
+  const mockData = [
+    { role: "admin", email: "admin@example.com", password: "password" },
+    { role: "freelancer", email: "freelancer@example.com", password: "password" },
+    { role: "client", email: "client@example.com", password: "password" },
+  ];
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage(null);
-    
+  const onSubmit = async (data: FormData) => {
+    setError(null);
+    setIsLoading(true);
+
     try {
-      if (demoMode) {
-        const { user, error } = mockSignIn(email, password);
-        
-        if (error) {
-          setErrorMessage(error);
-          return;
-        }
-        
-        if (user) {
-          toast({
-            title: "Connexion réussie (Mode Démo)",
-            description: `Connecté en tant que ${user.name} (${user.role})`,
-          });
-          
-          localStorage.setItem('demoUser', JSON.stringify(user));
-          navigate("/dashboard");
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) {
-          throw error;
-        }
-        
-        toast({
-          title: "Connexion réussie",
-          description: "Vous êtes maintenant connecté",
-        });
-        
+      // For demo purposes, find the user in our mock data
+      const user = mockData.find(
+        (u) => u.email === data.email && u.password === data.password
+      );
+
+      if (user) {
+        // Call the signIn function from auth context
+        await signIn(data.email, data.password);
         navigate("/dashboard");
+      } else {
+        setError("Identifiants invalides");
       }
-    } catch (error: any) {
-      console.error("Erreur de connexion:", error);
-      
-      setErrorMessage(error.message || "Veuillez vérifier vos identifiants");
-      
-      if (!demoMode) {
-        setDemoMode(true);
-        toast({
-          variant: "destructive",
-          title: "Erreur de connexion",
-          description: "Connexion automatique au mode démo. Utilisez l'un des comptes de démonstration listés.",
-        });
-      }
+    } catch (err: any) {
+      setError(err.message || "Une erreur est survenue lors de la connexion");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleWhatsAppContact = () => {
-    window.open(`https://wa.me/212663529031`, '_blank');
+  // Function to autofill form with mock data
+  const autofillForm = (role: string) => {
+    const mockUser = mockData.find((u) => u.role === role);
+    if (mockUser) {
+      form.setValue("email", mockUser.email);
+      form.setValue("password", mockUser.password);
+    }
   };
 
-  if (checkingSession) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex justify-center items-center min-h-screen bg-background">
-      <div className="absolute right-4 top-4">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
-      </div>
-      
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex justify-center mb-4">
-            <LogoCard className="w-16 h-16 flex items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xl shadow">
-              AH
-            </LogoCard>
-          </div>
-          <CardTitle className="text-2xl font-bold text-center">AdLab Hub</CardTitle>
-          <CardDescription className="text-center">
-            Gérez vos prospects et suivez vos commissions
+          <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
+          <CardDescription>
+            Entrez vos identifiants pour accéder à AdLab Hub
           </CardDescription>
-          
-          {!supabaseStatus.success && (
-            <Alert variant="default" className="mt-2 border-amber-500 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Connexion à Supabase indisponible. Mode démo activé automatiquement.
-              </AlertDescription>
-            </Alert>
-          )}
         </CardHeader>
-        
         <CardContent>
-          {errorMessage && (
+          {error && (
             <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {errorMessage}
-              </AlertDescription>
+              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTitle>Erreur</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="votre@email.com" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)}
-                required
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="votre@email.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input 
-                id="password" 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mot de passe</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="Votre mot de passe"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Connexion en cours...
-                </>
-              ) : (
-                "Se connecter"
-              )}
-            </Button>
-          </form>
-          
-          <div className="mt-4">
-            <p className="text-sm text-center text-muted-foreground">
-              Comptes de démonstration:
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2 border rounded">
-                <p className="font-semibold">Admin</p>
-                <p>admin@example.com</p>
-                <p>Mot de passe: 123456</p>
-              </div>
-              <div className="p-2 border rounded">
-                <p className="font-semibold">Freelancer</p>
-                <p>commercial@example.com</p>
-                <p>Mot de passe: 123456</p>
-              </div>
-              <div className="p-2 border rounded">
-                <p className="font-semibold">Client</p>
-                <p>client@example.com</p>
-                <p>Mot de passe: 123456</p>
-              </div>
-              <div className="p-2 border rounded">
-                <p className="font-semibold">Chargé d'affaires</p>
-                <p>freelance@example.com</p>
-                <p>Mot de passe: 123456</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-        
-        <CardFooter className="flex flex-col space-y-4 pt-0">
-          <p className="text-sm text-center text-muted-foreground">
-            Contactez l'administrateur pour obtenir vos identifiants de connexion.
-          </p>
-          <div className="flex flex-col gap-2 w-full">
-            <Button 
-              variant="outline" 
-              className="flex items-center justify-center gap-2 w-full text-green-600 hover:text-green-700 border-green-500 hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-950" 
-              onClick={handleWhatsAppContact}
-            >
-              <MessageCircle className="h-5 w-5" />
-              Contacter l'admin via WhatsApp
-            </Button>
-            <Link to="/auth/reset-demo-passwords">
-              <Button 
-                variant="outline" 
-                className="flex items-center justify-center gap-2 w-full text-blue-600 hover:text-blue-700 border-blue-500 hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
               >
-                <Key className="h-5 w-5" />
-                Réinitialiser les mots de passe démo
+                {isLoading ? "Connexion..." : "Se connecter"}
               </Button>
-            </Link>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex flex-col">
+          <div className="text-sm text-muted-foreground mb-2">
+            Pour la démonstration, vous pouvez vous connecter avec :
+          </div>
+          <div className="grid grid-cols-3 gap-2 w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => autofillForm("admin")}
+            >
+              Admin
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => autofillForm("freelancer")}
+            >
+              Freelancer
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => autofillForm("client")}
+            >
+              Client
+            </Button>
           </div>
         </CardFooter>
       </Card>
@@ -286,4 +175,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

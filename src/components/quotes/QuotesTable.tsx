@@ -108,9 +108,9 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
             quotes.map((quote) => (
               <TableRow key={quote.id}>
                 <TableCell className="font-medium">{quote.id?.substring(0, 8)}</TableCell>
-                <TableCell>{quote.contact?.name || "Client inconnu"}</TableCell>
+                <TableCell>{quote.contactId}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  {quote.freelancer?.name || "Commercial inconnu"}
+                  {quote.freelancerId}
                 </TableCell>
                 <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
                 <TableCell>{getStatusBadge(quote.status)}</TableCell>

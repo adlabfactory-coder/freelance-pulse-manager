@@ -1,120 +1,130 @@
 
 import React from "react";
 import { Service, ServiceType } from "@/types";
+import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-interface ServiceFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface ServiceFormProps {
   service: Partial<Service> | null;
-  onServiceChange: (field: string, value: any) => void;
-  onSave: () => void;
+  onSave: () => Promise<void>;
+  onCancel: () => void;
+  onChange: (field: string, value: any) => void;
 }
 
-const ServiceForm: React.FC<ServiceFormProps> = ({
-  open,
-  onOpenChange,
-  service,
-  onServiceChange,
-  onSave,
-}) => {
+const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSave, onCancel, onChange }) => {
   if (!service) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave();
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {service.id ? "Modifier le service" : "Ajouter un service"}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="grid grid-cols-1 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom du service *</Label>
-              <Input
-                id="name"
-                value={service.name || ""}
-                onChange={(e) => onServiceChange("name", e.target.value)}
-                placeholder="Nom du service"
-                required
-              />
-            </div>
+    <DialogContent className="sm:max-w-[500px]">
+      <DialogHeader>
+        <DialogTitle>
+          {service.id ? "Modifier le service" : "Ajouter un service"}
+        </DialogTitle>
+        <DialogDescription>
+          {service.id
+            ? "Modifiez les détails du service"
+            : "Renseignez les informations pour créer un nouveau service"}
+        </DialogDescription>
+      </DialogHeader>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={service.description || ""}
-                onChange={(e) => onServiceChange("description", e.target.value)}
-                placeholder="Description du service"
-                rows={3}
-              />
-            </div>
+      <div className="space-y-4 py-2">
+        <FormItem>
+          <FormLabel htmlFor="name">Nom du service *</FormLabel>
+          <FormControl>
+            <Input
+              id="name"
+              value={service.name || ""}
+              onChange={(e) => onChange("name", e.target.value)}
+              placeholder="Nom du service"
+              required
+            />
+          </FormControl>
+        </FormItem>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Type *</Label>
-                <Select
-                  value={service.type || ServiceType.SERVICE}
-                  onValueChange={(value) => onServiceChange("type", value)}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Sélectionnez un type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ServiceType.SERVICE}>Service</SelectItem>
-                    <SelectItem value={ServiceType.PRODUCT}>Produit</SelectItem>
-                    <SelectItem value={ServiceType.SUBSCRIPTION}>Abonnement</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <FormItem>
+          <FormLabel htmlFor="description">Description</FormLabel>
+          <FormControl>
+            <Textarea
+              id="description"
+              value={service.description || ""}
+              onChange={(e) => onChange("description", e.target.value)}
+              placeholder="Description du service"
+              rows={3}
+            />
+          </FormControl>
+          <FormDescription>
+            Une description détaillée du service proposé.
+          </FormDescription>
+        </FormItem>
 
-              <div className="space-y-2">
-                <Label htmlFor="price">Prix *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={service.price !== undefined ? service.price : ""}
-                  onChange={(e) => onServiceChange("price", parseFloat(e.target.value))}
-                  placeholder="Prix"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-            </div>
+        <FormItem>
+          <FormLabel htmlFor="type">Type de service *</FormLabel>
+          <Select
+            value={service.type}
+            onValueChange={(value) => onChange("type", value)}
+          >
+            <FormControl>
+              <SelectTrigger id="type">
+                <SelectValue placeholder="Sélectionner un type" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              <SelectItem value={ServiceType.SERVICE}>Service</SelectItem>
+              <SelectItem value={ServiceType.PRODUCT}>Produit</SelectItem>
+              <SelectItem value={ServiceType.SUBSCRIPTION}>
+                Abonnement
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </FormItem>
 
-            <div className="flex items-center justify-between">
-              <Label htmlFor="isActive" className="cursor-pointer">Actif</Label>
-              <Switch
-                id="isActive"
-                checked={service.isActive !== undefined ? service.isActive : true}
-                onCheckedChange={(checked) => onServiceChange("isActive", checked)}
-              />
-            </div>
-          </div>
+        <FormItem>
+          <FormLabel htmlFor="price">Prix (€) *</FormLabel>
+          <FormControl>
+            <Input
+              id="price"
+              type="number"
+              value={service.price || ""}
+              onChange={(e) => onChange("price", parseFloat(e.target.value))}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+            />
+          </FormControl>
+        </FormItem>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit">Enregistrer</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <FormItem className="flex items-center space-x-2">
+          <FormControl>
+            <Switch
+              checked={service.isActive !== false}
+              onCheckedChange={(checked) => onChange("isActive", checked)}
+            />
+          </FormControl>
+          <FormLabel>Service actif</FormLabel>
+        </FormItem>
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button onClick={onSave}>
+          {service.id ? "Mettre à jour" : "Créer"}
+        </Button>
+      </div>
+    </DialogContent>
   );
 };
 

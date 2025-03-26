@@ -1,215 +1,159 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteStatus } from '@/types';
-import { toast } from '@/components/ui/use-toast';
-
-// Utility function to ensure proper enum type
-const ensureQuoteStatus = (status: string): QuoteStatus => {
-  switch(status) {
-    case 'draft': return QuoteStatus.DRAFT;
-    case 'sent': return QuoteStatus.SENT;
-    case 'accepted': return QuoteStatus.ACCEPTED;
-    case 'rejected': return QuoteStatus.REJECTED;
-    case 'expired': return QuoteStatus.EXPIRED;
-    default: return QuoteStatus.DRAFT; // Default value
-  }
-};
+import { v4 as uuidv4 } from 'uuid';
 
 export const fetchQuotes = async (): Promise<Quote[]> => {
   try {
     const { data, error } = await supabase
       .from('quotes')
-      .select(`
-        *,
-        contact:contacts(name, email),
-        freelancer:users(name, email),
-        items:quote_items(*)
-      `)
-      .order('createdAt', { ascending: false });
-
+      .select('*')
+      .is('deleted_at', null);
+    
     if (error) {
-      console.error('Error fetching quotes:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load quotes. Please try again.",
-      });
+      console.error('Erreur lors de la récupération des devis:', error);
       return [];
     }
-
-    // Transform and type-cast the data
-    return data.map(quote => {
-      // Create a properly-typed Quote object
-      const typedQuote: Quote = {
-        id: quote.id,
-        contactId: quote.contactId,
-        freelancerId: quote.freelancerId,
-        totalAmount: quote.totalAmount,
-        status: ensureQuoteStatus(quote.status),
-        validUntil: new Date(quote.validUntil),
-        notes: quote.notes || '',
-        createdAt: new Date(quote.createdAt || Date.now()),
-        updatedAt: new Date(quote.updatedAt || Date.now()),
-        items: quote.items || [],
-        // Cast partial contact/freelancer objects as needed
-        contact: quote.contact as any,
-        freelancer: quote.freelancer as any
-      };
-      
-      return typedQuote;
-    });
+    
+    return data.map(mapDatabaseQuoteToQuote);
   } catch (error) {
-    console.error('Unexpected error fetching quotes:', error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "An unexpected error occurred. Please try again.",
-    });
+    console.error('Erreur lors de la récupération des devis:', error);
     return [];
   }
 };
 
-export const createQuote = async (quote: Quote): Promise<{ success: boolean, quoteId?: string }> => {
+export const fetchQuoteById = async (id: string): Promise<Quote | null> => {
   try {
-    // Map the Quote enum to string for database storage
-    let statusString: string;
-    switch(quote.status) {
-      case QuoteStatus.DRAFT: statusString = 'draft'; break;
-      case QuoteStatus.SENT: statusString = 'sent'; break;
-      case QuoteStatus.ACCEPTED: statusString = 'accepted'; break;
-      case QuoteStatus.REJECTED: statusString = 'rejected'; break;
-      case QuoteStatus.EXPIRED: statusString = 'expired'; break;
-      default: statusString = 'draft';
-    }
-    
-    // Conversion de la date en format ISO string
-    const validUntilStr = quote.validUntil instanceof Date 
-      ? quote.validUntil.toISOString() 
-      : new Date(quote.validUntil).toISOString();
-    
-    console.log("Création de devis avec les données:", {
-      contactId: quote.contactId,
-      freelancerId: quote.freelancerId,
-      totalAmount: quote.totalAmount,
-      status: statusString,
-      validUntil: validUntilStr,
-      notes: quote.notes
-    });
-    
-    // Insérer le devis
     const { data, error } = await supabase
       .from('quotes')
-      .insert({
-        contactId: quote.contactId,
-        freelancerId: quote.freelancerId,
-        totalAmount: quote.totalAmount,
-        status: statusString,
-        validUntil: validUntilStr,
-        notes: quote.notes
-      })
+      .select('*')
+      .eq('id', id)
+      .is('deleted_at', null)
+      .single();
+    
+    if (error) {
+      console.error(`Erreur lors de la récupération du devis ${id}:`, error);
+      return null;
+    }
+    
+    return mapDatabaseQuoteToQuote(data);
+  } catch (error) {
+    console.error(`Erreur lors de la récupération du devis ${id}:`, error);
+    return null;
+  }
+};
+
+export const createQuote = async (quoteData: Quote): Promise<{ success: boolean, id?: string }> => {
+  try {
+    // Map Quote to database format
+    const dbQuote = {
+      contactId: quoteData.contactId,
+      freelancerId: quoteData.freelancerId,
+      totalAmount: quoteData.totalAmount,
+      status: quoteData.status,
+      validUntil: quoteData.validUntil,
+      notes: quoteData.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    // Insert the quote
+    const { data, error } = await supabase
+      .from('quotes')
+      .insert(dbQuote)
       .select()
       .single();
-
+    
     if (error) {
-      console.error("Erreur lors de la création du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de créer le devis. Veuillez réessayer plus tard.",
-      });
+      console.error('Erreur lors de la création du devis:', error);
       return { success: false };
     }
-
-    const quoteId = data.id;
-    console.log("Devis créé avec ID:", quoteId);
     
-    // Insérer les éléments du devis
-    if (quote.items && quote.items.length > 0) {
-      const quoteItemsWithQuoteId = quote.items.map(item => ({
-        quoteId,
+    const quoteId = data.id;
+    
+    // Now insert quote items
+    if (quoteData.items && quoteData.items.length > 0) {
+      const itemsWithQuoteId = quoteData.items.map(item => ({
+        quoteId: quoteId,
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        discount: item.discount || 0,
-        tax: item.tax || 0,
-        serviceId: item.serviceId || null // S'assurer que serviceId est null si non défini
+        discount: item.discount,
+        tax: item.tax,
       }));
-      
-      console.log("Ajout des éléments au devis:", quoteItemsWithQuoteId);
       
       const { error: itemsError } = await supabase
         .from('quote_items')
-        .insert(quoteItemsWithQuoteId);
+        .insert(itemsWithQuoteId);
       
       if (itemsError) {
-        console.error("Erreur lors de la création des éléments du devis:", itemsError);
-        toast({
-          variant: "destructive",
-          title: "Attention",
-          description: "Le devis a été créé mais certains éléments n'ont pas pu être ajoutés.",
-        });
-        return { success: true, quoteId };
+        console.error('Erreur lors de l\'ajout des éléments du devis:', itemsError);
+        // We don't return an error here since the quote was created successfully
       }
     }
     
-    toast({
-      title: "Succès",
-      description: "Le devis a été créé avec succès.",
-    });
-    
-    return { success: true, quoteId };
+    return { success: true, id: quoteId };
   } catch (error) {
-    console.error("Erreur lors de la création du devis:", error);
-    toast({
-      variant: "destructive",
-      title: "Erreur",
-      description: "Une erreur est survenue lors de la création du devis.",
-    });
+    console.error('Erreur lors de la création du devis:', error);
     return { success: false };
   }
 };
 
 export const updateQuoteStatus = async (id: string, status: QuoteStatus): Promise<boolean> => {
   try {
-    // Convert enum to string for database storage
-    let statusString: string;
-    switch(status) {
-      case QuoteStatus.DRAFT: statusString = 'draft'; break;
-      case QuoteStatus.SENT: statusString = 'sent'; break;
-      case QuoteStatus.ACCEPTED: statusString = 'accepted'; break;
-      case QuoteStatus.REJECTED: statusString = 'rejected'; break;
-      case QuoteStatus.EXPIRED: statusString = 'expired'; break;
-      default: statusString = 'draft';
-    }
-    
     const { error } = await supabase
       .from('quotes')
-      .update({ status: statusString, updatedAt: new Date().toISOString() })
+      .update({ 
+        status: status,
+        updatedAt: new Date().toISOString()
+      })
       .eq('id', id);
     
     if (error) {
-      console.error("Erreur lors de la mise à jour du statut du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut du devis.",
-      });
+      console.error(`Erreur lors de la mise à jour du statut du devis ${id}:`, error);
       return false;
     }
     
-    toast({
-      title: "Succès",
-      description: `Le statut du devis a été mis à jour en "${statusString}".`,
-    });
+    return true;
+  } catch (error) {
+    console.error(`Erreur lors de la mise à jour du statut du devis ${id}:`, error);
+    return false;
+  }
+};
+
+export const deleteQuote = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('quotes')
+      .update({ 
+        deleted_at: new Date().toISOString()
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Erreur lors de la suppression du devis ${id}:`, error);
+      return false;
+    }
     
     return true;
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du statut du devis:", error);
-    toast({
-      variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour du statut du devis.",
-      });
+    console.error(`Erreur lors de la suppression du devis ${id}:`, error);
     return false;
   }
+};
+
+// Helper function to map database quote to our Quote type
+const mapDatabaseQuoteToQuote = (dbQuote: any): Quote => {
+  return {
+    id: dbQuote.id,
+    contactId: dbQuote.contactId,
+    freelancerId: dbQuote.freelancerId,
+    totalAmount: dbQuote.totalAmount,
+    validUntil: dbQuote.validUntil ? new Date(dbQuote.validUntil) : new Date(),
+    status: dbQuote.status,
+    notes: dbQuote.notes,
+    createdAt: dbQuote.createdAt ? new Date(dbQuote.createdAt) : new Date(),
+    updatedAt: dbQuote.updatedAt ? new Date(dbQuote.updatedAt) : new Date(),
+    items: [] // Items are fetched separately if needed
+  };
 };

@@ -1,61 +1,67 @@
-import React, { useState, useEffect } from 'react';
-import { SubscriptionPlan, SubscriptionInterval } from '@/types';
-import { subscriptionPlanService } from '@/services/subscriptions';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import SubscriptionPlans from '@/components/subscriptions/SubscriptionPlans';
 
-const Subscriptions: React.FC = () => {
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+import React, { useState } from "react";
+import { SubscriptionPlan } from "@/types";
+import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";
+import { getSubscriptionPlans } from "@/services/subscriptions";
+import { useToast } from "@/hooks/use-toast";
 
-  useEffect(() => {
-    const loadPlans = async () => {
-      setIsLoading(true);
-      try {
-        const data = await subscriptionPlanService.getSubscriptionPlans();
-        setPlans(data);
-      } catch (error) {
-        console.error("Erreur lors du chargement des plans:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+import SubscriptionHeader from "@/components/subscriptions/SubscriptionHeader";
+import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
+import SubscriptionFilters from "@/components/subscriptions/SubscriptionFilters";
+import SubscriptionList from "@/components/subscriptions/SubscriptionList";
 
-    loadPlans();
-  }, []);
+const SubscriptionsPage: React.FC = () => {
+  const [selectedInterval, setSelectedInterval] = useState<string | null>(null);
+  const { plans, isLoading } = useSubscriptionPlans();
+  const { toast } = useToast();
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
 
-  const handleSelectPlan = (plan: any) => {
-    setSelectedPlan(plan);
+  // Filter plans based on selected interval
+  const filteredPlans = selectedInterval
+    ? plans.filter(plan => plan.interval === selectedInterval)
+    : plans;
+
+  const handleSelectPlan = (plan: SubscriptionPlan) => {
+    console.log("Plan selected:", plan);
+    // Handle plan selection logic
+    toast({
+      title: "Plan sélectionné",
+      description: `Vous avez sélectionné le plan "${plan.name}".`,
+    });
+  };
+
+  const handleFilterChange = (interval: string | null) => {
+    setSelectedInterval(interval);
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Plans d'abonnement</h1>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Ajouter un plan
-        </Button>
-      </div>
+    <div className="space-y-8">
+      <SubscriptionHeader />
 
-      <SubscriptionPlans 
-        plans={plans} 
-        onSelectPlan={handleSelectPlan} 
-        loading={isLoading} 
-      />
-
-      {selectedPlan && (
-        <div className="mt-8 p-4 border rounded-md">
-          <h2 className="text-xl font-semibold">Détails du plan sélectionné</h2>
-          <p>Nom: {selectedPlan.name}</p>
-          <p>Description: {selectedPlan.description}</p>
-          <p>Intervalle: {selectedPlan.interval}</p>
-          <p>Prix: {selectedPlan.price}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1 space-y-4">
+          <SubscriptionFilters
+            selectedInterval={selectedInterval}
+            onFilterChange={handleFilterChange}
+          />
         </div>
-      )}
+
+        <div className="md:col-span-2 space-y-6">
+          <SubscriptionPlans
+            plans={filteredPlans}
+            onSelectPlan={handleSelectPlan}
+            loading={isLoading}
+          />
+
+          <SubscriptionList
+            subscriptions={subscriptions}
+            loading={subscriptionsLoading}
+          />
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Subscriptions;
+export default SubscriptionsPage;
