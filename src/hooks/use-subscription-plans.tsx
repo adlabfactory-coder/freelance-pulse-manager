@@ -14,6 +14,7 @@ export const useSubscriptionPlans = () => {
       setIsLoading(true);
       try {
         const plansData = await getSubscriptionPlans();
+        console.log("Plans d'abonnement chargés:", plansData);
         setPlans(plansData);
       } catch (error) {
         console.error("Erreur lors du chargement des plans d'abonnement:", error);

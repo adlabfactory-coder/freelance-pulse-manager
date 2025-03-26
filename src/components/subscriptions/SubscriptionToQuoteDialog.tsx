@@ -4,12 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { QuoteStatus, SubscriptionPlan } from "@/types";
-import { useQuoteForm } from "@/components/quotes/hooks/useQuoteForm";
+import { useQuoteForm } from "@/hooks/useQuoteForm";
 import ClientSelector from "@/components/quotes/form/ClientSelector";
 import FreelancerSelector from "@/components/quotes/form/FreelancerSelector";
 import StatusSelector from "@/components/quotes/form/StatusSelector";
 import QuoteValidityDatePicker from "@/components/quotes/form/QuoteValidityDatePicker";
-import { format } from "date-fns";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/format";
 
@@ -34,7 +33,13 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     contacts,
     freelancers,
     isSubmitting,
-    handleSubmit
+    handleSubmit,
+    setContactId: setFormContactId,
+    setFreelancerId: setFormFreelancerId,
+    setValidUntil: setFormValidUntil,
+    setStatus: setFormStatus,
+    addItem,
+    loadData
   } = useQuoteForm({
     onCloseDialog: onOpenChange,
     onQuoteCreated: () => {
@@ -42,6 +47,21 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
       onOpenChange(false);
     }
   });
+
+  // Charger les données au moment de l'ouverture du dialogue
+  React.useEffect(() => {
+    if (open) {
+      loadData();
+    }
+  }, [open, loadData]);
+
+  // Synchroniser les états locaux avec les états du formulaire
+  React.useEffect(() => {
+    if (contactId) setFormContactId(contactId);
+    if (freelancerId) setFormFreelancerId(freelancerId);
+    setFormValidUntil(validUntil);
+    setFormStatus(status);
+  }, [contactId, freelancerId, validUntil, status, setFormContactId, setFormFreelancerId, setFormValidUntil, setFormStatus]);
 
   const handleCreateQuote = async () => {
     if (!contactId) {
@@ -58,13 +78,13 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     
     try {
       // Créer le devis avec un seul élément basé sur le plan d'abonnement
-      const quoteItems = [{
+      addItem({
         description: `Abonnement ${plan.name}`,
         quantity: 1,
         unitPrice: plan.price,
         tax: 20,
         discount: 0
-      }];
+      });
       
       // Soumettre le formulaire
       await handleSubmit();
@@ -113,8 +133,8 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={handleCreateQuote} disabled={loading || !contactId || !freelancerId}>
-            {loading ? (
+          <Button onClick={handleCreateQuote} disabled={isSubmitting || !contactId || !freelancerId}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Création en cours...
