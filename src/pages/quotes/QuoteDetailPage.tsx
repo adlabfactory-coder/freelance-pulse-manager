@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,15 +42,22 @@ const QuoteDetailPage: React.FC = () => {
           throw error;
         }
 
-        // Conversion des dates
-        const quote: Quote = {
-          ...data,
+        const quoteData: Quote = {
+          id: data.id,
+          contactId: data.contactId,
+          freelancerId: data.freelancerId,
+          totalAmount: data.totalAmount,
+          status: data.status as QuoteStatus,
           validUntil: new Date(data.validUntil),
+          notes: data.notes,
+          items: data.items,
           createdAt: new Date(data.createdAt),
-          updatedAt: new Date(data.updatedAt)
+          updatedAt: new Date(data.updatedAt),
+          contact: data.contact,
+          freelancer: data.freelancer
         };
 
-        setQuote(quote);
+        setQuote(quoteData);
       } catch (error) {
         console.error('Erreur lors de la récupération du devis:', error);
         toast({
@@ -68,7 +74,7 @@ const QuoteDetailPage: React.FC = () => {
   }, [quoteId, toast]);
 
   const handleChangeStatus = async (status: QuoteStatus) => {
-    if (!quote) return;
+    if (!quote?.id) return;
     
     try {
       setUpdating(true);
@@ -100,7 +106,7 @@ const QuoteDetailPage: React.FC = () => {
       case QuoteStatus.SENT:
         return <Badge variant="secondary">Envoyé</Badge>;
       case QuoteStatus.ACCEPTED:
-        return <Badge variant="success">Accepté</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Accepté</Badge>;
       case QuoteStatus.REJECTED:
         return <Badge variant="destructive">Rejeté</Badge>;
       case QuoteStatus.EXPIRED:

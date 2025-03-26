@@ -18,11 +18,23 @@ import { useNavigate } from "react-router-dom";
 import { formatCurrency, formatDate } from "@/utils/format";
 import CommissionStatusBadge from "@/components/commissions/CommissionStatusBadge";
 
+interface SubscriptionDetails {
+  name?: string;
+  clientId?: string;
+  client?: {
+    name?: string;
+  };
+}
+
+interface CommissionWithDetails extends Commission {
+  subscriptionDetails?: SubscriptionDetails;
+}
+
 const FreelancerCommissionsList: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [commissions, setCommissions] = useState<CommissionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,7 +55,21 @@ const FreelancerCommissionsList: React.FC = () => {
           throw error;
         }
 
-        setCommissions(data as unknown as Commission[]);
+        // Transformer les données pour correspondre à notre interface
+        const transformedData = data.map(item => ({
+          id: item.id,
+          freelancerId: item.freelancerId,
+          amount: item.amount,
+          tier: item.tier,
+          periodStart: new Date(item.periodStart),
+          periodEnd: new Date(item.periodEnd),
+          status: item.status,
+          paidDate: item.paidDate ? new Date(item.paidDate) : undefined,
+          paymentRequested: item.payment_requested || false,
+          subscriptionDetails: item.subscription
+        }));
+
+        setCommissions(transformedData);
       } catch (error) {
         console.error("Erreur lors du chargement des commissions:", error);
         toast({
@@ -129,7 +155,7 @@ const FreelancerCommissionsList: React.FC = () => {
                     {formatDate(commission.periodStart)} - {formatDate(commission.periodEnd)}
                   </TableCell>
                   <TableCell>
-                    {commission.subscription?.client?.name || 'Client inconnu'}
+                    {commission.subscriptionDetails?.client?.name || 'Client inconnu'}
                   </TableCell>
                   <TableCell>{formatCurrency(commission.amount)}</TableCell>
                   <TableCell>

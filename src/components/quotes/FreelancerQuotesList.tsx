@@ -57,7 +57,7 @@ const FreelancerQuotesList: React.FC = () => {
       case QuoteStatus.SENT:
         return <Badge variant="secondary">Envoyé</Badge>;
       case QuoteStatus.ACCEPTED:
-        return <Badge variant="success">Accepté</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Accepté</Badge>;
       case QuoteStatus.REJECTED:
         return <Badge variant="destructive">Rejeté</Badge>;
       case QuoteStatus.EXPIRED:
@@ -106,7 +106,7 @@ const FreelancerQuotesList: React.FC = () => {
               quotes.map((quote) => (
                 <TableRow key={quote.id}>
                   <TableCell className="font-medium">
-                    {quote.id.substring(0, 8)}...
+                    {quote.id?.substring(0, 8)}...
                   </TableCell>
                   <TableCell>{quote.contact?.name}</TableCell>
                   <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
@@ -117,7 +117,7 @@ const FreelancerQuotesList: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleViewQuote(quote.id)}
+                      onClick={() => handleViewQuote(quote.id || "")}
                     >
                       Voir
                     </Button>
