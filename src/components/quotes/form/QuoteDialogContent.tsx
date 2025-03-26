@@ -13,6 +13,7 @@ import QuoteItemsList from "./QuoteItemsList";
 import QuoteNotesField from "./QuoteNotesField";
 import StatusSelector from "./StatusSelector";
 import QuoteValidityDatePicker from "./QuoteValidityDatePicker";
+import { formatCurrency } from "@/utils/format";
 
 interface QuoteDialogContentProps {
   loading: boolean;
@@ -116,7 +117,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
         <div>
           {quoteData.totalAmount !== undefined && (
             <div className="font-bold text-lg">
-              Total: {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(quoteData.totalAmount)}
+              Total: {formatCurrency(quoteData.totalAmount)}
             </div>
           )}
         </div>

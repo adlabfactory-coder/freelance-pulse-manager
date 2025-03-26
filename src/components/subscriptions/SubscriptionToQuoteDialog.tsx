@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import { createQuote } from "@/services/quote-service";
 import { Quote, QuoteItem, QuoteStatus } from "@/types";
 import { addDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/format";
 
 interface SubscriptionToQuoteDialogProps {
   open: boolean;
@@ -75,7 +75,6 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
 
     setSubmitting(true);
     try {
-      // Créer un élément de devis pour l'abonnement
       const quoteItem: QuoteItem = {
         description: `Abonnement ${plan.name} - ${plan.interval}`,
         quantity: 1,
@@ -84,12 +83,10 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         tax: 20
       };
 
-      // Calculer le montant total avec TVA
       const subtotal = quoteItem.quantity * quoteItem.unitPrice;
       const taxAmount = subtotal * (quoteItem.tax / 100);
       const totalAmount = subtotal + taxAmount;
 
-      // Créer le devis avec validité de 30 jours
       const quote: Quote = {
         contactId: selectedContactId,
         freelancerId: selectedFreelancerId,
@@ -112,7 +109,6 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         
         onOpenChange(false);
         
-        // Rediriger vers la page des devis
         navigate("/quotes");
       } else {
         throw new Error("Erreur lors de la création du devis");
@@ -137,7 +133,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Créer un devis pour l'abonnement</DialogTitle>
           <DialogDescription>
-            Sélectionnez un client et un commercial pour créer un devis pour l'abonnement {plan.name}.
+            Sélectionnez un contact et un commercial pour créer un devis pour l'abonnement {plan.name}.
           </DialogDescription>
         </DialogHeader>
 
@@ -146,7 +142,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
             <Label htmlFor="plan">Abonnement sélectionné</Label>
             <div className="p-2 bg-muted rounded-md">
               <h4 className="font-medium">{plan.name}</h4>
-              <p className="text-sm text-muted-foreground">{plan.price}€ / {plan.interval}</p>
+              <p className="text-sm text-muted-foreground">{formatCurrency(plan.price)} / {plan.interval}</p>
               {plan.description && (
                 <p className="text-sm mt-1">{plan.description}</p>
               )}
@@ -154,14 +150,14 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact">Client</Label>
+            <Label htmlFor="contact">Contact</Label>
             <Select
               value={selectedContactId}
               onValueChange={setSelectedContactId}
               disabled={loading}
             >
               <SelectTrigger id="contact">
-                <SelectValue placeholder="Sélectionner un client" />
+                <SelectValue placeholder="Sélectionner un contact" />
               </SelectTrigger>
               <SelectContent>
                 {contacts.map(contact => (

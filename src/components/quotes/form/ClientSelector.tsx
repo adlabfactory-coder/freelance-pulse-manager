@@ -17,18 +17,18 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({
 }) => {
   return (
     <div>
-      <Label htmlFor="contact">Client</Label>
+      <Label htmlFor="contact">Contact</Label>
       <Select
         value={contactId}
         onValueChange={onSelect}
       >
         <SelectTrigger id="contact">
-          <SelectValue placeholder="Sélectionner un client" />
+          <SelectValue placeholder="Sélectionner un contact" />
         </SelectTrigger>
         <SelectContent>
           {contacts.map(contact => (
             <SelectItem key={contact.id} value={contact.id}>
-              {contact.name} ({contact.company || "Particulier"})
+              {contact.name} {contact.company ? `(${contact.company})` : ''}
             </SelectItem>
           ))}
         </SelectContent>
