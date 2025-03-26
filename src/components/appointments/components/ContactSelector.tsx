@@ -1,18 +1,20 @@
 
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase/client";
 
 interface ContactSelectorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const ContactSelector: React.FC<ContactSelectorProps> = ({
   value,
   onChange,
-  placeholder = "Sélectionner un contact"
+  placeholder = "Sélectionner un contact",
+  disabled = false
 }) => {
   const [contacts, setContacts] = useState<Array<{ id: string; name: string }>>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
           .order('name');
 
         if (error) {
+          console.error("Erreur lors du chargement des contacts:", error);
           throw error;
         }
 
@@ -43,11 +46,16 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
   }, []);
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={loading}>
+    <Select value={value} onValueChange={onChange} disabled={loading || disabled}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder={loading ? "Chargement des contacts..." : placeholder} />
       </SelectTrigger>
       <SelectContent>
+        {contacts.length === 0 && !loading && (
+          <SelectItem value="no-contacts" disabled>
+            Aucun contact disponible
+          </SelectItem>
+        )}
         {contacts.map((contact) => (
           <SelectItem key={contact.id} value={contact.id}>
             {contact.name}

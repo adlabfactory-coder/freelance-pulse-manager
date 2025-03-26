@@ -1,106 +1,119 @@
 
-import { useState, useEffect } from "react";
-import { useSupabase } from "@/hooks/use-supabase";
+import { useState, useEffect, useCallback } from "react";
+import { supabase, checkSupabaseConnection } from "@/lib/supabase/client";
+import { tableNames } from "@/services/supabase/setup/database-status";
+import { toast } from "@/components/ui/use-toast";
 
 export type TableStatus = {
   table: string;
   exists: boolean;
 };
 
-export type DatabaseStatus = "ok" | "partial" | "not_configured" | "connection_error" | "unknown" | "loading";
+export type DatabaseStatusType = "ok" | "partial" | "not_configured" | "connection_error" | "unknown" | "loading";
 
-export const useDatabaseStatus = () => {
-  const supabase = useSupabase();
+export function useDatabaseStatus() {
+  const [status, setStatus] = useState<DatabaseStatusType>("loading");
   const [isLoading, setIsLoading] = useState(true);
-  const [tablesStatus, setTablesStatus] = useState<TableStatus[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  
-  const fetchStatus = async () => {
-    setIsLoading(true);
-    setConnectionError(null);
+  const [tablesStatus, setTablesStatus] = useState<TableStatus[]>([]);
 
+  const checkTableExists = useCallback(async (tableName: string): Promise<boolean> => {
     try {
-      const tables = [
-        'users', 
-        'contacts', 
-        'appointments', 
-        'quotes', 
-        'quote_items',
-        'subscriptions', 
-        'commissions', 
-        'commission_rules'
-      ];
-      
+      // Try with RPC function first
       try {
-        // Vérifier la connexion d'abord
-        const connectionStatus = await supabase.checkSupabaseStatus();
-        
-        if (!connectionStatus.success) {
-          setConnectionError(connectionStatus.message || "Impossible de se connecter à Supabase");
-          setTablesStatus(tables.map(table => ({ table, exists: false })));
-          setIsLoading(false);
-          return;
+        const { data, error } = await supabase.rpc('check_table_exists', { table_name: tableName });
+        if (!error) {
+          return !!data;
         }
-        
-        // Si la connexion est établie, vérifier les tables
-        const dbStatus = await supabase.checkDatabaseStatus();
-        
-        if (dbStatus.success) {
-          // Toutes les tables existent
-          setTablesStatus(tables.map(table => ({ table, exists: true })));
-        } else if (dbStatus.missingTables) {
-          // Certaines tables sont manquantes
-          setTablesStatus(tables.map(table => ({
-            table, 
-            exists: !dbStatus.missingTables?.includes(table)
-          })));
-        } else {
-          // Échec de la vérification
-          setTablesStatus(tables.map(table => ({ table, exists: false })));
-        }
-      } catch (error: any) {
-        console.error("Erreur lors de la vérification des tables:", error);
-        setConnectionError(error.message || "Erreur lors de la vérification des tables");
-        setTablesStatus(tables.map(table => ({ table, exists: false })));
+      } catch (rpcError) {
+        // Fall back to direct query if RPC not available
       }
-    } catch (error) {
-      console.error("Erreur générale:", error);
-      setConnectionError("Erreur inattendue lors de la vérification de la base de données");
-    } finally {
-      setIsLoading(false);
+      
+      // Try direct query as fallback
+      const { error } = await supabase.from(tableName).select('id').limit(1);
+      return !error || error.code !== '42P01'; // 42P01 is 'relation does not exist'
+    } catch (err) {
+      console.error(`Error checking if table ${tableName} exists:`, err);
+      return false;
     }
-  };
-  
-  useEffect(() => {
-    fetchStatus();
   }, []);
-  
-  const handleRefresh = async () => {
+
+  const checkDatabaseStatus = useCallback(async () => {
+    try {
+      // Check all required tables
+      const results = await Promise.all(
+        tableNames.map(async (tableName) => ({
+          table: tableName,
+          exists: await checkTableExists(tableName)
+        }))
+      );
+      
+      setTablesStatus(results);
+      
+      // Determine overall status
+      const missingTables = results.filter(r => !r.exists);
+      if (missingTables.length === 0) {
+        setStatus("ok");
+      } else if (missingTables.length < tableNames.length) {
+        setStatus("partial");
+      } else {
+        setStatus("not_configured");
+      }
+      
+      setConnectionError(null);
+    } catch (err: any) {
+      console.error("Error checking database status:", err);
+      setConnectionError(err.message || "Une erreur est survenue lors de la vérification des tables");
+      setStatus("unknown");
+    }
+  }, [checkTableExists]);
+
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchStatus();
-    setRefreshing(false);
-  };
-  
-  const getOverallStatus = (): DatabaseStatus => {
-    if (isLoading) return "loading";
-    if (connectionError) return "connection_error";
-    if (tablesStatus.length === 0) return "unknown";
     
-    const missingTables = tablesStatus.filter(t => !t.exists);
-    if (missingTables.length === 0) return "ok";
-    if (missingTables.length === tablesStatus.length) return "not_configured";
-    return "partial";
-  };
-  
+    // Check Supabase connection first
+    try {
+      const connectionStatus = await checkSupabaseConnection();
+      
+      if (!connectionStatus.success) {
+        setConnectionError(connectionStatus.message);
+        setStatus("connection_error");
+        setTablesStatus([]);
+        setRefreshing(false);
+        return;
+      }
+      
+      // If connection is successful, check database status
+      await checkDatabaseStatus();
+    } catch (error: any) {
+      console.error("Error during refresh:", error);
+      setConnectionError(error.message || "Erreur lors de la vérification de la connexion");
+      setStatus("connection_error");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [checkDatabaseStatus]);
+
+  // Initial check
+  useEffect(() => {
+    const initialCheck = async () => {
+      setIsLoading(true);
+      await handleRefresh();
+      setIsLoading(false);
+    };
+    
+    initialCheck();
+  }, [handleRefresh]);
+
   return {
-    tablesStatus,
+    status,
     isLoading,
     refreshing,
     connectionError,
-    status: getOverallStatus(),
+    tablesStatus,
     handleRefresh
   };
-};
+}
 
 export default useDatabaseStatus;

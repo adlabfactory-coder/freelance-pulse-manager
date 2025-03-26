@@ -7,7 +7,7 @@ export interface Appointment {
   duration: number;
   status: "scheduled" | "cancelled" | "completed" | "pending" | "no_show";
   contactId: string;
-  freelancerid: string; // Utilisation cohérente de freelancerid (tout en minuscule)
+  freelancerId: string; // Changed from freelancerid to freelancerId for consistency
   location: string | null;
   notes: string | null;
   createdAt: string;

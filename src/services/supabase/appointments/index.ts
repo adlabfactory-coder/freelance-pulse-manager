@@ -1,6 +1,6 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Appointment } from '@/types/appointment';
+import { Appointment, AppointmentStatus } from '@/types/appointment';
 
 export const createAppointmentsService = (supabase: SupabaseClient) => {
   const getAppointments = async () => {
@@ -22,7 +22,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
-      .eq('freelancerid', freelancerId)
+      .eq('freelancerId', freelancerId) // Updated from freelancerid to freelancerId
       .is('deleted_at', null)
       .order('date', { ascending: true });
 
@@ -54,7 +54,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from('appointments')
       .select('*, contacts(*)')
-      .eq('status', 'pending')
+      .eq('status', AppointmentStatus.PENDING)
       .is('deleted_at', null)
       .order('date', { ascending: true });
 
@@ -85,7 +85,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     }
   };
 
-  const createAutoAssignAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createAutoAssignAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'freelancerId'>) => {
     try {
       const { data, error } = await supabase
         .rpc('create_auto_assign_appointment', {
@@ -164,3 +164,26 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     deleteAppointment
   };
 };
+
+// Export a simpler interface for usage in components
+export const appointmentsService = {
+  getAppointments: () => createAppointmentsService(supabase).getAppointments(),
+  getAppointmentsByFreelancer: (freelancerId: string) => 
+    createAppointmentsService(supabase).getAppointmentsByFreelancer(freelancerId),
+  getAppointmentsByContact: (contactId: string) => 
+    createAppointmentsService(supabase).getAppointmentsByContact(contactId),
+  getPendingAppointments: () => createAppointmentsService(supabase).getPendingAppointments(),
+  createAppointment: (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => 
+    createAppointmentsService(supabase).createAppointment(appointmentData),
+  createAutoAssignAppointment: (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'freelancerId'>) => 
+    createAppointmentsService(supabase).createAutoAssignAppointment(appointmentData),
+  acceptAppointment: (appointmentId: string, freelancerId: string) => 
+    createAppointmentsService(supabase).acceptAppointment(appointmentId, freelancerId),
+  updateAppointment: (appointmentId: string, updateData: Partial<Appointment>) => 
+    createAppointmentsService(supabase).updateAppointment(appointmentId, updateData),
+  deleteAppointment: (appointmentId: string) => 
+    createAppointmentsService(supabase).deleteAppointment(appointmentId)
+};
+
+// Import necessary Supabase client
+import { supabase } from '@/lib/supabase';
