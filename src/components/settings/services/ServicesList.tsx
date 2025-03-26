@@ -1,4 +1,3 @@
-
 import { Service } from "@/types/services";
 import {
   Table,
@@ -17,6 +16,22 @@ const formatPrice = (price: number): string => {
     style: 'currency',
     currency: 'EUR'
   }).format(price);
+};
+
+// Corrigeons la comparaison de type
+const getTypeLabel = (type: string) => {
+  switch (type) {
+    case "service":
+      return "Service";
+    case "product":
+      return "Produit";
+    case "subscription":
+      return "Abonnement";
+    case "pack":
+      return "Pack";
+    default:
+      return type;
+  }
 };
 
 interface ServicesListProps {
@@ -57,11 +72,7 @@ const ServicesList = ({ services, loading, onEditService, onDeleteService }: Ser
                 <TableCell className="font-medium">{service.name}</TableCell>
                 <TableCell>{service.description || "-"}</TableCell>
                 <TableCell>
-                  {service.type === "service"
-                    ? "Service"
-                    : service.type === "product"
-                    ? "Produit"
-                    : "Abonnement"}
+                  {getTypeLabel(service.type)}
                 </TableCell>
                 <TableCell className="text-right">
                   {formatPrice(service.price)}

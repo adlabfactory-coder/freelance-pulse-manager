@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -57,18 +56,16 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
 
   const getStatusBadgeVariant = (status: QuoteStatus) => {
     switch (status) {
-      case QuoteStatus.DRAFT:
-        return "secondary";
-      case QuoteStatus.SENT:
-        return "default";
       case QuoteStatus.ACCEPTED:
-        return "success";
+        return "success" as const;
       case QuoteStatus.REJECTED:
         return "destructive";
+      case QuoteStatus.SENT:
+        return "default";
       case QuoteStatus.EXPIRED:
-        return "outline";
-      default:
         return "secondary";
+      default:
+        return "outline";
     }
   };
 

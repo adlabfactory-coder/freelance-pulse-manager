@@ -1,10 +1,9 @@
-
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { Quote, QuoteItem, QuoteStatus } from '@/types';
 import { format } from 'date-fns';
 
-export const createQuotesService = (supabase: SupabaseClient<Database>) => {
+export const createQuotesService = (supabase: SupabaseClient) => {
   return {
     fetchQuotes: async (): Promise<Quote[]> => {
       try {

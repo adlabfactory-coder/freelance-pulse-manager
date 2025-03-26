@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { Quote, QuoteItem, QuoteStatus } from "@/types";
 import { format } from "date-fns";
 import { v4 as uuidv4 } from "uuid";

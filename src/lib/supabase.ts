@@ -1,20 +1,12 @@
 
-// Main Supabase export file
-// This file re-exports all Supabase-related functionality to maintain compatibility
+import { createClient } from '@supabase/supabase-js';
+import { Database } from '@/types/database';
 
-export { supabase } from './supabase/supabase-client';
-export { checkSupabaseConnection } from './supabase-connection';
-export { 
-  checkDatabaseSetup, 
-  setupDatabase,
-  tableNames,
-  getCreateTableSql
-} from './supabase/index';
-export { createDatabaseFunctions } from './supabase-functions';
-export type {
-  DatabaseConnectionStatus,
-  DatabaseSetupStatus,
-  DatabaseSetupResult,
-  TableSetupStatus,
-  DatabaseSetupOptions
-} from './supabase/types';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase environment variables are missing!');
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
