@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
-import { Subscription, SubscriptionStatus } from "@/types";
+import { Subscription, SubscriptionStatus, SubscriptionInterval } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
 export const useSubscriptions = () => {
@@ -24,12 +24,12 @@ export const useSubscriptions = () => {
             name: "Plan Basique",
             description: "Forfait de base pour les petites entreprises",
             price: 5000,
-            interval: "monthly",
+            interval: SubscriptionInterval.MONTHLY,
             clientId: "client-1",
             clientName: "Client Demo",
             freelancerId: "freelancer-1",
             freelancerName: "Commercial Demo",
-            status: "active",
+            status: SubscriptionStatus.ACTIVE,
             startDate: new Date(2023, 0, 15),
             renewalDate: new Date(2023, 1, 15)
           },
@@ -38,12 +38,12 @@ export const useSubscriptions = () => {
             name: "Plan Premium",
             description: "Forfait avancé avec fonctionnalités supplémentaires",
             price: 12000,
-            interval: "monthly",
+            interval: SubscriptionInterval.MONTHLY,
             clientId: "client-2",
             clientName: "Client Enterprise",
             freelancerId: "freelancer-1",
             freelancerName: "Commercial Demo",
-            status: "active",
+            status: SubscriptionStatus.ACTIVE,
             startDate: new Date(2023, 1, 5),
             renewalDate: new Date(2023, 2, 5)
           }
@@ -69,6 +69,7 @@ export const useSubscriptions = () => {
   return {
     subscriptions,
     loading,
-    error
+    error,
+    isLoading: loading // Ajout d'un alias pour compatibilité
   };
 };

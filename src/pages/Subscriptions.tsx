@@ -11,7 +11,7 @@ import SubscriptionList from "@/components/subscriptions/SubscriptionList";
 
 const SubscriptionsPage: React.FC = () => {
   const { plans, isLoading: plansLoading } = useSubscriptionPlans();
-  const { subscriptions, isLoading: subscriptionsLoading } = useSubscriptions();
+  const { subscriptions, loading: subscriptionsLoading } = useSubscriptions();
   const { toast } = useToast();
 
   const handleSelectPlan = (plan: SubscriptionPlan) => {

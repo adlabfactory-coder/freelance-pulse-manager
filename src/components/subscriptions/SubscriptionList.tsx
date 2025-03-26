@@ -80,7 +80,9 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptions, load
                 <TableCell>
                   <SubscriptionStatusBadge status={subscription.status} />
                 </TableCell>
-                <TableCell>{subscription.startDate.toLocaleDateString('fr-FR')}</TableCell>
+                <TableCell>{subscription.startDate instanceof Date 
+                  ? subscription.startDate.toLocaleDateString('fr-FR') 
+                  : new Date(subscription.startDate).toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell className="text-right">
                   {/* Actions pour gérer l'abonnement */}
                 </TableCell>
