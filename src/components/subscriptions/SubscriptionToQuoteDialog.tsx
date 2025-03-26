@@ -29,8 +29,12 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
   const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
   const [loading, setLoading] = useState(false);
 
-  // Fix: Pass a function that takes no arguments to onCloseDialog
   const handleCloseDialog = () => {
+    onOpenChange(false);
+  };
+
+  const handleQuoteCreated = () => {
+    toast.success("Devis créé avec succès");
     onOpenChange(false);
   };
 
@@ -46,11 +50,8 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     addItem,
     loadData
   } = useQuoteForm({
-    onCloseDialog: handleCloseDialog, // Use the properly typed handler function
-    onQuoteCreated: () => {
-      toast.success("Devis créé avec succès");
-      onOpenChange(false);
-    }
+    onCloseDialog: handleCloseDialog,
+    onQuoteCreated: handleQuoteCreated
   });
 
   // Charger les données au moment de l'ouverture du dialogue
