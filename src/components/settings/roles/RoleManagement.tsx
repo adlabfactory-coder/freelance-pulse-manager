@@ -1,27 +1,20 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Check, Info, ShieldAlert, Shield, Filter } from "lucide-react";
+import { Info, Shield } from "lucide-react";
 import { 
   UserRole, 
-  USER_ROLE_LABELS, 
-  ROLE_HIERARCHY, 
   DEFAULT_PERMISSIONS, 
   RolePermission, 
   PermissionCategory 
 } from "@/types/roles";
 import { toast } from "@/components/ui/use-toast";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import RoleSelector from "./RoleSelector";
+import PermissionFilter from "./PermissionFilter";
+import PermissionTablesContainer from "./PermissionTablesContainer";
+import PermissionEditDialog from "./PermissionEditDialog";
 
 const RoleManagement: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -100,14 +93,6 @@ const RoleManagement: React.FC = () => {
     ));
   };
   
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category as PermissionCategory | "all");
-  };
-  
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
-  
   const handleSaveAllChanges = () => {
     setSaveInProgress(true);
     
@@ -119,65 +104,6 @@ const RoleManagement: React.FC = () => {
       });
       setSaveInProgress(false);
     }, 1000);
-  };
-
-  const renderPermissionTables = () => {
-    if (selectedCategory !== "all") {
-      // Afficher une seule catégorie
-      const categoryPermissions = permissionsByCategory[selectedCategory as PermissionCategory] || [];
-      return renderPermissionTable(selectedCategory as PermissionCategory, categoryPermissions);
-    } else {
-      // Afficher toutes les catégories
-      return Object.entries(permissionsByCategory).map(([category, perms]) => (
-        <div key={category} className="mb-8">
-          <h3 className="text-lg font-semibold mb-2">{category}</h3>
-          {renderPermissionTable(category as PermissionCategory, perms)}
-        </div>
-      ));
-    }
-  };
-
-  const renderPermissionTable = (category: PermissionCategory, permissions: RolePermission[]) => {
-    return (
-      <Table key={category}>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[250px]">Permission</TableHead>
-            <TableHead className="w-[300px]">Description</TableHead>
-            {ROLE_HIERARCHY.map((role) => (
-              <TableHead key={role} className="text-center">
-                {USER_ROLE_LABELS[role]}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {permissions.map((permission) => (
-            <TableRow key={permission.id}>
-              <TableCell className="font-medium">{permission.name}</TableCell>
-              <TableCell>{permission.description}</TableCell>
-              {ROLE_HIERARCHY.map((role) => (
-                <TableCell key={role} className="text-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => handleToggleRole(permission, role)}
-                    disabled={role === UserRole.SUPER_ADMIN} // Super Admin a toujours toutes les permissions
-                  >
-                    {permission.roles.includes(role) || role === UserRole.SUPER_ADMIN ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <div className="h-4 w-4 rounded-full border border-gray-300"></div>
-                    )}
-                  </Button>
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
   };
 
   return (
@@ -209,152 +135,37 @@ const RoleManagement: React.FC = () => {
           </AlertDescription>
         </Alert>
         
-        <div className="flex space-x-2 mb-6 flex-wrap gap-2">
-          {ROLE_HIERARCHY.map((role) => (
-            <Button 
-              key={role}
-              variant={selectedRole === role ? "default" : "outline"} 
-              onClick={() => handleRoleSelect(role)}
-              className={role === UserRole.SUPER_ADMIN ? "border-amber-500 text-amber-700" : ""}
-            >
-              {role === UserRole.SUPER_ADMIN && <ShieldAlert className="mr-2 h-4 w-4 text-amber-500" />}
-              {USER_ROLE_LABELS[role]}
-            </Button>
-          ))}
-        </div>
+        <RoleSelector 
+          selectedRole={selectedRole} 
+          onRoleSelect={handleRoleSelect} 
+        />
 
-        <div className="grid gap-4 mb-6 md:grid-cols-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="category-filter" className="w-24">Catégorie:</Label>
-            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger id="category-filter" className="flex-1">
-                <SelectValue placeholder="Toutes les catégories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les catégories</SelectItem>
-                {allCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Label htmlFor="search-permissions" className="w-24">Rechercher:</Label>
-            <div className="relative flex-1">
-              <Filter className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="search-permissions"
-                placeholder="Rechercher une permission..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
-        </div>
+        <PermissionFilter 
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          allCategories={allCategories}
+        />
 
         <div className="overflow-auto">
-          {filteredPermissions.length > 0 ? (
-            renderPermissionTables()
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Aucune permission trouvée pour ces critères
-            </div>
-          )}
+          <PermissionTablesContainer 
+            selectedCategory={selectedCategory}
+            permissionsByCategory={permissionsByCategory}
+            filteredPermissions={filteredPermissions}
+            onToggleRole={handleToggleRole}
+          />
         </div>
       </CardContent>
       
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier la permission</DialogTitle>
-            <DialogDescription>
-              Définissez les rôles qui ont accès à cette permission
-            </DialogDescription>
-          </DialogHeader>
-          
-          {editingPermission && (
-            <>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Nom</Label>
-                  <Input 
-                    id="name" 
-                    value={editingPermission.name} 
-                    onChange={(e) => setEditingPermission({...editingPermission, name: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input 
-                    id="description" 
-                    value={editingPermission.description} 
-                    onChange={(e) => setEditingPermission({...editingPermission, description: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="category">Catégorie</Label>
-                  <Select 
-                    value={editingPermission.category} 
-                    onValueChange={(value) => setEditingPermission({
-                      ...editingPermission, 
-                      category: value as PermissionCategory
-                    })}
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Sélectionner une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allCategories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label>Rôles avec cette permission</Label>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {ROLE_HIERARCHY.map((role) => (
-                      <Button
-                        key={role}
-                        type="button"
-                        variant={editingPermission.roles.includes(role) || role === UserRole.SUPER_ADMIN ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                          if (role === UserRole.SUPER_ADMIN) return; // Super Admin a toujours toutes les permissions
-                          
-                          const updatedRoles = editingPermission.roles.includes(role)
-                            ? editingPermission.roles.filter(r => r !== role)
-                            : [...editingPermission.roles, role];
-                          setEditingPermission({...editingPermission, roles: updatedRoles});
-                        }}
-                        disabled={role === UserRole.SUPER_ADMIN} // Super Admin a toujours toutes les permissions
-                        className={role === UserRole.SUPER_ADMIN ? "border-amber-500 text-amber-700" : ""}
-                      >
-                        {role === UserRole.SUPER_ADMIN && <ShieldAlert className="mr-2 h-3 w-3 text-amber-500" />}
-                        {USER_ROLE_LABELS[role]}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Annuler
-                </Button>
-                <Button onClick={handleSavePermission}>
-                  Enregistrer
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PermissionEditDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editingPermission={editingPermission}
+        setEditingPermission={setEditingPermission}
+        onSave={handleSavePermission}
+        allCategories={allCategories}
+      />
     </Card>
   );
 };
