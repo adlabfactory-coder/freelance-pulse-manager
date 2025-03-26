@@ -1,24 +1,29 @@
 
-import React from "react";
-import { SubscriptionInterval } from "@/types";
+import React from 'react';
+import { SubscriptionInterval } from '@/types';
 
 interface SubscriptionIntervalLabelProps {
   interval: SubscriptionInterval;
 }
 
-const SubscriptionIntervalLabel: React.FC<SubscriptionIntervalLabelProps> = ({ 
-  interval 
-}) => {
-  switch (interval) {
-    case SubscriptionInterval.MONTHLY:
-      return <span>Mensuel</span>;
-    case SubscriptionInterval.QUARTERLY:
-      return <span>Trimestriel</span>;
-    case SubscriptionInterval.YEARLY:
-      return <span>Annuel</span>;
-    default:
-      return <span></span>;
-  }
+const SubscriptionIntervalLabel: React.FC<SubscriptionIntervalLabelProps> = ({ interval }) => {
+  const getIntervalLabel = () => {
+    switch (interval) {
+      case SubscriptionInterval.MONTHLY:
+        return 'Mensuel';
+      case SubscriptionInterval.QUARTERLY:
+        return 'Trimestriel';
+      case SubscriptionInterval.BIANNUAL:
+        return 'Semestriel';
+      case SubscriptionInterval.ANNUAL:
+      case SubscriptionInterval.YEARLY:
+        return 'Annuel';
+      default:
+        return interval;
+    }
+  };
+
+  return <span>{getIntervalLabel()}</span>;
 };
 
 export default SubscriptionIntervalLabel;

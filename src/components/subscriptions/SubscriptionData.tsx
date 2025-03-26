@@ -1,5 +1,42 @@
+import React from 'react';
+import { SubscriptionInterval, SubscriptionStatus } from '@/types';
 
-import { SubscriptionInterval, SubscriptionStatus } from "@/types";
+// Fonction pour formater l'intervalle d'abonnement
+export const formatSubscriptionInterval = (interval: SubscriptionInterval): string => {
+  switch (interval) {
+    case SubscriptionInterval.MONTHLY:
+      return 'Mensuel';
+    case SubscriptionInterval.QUARTERLY:
+      return 'Trimestriel';
+    case SubscriptionInterval.BIANNUAL:
+      return 'Semestriel';
+    case SubscriptionInterval.ANNUAL:
+    case SubscriptionInterval.YEARLY:
+      return 'Annuel';
+    default:
+      return 'Inconnu';
+  }
+};
+
+// Fonction pour obtenir la classe CSS en fonction du statut
+export const getStatusColorClass = (status: SubscriptionStatus): string => {
+  switch (status) {
+    case SubscriptionStatus.ACTIVE:
+      return 'text-green-500';
+    case SubscriptionStatus.INACTIVE:
+      return 'text-red-500';
+    case SubscriptionStatus.PENDING:
+      return 'text-yellow-500';
+    case SubscriptionStatus.CANCELLED:
+      return 'text-gray-500';
+    case SubscriptionStatus.EXPIRED:
+      return 'text-red-700';
+    case SubscriptionStatus.TRIAL:
+      return 'text-blue-500';
+    default:
+      return 'text-gray-500';
+  }
+};
 
 export const mockSubscriptionData = [
   {

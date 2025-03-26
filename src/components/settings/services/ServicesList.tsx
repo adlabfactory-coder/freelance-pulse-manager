@@ -1,50 +1,28 @@
 
 import React from "react";
-import { AlertCircle, Pencil, Trash2 } from "lucide-react";
 import { Service } from "@/types";
-import { formatCurrency } from "@/utils/format";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Edit2, Trash2 } from "lucide-react";
+import { formatPrice } from "@/utils/format";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ServicesListProps {
   services: Service[];
-  isLoading: boolean;
-  onEditService: (service: Service) => void;
-  onDeleteService: (service: Service) => void;
+  onEdit: (service: Service) => void;
+  onDelete: (service: Service) => void;
+  loading?: boolean;
 }
 
 const ServicesList: React.FC<ServicesListProps> = ({
   services,
-  isLoading,
-  onEditService,
-  onDeleteService,
+  onEdit,
+  onDelete,
+  loading = false,
 }) => {
-  if (isLoading) {
-    return <div className="py-8 text-center">Chargement des services...</div>;
-  }
-
-  if (services.length === 0) {
+  if (loading) {
     return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Aucun service</AlertTitle>
-        <AlertDescription>
-          Aucun service n'a été créé. Cliquez sur "Ajouter un service" pour commencer.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  return (
-    <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
@@ -56,55 +34,93 @@ const ServicesList: React.FC<ServicesListProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {services.map((service) => (
-            <TableRow key={service.id}>
-              <TableCell>
-                <div>
-                  <div className="font-medium">{service.name}</div>
-                  {service.description && (
-                    <div className="text-sm text-muted-foreground truncate max-w-[300px]">
-                      {service.description}
-                    </div>
-                  )}
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className={`capitalize ${service.type === 'pack' ? 'text-purple-600' : ''}`}>
-                  {service.type}
-                </span>
-              </TableCell>
-              <TableCell>{formatCurrency(service.price)}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  service.is_active
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {service.is_active ? "Actif" : "Inactif"}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEditService(service)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeleteService(service)}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </TableCell>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+              <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+              <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+              <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+              <TableCell><Skeleton className="h-8 w-20 float-right" /></TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-    </div>
+    );
+  }
+
+  if (!services || services.length === 0) {
+    return (
+      <div className="text-center py-6 text-muted-foreground">
+        Aucun service trouvé
+      </div>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Nom</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Prix</TableHead>
+          <TableHead>Statut</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {services.map((service) => (
+          <TableRow key={service.id}>
+            <TableCell className="font-medium">
+              {service.name}
+              {service.description && (
+                <p className="text-xs text-muted-foreground mt-1 truncate max-w-xs">
+                  {service.description}
+                </p>
+              )}
+            </TableCell>
+            <TableCell>{getTypeLabel(service.type)}</TableCell>
+            <TableCell>{formatPrice(service.price)}</TableCell>
+            <TableCell>
+              <Badge variant={service.isActive ? "default" : "secondary"}>
+                {service.isActive ? "Actif" : "Inactif"}
+              </Badge>
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(service)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(service)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 };
+
+function getTypeLabel(type: string): string {
+  switch (type) {
+    case "service":
+      return "Service";
+    case "product":
+      return "Produit";
+    case "subscription":
+      return "Abonnement";
+    default:
+      return type;
+  }
+}
 
 export default ServicesList;

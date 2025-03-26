@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Service } from "@/types";
+import { Service, ServiceType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { 
   fetchServices, 
@@ -42,9 +42,9 @@ export const useServices = () => {
     setSelectedService({
       name: "",
       description: "",
-      type: "service",
+      type: ServiceType.SERVICE,
       price: 0,
-      is_active: true,
+      isActive: true,
     });
     setEditDialogOpen(true);
   };

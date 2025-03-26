@@ -1,366 +1,405 @@
 
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
-import { AuditAction } from "@/services/audit-service";
-import { UserRole, USER_ROLE_LABELS } from "@/types/roles";
-import { Navigate } from "react-router-dom";
-import { AlertCircle, Download, Filter, RefreshCw, Search } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-// Données factices pour l'exemple
-const mockAuditEntries = [
-  {
-    id: "1",
-    userId: "1",
-    userName: "Admin Démo",
-    userRole: UserRole.ADMIN,
-    action: AuditAction.LOGIN,
-    resource: "auth",
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    details: { ip: "192.168.1.1", browser: "Chrome" }
-  },
-  {
-    id: "2",
-    userId: "2",
-    userName: "Freelance Démo",
-    userRole: UserRole.FREELANCER,
-    action: AuditAction.CREATE,
-    resource: "contacts",
-    resourceId: "123",
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
-    details: { contactName: "Nouveau Contact", company: "Société XYZ" }
-  },
-  {
-    id: "3",
-    userId: "1",
-    userName: "Admin Démo",
-    userRole: UserRole.ADMIN,
-    action: AuditAction.UPDATE,
-    resource: "users",
-    resourceId: "2",
-    timestamp: new Date(Date.now() - 10800000).toISOString(),
-    details: { field: "role", old: "client", new: "freelancer" }
-  },
-  {
-    id: "4",
-    userId: "3",
-    userName: "Super Admin Démo",
-    userRole: UserRole.SUPER_ADMIN,
-    action: AuditAction.PERMISSIONS_CHANGE,
-    resource: "user_permissions",
-    resourceId: "1",
-    timestamp: new Date(Date.now() - 14400000).toISOString(),
-    details: { permission: "admin_access", granted: true }
-  }
-];
+import {
+  ArrowDownWideNarrow,
+  ArrowUpWideNarrow,
+  Calendar,
+  ClipboardList,
+  Clock,
+  Download,
+  Filter,
+  MoreHorizontal,
+  Search,
+  User
+} from "lucide-react";
+import { UserRole } from "@/types";
 
 const AuditPage: React.FC = () => {
-  const { isSuperAdmin } = useAuth();
-  const [auditEntries, setAuditEntries] = useState(mockAuditEntries);
-  const [isLoading, setIsLoading] = useState(false);
-  const [filterAction, setFilterAction] = useState<string>("all");
-  const [filterResource, setFilterResource] = useState<string>("all");
-  const [filterUser, setFilterUser] = useState<string>("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  
-  // Rediriger si l'utilisateur n'est pas un super admin
-  if (!isSuperAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  const handleRefresh = async () => {
-    setIsLoading(true);
-    // Simule un chargement de données
-    setTimeout(() => {
-      setAuditEntries(mockAuditEntries);
-      setIsLoading(false);
-    }, 1000);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(getMockAuditLogs());
+  const [startDate, setStartDate] = useState<Date>(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)); // 7 days ago
+  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [selectedModule, setSelectedModule] = useState<string>("all");
+  const [selectedAction, setSelectedAction] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
-  
-  const handleExport = () => {
-    // Implémentation fictive pour l'exportation
-    alert("Export des données d'audit en CSV");
+
+  const toggleSortDirection = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
   };
-  
-  const handleFilter = () => {
-    setIsLoading(true);
-    // Simule un filtrage de données
-    setTimeout(() => {
-      // Ici nous utiliserions les critères de filtre pour obtenir les données filtrées
-      setAuditEntries(mockAuditEntries);
-      setIsLoading(false);
-    }, 800);
-  };
-  
-  const getActionLabel = (action: string): string => {
-    const actionMap: Record<string, string> = {
-      [AuditAction.CREATE]: 'Création',
-      [AuditAction.UPDATE]: 'Modification',
-      [AuditAction.DELETE]: 'Suppression',
-      [AuditAction.LOGIN]: 'Connexion',
-      [AuditAction.LOGOUT]: 'Déconnexion',
-      [AuditAction.PERMISSIONS_CHANGE]: 'Modification des permissions',
-      [AuditAction.SETTINGS_CHANGE]: 'Modification des paramètres',
-      [AuditAction.OTHER]: 'Autre'
-    };
-    return actionMap[action] || action;
-  };
-  
-  const getActionColor = (action: string): string => {
-    const colorMap: Record<string, string> = {
-      [AuditAction.CREATE]: 'bg-green-100 text-green-800',
-      [AuditAction.UPDATE]: 'bg-blue-100 text-blue-800',
-      [AuditAction.DELETE]: 'bg-red-100 text-red-800',
-      [AuditAction.LOGIN]: 'bg-purple-100 text-purple-800',
-      [AuditAction.LOGOUT]: 'bg-purple-100 text-purple-800',
-      [AuditAction.PERMISSIONS_CHANGE]: 'bg-yellow-100 text-yellow-800',
-      [AuditAction.SETTINGS_CHANGE]: 'bg-orange-100 text-orange-800',
-      [AuditAction.OTHER]: 'bg-gray-100 text-gray-800'
-    };
-    return colorMap[action] || 'bg-gray-100 text-gray-800';
-  };
-  
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-  
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Journal d'Audit</h1>
-          <p className="text-muted-foreground">
-            Historique des activités et actions des utilisateurs
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleRefresh} variant="outline" disabled={isLoading}>
-            {isLoading ? (
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Actualiser
-          </Button>
-          <Button onClick={handleExport} variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Exporter
-          </Button>
-        </div>
-      </div>
+
+  const filteredLogs = auditLogs
+    .filter(log => {
+      const dateInRange = new Date(log.timestamp) >= startDate && new Date(log.timestamp) <= endDate;
+      const moduleMatch = selectedModule === 'all' || log.module === selectedModule;
+      const actionMatch = selectedAction === 'all' || log.action === selectedAction;
+      const searchMatch = searchTerm === '' || 
+        log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.module.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.action.toLowerCase().includes(searchTerm.toLowerCase());
       
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">Toutes les Actions</TabsTrigger>
-          <TabsTrigger value="security">Sécurité</TabsTrigger>
-          <TabsTrigger value="data">Modification de Données</TabsTrigger>
-          <TabsTrigger value="system">Système</TabsTrigger>
-        </TabsList>
-        
-        <Card className="mt-4">
-          <CardHeader className="pb-3">
-            <CardTitle>Filtres</CardTitle>
-            <CardDescription>Affinez les résultats du journal d'audit</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium">Action</label>
-                <Select 
-                  value={filterAction} 
-                  onValueChange={setFilterAction}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Toutes les actions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les actions</SelectItem>
-                    <SelectItem value={AuditAction.CREATE}>Création</SelectItem>
-                    <SelectItem value={AuditAction.UPDATE}>Modification</SelectItem>
-                    <SelectItem value={AuditAction.DELETE}>Suppression</SelectItem>
-                    <SelectItem value={AuditAction.LOGIN}>Connexion</SelectItem>
-                    <SelectItem value={AuditAction.PERMISSIONS_CHANGE}>Permissions</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Ressource</label>
-                <Select 
-                  value={filterResource} 
-                  onValueChange={setFilterResource}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Toutes les ressources" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes les ressources</SelectItem>
-                    <SelectItem value="users">Utilisateurs</SelectItem>
-                    <SelectItem value="contacts">Contacts</SelectItem>
-                    <SelectItem value="quotes">Devis</SelectItem>
-                    <SelectItem value="auth">Authentification</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Utilisateur</label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher un utilisateur"
-                    value={filterUser}
-                    onChange={(e) => setFilterUser(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-end">
-                <Button onClick={handleFilter} className="w-full">
-                  <Filter className="mr-2 h-4 w-4" />
-                  Filtrer
-                </Button>
-              </div>
+      return dateInRange && moduleMatch && actionMatch && searchMatch;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.timestamp).getTime();
+      const dateB = new Date(b.timestamp).getTime();
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+
+  const exportToCSV = () => {
+    // Logique d'exportation CSV
+    alert("Fonctionnalité d'exportation CSV à implémenter");
+  };
+
+  const getActionBadgeColor = (action: string) => {
+    switch (action) {
+      case 'create':
+        return 'bg-green-500';
+      case 'update':
+        return 'bg-blue-500';
+      case 'delete':
+        return 'bg-red-500';
+      case 'login':
+        return 'bg-purple-500';
+      case 'logout':
+        return 'bg-gray-500';
+      default:
+        return 'bg-secondary';
+    }
+  };
+
+  const getModuleIcon = (module: string) => {
+    switch (module) {
+      case 'users':
+        return <User className="h-4 w-4" />;
+      case 'contacts':
+        return <ClipboardList className="h-4 w-4" />;
+      case 'quotes':
+        return <ClipboardList className="h-4 w-4" />;
+      case 'auth':
+        return <User className="h-4 w-4" />;
+      default:
+        return <MoreHorizontal className="h-4 w-4" />;
+    }
+  };
+
+  const formatDateTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date);
+  };
+
+  const getUniqueModules = () => {
+    const modules = ['all', ...new Set(auditLogs.map(log => log.module))];
+    return modules;
+  };
+
+  const getUniqueActions = () => {
+    const actions = ['all', ...new Set(auditLogs.map(log => log.action))];
+    return actions;
+  };
+
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Journaux d'audit</h1>
+        <Button variant="outline" onClick={exportToCSV}>
+          <Download className="mr-2 h-4 w-4" />
+          Exporter
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtres</CardTitle>
+          <CardDescription>Filtrer les journaux d'audit par date, module ou action</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Date de début</label>
+              <DatePicker
+                date={startDate}
+                setDate={setStartDate}
+                className="w-full"
+              />
             </div>
             
-            <div className="flex gap-4 mt-4">
-              <div>
-                <label className="text-sm font-medium">Date de début</label>
-                <DatePicker
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Date de fin</label>
-                <DatePicker
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  className="w-full"
+            <div>
+              <label className="text-sm font-medium mb-1 block">Date de fin</label>
+              <DatePicker
+                date={endDate}
+                setDate={setEndDate}
+                className="w-full"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Module</label>
+              <Select
+                value={selectedModule}
+                onValueChange={setSelectedModule}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tous les modules" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getUniqueModules().map(module => (
+                    <SelectItem key={module} value={module}>
+                      {module === 'all' ? 'Tous les modules' : module}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Action</label>
+              <Select
+                value={selectedAction}
+                onValueChange={setSelectedAction}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Toutes les actions" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getUniqueActions().map(action => (
+                    <SelectItem key={action} value={action}>
+                      {action === 'all' ? 'Toutes les actions' : action}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Recherche</label>
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={handleSearch}
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        <TabsContent value="all" className="mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              {auditEntries.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Utilisateur</TableHead>
-                      <TableHead>Rôle</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Ressource</TableHead>
-                      <TableHead>Détails</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {auditEntries.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">
-                          {formatDate(entry.timestamp)}
-                        </TableCell>
-                        <TableCell>{entry.userName}</TableCell>
-                        <TableCell>
-                          {USER_ROLE_LABELS[entry.userRole as UserRole] || entry.userRole}
-                        </TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${getActionColor(entry.action)}`}>
-                            {getActionLabel(entry.action)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {entry.resource}
-                          {entry.resourceId && <span className="text-muted-foreground ml-1">#{entry.resourceId}</span>}
-                        </TableCell>
-                        <TableCell>
-                          <pre className="text-xs bg-slate-50 p-2 rounded overflow-auto max-w-xs">
-                            {JSON.stringify(entry.details, null, 2)}
-                          </pre>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Résultats ({filteredLogs.length})</CardTitle>
+            <Button variant="ghost" size="sm" onClick={toggleSortDirection}>
+              {sortDirection === 'desc' ? (
+                <ArrowDownWideNarrow className="h-4 w-4 mr-1" />
               ) : (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Aucune donnée</AlertTitle>
-                  <AlertDescription>
-                    Aucune entrée d'audit ne correspond aux critères sélectionnés.
-                  </AlertDescription>
-                </Alert>
+                <ArrowUpWideNarrow className="h-4 w-4 mr-1" />
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Les autres onglets utiliseraient des filtres prédéfinis */}
-        <TabsContent value="security" className="mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Filtres appliqués</AlertTitle>
-                <AlertDescription>
-                  Affichage des événements de sécurité uniquement (connexion, permissions, etc.)
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="data" className="mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Filtres appliqués</AlertTitle>
-                <AlertDescription>
-                  Affichage des modifications de données uniquement (création, modification, suppression)
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="system" className="mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Filtres appliqués</AlertTitle>
-                <AlertDescription>
-                  Affichage des événements système uniquement (configurations, paramètres)
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              Date
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[180px]">Date & Heure</TableHead>
+                  <TableHead>Utilisateur</TableHead>
+                  <TableHead>Module</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead className="w-[300px]">Détails</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      Aucun journal d'audit ne correspond à vos critères de filtrage
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>{formatDateTime(log.timestamp)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Avatar className="h-7 w-7 mr-2">
+                            <AvatarImage src={log.avatar} />
+                            <AvatarFallback>{log.user.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium">{log.user}</div>
+                            <div className="text-xs text-muted-foreground">{log.role}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          {getModuleIcon(log.module)}
+                          <span className="ml-2">{log.module}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getActionBadgeColor(log.action)}>
+                          {log.action}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[300px] truncate">
+                        {log.details}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
+
+interface AuditLog {
+  id: string;
+  timestamp: string;
+  user: string;
+  role: string;
+  avatar: string | null;
+  module: string;
+  action: string;
+  details: string;
+}
+
+function getMockAuditLogs(): AuditLog[] {
+  return [
+    {
+      id: "1",
+      timestamp: "2023-05-15T09:30:00Z",
+      user: "Admin Démo",
+      role: "Administrateur",
+      avatar: null,
+      module: "users",
+      action: "create",
+      details: "Création de l'utilisateur John Doe (john.doe@example.com)"
+    },
+    {
+      id: "2",
+      timestamp: "2023-05-15T10:15:00Z",
+      user: "Commercial Démo",
+      role: "Freelance",
+      avatar: null,
+      module: "contacts",
+      action: "update",
+      details: "Mise à jour des informations du contact #123: Entreprise XYZ"
+    },
+    {
+      id: "3",
+      timestamp: "2023-05-15T11:00:00Z",
+      user: "Admin Démo",
+      role: "Administrateur",
+      avatar: null,
+      module: "auth",
+      action: "login",
+      details: "Connexion réussie à l'application"
+    },
+    {
+      id: "4",
+      timestamp: "2023-05-16T09:00:00Z",
+      user: "Super Admin Démo",
+      role: "Super Administrateur",
+      avatar: null,
+      module: "quotes",
+      action: "delete",
+      details: "Suppression du devis #456 pour le client Société ABC"
+    },
+    {
+      id: "5",
+      timestamp: "2023-05-16T14:30:00Z",
+      user: "Commercial Démo",
+      role: "Freelance",
+      avatar: null,
+      module: "auth",
+      action: "logout",
+      details: "Déconnexion de l'application"
+    },
+    {
+      id: "6",
+      timestamp: "2023-05-17T10:00:00Z",
+      user: "Admin Démo",
+      role: "Administrateur",
+      avatar: null,
+      module: "users",
+      action: "update",
+      details: "Modification des droits d'accès pour l'utilisateur Jane Smith"
+    },
+    {
+      id: "7",
+      timestamp: "2023-05-17T11:45:00Z",
+      user: "Super Admin Démo",
+      role: "Super Administrateur",
+      avatar: null,
+      module: "contacts",
+      action: "create",
+      details: "Ajout d'un nouveau contact: Entreprise DEF"
+    },
+    {
+      id: "8",
+      timestamp: "2023-05-18T09:15:00Z",
+      user: "Chargé de Compte Démo",
+      role: "Chargé de compte",
+      avatar: null,
+      module: "quotes",
+      action: "update",
+      details: "Mise à jour du statut du devis #789 de 'Brouillon' à 'Envoyé'"
+    },
+    {
+      id: "9",
+      timestamp: "2023-05-18T16:00:00Z",
+      user: "Admin Démo",
+      role: "Administrateur",
+      avatar: null,
+      module: "auth",
+      action: "login",
+      details: "Connexion réussie depuis une nouvelle adresse IP"
+    },
+    {
+      id: "10",
+      timestamp: new Date().toISOString(),
+      user: "Commercial Démo",
+      role: "Freelance",
+      avatar: null,
+      module: "contacts",
+      action: "delete",
+      details: "Suppression du contact #321: Contact inactif"
+    }
+  ];
+}
 
 export default AuditPage;

@@ -1,46 +1,38 @@
 
-import React from "react";
-import { SubscriptionStatus } from "@/types";
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { SubscriptionStatus } from '@/types';
 
 interface SubscriptionStatusBadgeProps {
   status: SubscriptionStatus;
 }
 
 const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = ({ status }) => {
-  switch (status) {
-    case SubscriptionStatus.ACTIVE:
-      return (
-        <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-700/10">
-          Actif
-        </span>
-      );
-    case SubscriptionStatus.CANCELED:
-      return (
-        <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-700/10">
-          Annulé
-        </span>
-      );
-    case SubscriptionStatus.EXPIRED:
-      return (
-        <span className="inline-flex items-center rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-700/10">
-          Expiré
-        </span>
-      );
-    case SubscriptionStatus.PENDING:
-      return (
-        <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-          En attente
-        </span>
-      );
-    case SubscriptionStatus.TRIAL:
-      return (
-        <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-1 text-xs font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10">
-          Essai
-        </span>
-      );
-    default:
-      return null;
-  }
+  // Configuration des badges en fonction du statut
+  const getBadgeVariant = () => {
+    switch (status) {
+      case SubscriptionStatus.ACTIVE:
+        return 'bg-green-500';
+      case SubscriptionStatus.EXPIRED:
+        return 'bg-red-500';
+      case SubscriptionStatus.PENDING:
+        return 'bg-yellow-500';
+      case SubscriptionStatus.CANCELLED:
+        return 'bg-gray-500';
+      case SubscriptionStatus.INACTIVE:
+        return 'bg-red-700';
+      case SubscriptionStatus.TRIAL:
+        return 'bg-blue-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  return (
+    <Badge className={getBadgeVariant()}>
+      {status}
+    </Badge>
+  );
 };
 
 export default SubscriptionStatusBadge;
