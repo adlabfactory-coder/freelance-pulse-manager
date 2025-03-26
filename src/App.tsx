@@ -1,5 +1,6 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import ResetDemoPasswords from "./pages/auth/ResetDemoPasswords";
@@ -46,8 +47,8 @@ function App() {
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Toaster />
         </BrowserRouter>
-        <Toaster />
       </ThemeProvider>
     </div>
   );

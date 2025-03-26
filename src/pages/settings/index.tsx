@@ -1,16 +1,16 @@
 
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation } from "react-router-dom";
 import SettingsPage from "./SettingsPage";
 
 const Settings: React.FC = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<SettingsPage />} />
-      <Route path="/:tab" element={<SettingsPage />} />
-      <Route path="*" element={<Navigate to="/settings" replace />} />
-    </Routes>
-  );
+  const location = useLocation();
+  // If we're at /settings, redirect to /settings/profile
+  if (location.pathname === "/settings") {
+    return <Navigate to="/settings/profile" replace />;
+  }
+  
+  return <SettingsPage />;
 };
 
 export default Settings;

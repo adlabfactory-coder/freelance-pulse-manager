@@ -14,9 +14,6 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   const isMobile = useIsMobile();
-  const renderIcon = (Icon: React.ElementType) => {
-    return <Icon className="h-5 w-5" aria-hidden="true" />;
-  };
 
   return (
     <TooltipProvider>
@@ -42,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
           <Navigation collapsed={collapsed} />
         </div>
 
-        <SidebarFooter collapsed={collapsed} renderIcon={renderIcon} />
+        <SidebarFooter collapsed={collapsed} />
       </aside>
       
       {/* Overlay pour mobile quand sidebar est ouverte */}
