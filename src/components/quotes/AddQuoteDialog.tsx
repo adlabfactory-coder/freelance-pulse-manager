@@ -1,83 +1,67 @@
-
-import React, { useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuoteForm } from "./hooks/useQuoteForm";
-import QuoteDialogContent from "./form/QuoteDialogContent";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import QuoteForm from "./form/QuoteForm";
+import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 interface AddQuoteDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onQuoteCreated: () => void;
-  initialContactId?: string;
+  onQuoteAdded?: () => void;
+  trigger?: React.ReactNode;
 }
 
-const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
-  open,
-  onOpenChange,
-  onQuoteCreated,
-  initialContactId
-}) => {
-  const {
-    contacts,
-    freelancers,
-    services,
-    isSubmitting,
-    loading,
-    quoteData,
-    currentItem,
-    setQuoteData,
-    setCurrentItem,
-    handleAddItem,
-    handleRemoveItem,
-    handleSubmit,
-    loadData,
-  } = useQuoteForm({
-    onCloseDialog: onOpenChange,
-    onQuoteCreated
-  });
+export function AddQuoteDialog({ onQuoteAdded, trigger }: AddQuoteDialogProps) {
+  const [open, setOpen] = React.useState(false);
 
-  useEffect(() => {
-    if (open) {
-      loadData();
-      
-      // Si un ID de contact est fourni, définissez-le comme contactId initial
-      if (initialContactId) {
-        setQuoteData(prev => ({
-          ...prev,
-          contactId: initialContactId
-        }));
+  const handleDiscard = () => {
+    setOpen(false);
+  };
+
+  const quoteForm = useQuoteForm({
+    onSuccess: () => {
+      setOpen(false);
+      if (onQuoteAdded) {
+        onQuoteAdded();
       }
     }
-  }, [open, initialContactId, loadData, setQuoteData]);
+  });
+
+  const onCloseDialog = () => {
+    setOpen(false);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Ajouter un devis
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Créer un nouveau devis</DialogTitle>
+          <DialogTitle>Ajouter un nouveau devis</DialogTitle>
           <DialogDescription>
-            Remplissez les informations ci-dessous pour créer un nouveau devis.
+            Remplissez les informations pour créer un nouveau devis.
           </DialogDescription>
         </DialogHeader>
-
-        <QuoteDialogContent
-          loading={loading}
-          isSubmitting={isSubmitting}
-          quoteData={quoteData}
-          currentItem={currentItem}
-          contacts={contacts}
-          freelancers={freelancers}
-          services={services}
-          onQuoteDataChange={setQuoteData}
-          onCurrentItemChange={setCurrentItem}
-          onAddItem={handleAddItem}
-          onRemoveItem={handleRemoveItem}
-          onSubmit={() => handleSubmit()}
-          onCancel={() => onOpenChange(false)}
+        <QuoteForm
+          form={quoteForm.form}
+          isSubmitting={quoteForm.isSubmitting}
+          onSubmit={quoteForm.onSubmit}
+          onDiscard={handleDiscard}
+          onCloseDialog={onCloseDialog}
         />
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default AddQuoteDialog;

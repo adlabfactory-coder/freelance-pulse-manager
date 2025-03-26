@@ -13,7 +13,7 @@ export const contactSchema = z.object({
   status: z.enum(["lead", "prospect", "negotiation", "signed", "lost"]),
   notes: z.string().optional(),
   // Ajout de assignedTo au schéma
-  assignedTo: z.string()
+  assignedTo: z.string().optional()
 });
 
 // Type pour les valeurs du formulaire

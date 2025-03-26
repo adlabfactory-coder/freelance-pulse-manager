@@ -1,71 +1,86 @@
 
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { Contact, ContactFormInput } from "./types";
+import { supabase } from "@/lib/supabase-client";
+import { ContactStatus } from "@/types/database/enums";
 
-// Service pour la création et la mise à jour des contacts
+// Define input type for contact creation/update
+export interface ContactFormInput {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  status: ContactStatus;
+  assignedTo?: string;
+}
+
 export const contactCreateUpdateService = {
-  /**
-   * Crée un nouveau contact
-   */
-  createContact: async (contactData: ContactFormInput): Promise<string | null> => {
+  // Create a new contact
+  async createContact(contactData: ContactFormInput): Promise<string | null> {
     try {
+      const now = new Date().toISOString();
       const { data, error } = await supabase
-        .from('contacts')
-        .insert(contactData)
-        .select('id')
+        .from("contacts")
+        .insert([
+          {
+            name: contactData.name,
+            email: contactData.email,
+            phone: contactData.phone || null,
+            company: contactData.company || null,
+            position: contactData.position || null,
+            address: contactData.address || null,
+            notes: contactData.notes || null,
+            assignedTo: contactData.assignedTo || null,
+            status: contactData.status,
+            createdAt: now,
+            updatedAt: now
+          }
+        ])
+        .select("id")
         .single();
 
       if (error) {
-        console.error('Erreur lors de la création du contact:', error);
-        toast.error("Erreur lors de la création du contact: " + error.message);
-        return null;
+        console.error("Error creating contact:", error);
+        throw error;
       }
 
       return data?.id || null;
-    } catch (error: any) {
-      console.error('Erreur lors de la création du contact:', error);
-      toast.error("Erreur inattendue lors de la création du contact");
-      return null;
+    } catch (error) {
+      console.error("Error in createContact:", error);
+      throw error;
     }
   },
 
-  /**
-   * Ajoute un nouveau contact (alias pour rétrocompatibilité)
-   */
-  addContact: async (contactData: ContactFormInput): Promise<string | null> => {
-    return contactCreateUpdateService.createContact(contactData);
-  },
-
-  /**
-   * Met à jour un contact existant
-   */
-  updateContact: async (id: string, contactData: Partial<ContactFormInput>): Promise<boolean> => {
+  // Update an existing contact
+  async updateContact(id: string, contactData: Partial<ContactFormInput>): Promise<boolean> {
     try {
+      const now = new Date().toISOString();
       const { error } = await supabase
-        .from('contacts')
+        .from("contacts")
         .update({
-          ...contactData,
-          updatedAt: new Date().toISOString()
+          name: contactData.name,
+          email: contactData.email,
+          phone: contactData.phone || null,
+          company: contactData.company || null,
+          position: contactData.position || null,
+          address: contactData.address || null,
+          notes: contactData.notes || null,
+          assignedTo: contactData.assignedTo || null,
+          status: contactData.status,
+          updatedAt: now
         })
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) {
-        console.error('Erreur lors de la mise à jour du contact:', error);
-        toast.error("Erreur lors de la mise à jour du contact: " + error.message);
-        return false;
+        console.error("Error updating contact:", error);
+        throw error;
       }
 
-      toast.success("Contact mis à jour avec succès");
       return true;
-    } catch (error: any) {
-      console.error('Erreur lors de la mise à jour du contact:', error);
-      toast.error("Erreur inattendue lors de la mise à jour du contact");
-      return false;
+    } catch (error) {
+      console.error("Error in updateContact:", error);
+      throw error;
     }
   }
 };
-
-// Export individual functions for backward compatibility
-export const addContact = contactCreateUpdateService.addContact;
-export const updateContact = contactCreateUpdateService.updateContact;

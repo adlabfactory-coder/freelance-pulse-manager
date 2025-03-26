@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useContactForm } from "@/hooks/useContactForm";
 import ContactForm from "./ContactForm";
 import { useAuth } from "@/hooks/use-auth";
 import { CalendarPlus } from "lucide-react";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
+// Fix the import to use the named export
+import { useContactForm } from "@/hooks/useContactForm";
 
 interface AddContactFormProps {
   onSuccess?: () => void;
@@ -18,34 +19,27 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
   const [createdContactName, setCreatedContactName] = useState<string>("");
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   
-  const handleContactCreated = (contactId: string, contactName: string) => {
-    setCreatedContactId(contactId);
-    setCreatedContactName(contactName);
-    
-    // Automatiquement ouvrir la boîte de dialogue de rendez-vous lors de la création
-    setShowAppointmentDialog(true);
-    
-    if (onSuccess) {
-      onSuccess();
+  const handleContactCreated = (contactData?: {id: string, name: string}) => {
+    if (contactData && contactData.id) {
+      setCreatedContactId(contactData.id);
+      setCreatedContactName(contactData.name);
+      
+      // Automatiquement ouvrir la boîte de dialogue de rendez-vous lors de la création
+      setShowAppointmentDialog(true);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
     }
   };
   
   const { form, isSubmitting, onSubmit } = useContactForm({
-    onSuccess: (contactData) => {
-      if (contactData && contactData.id && contactData.name) {
-        handleContactCreated(contactData.id, contactData.name);
-      }
-    },
+    onSuccess: handleContactCreated,
     isEditing: false,
     initialData: {
       assignedTo: user?.id || ""
     }
   });
-
-  // Cette fonction n'est plus nécessaire car la boîte de dialogue s'ouvre automatiquement
-  // const handleScheduleInitialConsultation = () => {
-  //   setShowAppointmentDialog(true);
-  // };
 
   return (
     <>

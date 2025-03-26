@@ -8,8 +8,8 @@ import { contactSchema, ContactFormValues } from "../schema/contactFormSchema";
 import { Contact } from "@/services/contacts/types";
 
 interface UseContactFormProps {
-  onSuccess?: () => void;
-  initialData?: Partial<ContactFormValues> & { id?: string };
+  onSuccess?: (contactData?: {id: string, name: string}) => void;
+  initialData?: Partial<ContactFormValues & { id?: string }>;
   isEditing?: boolean;
 }
 
@@ -25,6 +25,7 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
       address: initialData?.address || "",
       notes: initialData?.notes || "",
       status: initialData?.status || "lead" as ContactStatus,
+      assignedTo: initialData?.assignedTo || ""
     },
   });
 
@@ -41,7 +42,8 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
         address: data.address || "",
         notes: data.notes || "",
         // Toujours définir le statut à "lead" lors de la création d'un nouveau contact
-        status: isEditing ? data.status as ContactStatus : "lead" as ContactStatus
+        status: isEditing ? data.status as ContactStatus : "lead" as ContactStatus,
+        assignedTo: data.assignedTo
       };
       
       let result;
@@ -58,7 +60,14 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
         }
       }
       
-      if (result && onSuccess) onSuccess();
+      if (result && onSuccess) {
+        // Pass both id and name to onSuccess callback
+        const contactInfo = {
+          id: typeof result === 'string' ? result : initialData?.id || '',
+          name: data.name
+        };
+        onSuccess(contactInfo);
+      }
     } catch (error) {
       console.error("Erreur lors de l'ajout/mise à jour du contact:", error);
       toast.error("Erreur lors de l'opération sur le contact");
