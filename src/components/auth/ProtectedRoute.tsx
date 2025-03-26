@@ -10,12 +10,21 @@ const ProtectedRoute: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Vérifier d'abord si un utilisateur de démo est stocké
+      const demoUser = localStorage.getItem('demoUser');
+      if (demoUser) {
+        setIsAuthenticated(true);
+        return;
+      }
+      
+      // Sinon, vérifier la session Supabase
       const { data } = await supabase.auth.getSession();
       setIsAuthenticated(!!data.session);
     };
     
     checkAuth();
     
+    // Écouter les changements d'état d'authentification Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setIsAuthenticated(!!session);
