@@ -5,6 +5,8 @@ export * from "./use-mobile";
 export * from "./use-notifications";
 export * from "./use-theme";
 export * from "./use-supabase";
+export * from "./use-subscription-plans";
+export * from "./use-subscriptions";
 
 // Export des hooks spécifiques
 export * from "./commission";

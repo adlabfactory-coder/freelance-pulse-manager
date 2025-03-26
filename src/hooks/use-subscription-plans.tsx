@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { SubscriptionPlan } from "@/types";
 import { useToast } from "./use-toast";
-import { getSubscriptionPlans } from "@/services/subscriptions";  // Updated import
+import { getSubscriptionPlans } from "@/services/supabase/subscriptions";
 
 export const useSubscriptionPlans = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
