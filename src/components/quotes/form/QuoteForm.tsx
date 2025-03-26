@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useQuoteForm } from '../hooks/useQuoteForm';
 import QuoteFormSections from './QuoteFormSections';
+import { Quote, QuoteItem } from '@/types';
 
 interface QuoteFormProps {
   form: ReturnType<typeof useQuoteForm>;
@@ -19,6 +20,20 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   onSubmit = form.handleSubmit,
   onCloseDialog
 }) => {
+  // Nous devons nous assurer que tous les éléments partiels sont complets avant de les passer
+  // au composant QuoteFormSections, pour éviter les erreurs de type
+  const safeItems: QuoteItem[] = form.items 
+    ? form.items.filter((item): item is QuoteItem => {
+        // Vérifier que chaque élément a les propriétés requises
+        return Boolean(
+          item && 
+          item.description !== undefined && 
+          item.quantity !== undefined && 
+          item.unitPrice !== undefined
+        );
+      })
+    : [];
+
   return (
     <form onSubmit={(e) => {
       e.preventDefault();
@@ -31,7 +46,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
           validUntil: form.validUntil,
           status: form.status,
           notes: form.notes,
-          items: form.items || [],
+          items: safeItems,
           totalAmount: form.totalAmount || 0
         }}
         currentItem={form.currentItem || {}}
