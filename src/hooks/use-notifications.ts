@@ -71,16 +71,18 @@ export const useNotifications = () => {
       
       // Filtrer les notifications selon le rôle de l'utilisateur
       return data.map((appointment) => {
-        // Si c'est un admin, super admin ou chargé d'affaires, ils reçoivent toutes les notifications
+        // Les admins, super admins et chargés d'affaires reçoivent toutes les notifications
         const shouldReceive = isAdmin || isSuperAdmin || isAccountManager || 
                            // Les freelances ne reçoivent que leurs propres rendez-vous
                            (user?.id === appointment.freelancerId);
                            
         if (shouldReceive) {
+          const creatorInfo = appointment.freelancer ? ` par ${appointment.freelancer.name}` : '';
+          
           return {
             id: `appointment-${appointment.id}`,
             title: "Rendez-vous aujourd'hui",
-            description: `${appointment.title} à ${format(new Date(appointment.date), 'HH:mm', { locale: fr })}${appointment.freelancer ? ` par ${appointment.freelancer.name}` : ''}`,
+            description: `${appointment.title} à ${format(new Date(appointment.date), 'HH:mm', { locale: fr })}${creatorInfo}`,
             date: new Date(appointment.date),
             type: "appointment" as const,
             read: false,
@@ -176,4 +178,3 @@ export const useNotifications = () => {
     refreshNotifications: loadNotifications
   };
 };
-

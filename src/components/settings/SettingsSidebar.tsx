@@ -9,7 +9,8 @@ import {
   Briefcase,
   BarChart3,
   Key,
-  DollarSign
+  DollarSign,
+  Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -104,6 +105,12 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ currentUser, isAdmin,
               to="/settings/database"
               label="Base de données"
               icon={<Database className="h-5 w-5" />}
+            />
+            
+            <SettingsLink
+              to="/settings/notifications"
+              label="Notifications"
+              icon={<Bell className="h-5 w-5" />}
             />
           </>
         )}

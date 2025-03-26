@@ -1,37 +1,93 @@
-
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { AppointmentStatus } from '@/types';
-
-// Types pour les rendez-vous
-export interface Appointment {
-  id: string;
-  title: string;
-  description?: string;
-  contactId: string;
-  freelancerId: string;
-  date: string;
-  duration: number;
-  status: 'scheduled' | 'cancelled' | 'completed' | 'pending';
-  location?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { supabase } from "@/lib/supabase";
+import { AppointmentStatus } from "@/types";
+import { processNotification } from "@/services/notification-service";
+import { NotificationType } from "@/types/notification-settings";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export interface AppointmentInput {
   title: string;
-  description?: string;
-  contactId: string;
-  freelancerId: string;
+  description: string;
   date: string;
   duration: number;
-  status: 'scheduled' | 'cancelled' | 'completed' | 'pending';
-  location?: string;
-  notes?: string;
+  status: "scheduled" | "cancelled" | "completed" | "pending";
+  freelancerId: string;
+  contactId: string;
+  location: any;
+  notes: any;
 }
 
-// Service pour la gestion des rendez-vous
+export const createAppointment = async (data: AppointmentInput) => {
+  try {
+    // Insertion de l'appointment
+    const { data: appointment, error } = await supabase
+      .from('appointments')
+      .insert([data])
+      .select('*, freelancer:freelancerId(id, name, email, role)')
+      .single();
+
+    if (error) {
+      console.error("Erreur lors de la création du rendez-vous:", error);
+      return null;
+    }
+
+    // Récupérer les utilisateurs admins, superadmins et chargés d'affaires
+    const { data: adminUsers, error: usersError } = await supabase
+      .from('users')
+      .select('id, name, email, role')
+      .in('role', ['admin', 'superadmin', 'account_manager']);
+
+    if (usersError) {
+      console.error("Erreur lors de la récupération des utilisateurs:", usersError);
+    }
+
+    // Envoyer des notifications
+    if (appointment && adminUsers) {
+      // Récupérer le créateur
+      const freelancer = appointment.freelancer;
+      
+      // Formater la date et l'heure
+      const formattedDate = format(new Date(appointment.date), 'dd/MM/yyyy', { locale: fr });
+      const formattedTime = format(new Date(appointment.date), 'HH:mm', { locale: fr });
+      
+      // Construire la liste des destinataires
+      const recipients = adminUsers.map(user => ({
+        email: user.email,
+        role: user.role,
+      }));
+      
+      // Ajouter le freelancer à la liste des destinataires
+      if (freelancer) {
+        recipients.push({
+          email: freelancer.email,
+          role: freelancer.role,
+        });
+      }
+      
+      // Données pour les templates
+      const notificationData = {
+        freelancerName: freelancer?.name || "Un utilisateur",
+        appointmentDate: formattedDate,
+        appointmentTime: formattedTime,
+        appointmentTitle: appointment.title,
+        appointmentDescription: appointment.description || ""
+      };
+      
+      // Envoyer la notification
+      await processNotification(
+        NotificationType.APPOINTMENT_CREATED,
+        notificationData,
+        recipients
+      );
+    }
+
+    return appointment;
+  } catch (error) {
+    console.error("Erreur inattendue lors de la création du rendez-vous:", error);
+    return null;
+  }
+};
+
 export const appointmentService = {
   // Récupère tous les rendez-vous
   async getAppointments(): Promise<Appointment[]> {

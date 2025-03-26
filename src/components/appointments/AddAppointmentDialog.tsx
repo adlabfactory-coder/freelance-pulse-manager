@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ const AddAppointmentDialog: React.FC<AddAppointmentDialogProps> = ({
         description,
         date: appointmentDateTime.toISOString(),
         duration: parseInt(duration),
-        status: AppointmentStatus.SCHEDULED,
+        status: "scheduled",
         freelancerId: user?.id || '',
         contactId: '00000000-0000-0000-0000-000000000000', // À remplacer par un vrai ID
         location: null,
