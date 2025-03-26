@@ -145,7 +145,7 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
         <QuoteItemForm 
           currentItem={currentItem}
           services={services}
-          onItemChange={onCurrentItemChange}
+          onChange={onCurrentItemChange}
           onAddItem={onAddItem}
         />
         
