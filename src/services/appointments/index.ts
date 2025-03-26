@@ -1,6 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { AppointmentStatus } from '@/types';
 
 // Types pour les rendez-vous
 export interface Appointment {
@@ -46,7 +47,11 @@ export const appointmentService = {
         throw error;
       }
       
-      return data || [];
+      // Conversion explicite des données au format Appointment[]
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'scheduled' | 'cancelled' | 'completed' | 'pending'
+      }));
     } catch (error) {
       console.error('Erreur lors de la récupération des rendez-vous:', error);
       return [];
@@ -68,7 +73,11 @@ export const appointmentService = {
         throw error;
       }
       
-      return data || [];
+      // Conversion explicite des données au format Appointment[]
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'scheduled' | 'cancelled' | 'completed' | 'pending'
+      }));
     } catch (error) {
       console.error(`Erreur lors de la récupération des rendez-vous du freelancer ${freelancerId}:`, error);
       return [];
@@ -90,7 +99,11 @@ export const appointmentService = {
         throw error;
       }
       
-      return data;
+      // Conversion explicite des données au format Appointment
+      return data ? {
+        ...data,
+        status: data.status as 'scheduled' | 'cancelled' | 'completed' | 'pending'
+      } : null;
     } catch (error) {
       console.error(`Erreur lors de la récupération du rendez-vous ${appointmentId}:`, error);
       return null;
@@ -218,7 +231,11 @@ export const appointmentService = {
         description: "Le rendez-vous a été mis à jour avec succès."
       });
       
-      return data;
+      // Conversion explicite des données au format Appointment
+      return data ? {
+        ...data,
+        status: data.status as 'scheduled' | 'cancelled' | 'completed' | 'pending'
+      } : null;
     } catch (error: any) {
       console.error(`Erreur lors de la mise à jour du rendez-vous ${appointmentId}:`, error);
       

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { User } from "@/types";
 
 interface SettingsLinkProps {
   to: string;
@@ -20,6 +21,12 @@ interface SettingsLinkProps {
   icon: React.ReactNode;
   active?: boolean;
   end?: boolean;
+}
+
+interface SettingsSidebarProps {
+  currentUser: User;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const SettingsLink: React.FC<SettingsLinkProps> = ({ to, label, icon, end = false }) => (
@@ -40,8 +47,8 @@ const SettingsLink: React.FC<SettingsLinkProps> = ({ to, label, icon, end = fals
   </NavLink>
 );
 
-const SettingsSidebar: React.FC = () => {
-  const { isSuperAdmin, isAdminOrSuperAdmin } = useAuth();
+const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ currentUser, isAdmin, isSuperAdmin }) => {
+  const { isAdminOrSuperAdmin } = useAuth();
   
   return (
     <aside className="w-64 hidden md:block">

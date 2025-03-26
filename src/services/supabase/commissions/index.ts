@@ -27,9 +27,9 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
 };
 
 // Réexporter tous les modules pour usage avec importation destructurée
-export * from './types';
 export * from './utils';
 export * from './fetch-commissions';
 export * from './fetch-rules';
 export * from './payment-operations';
 export * from './generate-commissions';
+// Ne pas réexporter types.ts pour éviter l'ambiguïté
