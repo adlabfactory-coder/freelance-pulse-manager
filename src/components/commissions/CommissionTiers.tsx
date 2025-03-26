@@ -61,7 +61,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
       </CardHeader>
       <CardContent>
         {!hasRules && (
-          <Alert variant="warning" className="mb-4">
+          <Alert className="mb-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               Impossible de charger les paliers depuis la base de données. Affichage des valeurs par défaut.
