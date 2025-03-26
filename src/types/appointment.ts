@@ -14,3 +14,6 @@ export interface Appointment {
   updatedAt: string;
   deleted_at?: string | null;
 }
+
+// Add a type to bridge between DB string status and our TypeScript enum
+export type AppointmentStatusFromDB = string;

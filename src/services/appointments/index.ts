@@ -1,7 +1,8 @@
+
 // Import the correct toast from hooks
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { Appointment } from "@/types/appointment";
+import { Appointment, AppointmentStatusFromDB } from "@/types/appointment";
 import { processNotification } from "@/services/notification-service";
 import { NotificationType } from "@/types/notification-settings";
 
@@ -17,7 +18,11 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
       return [];
     }
 
-    return data || [];
+    // Cast the string status to our TypeScript union type
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as Appointment['status']
+    }));
   } catch (error) {
     console.error('Unexpected error fetching appointments:', error);
     return [];
@@ -38,7 +43,11 @@ export const fetchAppointmentById = async (id: string): Promise<Appointment | nu
       return null;
     }
 
-    return data || null;
+    // Cast the string status to our TypeScript union type
+    return data ? {
+      ...data,
+      status: data.status as Appointment['status']
+    } : null;
   } catch (error) {
     console.error('Unexpected error fetching appointment by ID:', error);
     return null;
@@ -105,7 +114,10 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       title: "Succès",
       description: "Le rendez-vous a été créé avec succès"
     });
-    return data;
+    return {
+      ...data,
+      status: data.status as Appointment['status']
+    };
   } catch (err) {
     console.error('Unexpected error when creating appointment:', err);
     toast({
@@ -141,7 +153,10 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
       title: "Succès",
       description: "Le rendez-vous a été mis à jour avec succès"
     });
-    return data;
+    return {
+      ...data,
+      status: data.status as Appointment['status']
+    };
   } catch (err) {
     console.error('Unexpected error when updating appointment:', err);
     toast({

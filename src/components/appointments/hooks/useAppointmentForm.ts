@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
-import appointmentService from "@/services/appointments";
+import * as appointmentService from "@/services/appointments";
 
 // Options pour les types de rendez-vous
 export const APPOINTMENT_TITLE_OPTIONS = [
