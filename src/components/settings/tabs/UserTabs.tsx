@@ -17,7 +17,22 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
   const [activeTab, setActiveTab] = useState("general");
   const { user, role } = useAuth();
   
+  // State for PersonalInfoTab
+  const [name, setName] = useState(user?.name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [userRole, setUserRole] = useState<UserRole>(role || UserRole.FREELANCER);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const canAccessApiKeys = role && hasMinimumRole(role, UserRole.ACCOUNT_MANAGER);
+  
+  const handleSubmit = () => {
+    setIsSubmitting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+    }, 1000);
+    // In a real implementation, we would submit the data to an API
+  };
 
   return (
     <Tabs
@@ -34,8 +49,19 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
         )}
       </TabsList>
       <TabsContent value="general" className="space-y-4">
-        {/* We're removing the onSelectUser prop since PersonalInfoTab doesn't accept it */}
-        <PersonalInfoTab />
+        <PersonalInfoTab 
+          name={name}
+          setName={setName}
+          email={email}
+          setEmail={setEmail}
+          role={userRole}
+          setRole={setUserRole}
+          canEdit={true}
+          isCurrentUser={true}
+          currentUserRole={role || UserRole.FREELANCER}
+          isSubmitting={isSubmitting}
+          onSubmit={handleSubmit}
+        />
       </TabsContent>
       <TabsContent value="security" className="space-y-4">
         <SecurityTab isCurrentUser={true} />
