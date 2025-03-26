@@ -2,13 +2,13 @@
 import { createSupabaseService } from '@/services/supabase';
 import { User, UserRole } from '@/types';
 import { auditCreate, auditDelete, auditUpdate } from '@/services/audit-service';
-import { validateSupabaseConnection } from '@/integrations/supabase/client';
+import { validateSupabaseConfig } from '@/lib/supabase-client';
 import { fetchUsers, fetchUserById, updateUser, createUser, deleteUser } from '@/services/user';
 
 // Hook centralisé pour accéder aux services Supabase
 export const useSupabase = () => {
   // Validation de la configuration Supabase au démarrage
-  const isConfigValid = validateSupabaseConnection();
+  const isConfigValid = validateSupabaseConfig();
   if (!isConfigValid) {
     console.warn("La configuration Supabase n'est pas valide. Certaines fonctionnalités peuvent ne pas fonctionner correctement.");
   }

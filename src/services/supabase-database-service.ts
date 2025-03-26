@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 import { 
   checkDatabaseStatus as checkDbStatus, 
   initializeDatabase as initDb

@@ -2,7 +2,7 @@
 /**
  * Service for creating and updating contacts
  */
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 import { Contact, ContactInsert, ContactUpdate } from './types';
 import { toast } from 'sonner';
 import { ContactStatus } from '@/types/database/enums';

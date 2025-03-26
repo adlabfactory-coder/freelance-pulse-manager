@@ -45,7 +45,7 @@ export const contactCrudService = {
 };
 
 // Add missing import for supabase and toast
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 import { toast } from 'sonner';
 
 // Pour rétrocompatibilité, on expose aussi les fonctions individuellement
