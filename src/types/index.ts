@@ -48,15 +48,20 @@ export enum ServiceType {
   SUBSCRIPTION = "subscription"
 }
 
-export interface User {
+export interface Subscription {
   id: string;
   name: string;
-  email: string;
-  role: UserRole;
-  avatar: string | null;
-  calendly_enabled: boolean;
-  calendly_url: string;
-  calendly_sync_email: string;
+  description: string;
+  price: number;
+  interval: SubscriptionInterval;
+  clientId: string;
+  clientName?: string;
+  freelancerId: string;
+  freelancerName?: string;
+  status: SubscriptionStatus;
+  startDate: Date;
+  endDate?: Date;
+  renewalDate?: Date;
 }
 
 export interface Service {
@@ -83,7 +88,6 @@ export interface SubscriptionPlan {
   updated_at?: Date;
 }
 
-// Définition des interfaces pour QuoteItem et Quote
 export interface QuoteItem {
   id?: string;
   quoteId?: string;
@@ -108,7 +112,6 @@ export interface Quote {
   updatedAt: Date;
 }
 
-// Interface pour NavItem
 export interface NavItem {
   title: string;
   href: string;
@@ -118,7 +121,6 @@ export interface NavItem {
   disabled?: boolean;  // Added disabled property
 }
 
-// Fonction pour vérifier les rôles
 export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): boolean {
   // Ordre des rôles du plus élevé au plus bas
   const roles = [
@@ -136,7 +138,6 @@ export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): bool
   return userRoleIndex <= requiredRoleIndex && userRoleIndex !== -1 && requiredRoleIndex !== -1;
 }
 
-// Interface pour Contact
 export interface Contact {
   id: string;
   name: string;
@@ -153,7 +154,5 @@ export interface Contact {
   subscriptionPlanId?: string;
 }
 
-// Ré-exporter les types des autres fichiers pour centraliser l'accès
 export type { ContactStatusEnum as ContactStatus };
-// Removing ContactType export as it doesn't exist in the imported module
 export type { Commission, CommissionStatus, CommissionTier };

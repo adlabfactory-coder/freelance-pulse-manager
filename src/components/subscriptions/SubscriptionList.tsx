@@ -2,10 +2,11 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Subscription } from "@/types";
 import SubscriptionStatusBadge from "./SubscriptionStatusBadge";
 
 interface SubscriptionListProps {
-  subscriptions: any[];
+  subscriptions: Subscription[];
   loading: boolean;
 }
 
@@ -72,13 +73,13 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptions, load
           <TableBody>
             {subscriptions.map((subscription) => (
               <TableRow key={subscription.id}>
-                <TableCell className="font-medium">{subscription.contactName}</TableCell>
-                <TableCell>{subscription.planName}</TableCell>
+                <TableCell className="font-medium">{subscription.clientName || "Client inconnu"}</TableCell>
+                <TableCell>{subscription.name}</TableCell>
                 <TableCell>{new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(subscription.price)}</TableCell>
                 <TableCell>
                   <SubscriptionStatusBadge status={subscription.status} />
                 </TableCell>
-                <TableCell>{new Date(subscription.startDate).toLocaleDateString('fr-FR')}</TableCell>
+                <TableCell>{subscription.startDate.toLocaleDateString('fr-FR')}</TableCell>
                 <TableCell className="text-right">
                   {/* Actions pour gérer l'abonnement */}
                 </TableCell>

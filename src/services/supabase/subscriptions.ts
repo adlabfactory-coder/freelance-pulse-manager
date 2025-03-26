@@ -1,11 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/types/database';
 import { SubscriptionPlan, SubscriptionStatus, SubscriptionInterval, Subscription } from '@/types';
+import type { Database } from '@/types/database';
 
 // Service pour les abonnements avec Supabase
-export const createSubscriptionsService = (supabaseClient: SupabaseClient<Database>) => {
+export const createSubscriptionsService = (supabaseClient: any) => {
   return {
     getSubscriptionPlans: async (): Promise<SubscriptionPlan[]> => {
       try {
