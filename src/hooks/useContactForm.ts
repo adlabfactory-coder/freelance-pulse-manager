@@ -29,8 +29,8 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       address: "",
       status: "lead",
       notes: "",
-      // Ne pas définir assignedTo ici, cela sera géré lors de la soumission
-      assignedTo: "",
+      // Utilisez l'ID de l'utilisateur connecté s'il existe, sinon une chaîne vide
+      assignedTo: initialData?.assignedTo || user?.id || "",
     },
   });
 

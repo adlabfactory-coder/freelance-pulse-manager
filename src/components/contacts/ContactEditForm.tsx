@@ -19,9 +19,9 @@ const ContactEditForm: React.FC<ContactEditFormProps> = ({
   const { user } = useAuth();
   
   // Faire une copie du contact existant sans modifier son assignedTo
-  // Le hook useContactForm s'occupera de l'assignation lors de la soumission
   const contactWithAssignedTo = {
-    ...contact
+    ...contact,
+    assignedTo: contact.assignedTo || user?.id || ""
   };
   
   const { form, isSubmitting, onSubmit } = useContactForm({
