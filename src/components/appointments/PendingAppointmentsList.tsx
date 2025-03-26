@@ -73,30 +73,15 @@ const PendingAppointmentsList: React.FC = () => {
       
       const userId = user.id;
       
-      // Mettre à jour le rendez-vous
-      const { error: appointmentError } = await supabase
-        .from('appointments')
-        .update({ 
-          status: 'scheduled',
-          freelancerId: userId 
-        })
-        .eq('id', appointmentId);
+      // Utiliser la procédure stockée pour accepter le rendez-vous et mettre à jour le contact
+      const { error } = await supabase
+        .rpc('accept_appointment', {
+          appointment_id: appointmentId,
+          freelancer_id: userId
+        });
       
-      if (appointmentError) {
-        throw new Error(`Erreur lors de la mise à jour du rendez-vous: ${appointmentError.message}`);
-      }
-      
-      // Assigner le contact à l'utilisateur
-      const { error: contactError } = await supabase
-        .from('contacts')
-        .update({ 
-          assignedTo: userId,
-          status: 'prospect'
-        })
-        .eq('id', contactId);
-      
-      if (contactError) {
-        throw new Error(`Erreur lors de l'assignation du contact: ${contactError.message}`);
+      if (error) {
+        throw new Error(`Erreur lors de l'acceptation du rendez-vous: ${error.message}`);
       }
       
       toast.success("Rendez-vous accepté avec succès");
@@ -118,13 +103,11 @@ const PendingAppointmentsList: React.FC = () => {
     try {
       const { supabase } = await import('@/lib/supabase');
       
-      // Mettre à jour le rendez-vous
+      // Utiliser la procédure stockée pour refuser le rendez-vous
       const { error } = await supabase
-        .from('appointments')
-        .update({ 
-          status: 'cancelled'
-        })
-        .eq('id', appointmentId);
+        .rpc('decline_appointment', {
+          appointment_id: appointmentId
+        });
       
       if (error) {
         throw new Error(`Erreur lors du refus du rendez-vous: ${error.message}`);

@@ -21,14 +21,14 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       date: appointmentDate.toISOString()
     });
     
+    // Utiliser l'option rpc avec la procédure stockée pour contourner les problèmes de RLS
     const { data, error } = await supabase
-      .from('appointments')
-      .insert([{
-        ...appointmentData,
-        date: appointmentDate.toISOString() // Standardiser le format de date
-      }])
-      .select()
-      .single();
+      .rpc('create_appointment', {
+        appointment_data: {
+          ...appointmentData,
+          date: appointmentDate.toISOString() // Standardiser le format de date
+        }
+      });
 
     if (error) {
       console.error('Error creating appointment:', error);
@@ -39,20 +39,20 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
     // Send notification for appointment creation
     try {
       const notificationData = {
-        appointmentTitle: data.title,
-        appointmentDate: new Date(data.date).toLocaleDateString(),
-        appointmentTime: new Date(data.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        appointmentDescription: data.description || 'Pas de description',
+        appointmentTitle: appointmentData.title,
+        appointmentDate: new Date(appointmentData.date).toLocaleDateString(),
+        appointmentTime: new Date(appointmentData.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        appointmentDescription: appointmentData.description || 'Pas de description',
         freelancerName: "Un freelance" // This would be replaced with the actual name in a real implementation
       };
 
       // Only process notification if we have required data
-      if (data.freelancerId) {
+      if (appointmentData.freelancerId) {
         // Get freelancer name
         const { data: freelancer } = await supabase
           .from('users')
           .select('name')
-          .eq('id', data.freelancerId)
+          .eq('id', appointmentData.freelancerId)
           .single();
         
         if (freelancer) {
@@ -74,10 +74,7 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
     }
 
     toast.success("Le rendez-vous a été créé avec succès");
-    return {
-      ...data,
-      status: data.status as Appointment['status']
-    };
+    return data;
   } catch (err) {
     console.error('Unexpected error when creating appointment:', err);
     toast.error("Une erreur inattendue s'est produite lors de la création du rendez-vous");
@@ -134,11 +131,11 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       date: appointmentDate.toISOString()
     };
     
+    // Utiliser l'option rpc pour contourner les problèmes de RLS
     const { data, error } = await supabase
-      .from('appointments')
-      .insert([autoAssignData])
-      .select()
-      .single();
+      .rpc('create_auto_assign_appointment', {
+        appointment_data: autoAssignData
+      });
 
     if (error) {
       console.error('Erreur lors de la création du rendez-vous auto-assigné:', error);
@@ -157,10 +154,10 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       
       if (contact) {
         const notificationData = {
-          appointmentTitle: data.title,
-          appointmentDate: new Date(data.date).toLocaleDateString(),
-          appointmentTime: new Date(data.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          appointmentDescription: data.description || 'Pas de description',
+          appointmentTitle: appointmentData.title,
+          appointmentDate: new Date(appointmentData.date).toLocaleDateString(),
+          appointmentTime: new Date(appointmentData.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          appointmentDescription: appointmentData.description || 'Pas de description',
           contactName: contact.name,
           contactEmail: contact.email,
           appointmentId: data.id
@@ -184,10 +181,7 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
     }
 
     toast.success("Rendez-vous créé et en attente d'attribution à un chargé de compte");
-    return {
-      ...data,
-      status: data.status as Appointment['status']
-    };
+    return data;
   } catch (err) {
     console.error('Erreur inattendue lors de la création du rendez-vous auto-assigné:', err);
     toast.error("Une erreur inattendue s'est produite lors de la création du rendez-vous");
