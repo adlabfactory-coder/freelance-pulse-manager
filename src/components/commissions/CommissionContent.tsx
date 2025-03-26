@@ -8,6 +8,7 @@ import CommissionToolbar from "@/components/commissions/CommissionToolbar";
 import CommissionStatusBadge from "@/components/commissions/CommissionStatusBadge";
 import { formatPeriod } from "@/utils/commission";
 import { formatCurrency } from "@/utils/format";
+import { getTierLabel } from "@/components/settings/commission/TierMapper";
 
 interface CommissionContentProps {
   commissions: Commission[];
@@ -38,17 +39,6 @@ const CommissionContent: React.FC<CommissionContentProps> = ({
 
   const handleViewCommission = (commissionId: string) => {
     navigate(`/commissions/detail/${commissionId}`);
-  };
-
-  // Fonction d'aide pour traduire les valeurs de tier en libellés lisibles
-  const getTierLabel = (tier: string) => {
-    switch(tier) {
-      case 'bronze': return 'Bronze';
-      case 'silver': return 'Silver';
-      case 'gold': return 'Gold';
-      case 'platinum': return 'Platinum';
-      default: return tier;
-    }
   };
 
   return (
