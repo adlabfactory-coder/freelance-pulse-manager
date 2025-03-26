@@ -30,6 +30,60 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
 });
 
+// UUID générés pour remplacer les IDs simples (1, 2, 3...)
+const MOCK_USERS = [
+  {
+    id: "7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc", // Remplacé ID "1"
+    name: "Admin Test",
+    email: "admin@example.com",
+    role: UserRole.ADMIN,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "487fb1af-4396-49d1-ba36-8711facbb03c", // Remplacé ID "2"
+    name: "Freelancer Test",
+    email: "freelancer@example.com",
+    role: UserRole.FREELANCER,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: "https://calendly.com/freelancer-test",
+    calendly_sync_email: "freelancer@example.com"
+  },
+  {
+    id: "2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda", // Remplacé ID "3"
+    name: "Client Test",
+    email: "client@example.com",
+    role: UserRole.CLIENT,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "6a94bd3d-7f5c-49ae-b09e-e570cb01a978", // Remplacé ID "4"
+    name: "Super Admin Test",
+    email: "superadmin@example.com",
+    role: UserRole.SUPER_ADMIN,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  },
+  {
+    id: "3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c", // Remplacé ID "5"
+    name: "Account Manager Test",
+    email: "manager@example.com",
+    role: UserRole.ACCOUNT_MANAGER,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: "",
+    calendly_sync_email: ""
+  }
+];
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,58 +146,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
-
-const MOCK_USERS = [
-  {
-    id: "1",
-    name: "Admin Test",
-    email: "admin@example.com",
-    role: UserRole.ADMIN,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: "",
-    calendly_sync_email: ""
-  },
-  {
-    id: "2",
-    name: "Freelancer Test",
-    email: "freelancer@example.com",
-    role: UserRole.FREELANCER,
-    avatar: null,
-    calendly_enabled: true,
-    calendly_url: "https://calendly.com/freelancer-test",
-    calendly_sync_email: "freelancer@example.com"
-  },
-  {
-    id: "3",
-    name: "Client Test",
-    email: "client@example.com",
-    role: UserRole.CLIENT,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: "",
-    calendly_sync_email: ""
-  },
-  {
-    id: "4",
-    name: "Super Admin Test",
-    email: "superadmin@example.com",
-    role: UserRole.SUPER_ADMIN,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: "",
-    calendly_sync_email: ""
-  },
-  {
-    id: "5",
-    name: "Account Manager Test",
-    email: "manager@example.com",
-    role: UserRole.ACCOUNT_MANAGER,
-    avatar: null,
-    calendly_enabled: false,
-    calendly_url: "",
-    calendly_sync_email: ""
-  }
-];
 
 export const useAuth = () => useContext(AuthContext);

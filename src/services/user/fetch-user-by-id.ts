@@ -8,23 +8,14 @@ import { getMockUsers, getMockUserById } from '@/utils/supabase-mock-data';
  */
 export const fetchUserById = async (userId: string): Promise<User | null> => {
   try {
-    // Amélioration de la gestion des utilisateurs de démonstration
-    if (userId === "1" || userId === "2" || userId === "3" || 
-        userId === "7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc" || 
-        userId === "487fb1af-4396-49d1-ba36-8711facbb03c" || 
-        userId === "2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda") {
-      
-      // Vérifier d'abord les ID UUID de démonstration
-      if (userId === "7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc") {
-        return getMockUsers()[0]; // Admin démo
-      } else if (userId === "487fb1af-4396-49d1-ba36-8711facbb03c") {
-        return getMockUsers()[1]; // Commercial démo
-      } else if (userId === "2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda") {
-        return getMockUsers()[2]; // Client démo
-      } else {
-        // Fallback pour les anciens ID numériques
-        return getMockUserById(userId);
-      }
+    // Utilisateurs de démonstration avec IDs UUID
+    const mockUsers = getMockUsers();
+    
+    // Vérifier directement si l'ID correspond à un utilisateur de démonstration
+    const demoUser = mockUsers.find(user => user.id === userId);
+    if (demoUser) {
+      console.log("Utilisateur de démonstration trouvé avec ID", userId);
+      return demoUser;
     }
     
     // Pour les vrais utilisateurs dans Supabase
@@ -37,13 +28,13 @@ export const fetchUserById = async (userId: string): Promise<User | null> => {
       
       if (error) {
         console.warn("Erreur lors de la récupération de l'utilisateur:", error.message);
-        // Essayons de récupérer un utilisateur démo avec cet ID
-        return getMockUserById(userId) || getMockUsers()[0]; // Fallback sur admin démo
+        // Fallback sur admin démo
+        return mockUsers[0];
       }
       
       if (!data) {
         console.warn("Aucun utilisateur trouvé avec l'ID:", userId);
-        return getMockUsers()[0]; // Fallback sur admin démo
+        return mockUsers[0]; // Fallback sur admin démo
       }
       
       return {
@@ -52,8 +43,8 @@ export const fetchUserById = async (userId: string): Promise<User | null> => {
       } as User;
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-      // Ne pas lancer d'erreur ici, retourner un utilisateur démo
-      return getMockUserById(userId) || getMockUsers()[0];
+      // Fallback sur admin démo
+      return mockUsers[0];
     }
   } catch (error) {
     console.error('Erreur fatale lors de la récupération de l\'utilisateur:', error);

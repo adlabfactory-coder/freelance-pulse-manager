@@ -1,96 +1,76 @@
 
-import { User, UserRole } from "@/types";
+import { User, UserRole } from '@/types';
 
-// Fonction pour récupérer les utilisateurs de démo
+// Utilisateurs de démonstration avec IDs UUID
+export const MOCK_USERS: User[] = [
+  {
+    id: '7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc',
+    name: 'Super Admin Démo',
+    email: 'superadmin@example.com',
+    role: UserRole.SUPER_ADMIN,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: 'https://calendly.com/superadmin-demo',
+    calendly_sync_email: 'superadmin@example.com'
+  },
+  {
+    id: '6a94bd3d-7f5c-49ae-b09e-e570cb01a978',
+    name: 'Admin Démo',
+    email: 'admin@example.com',
+    role: UserRole.ADMIN,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: 'https://calendly.com/admin-demo',
+    calendly_sync_email: 'admin@example.com'
+  },
+  {
+    id: '487fb1af-4396-49d1-ba36-8711facbb03c',
+    name: 'Commercial Démo',
+    email: 'commercial@example.com',
+    role: UserRole.FREELANCER,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: 'https://calendly.com/commercial-demo',
+    calendly_sync_email: 'commercial@example.com'
+  },
+  {
+    id: '3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c',
+    name: 'Chargé de Compte Démo',
+    email: 'account@example.com',
+    role: UserRole.ACCOUNT_MANAGER,
+    avatar: null,
+    calendly_enabled: true,
+    calendly_url: 'https://calendly.com/account-demo',
+    calendly_sync_email: 'account@example.com'
+  },
+  {
+    id: '2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda',
+    name: 'Client Démo',
+    email: 'client@example.com',
+    role: UserRole.CLIENT,
+    avatar: null,
+    calendly_enabled: false,
+    calendly_url: '',
+    calendly_sync_email: ''
+  }
+];
+
+// Fonction pour récupérer tous les utilisateurs mockés
 export const getMockUsers = (): User[] => {
-  return [
-    {
-      id: "7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc",
-      name: "Admin Démo",
-      email: "admin@example.com",
-      role: UserRole.ADMIN,
-      avatar: null,
-      calendly_enabled: true,
-      calendly_url: "https://calendly.com/admin-demo",
-      calendly_sync_email: "admin@example.com"
-    },
-    {
-      id: "487fb1af-4396-49d1-ba36-8711facbb03c",
-      name: "Commercial Démo",
-      email: "commercial@example.com",
-      role: UserRole.FREELANCER,
-      avatar: null,
-      calendly_enabled: true,
-      calendly_url: "https://calendly.com/commercial-demo",
-      calendly_sync_email: "commercial@example.com"
-    },
-    {
-      id: "2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda",
-      name: "Client Démo",
-      email: "client@example.com",
-      role: UserRole.CLIENT,
-      avatar: null,
-      calendly_enabled: false,
-      calendly_url: "",
-      calendly_sync_email: ""
-    },
-    {
-      id: "d290f1ee-6c54-4b01-90e6-d701748f0851",
-      name: "John Doe",
-      email: "john@example.com",
-      role: UserRole.FREELANCER,
-      avatar: null,
-      calendly_enabled: false,
-      calendly_url: null,
-      calendly_sync_email: null
-    },
-    {
-      id: "d290f1ee-6c54-4b01-90e6-d701748f0852",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: UserRole.FREELANCER,
-      avatar: null,
-      calendly_enabled: false,
-      calendly_url: null,
-      calendly_sync_email: null
-    },
-    {
-      id: "d290f1ee-6c54-4b01-90e6-d701748f0853",
-      name: "Mike Johnson",
-      email: "mike@example.com",
-      role: UserRole.FREELANCER,
-      avatar: null,
-      calendly_enabled: false,
-      calendly_url: null,
-      calendly_sync_email: null
-    },
-    {
-      id: "d290f1ee-6c54-4b01-90e6-d701748f0854",
-      name: "Sarah Wilson",
-      email: "sarah@example.com",
-      role: UserRole.FREELANCER,
-      avatar: null,
-      calendly_enabled: false,
-      calendly_url: null,
-      calendly_sync_email: null
-    }
-  ];
+  return MOCK_USERS;
 };
 
-// Fonction pour récupérer un utilisateur de démo par son ID
+// Fonction pour récupérer un utilisateur mocké par ID
 export const getMockUserById = (userId: string): User | null => {
-  // Gérer d'abord les anciens IDs numériques en les convertissant
-  // vers les nouveaux IDs UUID de démonstration
-  if (userId === "1") {
-    userId = "7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc"; // Admin
-  } else if (userId === "2") {
-    userId = "487fb1af-4396-49d1-ba36-8711facbb03c"; // Commercial
-  } else if (userId === "3") {
-    userId = "2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda"; // Client
-  }
+  // Gérer à la fois les anciens IDs numériques et les nouveaux UUIDs
+  const user = MOCK_USERS.find(u => 
+    u.id === userId || 
+    (userId === "1" && u.role === UserRole.ADMIN) ||
+    (userId === "2" && u.role === UserRole.FREELANCER) ||
+    (userId === "3" && u.role === UserRole.CLIENT) ||
+    (userId === "4" && u.role === UserRole.SUPER_ADMIN) ||
+    (userId === "5" && u.role === UserRole.ACCOUNT_MANAGER)
+  );
   
-  // Puis chercher l'utilisateur dans les données mockées
-  const users = getMockUsers();
-  const user = users.find(u => u.id === userId);
   return user || null;
 };

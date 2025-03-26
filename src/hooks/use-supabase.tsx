@@ -69,7 +69,7 @@ export const useSupabase = () => {
     getMockUsers: (): User[] => {
       return [
         {
-          id: '1',
+          id: '7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc',
           name: 'Super Admin Démo',
           email: 'superadmin@example.com',
           role: UserRole.SUPER_ADMIN,
@@ -79,7 +79,7 @@ export const useSupabase = () => {
           calendly_sync_email: 'superadmin@example.com'
         },
         {
-          id: '4',
+          id: '6a94bd3d-7f5c-49ae-b09e-e570cb01a978',
           name: 'Admin Démo',
           email: 'admin@example.com',
           role: UserRole.ADMIN,
@@ -89,7 +89,7 @@ export const useSupabase = () => {
           calendly_sync_email: 'admin@example.com'
         },
         {
-          id: '2',
+          id: '487fb1af-4396-49d1-ba36-8711facbb03c',
           name: 'Commercial Démo',
           email: 'commercial@example.com',
           role: UserRole.FREELANCER,
@@ -99,7 +99,7 @@ export const useSupabase = () => {
           calendly_sync_email: 'commercial@example.com'
         },
         {
-          id: '5',
+          id: '3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c',
           name: 'Chargé de Compte Démo',
           email: 'account@example.com',
           role: UserRole.ACCOUNT_MANAGER,
@@ -109,7 +109,7 @@ export const useSupabase = () => {
           calendly_sync_email: 'account@example.com'
         },
         {
-          id: '3',
+          id: '2b6329d2-73e4-4f5e-b56e-c26cdf4b3dda',
           name: 'Client Démo',
           email: 'client@example.com',
           role: UserRole.CLIENT,
