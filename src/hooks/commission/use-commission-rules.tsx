@@ -85,18 +85,81 @@ export const useCommissionRules = () => {
    * Maps a database rule to the application model
    */
   const mapRuleFromDatabase = (dbRule: any): CommissionRule => {
-    // Debug logging
-    console.log("Mapping DB rule:", dbRule);
+    // Vérifier si dbRule est valide
+    if (!dbRule) {
+      console.warn("Invalid DB rule received:", dbRule);
+      return getDefaultCommissionRule(CommissionTier.TIER_1);
+    }
     
-    return {
-      id: dbRule.id,
-      tier: mapTierFromDb(dbRule.tier),
-      minContracts: dbRule.minContracts || 0,
-      maxContracts: dbRule.maxContracts || null,
-      percentage: dbRule.percentage || 0,
-      // Prioritize unit_amount from DB or 0 as fallback
-      unitAmount: dbRule.unit_amount || 0
-    };
+    try {
+      // Debug logging
+      console.log("Mapping DB rule:", dbRule);
+      
+      return {
+        id: dbRule.id || `default-${Date.now()}`,
+        tier: mapTierFromDb(dbRule.tier || 'bronze'),
+        minContracts: parseInt(dbRule.minContracts) || 0,
+        maxContracts: dbRule.maxContracts ? parseInt(dbRule.maxContracts) : null,
+        percentage: parseFloat(dbRule.percentage) || 0,
+        // Prioritize unit_amount from DB or 0 as fallback
+        unitAmount: parseFloat(dbRule.unit_amount) || 500 // Valeur par défaut
+      };
+    } catch (error) {
+      console.error("Error mapping DB rule:", error, dbRule);
+      return getDefaultCommissionRule(CommissionTier.TIER_1);
+    }
+  };
+
+  /**
+   * Provides a default commission rule for a specific tier
+   */
+  const getDefaultCommissionRule = (tier: CommissionTier): CommissionRule => {
+    switch (tier) {
+      case CommissionTier.TIER_1:
+        return {
+          id: "default-tier-1",
+          tier: CommissionTier.TIER_1,
+          minContracts: 1,
+          maxContracts: 10,
+          percentage: 0,
+          unitAmount: 500
+        };
+      case CommissionTier.TIER_2:
+        return {
+          id: "default-tier-2",
+          tier: CommissionTier.TIER_2,
+          minContracts: 11,
+          maxContracts: 20,
+          percentage: 0,
+          unitAmount: 1000
+        };
+      case CommissionTier.TIER_3:
+        return {
+          id: "default-tier-3",
+          tier: CommissionTier.TIER_3,
+          minContracts: 21,
+          maxContracts: 30,
+          percentage: 0,
+          unitAmount: 1500
+        };
+      case CommissionTier.TIER_4:
+        return {
+          id: "default-tier-4",
+          tier: CommissionTier.TIER_4,
+          minContracts: 31,
+          percentage: 0,
+          unitAmount: 2000
+        };
+      default:
+        return {
+          id: "default-unknown",
+          tier: CommissionTier.TIER_1,
+          minContracts: 1,
+          maxContracts: 10,
+          percentage: 0,
+          unitAmount: 500
+        };
+    }
   };
 
   /**
@@ -104,37 +167,10 @@ export const useCommissionRules = () => {
    */
   const getDefaultCommissionRules = (): CommissionRule[] => {
     return [
-      {
-        id: "default-tier-1",
-        tier: CommissionTier.TIER_1,
-        minContracts: 1,
-        maxContracts: 10,
-        percentage: 0,
-        unitAmount: 500
-      },
-      {
-        id: "default-tier-2",
-        tier: CommissionTier.TIER_2,
-        minContracts: 11,
-        maxContracts: 20,
-        percentage: 0,
-        unitAmount: 1000
-      },
-      {
-        id: "default-tier-3",
-        tier: CommissionTier.TIER_3,
-        minContracts: 21,
-        maxContracts: 30,
-        percentage: 0,
-        unitAmount: 1500
-      },
-      {
-        id: "default-tier-4",
-        tier: CommissionTier.TIER_4,
-        minContracts: 31,
-        percentage: 0,
-        unitAmount: 2000
-      }
+      getDefaultCommissionRule(CommissionTier.TIER_1),
+      getDefaultCommissionRule(CommissionTier.TIER_2),
+      getDefaultCommissionRule(CommissionTier.TIER_3),
+      getDefaultCommissionRule(CommissionTier.TIER_4)
     ];
   };
 

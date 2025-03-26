@@ -26,12 +26,16 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
   if (loadingUser) {
     return <SettingsLoading />;
   }
 
   if (error) {
-    return <SettingsError error={error} />;
+    return <SettingsError error={error} onRetry={handleRetry} />;
   }
 
   return (

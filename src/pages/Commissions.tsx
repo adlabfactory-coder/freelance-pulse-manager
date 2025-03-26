@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import AdminCommissionsContent from "@/components/commissions/AdminCommissionsContent";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import CommissionExplanation from "@/components/commissions/CommissionExplanation";
 
 const Commissions: React.FC = () => {
   const { isAdmin, isFreelancer, isAccountManager } = useAuth();
@@ -36,30 +37,31 @@ const Commissions: React.FC = () => {
     );
   }
 
-  // Si c'est un freelancer, afficher la vue freelancer
-  if (isFreelancer) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">Mes Commissions</h1>
-        <FreelancerCommissionsList />
-      </div>
-    );
-  }
-
-  // Sinon, afficher la vue admin
+  // Afficher l'explication du principe de commissionnement pour tous les utilisateurs autorisés
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Gestion des Commissions</h1>
-      <AdminCommissionsContent 
-        commissions={commissions}
-        commissionRules={commissionRules}
-        loading={loading}
-        requestingPayment={requestingPayment}
-        error={error}
-        requestPayment={requestPayment}
-        approvePayment={approvePayment}
-        generateMonthlyCommissions={generateMonthlyCommissions}
-      />
+      <h1 className="text-2xl font-bold tracking-tight">
+        {isFreelancer ? "Mes Commissions" : "Gestion des Commissions"}
+      </h1>
+      
+      {/* Explication du principe de commissionnement */}
+      <CommissionExplanation />
+      
+      {/* Contenu spécifique selon le rôle */}
+      {isFreelancer ? (
+        <FreelancerCommissionsList />
+      ) : (
+        <AdminCommissionsContent 
+          commissions={commissions}
+          commissionRules={commissionRules}
+          loading={loading}
+          requestingPayment={requestingPayment}
+          error={error}
+          requestPayment={requestPayment}
+          approvePayment={approvePayment}
+          generateMonthlyCommissions={generateMonthlyCommissions}
+        />
+      )}
     </div>
   );
 };

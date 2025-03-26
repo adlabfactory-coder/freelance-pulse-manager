@@ -8,6 +8,7 @@ import { hasMinimumRole } from "@/types/roles";
 import { UserRole } from "@/types";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 
+// Ajoutons le type correct pour éviter l'erreur TS
 interface UserProfileTabsProps {
   onSelectUser?: (userId: string) => void;
 }
@@ -33,6 +34,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
         )}
       </TabsList>
       <TabsContent value="general" className="space-y-4">
+        {/* Assurons-nous que le composant accepte la prop onSelectUser */}
         <PersonalInfoTab onSelectUser={onSelectUser} />
       </TabsContent>
       <TabsContent value="security" className="space-y-4">

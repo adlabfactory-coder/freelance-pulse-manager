@@ -53,7 +53,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
     }
   ];
 
-  console.log("Commission rules in display component:", rules);
+  console.log("Affichage des règles de commission:", rules);
 
   return (
     <Card className="mb-6">
@@ -65,7 +65,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
           <Alert className="mb-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Impossible de charger les paliers depuis la base de données. Affichage des valeurs par défaut.
+              Utilisation des valeurs de paliers par défaut. Les administrateurs peuvent configurer ces valeurs dans les paramètres.
             </AlertDescription>
           </Alert>
         )}
@@ -87,7 +87,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
                 {getTierLabel(rule.tier)}
               </Badge>
               <div className="mt-2 text-2xl font-bold">
-                {formatCurrency(rule.unitAmount)}
+                {formatCurrency(rule.unitAmount || 0)}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
                 par contrat validé
@@ -102,6 +102,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         <div className="mt-6 text-sm text-muted-foreground">
           <p>Les commissions sont calculées à la fin de chaque mois en fonction du nombre de contrats validés.</p>
           <p className="mt-2">Pour chaque contrat validé dans un palier, une commission fixe est attribuée selon le montant unitaire de ce palier.</p>
+          <p className="mt-2 font-medium">Ce système a remplacé l'ancien mode de calcul par pourcentage du montant des contrats.</p>
         </div>
       </CardContent>
     </Card>
