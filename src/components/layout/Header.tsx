@@ -77,7 +77,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between px-4 border-b bg-background">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 border-b bg-background">
       <div className="flex items-center">
         <Button
           variant="ghost"

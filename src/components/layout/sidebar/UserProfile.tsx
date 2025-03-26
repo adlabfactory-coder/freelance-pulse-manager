@@ -20,17 +20,14 @@ const UserProfile: React.FC<UserProfileProps> = ({
     if (!user) return "Utilisateur";
     
     if (typeof user === 'object') {
-      // Vérifier d'abord les propriétés directes
-      if ('name' in user && user.name) return user.name;
-      
-      // Ensuite vérifier les métadonnées (structure Supabase)
-      if ('user_metadata' in user && user.user_metadata?.name) {
-        return user.user_metadata.name;
-      }
-      
-      // Essayer d'utiliser l'email comme fallback
+      // Vérifier d'abord si email existe et l'utiliser comme fallback
       if ('email' in user && user.email) {
         return user.email.split('@')[0];
+      }
+      
+      // Essayer les métadonnées (structure Supabase)
+      if ('user_metadata' in user && user.user_metadata?.name) {
+        return user.user_metadata.name;
       }
     }
     

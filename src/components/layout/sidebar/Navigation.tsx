@@ -49,6 +49,7 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
   } else if (isAccountManager) {
     const accountManagerItems = [
       "/dashboard",
+      "/contacts",
       "/appointments",
       "/quotes",
       "/commissions",
