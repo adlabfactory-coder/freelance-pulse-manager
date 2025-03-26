@@ -41,7 +41,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
     addItem,
     loadData
   } = useQuoteForm({
-    onCloseDialog: onOpenChange,
+    onCloseDialog: () => onOpenChange(false),
     onQuoteCreated: () => {
       toast.success("Devis créé avec succès");
       onOpenChange(false);

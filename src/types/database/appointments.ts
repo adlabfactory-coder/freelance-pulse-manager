@@ -8,7 +8,7 @@ export interface AppointmentsTable {
       title: string
       description: string | null
       contactId: string
-      freelancerId: string // Changed from freelancerid to freelancerId for consistency
+      freelancerId: string // Consistent naming
       date: string
       duration: number
       status: string
@@ -23,7 +23,7 @@ export interface AppointmentsTable {
       title: string
       description?: string | null
       contactId: string
-      freelancerId: string // Changed from freelancerid to freelancerId for consistency
+      freelancerId: string // Consistent naming
       date: string
       duration: number
       status: string
@@ -38,7 +38,7 @@ export interface AppointmentsTable {
       title?: string
       description?: string | null
       contactId?: string
-      freelancerId?: string // Changed from freelancerid to freelancerId for consistency
+      freelancerId?: string // Consistent naming
       date?: string
       duration?: number
       status?: string
