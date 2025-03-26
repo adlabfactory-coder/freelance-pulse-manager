@@ -5,6 +5,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
+import { formatCurrency } from "@/utils/format";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ const Dashboard: React.FC = () => {
         />
         <StatsCard
           title="Commissions"
-          value="€0.00"
+          value={formatCurrency(0)}
           icon={<BarChart className="h-6 w-6" />}
           change={0}
           trend="neutral"

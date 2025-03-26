@@ -1,94 +1,82 @@
 
-/**
- * Service for creating and updating contacts
- */
-import { supabase } from '@/lib/supabase-client';
-import { Contact, ContactInsert, ContactUpdate } from './types';
-import { toast } from 'sonner';
-import { ContactStatus } from '@/types/database/enums';
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { ContactFormValues } from "@/components/contacts/schema/contactFormSchema";
 
-export const contactCreateUpdateService = {
-  /**
-   * Ajoute un nouveau contact dans Supabase
-   */
-  async addContact(contactData: ContactInsert): Promise<Contact | null> {
-    try {
-      // S'assurer que le statut est "lead" pour les nouveaux contacts
-      const contact = {
-        ...contactData,
-        status: 'lead' as ContactStatus
-      };
-      
-      const { data, error } = await supabase
-        .from('contacts')
-        .insert(contact)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Erreur lors de l\'ajout du contact:', error);
-        throw error;
-      }
-      
-      toast.success("Contact ajouté", {
-        description: `${contact.name} a été ajouté avec succès.`,
-      });
-      
-      return data;
-    } catch (error: any) {
-      console.error('Erreur lors de l\'ajout du contact:', error);
-      
-      toast.error("Erreur", {
-        description: `Impossible d'ajouter le contact: ${error.message}`,
-      });
-      
-      return null;
+// Ajouter un nouveau contact
+export const addContact = async (data: ContactFormValues): Promise<string> => {
+  console.log("Insertion d'un nouveau contact avec les données:", data);
+  
+  if (!data.assignedTo) {
+    console.error("AssignedTo est obligatoire pour les règles RLS");
+    throw new Error("Erreur: L'attribution du contact est obligatoire");
+  }
+
+  try {
+    const { data: newContact, error } = await supabase
+      .from('contacts')
+      .insert([{
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        company: data.company || null,
+        position: data.position || null,
+        address: data.address || null,
+        status: data.status,
+        notes: data.notes || null,
+        assignedTo: data.assignedTo
+      }])
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error("Erreur Supabase lors de l'insertion:", error);
+      throw error;
     }
-  },
 
-  /**
-   * Crée un nouveau contact (alias pour addContact pour compatibilité)
-   */
-  async createContact(contactData: ContactInsert): Promise<Contact | null> {
-    return this.addContact(contactData);
-  },
-
-  /**
-   * Met à jour les informations d'un contact
-   */
-  async updateContact(contactId: string, contactData: ContactUpdate): Promise<Contact | null> {
-    try {
-      // Assurez-vous que le statut est du type ContactStatus si présent
-      const contact = {
-        ...contactData,
-        ...(contactData.status && { status: contactData.status as ContactStatus })
-      };
-      
-      const { data, error } = await supabase
-        .from('contacts')
-        .update(contact)
-        .eq('id', contactId)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error(`Erreur lors de la mise à jour du contact ${contactId}:`, error);
-        throw error;
-      }
-      
-      toast.success("Contact mis à jour", {
-        description: "Les informations du contact ont été mises à jour avec succès.",
-      });
-      
-      return data;
-    } catch (error: any) {
-      console.error(`Erreur lors de la mise à jour du contact ${contactId}:`, error);
-      
-      toast.error("Erreur", {
-        description: `Impossible de mettre à jour le contact: ${error.message}`,
-      });
-      
-      return null;
+    if (!newContact) {
+      throw new Error("Aucune donnée retournée après l'insertion");
     }
+
+    return newContact.id;
+  } catch (error: any) {
+    console.error("Erreur lors de l'ajout du contact:", error);
+    throw error;
+  }
+};
+
+// Mettre à jour un contact existant
+export const updateContact = async (id: string, data: ContactFormValues): Promise<void> => {
+  console.log("Mise à jour du contact avec ID:", id, "et données:", data);
+  
+  if (!data.assignedTo) {
+    console.error("AssignedTo est obligatoire pour les règles RLS");
+    throw new Error("Erreur: L'attribution du contact est obligatoire");
+  }
+
+  try {
+    const { error } = await supabase
+      .from('contacts')
+      .update({
+        name: data.name,
+        email: data.email,
+        phone: data.phone || null,
+        company: data.company || null,
+        position: data.position || null,
+        address: data.address || null,
+        status: data.status,
+        notes: data.notes || null,
+        assignedTo: data.assignedTo,
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error("Erreur Supabase lors de la mise à jour:", error);
+      throw error;
+    }
+  } catch (error: any) {
+    console.error("Erreur lors de la mise à jour du contact:", error);
+    throw error;
   }
 };
