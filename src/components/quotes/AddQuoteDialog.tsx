@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import QuoteForm from "./form/QuoteForm";
-import { useQuoteForm } from "./hooks/useQuoteForm";
+import { useQuoteForm } from "@/hooks/useQuoteForm";
 
 interface AddQuoteDialogProps {
   onQuoteAdded?: () => void;
@@ -40,7 +40,7 @@ export function AddQuoteDialog({
     setOpen(false);
   };
 
-  const handleSuccess = () => {
+  const handleSuccess = (id?: string) => {
     setOpen(false);
     if (onQuoteAdded) {
       onQuoteAdded();

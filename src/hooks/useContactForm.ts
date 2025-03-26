@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useForm } from "react-hook-form";
@@ -62,9 +61,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
 
   const handleCreateContact = async () => {
     if (!name || !email) {
-      toast.error("Erreur", {
-        description: 'Le nom et l\'email sont requis.'
-      });
+      toast.error("Le nom et l'email sont requis.");
       return;
     }
 
@@ -86,17 +83,13 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       const contactId = await contactCreateUpdateService.createContact(contactData);
 
       if (contactId) {
-        toast.success("Succès", {
-          description: 'Contact créé avec succès.'
-        });
+        toast.success("Contact créé avec succès.");
         resetForm();
         if (onSuccess) onSuccess({id: contactId, name});
       }
     } catch (error) {
       console.error('Erreur lors de la création du contact:', error);
-      toast.error("Erreur", {
-        description: 'Une erreur est survenue lors de la création du contact.'
-      });
+      toast.error("Une erreur est survenue lors de la création du contact.");
     } finally {
       setLoading(false);
     }
@@ -104,9 +97,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
 
   const handleUpdateContact = async (contactId: string) => {
     if (!name || !email) {
-      toast.error("Erreur", {
-        description: 'Le nom et l\'email sont requis.'
-      });
+      toast.error("Le nom et l'email sont requis.");
       return;
     }
 
@@ -128,16 +119,12 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       const success = await contactCreateUpdateService.updateContact(contactId, contactData);
 
       if (success) {
-        toast.success("Succès", {
-          description: 'Contact mis à jour avec succès.'
-        });
+        toast.success("Contact mis à jour avec succès.");
         if (onSuccess) onSuccess({id: contactId, name});
       }
     } catch (error) {
       console.error('Erreur lors de la mise à jour du contact:', error);
-      toast.error("Erreur", {
-        description: 'Une erreur est survenue lors de la mise à jour du contact.'
-      });
+      toast.error("Une erreur est survenue lors de la mise à jour du contact.");
     } finally {
       setLoading(false);
     }
@@ -173,13 +160,37 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
     try {
       setLoading(true);
       if (isEditing && initialData?.id) {
-        const success = await contactCreateUpdateService.updateContact(initialData.id, data);
+        const updateData = {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          company: data.company,
+          position: data.position,
+          address: data.address,
+          notes: data.notes,
+          status: data.status,
+          assignedTo: data.assignedTo
+        };
+        
+        const success = await contactCreateUpdateService.updateContact(initialData.id, updateData);
         if (success) {
           toast.success("Contact mis à jour avec succès");
           if (onSuccess) onSuccess({id: initialData.id, name: data.name});
         }
       } else {
-        const contactId = await contactCreateUpdateService.createContact(data);
+        const createData = {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          company: data.company,
+          position: data.position,
+          address: data.address,
+          notes: data.notes,
+          status: data.status,
+          assignedTo: data.assignedTo
+        };
+        
+        const contactId = await contactCreateUpdateService.createContact(createData);
         if (contactId) {
           toast.success("Contact ajouté avec succès");
           form.reset();
@@ -195,12 +206,10 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
   };
 
   return {
-    // New form props
     form,
     isSubmitting,
     onSubmit: form.handleSubmit(onSubmit),
     
-    // Legacy props for backward compatibility
     loading,
     name,
     setName,
