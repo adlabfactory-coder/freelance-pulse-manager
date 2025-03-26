@@ -3,6 +3,7 @@ import React from "react";
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { User as AppUser } from "@/types"; // Import our custom User type
 
 interface UserProfileProps {
   collapsed: boolean;
@@ -14,6 +15,15 @@ const UserProfile: React.FC<UserProfileProps> = ({
   renderIcon = (Icon) => <Icon className="h-5 w-5" aria-hidden="true" />
 }) => {
   const { user } = useAuth();
+  
+  // Safety check for user object and its properties
+  const displayName = user ? (
+    'name' in user ? user.name : (user as any).user_metadata?.name || "Utilisateur"
+  ) : "Utilisateur";
+  
+  const displayEmail = user ? (
+    'email' in user ? user.email : (user as any).email || "Connecté"
+  ) : "Connecté";
   
   return (
     <div
@@ -32,9 +42,9 @@ const UserProfile: React.FC<UserProfileProps> = ({
         )}
       >
         <div className="font-medium text-sidebar-foreground">
-          {user?.name || "Utilisateur"}
+          {displayName}
         </div>
-        <div className="text-xs">{user?.email || "Connecté"}</div>
+        <div className="text-xs">{displayEmail}</div>
       </div>
     </div>
   );
