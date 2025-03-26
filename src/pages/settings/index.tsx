@@ -6,7 +6,8 @@ import NotificationSettings from "./components/NotificationSettings";
 import { useAuth } from "@/hooks/use-auth";
 
 const SettingsRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isLoading = !user && !isAuthenticated; // Simuler isLoading en vérifiant si user est null et non authentifié
 
   if (isLoading) {
     return <div>Chargement...</div>;

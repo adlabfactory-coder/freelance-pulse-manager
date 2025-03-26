@@ -4,6 +4,8 @@ import { processNotification } from "@/services/notification-service";
 import { NotificationType } from "@/types/notification-settings";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
+import { Appointment } from "@/types/appointment";
 
 export interface AppointmentInput {
   title: string;
@@ -187,7 +189,9 @@ export const appointmentService = {
       }
       
       if (existingAppointments && existingAppointments.length > 0) {
-        toast.error("Conflit d'horaire", {
+        toast({
+          variant: "destructive",
+          title: "Conflit d'horaire",
           description: "Le créneau horaire sélectionné n'est pas disponible pour ce freelancer."
         });
         return null;
@@ -208,7 +212,8 @@ export const appointmentService = {
         throw error;
       }
       
-      toast.success("Rendez-vous créé", {
+      toast({
+        title: "Rendez-vous créé",
         description: "Le rendez-vous a été créé avec succès."
       });
       
@@ -220,7 +225,9 @@ export const appointmentService = {
     } catch (error: any) {
       console.error('Erreur lors de la création du rendez-vous:', error);
       
-      toast.error("Erreur", {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
         description: `Impossible de créer le rendez-vous: ${error.message}`
       });
       

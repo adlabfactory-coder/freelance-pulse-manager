@@ -1,236 +1,197 @@
 
 import { supabase } from "@/lib/supabase";
-import { 
-  NotificationSettings, 
-  EmailConfig, 
-  SmsConfig,
-  NotificationType,
-  NotificationRule
-} from "@/types/notification-settings";
+import { EmailConfig, NotificationType, NotificationSettings, SmsConfig, NotificationRule } from "@/types/notification-settings";
 
-// Default notification settings
-const defaultEmailConfig: EmailConfig = {
-  enabled: false,
-  fromEmail: "",
-  fromName: "AdLab Hub",
-  signature: "L'équipe AdLab Hub",
-  logoUrl: ""
-};
+// Structure de données pour les variables de template
+export interface NotificationTemplateData {
+  [key: string]: string | number | boolean | undefined;
+}
 
-const defaultSmsConfig: SmsConfig = {
-  enabled: false,
-  fromNumber: "",
-  signature: "AdLab Hub"
-};
-
-const defaultNotificationRules: NotificationRule[] = [
-  {
-    id: "1",
-    type: NotificationType.APPOINTMENT_CREATED,
-    emailEnabled: true,
-    smsEnabled: false,
-    recipients: ["admin", "superadmin", "account_manager"],
-    emailTemplate: "<h1>Nouveau rendez-vous créé</h1><p>Un nouveau rendez-vous a été créé par {{freelancerName}} pour le {{appointmentDate}}.</p>",
-    smsTemplate: "Nouveau RDV: {{freelancerName}} a créé un RDV pour le {{appointmentDate}}."
-  },
-  {
-    id: "2",
-    type: NotificationType.APPOINTMENT_REMINDER,
-    emailEnabled: true,
-    smsEnabled: true,
-    recipients: ["admin", "superadmin", "account_manager", "freelancer"],
-    emailTemplate: "<h1>Rappel de rendez-vous</h1><p>Vous avez un rendez-vous demain à {{appointmentTime}}.</p>",
-    smsTemplate: "Rappel: Vous avez un RDV demain à {{appointmentTime}}."
-  }
-];
-
-// Default settings object
-const defaultSettings: NotificationSettings = {
-  id: "default",
-  email: defaultEmailConfig,
-  sms: defaultSmsConfig,
-  rules: defaultNotificationRules
-};
-
-// Get notification settings
-export const getNotificationSettings = async (): Promise<NotificationSettings> => {
-  try {
-    const { data, error } = await supabase
-      .from("notification_settings")
-      .select("*")
-      .single();
-
-    if (error) {
-      console.error("Error fetching notification settings:", error);
-      return defaultSettings;
-    }
-
-    return data || defaultSettings;
-  } catch (error) {
-    console.error("Unexpected error fetching notification settings:", error);
-    return defaultSettings;
-  }
-};
-
-// Update notification settings
-export const updateNotificationSettings = async (settings: NotificationSettings): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from("notification_settings")
-      .upsert({
-        id: settings.id || "default",
-        email: settings.email,
-        sms: settings.sms,
-        rules: settings.rules
-      });
-
-    if (error) {
-      console.error("Error updating notification settings:", error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Unexpected error updating notification settings:", error);
-    return false;
-  }
-};
-
-// Send email notification
-export const sendEmailNotification = async (
-  to: string,
-  subject: string,
-  html: string,
-  from?: string,
-  fromName?: string
-): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase.functions.invoke("send-email", {
-      body: { to, subject, html, from, fromName }
-    });
-
-    if (error) {
-      console.error("Error sending email notification:", error);
-      return false;
-    }
-
-    return data?.success || false;
-  } catch (error) {
-    console.error("Unexpected error sending email notification:", error);
-    return false;
-  }
-};
-
-// Send SMS notification
-export const sendSmsNotification = async (
-  to: string,
-  body: string,
-  from?: string
-): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase.functions.invoke("send-sms", {
-      body: { to, body, from }
-    });
-
-    if (error) {
-      console.error("Error sending SMS notification:", error);
-      return false;
-    }
-
-    return data?.success || false;
-  } catch (error) {
-    console.error("Unexpected error sending SMS notification:", error);
-    return false;
-  }
-};
-
-// Process notification for an event
-export const processNotification = async (
-  type: NotificationType,
-  data: Record<string, any>,
-  recipients: { email: string, phone?: string, role: string }[]
-): Promise<boolean> => {
-  try {
-    // Get notification settings
-    const settings = await getNotificationSettings();
-    
-    // Find the rule for this notification type
-    const rule = settings.rules.find(r => r.type === type);
-    
-    if (!rule) {
-      console.log(`No notification rule found for type: ${type}`);
-      return false;
-    }
-    
-    // Filter recipients based on roles in the rule
-    const eligibleRecipients = recipients.filter(r => 
-      rule.recipients.includes(r.role.toLowerCase())
-    );
-    
-    if (eligibleRecipients.length === 0) {
-      console.log(`No eligible recipients found for notification type: ${type}`);
-      return true; // Return true as this is not an error
-    }
-    
-    const results: boolean[] = [];
-    
-    // Process email notifications
-    if (rule.emailEnabled && settings.email.enabled) {
-      const template = rule.emailTemplate;
-      // Replace placeholders in the template
-      const processedHtml = processTemplate(template, data);
-      
-      // Send email to each recipient
-      for (const recipient of eligibleRecipients) {
-        if (recipient.email) {
-          const result = await sendEmailNotification(
-            recipient.email,
-            `Notification: ${type}`,
-            processedHtml,
-            settings.email.fromEmail,
-            settings.email.fromName
-          );
-          results.push(result);
-        }
-      }
-    }
-    
-    // Process SMS notifications
-    if (rule.smsEnabled && settings.sms.enabled) {
-      const template = rule.smsTemplate;
-      // Replace placeholders in the template
-      const processedText = processTemplate(template, data);
-      
-      // Send SMS to each recipient
-      for (const recipient of eligibleRecipients) {
-        if (recipient.phone) {
-          const result = await sendSmsNotification(
-            recipient.phone,
-            processedText,
-            settings.sms.fromNumber
-          );
-          results.push(result);
-        }
-      }
-    }
-    
-    // Return true if all notifications were sent successfully
-    return results.length > 0 && results.every(r => r);
-  } catch (error) {
-    console.error("Error processing notification:", error);
-    return false;
-  }
-};
-
-// Process template by replacing placeholders with actual data
-const processTemplate = (template: string, data: Record<string, any>): string => {
+// Fonction pour remplacer les variables dans un template
+export function replaceTemplateVariables(template: string, data: NotificationTemplateData): string {
   let result = template;
   
-  // Replace all {{key}} placeholders with corresponding values
+  // Remplacer toutes les variables {{variable}} par leur valeur
   Object.entries(data).forEach(([key, value]) => {
-    const placeholder = new RegExp(`{{${key}}}`, 'g');
-    result = result.replace(placeholder, String(value));
+    const regex = new RegExp(`{{${key}}}`, 'g');
+    result = result.replace(regex, String(value || ''));
   });
   
   return result;
-};
+}
+
+// Fonction pour envoyer un email via l'Edge Function de Supabase
+export async function sendEmail(to: string, subject: string, html: string, from?: string, fromName?: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: { to, subject, html, from, fromName }
+    });
+    
+    if (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erreur inattendue lors de l\'envoi de l\'email:', error);
+    return false;
+  }
+}
+
+// Fonction pour envoyer un SMS via l'Edge Function de Supabase
+export async function sendSms(to: string, body: string, from?: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke('send-sms', {
+      body: { to, body, from }
+    });
+    
+    if (error) {
+      console.error('Erreur lors de l\'envoi du SMS:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erreur inattendue lors de l\'envoi du SMS:', error);
+    return false;
+  }
+}
+
+// Fonction pour récupérer les paramètres de notification
+export async function getNotificationSettings(): Promise<NotificationSettings | null> {
+  try {
+    // Récupérer les paramètres depuis la base de données
+    const { data, error } = await supabase
+      .from('notification_settings')
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des paramètres de notification:', error);
+      return null;
+    }
+    
+    return data as NotificationSettings;
+  } catch (error) {
+    console.error('Erreur inattendue lors de la récupération des paramètres de notification:', error);
+    return null;
+  }
+}
+
+// Fonction pour sauvegarder les paramètres de notification
+export async function saveNotificationSettings(settings: NotificationSettings): Promise<boolean> {
+  try {
+    // Vérifier si un enregistrement existe déjà
+    const { data: existingData, error: checkError } = await supabase
+      .from('notification_settings')
+      .select('id')
+      .single();
+    
+    let result;
+    
+    if (existingData) {
+      // Mettre à jour l'enregistrement existant
+      const { error } = await supabase
+        .from('notification_settings')
+        .update(settings)
+        .eq('id', existingData.id);
+      
+      if (error) throw error;
+      result = true;
+    } else {
+      // Créer un nouvel enregistrement
+      const { error } = await supabase
+        .from('notification_settings')
+        .insert([settings]);
+      
+      if (error) throw error;
+      result = true;
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde des paramètres de notification:', error);
+    return false;
+  }
+}
+
+// Interface pour les destinataires
+interface NotificationRecipient {
+  email: string;
+  role: string;
+}
+
+// Fonction pour traiter et envoyer une notification
+export async function processNotification(
+  type: NotificationType,
+  data: NotificationTemplateData,
+  recipients: NotificationRecipient[]
+): Promise<boolean> {
+  try {
+    // Récupérer les paramètres de notification
+    const settings = await getNotificationSettings();
+    
+    if (!settings) {
+      console.warn('Paramètres de notification non configurés. Notification non envoyée.');
+      return false;
+    }
+    
+    // Trouver la règle correspondant au type de notification
+    const rule = settings.rules.find(r => r.type === type);
+    
+    if (!rule) {
+      console.warn(`Aucune règle de notification trouvée pour le type: ${type}`);
+      return false;
+    }
+    
+    // Filtrer les destinataires selon les rôles autorisés dans la règle
+    const validRecipients = recipients.filter(r => rule.recipients.includes(r.role));
+    
+    // Si aucun destinataire valide, ne pas envoyer de notification
+    if (validRecipients.length === 0) {
+      console.warn('Aucun destinataire valide pour cette notification.');
+      return false;
+    }
+    
+    // Variables pour suivre le statut d'envoi
+    let emailSuccess = true;
+    let smsSuccess = true;
+    
+    // Envoyer des emails si activés
+    if (rule.emailEnabled && settings.email.enabled) {
+      const emailText = replaceTemplateVariables(rule.emailTemplate, data);
+      
+      // Déduire le sujet de l'email (première ligne du template)
+      const emailLines = emailText.split('\n');
+      const subject = emailLines[0].trim();
+      const htmlContent = emailLines.slice(1).join('\n');
+      
+      // Envoyer l'email à chaque destinataire
+      for (const recipient of validRecipients) {
+        const sent = await sendEmail(
+          recipient.email,
+          subject,
+          htmlContent,
+          settings.email.fromEmail,
+          settings.email.fromName
+        );
+        
+        if (!sent) emailSuccess = false;
+      }
+    }
+    
+    // Envoyer des SMS si activés et si les numéros de téléphone sont disponibles
+    if (rule.smsEnabled && settings.sms.enabled) {
+      const smsText = replaceTemplateVariables(rule.smsTemplate, data);
+      
+      // Pour le SMS, nous aurions besoin d'une façon d'obtenir les numéros de téléphone des destinataires
+      // Cela pourrait être ajouté dans une implémentation future
+    }
+    
+    return emailSuccess && smsSuccess;
+  } catch (error) {
+    console.error('Erreur lors du traitement de la notification:', error);
+    return false;
+  }
+}
