@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -21,7 +22,11 @@ export type AppointmentFormData = {
   duration: string;
 };
 
-export const useAppointmentForm = (selectedDate?: Date, onClose?: () => void) => {
+export const useAppointmentForm = (
+  selectedDate?: Date, 
+  onClose?: () => void,
+  contactId?: string
+) => {
   // États du formulaire
   const [titleOption, setTitleOption] = useState("consultation-initiale");
   const [customTitle, setCustomTitle] = useState("");
@@ -52,9 +57,30 @@ export const useAppointmentForm = (selectedDate?: Date, onClose?: () => void) =>
     setIsSubmitting(true);
     
     try {
+      // Vérifier que l'utilisateur est connecté
+      if (!user || !user.id) {
+        toast({
+          variant: "destructive", 
+          title: "Erreur",
+          description: "Vous devez être connecté pour effectuer cette action"
+        });
+        return;
+      }
+      
       // Créer le format de date pour la base de données
       const dateTimeString = format(date, "yyyy-MM-dd") + "T" + time;
       const appointmentDateTime = new Date(dateTimeString);
+      
+      // S'assurer qu'un ID de contact valide est disponible
+      if (!contactId) {
+        console.error("ID de contact manquant pour la création du rendez-vous");
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Le contact pour ce rendez-vous n'est pas spécifié"
+        });
+        return;
+      }
       
       // Créer un rendez-vous
       const appointmentData = {
@@ -63,11 +89,13 @@ export const useAppointmentForm = (selectedDate?: Date, onClose?: () => void) =>
         date: appointmentDateTime.toISOString(),
         duration: parseInt(duration),
         status: "scheduled" as const,
-        freelancerId: user?.id || '',
-        contactId: '00000000-0000-0000-0000-000000000000', // À remplacer par un vrai ID
+        freelancerId: user.id,
+        contactId: contactId,
         location: null,
         notes: null
       };
+      
+      console.log("Création d'un rendez-vous avec les données:", appointmentData);
       
       // Appel du service avec les données préparées
       const result = await appointmentService.createAppointment(appointmentData);
@@ -79,7 +107,7 @@ export const useAppointmentForm = (selectedDate?: Date, onClose?: () => void) =>
       // Message de succès
       toast({
         title: "Rendez-vous planifié",
-        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm", { locale: require("date-fns/locale/fr") })}`,
+        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm")}`,
       });
       
       // Réinitialiser le formulaire et fermer la boîte de dialogue
@@ -93,12 +121,12 @@ export const useAppointmentForm = (selectedDate?: Date, onClose?: () => void) =>
         window.dispatchEvent(event);
       }, 500);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la planification du rendez-vous:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de la planification du rendez-vous.",
+        description: error.message || "Une erreur est survenue lors de la planification du rendez-vous.",
       });
     } finally {
       setIsSubmitting(false);

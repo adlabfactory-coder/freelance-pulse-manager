@@ -10,7 +10,7 @@ import { Contact } from "@/services/contacts/types";
 
 interface UseContactFormProps {
   initialData?: Partial<Contact>;
-  onSuccess?: () => void;
+  onSuccess?: (contactData?: Contact) => void;
   isEditing: boolean;
 }
 
@@ -63,18 +63,27 @@ export const useContactForm = ({ initialData, onSuccess, isEditing }: UseContact
       
       console.log("Données de contact à soumettre:", contactData);
 
+      let createdOrUpdatedContact: Contact | undefined;
+
       if (isEditing && initialData?.id) {
         console.log("Mise à jour du contact existant avec ID:", initialData.id);
-        await updateContact(initialData.id, contactData);
+        createdOrUpdatedContact = await updateContact(initialData.id, contactData);
         toast.success("Contact mis à jour avec succès");
       } else {
         console.log("Création d'un nouveau contact");
-        await addContact(contactData);
+        const contactId = await addContact(contactData);
+        createdOrUpdatedContact = {
+          id: contactId,
+          ...contactData,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          deleted_at: null
+        };
         toast.success("Contact ajouté avec succès");
       }
 
       if (onSuccess) {
-        onSuccess();
+        onSuccess(createdOrUpdatedContact);
       }
     } catch (error: any) {
       console.error("Erreur lors de l'ajout du contact:", error);

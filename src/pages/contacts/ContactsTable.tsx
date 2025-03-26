@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ContactStatus } from "@/types/database/enums";
-import { MoreHorizontal, FileText } from "lucide-react";
+import { MoreHorizontal, FileText, CalendarPlus } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
+import ContactAppointmentDialog from "@/components/contacts/ContactAppointmentDialog";
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -33,11 +34,19 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
 }) => {
   const navigate = useNavigate();
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [selectedContactName, setSelectedContactName] = useState<string>("");
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
 
   const handleCreateQuote = (contactId: string) => {
     setSelectedContactId(contactId);
     setQuoteDialogOpen(true);
+  };
+
+  const handleCreateAppointment = (contactId: string, contactName: string) => {
+    setSelectedContactId(contactId);
+    setSelectedContactName(contactName);
+    setAppointmentDialogOpen(true);
   };
 
   // Filtrer les contacts par terme de recherche et statut
@@ -145,6 +154,13 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
+                        handleCreateAppointment(contact.id, contact.name);
+                      }}>
+                        <CalendarPlus className="mr-2 h-4 w-4" />
+                        Planifier une consultation initiale
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
                         handleCreateQuote(contact.id);
                       }}>
                         <FileText className="mr-2 h-4 w-4" />
@@ -165,6 +181,15 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
         onOpenChange={setQuoteDialogOpen}
         onQuoteCreated={() => setQuoteDialogOpen(false)}
         initialContactId={selectedContactId || undefined}
+      />
+
+      {/* Boîte de dialogue pour planifier un rendez-vous */}
+      <ContactAppointmentDialog
+        open={appointmentDialogOpen} 
+        onOpenChange={setAppointmentDialogOpen}
+        contactId={selectedContactId || ""}
+        contactName={selectedContactName}
+        initialType="consultation-initiale"
       />
     </>
   );
