@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Service, ServiceType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -83,7 +82,7 @@ export const useServices = () => {
         });
       } else {
         // Create new service
-        await createService(selectedService as Omit<Service, "id" | "created_at" | "updated_at">);
+        await createService(selectedService as Omit<Service, "id" | "created_at" | "updated_at">, "service");
         toast({
           title: "Service créé",
           description: `Le service "${selectedService.name}" a été créé avec succès.`,

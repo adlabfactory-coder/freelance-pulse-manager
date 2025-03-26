@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { SubscriptionPlan } from '@/types';
-import { fetchSubscriptionPlans } from '@/services/supabase-subscription-service';
+import { getSubscriptionPlans } from '@/services/supabase-subscription-service';
 import { toast } from '@/components/ui/use-toast';
 
 export const useSubscriptionPlans = () => {
@@ -14,7 +13,7 @@ export const useSubscriptionPlans = () => {
     const loadPlans = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchSubscriptionPlans();
+        const data = await getSubscriptionPlans();
         if (data.length === 0) {
           setError("Aucun plan d'abonnement trouvé.");
         } else {

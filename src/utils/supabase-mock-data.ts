@@ -1,3 +1,4 @@
+
 import { User, UserRole } from "@/types";
 
 // Fonction pour générer des utilisateurs fictifs pour les démonstrations
@@ -53,3 +54,25 @@ export const getMockUsers = (): User[] => [
     avatar: null
   }
 ];
+
+// Fonction pour simuler la connexion d'un utilisateur
+export const mockSignIn = (email: string, password: string): Promise<User | null> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const users = getMockUsers();
+      const user = users.find(u => u.email === email);
+      resolve(user || null);
+    }, 500);
+  });
+};
+
+// Fonction pour récupérer un utilisateur par ID
+export const getMockUserById = (id: string): Promise<User | null> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const users = getMockUsers();
+      const user = users.find(u => u.id === id);
+      resolve(user || null);
+    }, 300);
+  });
+};

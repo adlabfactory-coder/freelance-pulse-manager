@@ -1,4 +1,3 @@
-
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
@@ -6,6 +5,14 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);
+}
+
+// Fonction pour formatter un prix
+export function formatPrice(price: number): string {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(price);
 }
 
 // Add formatDate function 

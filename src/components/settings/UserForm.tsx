@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,11 @@ const UserForm: React.FC<UserFormProps> = ({
         result = await supabase.createUser({
           name,
           email,
-          role
+          role,
+          avatar: null,
+          calendly_enabled: false,
+          calendly_url: "",
+          calendly_sync_email: ""
         });
       }
       

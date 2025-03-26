@@ -1,62 +1,59 @@
-
-import React from "react";
-import { Link } from "react-router-dom";
-import SubscriptionHeader from "@/components/subscriptions/SubscriptionHeader";
-import SubscriptionFilters from "@/components/subscriptions/SubscriptionFilters";
-import SubscriptionList from "@/components/subscriptions/SubscriptionList";
-import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
-import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+import React, { useState, useEffect } from 'react';
+import { SubscriptionPlan, SubscriptionInterval } from '@/types';
+import { subscriptionPlanService } from '@/services/subscriptions';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import SubscriptionPlans from '@/components/subscriptions/SubscriptionPlans';
 
 const Subscriptions: React.FC = () => {
-  const { plans, isLoading, error, selectPlan } = useSubscriptionPlans();
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
 
-  const handleSelectPlan = (plan) => {
-    selectPlan(plan);
-    toast({
-      title: "Plan sélectionné",
-      description: `Vous avez sélectionné le plan ${plan.name}.`,
-    });
-    // Ici, vous pourriez rediriger vers un formulaire d'inscription ou ouvrir une modale
+  useEffect(() => {
+    const loadPlans = async () => {
+      setIsLoading(true);
+      try {
+        const data = await subscriptionPlanService.getSubscriptionPlans();
+        setPlans(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des plans:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPlans();
+  }, []);
+
+  const handleSelectPlan = (plan: any) => {
+    setSelectedPlan(plan);
   };
 
   return (
-    <div className="space-y-6">
-      <SubscriptionHeader />
-      
-      <Tabs defaultValue="plans">
-        <TabsList className="mb-4">
-          <TabsTrigger value="plans">Plans d'abonnement</TabsTrigger>
-          <TabsTrigger value="subscriptions">Abonnements actifs</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="plans">
-          <div className="bg-card rounded-lg p-6">
-            <h2 className="text-2xl font-bold mb-2">Nos plans d'abonnement</h2>
-            <p className="text-muted-foreground mb-6">
-              Choisissez le plan qui correspond le mieux à vos besoins
-            </p>
-            
-            {error ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {error}
-              </div>
-            ) : (
-              <SubscriptionPlans 
-                plans={plans} 
-                onSelectPlan={handleSelectPlan} 
-                isLoading={isLoading} 
-              />
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="subscriptions">
-          <SubscriptionFilters />
-          <SubscriptionList subscriptions={[]} />
-        </TabsContent>
-      </Tabs>
+    <div className="container mx-auto py-10">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Plans d'abonnement</h1>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> Ajouter un plan
+        </Button>
+      </div>
+
+      <SubscriptionPlans 
+        plans={plans} 
+        onSelectPlan={handleSelectPlan} 
+        loading={isLoading} 
+      />
+
+      {selectedPlan && (
+        <div className="mt-8 p-4 border rounded-md">
+          <h2 className="text-xl font-semibold">Détails du plan sélectionné</h2>
+          <p>Nom: {selectedPlan.name}</p>
+          <p>Description: {selectedPlan.description}</p>
+          <p>Intervalle: {selectedPlan.interval}</p>
+          <p>Prix: {selectedPlan.price}</p>
+        </div>
+      )}
     </div>
   );
 };

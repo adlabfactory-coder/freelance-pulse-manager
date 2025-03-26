@@ -68,7 +68,7 @@ export const mockSubscriptionData = [
     freelancerName: "John Doe",
     price: 49.99,
     interval: SubscriptionInterval.MONTHLY,
-    status: SubscriptionStatus.CANCELED,
+    status: SubscriptionStatus.CANCELLED,
     startDate: new Date(2023, 2, 20),
     renewalDate: new Date(2023, 3, 20),
   },

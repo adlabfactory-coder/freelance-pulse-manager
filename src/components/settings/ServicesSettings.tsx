@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog } from "@/components/ui/dialog";
 import ServicesHeader from "./services/ServicesHeader";
@@ -30,7 +29,7 @@ const ServicesSettings: React.FC = () => {
 
       <ServicesList
         services={services}
-        isLoading={loading}
+        loading={loading}
         onEditService={handleEditClick}
         onDeleteService={handleDeleteClick}
       />

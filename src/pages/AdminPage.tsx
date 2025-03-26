@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { User, UserRole } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,12 +28,10 @@ const AdminPage: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Try to fetch users from Supabase first
       const fetchedUsers = await supabase.fetchUsers();
       if (fetchedUsers && fetchedUsers.length > 0) {
         setUsers(fetchedUsers);
       } else {
-        // If Supabase fetch fails or returns no users, use mock data
         const mockUsers = supabase.getMockUsers().map(user => ({
           ...user,
           role: user.role as UserRole
@@ -47,7 +44,6 @@ const AdminPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching users:", error);
-      // Fallback to mock data in case of error
       const mockUsers = supabase.getMockUsers();
       setUsers(mockUsers);
       toast({
@@ -106,7 +102,6 @@ const AdminPage: React.FC = () => {
 
     try {
       if (isEditing && currentUser.id) {
-        // Update existing user
         await supabase.updateUser(currentUser as User);
         setUsers(users.map(user => 
           user.id === currentUser.id ? { ...user, ...currentUser } as User : user
@@ -116,7 +111,6 @@ const AdminPage: React.FC = () => {
           description: "L'utilisateur a été mis à jour avec succès",
         });
       } else {
-        // Create new user
         const newUser = await supabase.createUser(currentUser as Omit<User, "id">);
         if (newUser) {
           setUsers([...users, newUser as User]);
@@ -211,7 +205,6 @@ const AdminPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog for adding/editing users */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -269,7 +262,6 @@ const AdminPage: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog for confirming delete */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

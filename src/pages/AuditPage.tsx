@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -136,19 +135,19 @@ const AuditPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Date de début</label>
-              <DatePicker
-                date={startDate}
-                setDate={setStartDate}
-                className="w-full"
+              <DatePicker 
+                date={startDate} 
+                onSelect={setStartDate} 
+                className="w-full" 
               />
             </div>
             
             <div>
               <label className="text-sm font-medium mb-1 block">Date de fin</label>
-              <DatePicker
-                date={endDate}
-                setDate={setEndDate}
-                className="w-full"
+              <DatePicker 
+                date={endDate} 
+                onSelect={setEndDate} 
+                className="w-full" 
               />
             </div>
             

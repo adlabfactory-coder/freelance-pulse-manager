@@ -1,6 +1,14 @@
 
-import { ContactStatus as ContactStatusEnum } from "@/types/index";
 import { ContactStatus as ContactStatusUnion } from "@/types/database/enums";
+
+// Définir un enum pour le statut des contacts
+export enum ContactStatusEnum {
+  LEAD = "lead",
+  PROSPECT = "prospect",
+  NEGOTIATION = "negotiation",
+  SIGNED = "signed",
+  LOST = "lost"
+}
 
 /**
  * This helper function converts between the two types of ContactStatus used in the application.
@@ -17,19 +25,19 @@ export function normalizeContactStatus(status: ContactStatusEnum | ContactStatus
     // Convert from enum string representation to union type
     switch (status.toUpperCase()) {
       case 'LEAD':
-      case ContactStatusEnum.LEAD.toString():
+      case ContactStatusEnum.LEAD:
         return 'lead';
       case 'PROSPECT':
-      case ContactStatusEnum.PROSPECT.toString():
+      case ContactStatusEnum.PROSPECT:
         return 'prospect';
       case 'NEGOTIATION':
-      case ContactStatusEnum.NEGOTIATION.toString():
+      case ContactStatusEnum.NEGOTIATION:
         return 'negotiation';
       case 'SIGNED':
-      case ContactStatusEnum.SIGNED.toString():
+      case ContactStatusEnum.SIGNED:
         return 'signed';
       case 'LOST':
-      case ContactStatusEnum.LOST.toString():
+      case ContactStatusEnum.LOST:
         return 'lost';
       default:
         return 'lead';

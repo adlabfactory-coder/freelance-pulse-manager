@@ -1,4 +1,5 @@
-import { ContactStatus, ContactType } from "./contacts";
+
+import { ContactStatus as ContactStatusEnum, ContactType } from "@/types/database/enums";
 import { Commission, CommissionStatus, CommissionTier } from "./commissions";
 
 export enum UserRole {
@@ -83,6 +84,75 @@ export interface SubscriptionPlan {
   updated_at?: Date;
 }
 
+// Définition des interfaces pour QuoteItem et Quote
+export interface QuoteItem {
+  id?: string;
+  quoteId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  tax?: number;
+  serviceId?: string;
+}
+
+export interface Quote {
+  id?: string;
+  contactId: string;
+  freelancerId: string;
+  totalAmount: number;
+  validUntil: Date;
+  status: QuoteStatus;
+  notes?: string;
+  items: QuoteItem[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Interface pour NavItem
+export interface NavItem {
+  title: string;
+  href: string;
+  icon?: React.ComponentType<any>;
+  children?: NavItem[];
+  role?: UserRole;
+}
+
+// Fonction pour vérifier les rôles
+export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): boolean {
+  // Ordre des rôles du plus élevé au plus bas
+  const roles = [
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.ACCOUNT_MANAGER,
+    UserRole.FREELANCER,
+    UserRole.CLIENT
+  ];
+  
+  const userRoleIndex = roles.indexOf(userRole);
+  const requiredRoleIndex = roles.indexOf(requiredRole);
+  
+  // Plus l'index est bas, plus le rôle est élevé
+  return userRoleIndex <= requiredRoleIndex && userRoleIndex !== -1 && requiredRoleIndex !== -1;
+}
+
+// Interface pour Contact
+export interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  address?: string;
+  notes?: string;
+  status: ContactStatusEnum;
+  createdAt: string;
+  updatedAt: string;
+  assignedTo?: string;
+  subscriptionPlanId?: string;
+}
+
 // Ré-exporter les types des autres fichiers pour centraliser l'accès
-export type { ContactStatus, ContactType };
+export type { ContactStatusEnum as ContactStatus, ContactType };
 export type { Commission, CommissionStatus, CommissionTier };
