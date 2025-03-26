@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale"; 
 import { useAuth } from "@/hooks/use-auth";
 import * as appointmentService from "@/services/appointments";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-client";
 
 // Options pour les types de rendez-vous
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -82,17 +81,6 @@ export const useAppointmentForm = (
       
       // Message de succès spécifique
       toast.success(`${title} planifié et en attente d'attribution à un chargé de compte`);
-      
-      // Mettre également à jour le contact pour indiquer qu'il est en attente d'attribution
-      if (appointmentContactId) {
-        await supabase
-          .from('contacts')
-          .update({ 
-            status: 'prospect',
-            assignedTo: null // Réinitialiser l'assignation pour qu'elle soit déterminée par le rendez-vous
-          })
-          .eq('id', appointmentContactId);
-      }
       
       return result;
     } catch (error: any) {

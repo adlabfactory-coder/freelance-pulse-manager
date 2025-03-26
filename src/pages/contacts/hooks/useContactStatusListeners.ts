@@ -54,13 +54,21 @@ export function useContactStatusListeners(contacts: Contact[]) {
           table: 'appointments'
         }, 
         (payload) => {
-          // Si le statut du rendez-vous est validé, mettre à jour le contact en prospect
-          if (payload.new && payload.new.status === 'confirmed') {
+          // CORRECTION: Vérifier explicitement que le statut a changé de 'pending' à 'confirmed'
+          // plutôt que de simplement vérifier s'il est 'confirmed'
+          if (payload.new && payload.old && 
+              payload.old.status === 'pending' && 
+              payload.new.status === 'confirmed') {
+            
             const contactId = payload.new.contactId;
             const contact = contacts.find(c => c.id === contactId);
             
+            // Mettre à jour le statut seulement si le contact est un lead
             if (contact && contact.status === 'lead') {
               updateContactStatus(contactId, 'prospect');
+              
+              // Ajouter un log pour débogage
+              console.log(`Contact ${contactId} mis à jour de lead à prospect suite à la confirmation du rendez-vous`);
             }
           }
         }

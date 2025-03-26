@@ -23,3 +23,8 @@ export const filterPendingAssignmentAppointments = (appointments: Appointment[])
     .filter(appointment => appointment.status === 'pending')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
+
+// Fonction pour logger les changements de statut des contacts pour débogage
+export const logContactStatusChange = (contactId: string, oldStatus: string, newStatus: string) => {
+  console.log(`[CONTACT STATUS] ID: ${contactId} | ${oldStatus} -> ${newStatus}`);
+};
