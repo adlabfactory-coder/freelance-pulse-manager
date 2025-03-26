@@ -16,10 +16,15 @@ import { BookOpen, HelpCircle, LogOut, Settings, User } from 'lucide-react';
 const UserProfileMenu: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
+  
   if (!user) return null;
 
   const userInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate("/auth/login");
+  };
 
   return (
     <DropdownMenu>
@@ -55,7 +60,7 @@ const UserProfileMenu: React.FC = () => {
           <span>Support</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => logout()}>
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Se déconnecter</span>
         </DropdownMenuItem>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, UserRole } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,8 +91,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Déconnexion de l'utilisateur
     setUser(null);
     localStorage.removeItem("currentUser");
+    
+    // Supprimer également la session Supabase si elle existe
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion Supabase:", error);
+    }
   };
 
   const logout = signOut;
