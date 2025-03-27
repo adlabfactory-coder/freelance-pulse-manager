@@ -44,6 +44,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
       const validItems = safeItems.map(item => {
         // Assurez-vous que tous les champs requis sont présents
         return {
+          id: item.id || "",
+          quoteId: item.quoteId || "",
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
@@ -58,10 +60,10 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         freelancerId: form.freelancerId,
         validUntil: form.validUntil,
         status: form.status as QuoteStatus,
-        notes: form.notes,
+        notes: form.notes || "",
         folder: form.folder || 'general',
         totalAmount: form.totalAmount || 0,
-        items: validItems as QuoteItem[]
+        items: validItems
       };
       
       await form.handleSubmit(quoteData, safeItems);

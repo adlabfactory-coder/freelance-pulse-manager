@@ -1,4 +1,21 @@
 
+export enum SubscriptionStatus {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  PENDING = "pending",
+  CANCELLED = "cancelled",
+  EXPIRED = "expired",
+  TRIAL = "trial"
+}
+
+export enum SubscriptionInterval {
+  MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  BIANNUAL = "biannual",
+  ANNUAL = "annual",
+  YEARLY = "yearly"
+}
+
 export interface Subscription {
   id: string;
   name: string;
@@ -6,7 +23,7 @@ export interface Subscription {
   price: number;
   interval: SubscriptionInterval;
   clientId: string;
-  clientName?: string; // Added this property to fix type errors
+  clientName?: string;
   freelancerId: string;
   freelancerName?: string;
   status: SubscriptionStatus;
@@ -25,24 +42,7 @@ export interface SubscriptionPlan {
   price: number;
   interval: SubscriptionInterval;
   features: any | null;
-  isActive: boolean | null;
+  isActive: boolean;
   created_at?: Date;
   updated_at?: Date;
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  PENDING = "pending",
-  CANCELLED = "cancelled",
-  EXPIRED = "expired",
-  TRIAL = "trial"
-}
-
-export enum SubscriptionInterval {
-  MONTHLY = "monthly",
-  QUARTERLY = "quarterly",
-  BIANNUAL = "biannual",
-  ANNUAL = "annual",
-  YEARLY = "yearly"
 }

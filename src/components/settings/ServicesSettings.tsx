@@ -1,93 +1,128 @@
 
-import React, { useState } from "react";
-import { Dialog } from "@/components/ui/dialog";
-import ServicesHeader from "./services/ServicesHeader";
-import ServicesList from "./services/ServicesList";
-import ServiceForm from "./services/ServiceForm";
-import DeleteServiceDialog from "./services/DeleteServiceDialog";
-import { useServices } from "@/hooks/useServices";
-import { Service } from "@/types/service";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PlusCircle } from 'lucide-react';
+import { Service } from '@/types/service';
+import ServicesList from './services/ServicesList';
+import ServiceForm from './services/ServiceForm';
+import { useServices } from './services/hooks/useServices';
+import { toast } from 'sonner';
 
 const ServicesSettings: React.FC = () => {
-  const {
-    services,
-    loading,
-    isSaving,
-    isDeleting,
-    createService,
-    updateService,
-    deleteService,
-    loadServices
-  } = useServices();
-
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-
-  const handleAddClick = () => {
-    setSelectedService(null);
-    setEditDialogOpen(true);
-  };
-
-  const handleEditClick = (service: Service) => {
-    setSelectedService(service);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteClick = (service: Service) => {
-    setSelectedService(service);
-    setConfirmDeleteDialogOpen(true);
-  };
+  const { services, loading, addService, updateService, deleteService } = useServices();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveService = async (service: Service) => {
-    if (selectedService && selectedService.id) {
-      await updateService(selectedService.id, service);
-    } else {
-      await createService(service);
+    setIsSaving(true);
+    try {
+      if (service.id) {
+        await updateService(service);
+        toast.success("Service mis à jour avec succès");
+      } else {
+        await addService(service);
+        toast.success("Service ajouté avec succès");
+      }
+      setShowAddForm(false);
+      setEditingService(null);
+    } catch (error) {
+      toast.error("Une erreur est survenue lors de l'enregistrement du service");
+      console.error(error);
+    } finally {
+      setIsSaving(false);
     }
-    setEditDialogOpen(false);
   };
 
-  const handleConfirmDelete = async () => {
-    if (selectedService && selectedService.id) {
-      await deleteService(selectedService.id);
-      setConfirmDeleteDialogOpen(false);
+  const handleDeleteService = async (service: Service) => {
+    try {
+      await deleteService(service.id);
+      toast.success("Service supprimé avec succès");
+    } catch (error) {
+      toast.error("Une erreur est survenue lors de la suppression du service");
+      console.error(error);
     }
+  };
+
+  const handleEditService = (service: Service) => {
+    setEditingService(service);
+    setShowAddForm(false);
+  };
+
+  const handleCancelForm = () => {
+    setShowAddForm(false);
+    setEditingService(null);
+  };
+
+  const handleAddNewClick = () => {
+    setEditingService(null);
+    setShowAddForm(true);
+  };
+
+  const emptyService: Service = {
+    id: '',
+    name: '',
+    type: '',
+    price: 0,
+    description: '',
+    is_active: true
   };
 
   return (
-    <div className="space-y-6">
-      <ServicesHeader onAddService={handleAddClick} />
-
-      <ServicesList
-        services={services}
-        loading={loading}
-        onEditService={handleEditClick}
-        onDeleteService={handleDeleteClick}
-      />
-
-      {/* Edit/Add Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        {editDialogOpen && (
-          <ServiceForm
-            service={selectedService}
-            onSave={handleSaveService}
-            onCancel={() => setEditDialogOpen(false)}
-            isSaving={isSaving}
-          />
+    <Tabs defaultValue="list" className="w-full">
+      <div className="flex justify-between items-center mb-4">
+        <TabsList>
+          <TabsTrigger value="list">Liste des services</TabsTrigger>
+          {(showAddForm || editingService) && (
+            <TabsTrigger value="form">
+              {editingService ? "Modifier le service" : "Ajouter un service"}
+            </TabsTrigger>
+          )}
+        </TabsList>
+        
+        {!showAddForm && !editingService && (
+          <Button onClick={handleAddNewClick} className="flex items-center">
+            <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un service
+          </Button>
         )}
-      </Dialog>
+      </div>
 
-      {/* Confirm Delete Dialog */}
-      {confirmDeleteDialogOpen && selectedService && (
-        <DeleteServiceDialog
-          service={selectedService}
-          onConfirm={handleConfirmDelete}
-          onClose={() => setConfirmDeleteDialogOpen(false)}
-          isOpen={confirmDeleteDialogOpen}
-        />
-      )}
-    </div>
+      <TabsContent value="list">
+        <Card>
+          <CardHeader>
+            <CardTitle>Services</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ServicesList 
+              services={services} 
+              loading={loading} 
+              onEditService={handleEditService}
+              onDeleteService={handleDeleteService}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="form">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {editingService ? "Modifier le service" : "Ajouter un service"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ServiceForm 
+              service={editingService || emptyService} 
+              onSave={handleSaveService} 
+              onCancel={handleCancelForm}
+              isSaving={isSaving}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 };
 

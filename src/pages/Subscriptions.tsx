@@ -10,21 +10,7 @@ import SubscriptionFilters from '@/components/subscriptions/SubscriptionFilters'
 import ServicesDisplay from '@/components/subscriptions/ServicesDisplay';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-
-// Utilitaire pour standardiser les URLs
-const normalizeUrl = (url: string): string => {
-  return url.trim().toLowerCase();
-};
-
-// Utilitaire de validation d'URL
-const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
+import { normalizeUrl, isValidUrl } from '@/utils/url-utils';
 
 const Subscriptions: React.FC = () => {
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -39,11 +25,10 @@ const Subscriptions: React.FC = () => {
         console.log("Chargement des plans d'abonnement");
         const plansData = await fetchSubscriptionPlans();
         
-        // Normaliser les URLs et valider les données avant de les stocker
+        // Normaliser et valider les données avant de les stocker
         const normalizedPlans = plansData.map(plan => ({
           ...plan,
-          // Si un plan contient des liens ou des URLs, les normaliser ici
-          is_active: plan.is_active !== undefined ? plan.is_active : true
+          isActive: plan.is_active !== undefined ? plan.is_active : true
         })) as SubscriptionPlan[];
         
         setPlans(normalizedPlans);
@@ -64,10 +49,14 @@ const Subscriptions: React.FC = () => {
 
   // Filtrer les plans selon le filtre sélectionné
   const filteredPlans = plans.filter(plan => {
-    if (filter === 'active') return plan.is_active;
-    if (filter === 'inactive') return !plan.is_active;
+    if (filter === 'active') return plan.isActive;
+    if (filter === 'inactive') return !plan.isActive;
     return true;
   });
+
+  const handleFilterChange = (newFilter: 'all' | 'active' | 'inactive') => {
+    setFilter(newFilter);
+  };
 
   return (
     <TooltipProvider>
@@ -75,7 +64,10 @@ const Subscriptions: React.FC = () => {
         <SubscriptionHeader />
         
         <div className="bg-white rounded-md shadow p-6">
-          <SubscriptionFilters filter={filter} onFilterChange={setFilter} />
+          <SubscriptionFilters 
+            filter={filter} 
+            onFilterChange={handleFilterChange} 
+          />
           
           <div className="mt-8">
             <SubscriptionPlans plans={filteredPlans} loading={loading} />

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useQuoteForm } from "../hooks/useQuoteForm";
 import QuoteDialogContent from "./QuoteDialogContent";
 import { Quote, QuoteItem } from "@/types";
+import { QuoteStatus } from "@/types/quote";
 
 interface EditQuoteDialogProps {
   open: boolean;
@@ -49,7 +50,12 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
       loadData();
       if (initialQuote) {
         console.log('Setting initial quote data:', initialQuote);
-        setQuoteData(initialQuote);
+        // Convertir le statut en QuoteStatus pour assurer la compatibilité de type
+        const convertedQuote = {
+          ...initialQuote,
+          status: initialQuote.status as QuoteStatus
+        };
+        setQuoteData(convertedQuote);
       } else if (quoteId) {
         console.log('Loading quote data for ID:', quoteId);
         loadQuoteData(quoteId);
