@@ -82,7 +82,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
 };
 
 /**
- * Crée un rendez-vous en attente d'assignation à un freelancer
+ * Crée un rendez-vous en attente d'assignation à un chargé de compte
  */
 export const createAutoAssignAppointment = async (appointmentData: AppointmentCreateData): Promise<Appointment | null> => {
   try {

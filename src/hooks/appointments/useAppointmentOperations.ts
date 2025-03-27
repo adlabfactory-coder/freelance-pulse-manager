@@ -54,7 +54,7 @@ export const useAppointmentOperations = () => {
       }
       
       // Utiliser l'ID de l'utilisateur connecté comme freelancer si c'est un freelancer
-      const finalFreelancerId = freelancerId || (user?.role === 'freelancer' ? user.id : undefined);
+      const finalFreelancerId = freelancerId || (user?.role === 'freelancer' ? user.id : null);
       
       console.log("useAppointmentOperations: Informations du rendez-vous:", {
         title,
@@ -65,12 +65,12 @@ export const useAppointmentOperations = () => {
         userRole: user?.role
       });
       
-      // Déterminer si on utilise l'auto-assignation
-      const useAutoAssign = autoAssign || (!finalFreelancerId && user?.role !== 'freelancer');
+      // Si l'utilisateur est un freelancer, toujours lui assigner le rendez-vous
+      const useAutoAssign = autoAssign || (user?.role !== 'freelancer' && !finalFreelancerId);
       
       if (useAutoAssign) {
-        console.log("useAppointmentOperations: Mode auto-assignation activé");
-        toast.info("Le rendez-vous sera assigné automatiquement à un freelancer disponible");
+        console.log("useAppointmentOperations: Mode auto-assignation activé pour un chargé de compte");
+        toast.info("Le rendez-vous sera assigné à un chargé de compte");
       }
       
       const appointmentData = {

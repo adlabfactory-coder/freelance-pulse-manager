@@ -66,8 +66,8 @@ export const useAppointmentForm = (
     const finalTitle = getFinalTitle();
     
     // Déterminer l'ID du freelancer à utiliser
-    // Pour les utilisateurs freelancers, utilisez leur propre ID
-    // Sinon, utilisez le freelancer par défaut ou auto-assignez
+    // Pour les utilisateurs freelancers, utilisez toujours leur propre ID
+    // Pour les autres types d'utilisateurs, le comportement dépend du flag autoAssign
     const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
     
     console.log("useAppointmentForm: Soumission du formulaire", {
@@ -85,9 +85,11 @@ export const useAppointmentForm = (
       time,
       duration,
       contactId: finalContactId,
-      freelancerId: freelancerId,
+      freelancerId,
       folder,
-      autoAssign: autoAssign || user?.role !== 'freelancer'
+      // Si l'utilisateur est un freelancer, jamais d'auto-assignation
+      // Sinon, utiliser la valeur de autoAssign ou définir à true si non spécifié
+      autoAssign: user?.role === 'freelancer' ? false : (autoAssign === undefined ? true : autoAssign)
     });
     
     if (result && onSuccess) {
