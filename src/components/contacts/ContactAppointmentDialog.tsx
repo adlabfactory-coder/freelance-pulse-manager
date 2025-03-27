@@ -25,6 +25,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { createAppointment } from "@/services/appointments/create";
 import { appointmentFormSchema, AppointmentFormValues } from "@/hooks/appointments/useAppointmentForm";
 import FolderSelect from "../appointments/components/FolderSelect";
+import { AppointmentStatus } from "@/types/appointment";
+
+// Définir les types manquants
+interface CreateAppointmentInput {
+  title: string;
+  description?: string;
+  date: string;
+  duration: number;
+  contactId: string;
+  freelancerId: string;
+  location?: string;
+  notes?: string;
+  status: AppointmentStatus;
+  folder?: string;
+}
 
 // Types de rendez-vous prédéfinis
 const APPOINTMENT_TYPES = [

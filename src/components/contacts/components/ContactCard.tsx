@@ -3,7 +3,8 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, FileText } from "lucide-react";
-import { Contact, ContactStatus } from "@/types";
+import { Contact } from "@/services/contacts/types";
+import { ContactStatus } from "@/types/database/enums";
 import ContactStatusBadge from "../ContactStatusBadge";
 import { formatDateToFrench } from "@/utils/format";
 

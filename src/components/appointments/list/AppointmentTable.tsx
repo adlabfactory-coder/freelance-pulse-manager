@@ -9,11 +9,13 @@ import { Appointment } from "@/types/appointment";
 interface AppointmentTableProps {
   appointments: Appointment[];
   contacts: {[key: string]: string};
+  onUpdate: () => void;
 }
 
 const AppointmentTable: React.FC<AppointmentTableProps> = ({ 
   appointments, 
-  contacts 
+  contacts,
+  onUpdate
 }) => {
   // Enrichir les rendez-vous avec les noms des contacts
   const enrichedAppointments = appointments.map(appointment => ({
@@ -31,7 +33,7 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
               <AppointmentRow 
                 key={appointment.id}
                 appointment={appointment}
-                onUpdate={() => {}}
+                onUpdate={onUpdate}
               />
             ))}
           </TableBody>

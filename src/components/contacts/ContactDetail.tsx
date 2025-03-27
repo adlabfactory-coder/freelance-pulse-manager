@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarClock, FileText, UserCog, Trash } from "lucide-react";
 import ContactInfoDisplay from "./ContactInfoDisplay";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
-import { Contact } from "@/types";
+import { Contact } from "@/services/contacts/types";
 import ContactEditForm from "./ContactEditForm";
 import { formatDateToFrench } from "@/utils/format";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";

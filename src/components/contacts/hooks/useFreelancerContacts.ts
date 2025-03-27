@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { Contact } from '@/types';
 import { contactService } from '@/services/contacts';
+import { Contact } from '@/services/contacts/types';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 

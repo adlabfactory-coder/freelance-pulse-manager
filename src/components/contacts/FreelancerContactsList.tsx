@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
@@ -7,6 +6,7 @@ import ContactsLoadingState from "./components/ContactsLoadingState";
 import ContactsEmptyState from "./components/ContactsEmptyState";
 import ContactCard from "./components/ContactCard";
 import FreelancerContactsHeader from "./components/FreelancerContactsHeader";
+import { Contact } from "@/services/contacts/types";
 
 interface FreelancerContactsListProps {
   contacts?: Contact[];
@@ -85,6 +85,3 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
 };
 
 export default FreelancerContactsList;
-
-// Add missing import
-import { Contact } from "@/types";

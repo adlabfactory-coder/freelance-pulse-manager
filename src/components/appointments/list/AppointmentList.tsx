@@ -12,12 +12,14 @@ interface AppointmentListProps {
   appointments?: Appointment[];
   isLoading?: boolean;
   onStatusChange?: () => void;
+  onAddAppointment?: () => void;
 }
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ 
   appointments: externalAppointments,
   isLoading: externalLoading,
-  onStatusChange
+  onStatusChange,
+  onAddAppointment = () => {} // Valeur par défaut pour éviter l'erreur
 }) => {
   const hookResult = useAppointments();
   
@@ -33,7 +35,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   }
 
   if (normalizedAppointments.length === 0) {
-    return <AppointmentEmptyState hasFilters={false} />;
+    return <AppointmentEmptyState hasFilters={false} onAddAppointment={onAddAppointment} />;
   }
 
   const contacts = normalizedAppointments.reduce((acc, app) => {
@@ -48,7 +50,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
       <AppointmentTable 
         appointments={normalizedAppointments} 
         contacts={contacts} 
-        onStatusChange={onStatusChange}
+        onUpdate={onStatusChange || (() => {})}
       />
     </>
   );

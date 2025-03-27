@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchQuoteById, updateQuoteStatus, deleteQuote } from '@/services/quote-service';
@@ -364,7 +363,7 @@ const QuoteDetailPage: React.FC = () => {
             )}
             
             {(quote.status === QuoteStatus.DRAFT || quote.status === QuoteStatus.PENDING) && (
-              <Button variant="success" onClick={() => handleChangeStatus(QuoteStatus.ACCEPTED)}>
+              <Button variant="default" onClick={() => handleChangeStatus(QuoteStatus.ACCEPTED)}>
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Marquer comme Accepté
               </Button>
