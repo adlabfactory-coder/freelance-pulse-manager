@@ -1,41 +1,49 @@
 
-export enum AppointmentStatus {
-  SCHEDULED = "scheduled",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled",
-  PENDING = "pending",
-  RESCHEDULED = "rescheduled",
-  NO_SHOW = "no_show"
-}
-
 export interface Appointment {
   id: string;
   title: string;
-  description: string;
-  contactId: string;
-  contactName?: string;
-  freelancerId: string;
-  freelancerName?: string;
-  managerId?: string;
-  managerName?: string;
-  date: string;
+  description?: string;
+  date: Date;
   duration: number;
   status: AppointmentStatus;
-  location: string | null;
-  notes: string | null;
-  folder: string;
-  createdAt: string;
-  updatedAt: string;
+  contactId: string;
+  freelancerid?: string;
+  location?: string;
+  notes?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  deleted_at?: Date;
+  folder?: string;
 }
 
-// Utility function to normalize freelancerId from database (handling inconsistent naming)
-export const normalizeFreelancerId = (appointment: any): Appointment => {
-  // Handle case where the property is named 'freelancerid' instead of 'freelancerId'
-  if (appointment.freelancerid && !appointment.freelancerId) {
-    return {
-      ...appointment,
-      freelancerId: appointment.freelancerid
-    };
-  }
-  return appointment as Appointment;
+export enum AppointmentStatus {
+  SCHEDULED = "scheduled",
+  PENDING = "pending",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  NO_SHOW = "no_show"
+}
+
+export const getAppointmentStatusLabel = (status: AppointmentStatus): string => {
+  const statusLabels: Record<AppointmentStatus, string> = {
+    [AppointmentStatus.SCHEDULED]: "Planifié",
+    [AppointmentStatus.PENDING]: "En attente",
+    [AppointmentStatus.COMPLETED]: "Terminé",
+    [AppointmentStatus.CANCELLED]: "Annulé",
+    [AppointmentStatus.NO_SHOW]: "Absence"
+  };
+  
+  return statusLabels[status] || "Inconnu";
+};
+
+export const getAppointmentStatusColor = (status: AppointmentStatus): string => {
+  const statusColors: Record<AppointmentStatus, string> = {
+    [AppointmentStatus.SCHEDULED]: "blue",
+    [AppointmentStatus.PENDING]: "yellow",
+    [AppointmentStatus.COMPLETED]: "green",
+    [AppointmentStatus.CANCELLED]: "red",
+    [AppointmentStatus.NO_SHOW]: "gray"
+  };
+  
+  return statusColors[status] || "gray";
 };
