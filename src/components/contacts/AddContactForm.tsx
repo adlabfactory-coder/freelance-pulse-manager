@@ -5,6 +5,7 @@ import ContactForm from "./ContactForm";
 import { useAuth } from "@/hooks/use-auth";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import { useContactForm } from "@/hooks/useContactForm";
+import { toast } from "sonner";
 
 interface AddContactFormProps {
   onSuccess?: () => void;
@@ -26,9 +27,20 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
       // Automatiquement ouvrir la boîte de dialogue de rendez-vous lors de la création
       setShowAppointmentDialog(true);
       
+      toast.success(`Contact "${contactData.name}" ajouté avec succès`);
+      
       if (onSuccess) {
         onSuccess();
       }
+    }
+  };
+  
+  const handleAppointmentClosed = () => {
+    setShowAppointmentDialog(false);
+    
+    // Quand la planification de rendez-vous est terminée, on considère que tout le processus est terminé
+    if (onSuccess) {
+      onSuccess();
     }
   };
   
@@ -84,7 +96,12 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
       {createdContactId && (
         <ContactAppointmentDialog
           open={showAppointmentDialog}
-          onOpenChange={setShowAppointmentDialog}
+          onOpenChange={(open) => {
+            setShowAppointmentDialog(open);
+            if (!open) {
+              handleAppointmentClosed();
+            }
+          }}
           contactId={createdContactId}
           contactName={createdContactName}
           initialType="consultation-initiale"

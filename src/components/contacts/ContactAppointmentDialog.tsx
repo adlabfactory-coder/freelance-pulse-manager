@@ -27,19 +27,30 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   autoAssign = false
 }) => {
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const handleSuccess = () => {
     console.log("Rendez-vous créé avec succès pour", contactName);
     setSuccess(true);
+    setError(null);
     
     // Annoncer l'événement pour que les autres composants puissent réagir
     window.dispatchEvent(new CustomEvent('appointment-created'));
+    
+    toast.success(`Rendez-vous planifié avec ${contactName}`);
     
     // Fermer automatiquement après un délai
     setTimeout(() => {
       onOpenChange(false);
       setSuccess(false);
     }, 2000);
+  };
+  
+  const handleError = (errorMessage: string) => {
+    console.error("Erreur lors de la création du rendez-vous:", errorMessage);
+    setError(errorMessage);
+    setSuccess(false);
+    toast.error("Erreur: " + errorMessage);
   };
   
   const {
@@ -78,14 +89,16 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       setDuration(30);
       setCustomTitle('');
       setSuccess(false);
+      setError(null);
     }
   }, [open, initialType, setTitleOption, setDescription, setDate, setTime, setDuration, setCustomTitle]);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
     if (!contactId) {
-      toast.error("ID de contact manquant");
+      handleError("ID de contact manquant");
       return;
     }
     
@@ -93,12 +106,16 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     
     // Vérifier que tous les champs requis sont remplis
     if (!date || !time) {
-      toast.error("Veuillez remplir tous les champs obligatoires");
+      handleError("Veuillez remplir tous les champs obligatoires");
       return;
     }
     
-    // Passer l'ID du contact lors de la soumission
-    formSubmit(e, contactId);
+    try {
+      // Passer l'ID du contact lors de la soumission
+      await formSubmit(e, contactId);
+    } catch (error) {
+      handleError(error instanceof Error ? error.message : "Erreur inconnue");
+    }
   };
 
   const handleTitleOptionChange = (value: string) => {
@@ -139,6 +156,12 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
                 Planifier un rendez-vous avec {contactName}
               </DialogDescription>
             </DialogHeader>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-3 mb-4">
+                {error}
+              </div>
+            )}
             
             <form onSubmit={handleFormSubmit}>
               <div className="grid gap-4 py-4">
