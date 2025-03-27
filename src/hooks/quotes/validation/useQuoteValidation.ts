@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Quote, QuoteItem } from "@/types/quote";
-import { validateQuoteForm } from "@/components/quotes/hooks/utils/quoteCalculations";
 
 /**
  * Hook pour la validation des données de devis
@@ -40,39 +39,30 @@ export const useQuoteValidation = () => {
     contactId: string | undefined, 
     freelancerId: string | undefined, 
     validUntil: string | Date | undefined,
-    items: (Partial<QuoteItem> | QuoteItem)[]
-  ): { isValid: boolean } => {
+    items: QuoteItem[]
+  ): { isValid: boolean; errorMessage?: string } => {
     try {
       // Validation des entrées
       const safeContactId = validateId(contactId);
       const safeFreelancerId = validateId(freelancerId);
       const safeValidUntil = validUntil ? validateDate(validUntil) : new Date();
-      const safeItems = items || [];
       
       if (!safeContactId) {
-        toast.error("Le contact est obligatoire");
-        setValidationErrors("Le contact est obligatoire");
-        return { isValid: false };
+        const message = "Le contact est obligatoire";
+        setValidationErrors(message);
+        return { isValid: false, errorMessage: message };
       }
       
       if (!safeFreelancerId) {
-        toast.error("Le freelance est obligatoire");
-        setValidationErrors("Le freelance est obligatoire");
-        return { isValid: false };
+        const message = "Le freelance est obligatoire";
+        setValidationErrors(message);
+        return { isValid: false, errorMessage: message };
       }
       
-      // Utiliser la fonction de validation existante
-      const validation = validateQuoteForm(
-        safeContactId,
-        safeFreelancerId,
-        safeValidUntil,
-        safeItems
-      );
-      
-      if (!validation.isValid && validation.errorMessage) {
-        toast.error(validation.errorMessage);
-        setValidationErrors(validation.errorMessage);
-        return { isValid: false };
+      if (!items || items.length === 0) {
+        const message = "Veuillez ajouter au moins un service au devis";
+        setValidationErrors(message);
+        return { isValid: false, errorMessage: message };
       }
       
       setValidationErrors(null);
@@ -80,9 +70,8 @@ export const useQuoteValidation = () => {
     } catch (error: any) {
       const errorMessage = `Erreur de validation: ${error.message || 'Erreur inconnue'}`;
       console.error(errorMessage);
-      toast.error(errorMessage);
       setValidationErrors(errorMessage);
-      return { isValid: false };
+      return { isValid: false, errorMessage };
     }
   };
   

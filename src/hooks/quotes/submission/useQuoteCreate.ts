@@ -10,8 +10,8 @@ const quotesService = createQuotesService(supabase);
 
 interface UseQuoteCreateProps {
   onSuccess?: (id?: string) => void;
+  onError?: (error: any) => void;
   onCloseDialog?: (open: boolean) => void;
-  onQuoteCreated?: (id?: string) => void;
 }
 
 /**
@@ -19,96 +19,93 @@ interface UseQuoteCreateProps {
  */
 export const useQuoteCreate = ({
   onSuccess,
-  onCloseDialog,
-  onQuoteCreated
+  onError,
+  onCloseDialog
 }: UseQuoteCreateProps = {}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { validateQuoteData } = useQuoteValidation();
   
   const handleSubmit = useCallback(async (
-    quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, 
-    items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]
+    quoteData: Partial<Quote>,
+    items: QuoteItem[]
   ) => {
     console.log("handleSubmit called with data:", quoteData);
     
-    // Valider les données du devis
-    const validation = validateQuoteData(
-      quoteData.contactId,
-      quoteData.freelancerId,
-      quoteData.validUntil,
-      quoteData.items || []
-    );
-    
-    if (!validation.isValid) {
-      return { success: false };
-    }
-    
-    setIsSubmitting(true);
-    
     try {
-      console.log("Création d'un nouveau devis");
+      // Valider les données requises
+      if (!quoteData.contactId) {
+        throw new Error("Veuillez sélectionner un contact");
+      }
       
-      // Filtrer et formater les éléments du devis
-      const itemsToCreate = items
-        .filter(item => !item.toDelete && item.description && item.quantity && item.unitPrice)
-        .map(({ isNew, toDelete, id, ...item }) => ({
-          description: item.description!,
-          quantity: item.quantity!,
-          unitPrice: item.unitPrice!,
-          tax: item.tax || 0,
-          discount: item.discount || 0,
-          serviceId: item.serviceId
-        }));
+      if (!quoteData.freelancerId) {
+        throw new Error("Un freelancer doit être assigné à ce devis");
+      }
       
-      // Préparer les données du devis avec le dossier par défaut
-      const quoteDataWithFolder = {
+      if (!quoteData.validUntil) {
+        throw new Error("Veuillez spécifier une date de validité");
+      }
+      
+      if (!quoteData.totalAmount && quoteData.totalAmount !== 0) {
+        throw new Error("Le montant total est requis");
+      }
+      
+      if (!items || items.length === 0) {
+        throw new Error("Veuillez ajouter au moins un service au devis");
+      }
+      
+      setIsSubmitting(true);
+      
+      // Formater les items pour l'envoi
+      const formattedItems = items.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount || 0,
+        tax: item.tax || 0,
+        serviceId: item.serviceId
+      }));
+      
+      // Préparer les données du devis
+      const quoteDataObj = {
         contactId: quoteData.contactId,
         freelancerId: quoteData.freelancerId,
         totalAmount: quoteData.totalAmount,
+        status: quoteData.status || "DRAFT",
         validUntil: quoteData.validUntil,
-        status: quoteData.status,
-        notes: quoteData.notes || null,
-        folder: quoteData.folder || 'general',
+        notes: quoteData.notes || "",
+        folder: quoteData.folder || "general"
       };
       
-      // Créer le devis
-      const newQuote = await quotesService.createQuote(
-        quoteDataWithFolder as Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>,
-        itemsToCreate
-      );
+      // Appel avec les bons arguments
+      const result = await quotesService.createQuote(quoteDataObj, formattedItems);
       
-      if (newQuote) {
-        console.log("Devis créé avec succès:", newQuote);
+      if (result && result.id) {
         toast.success("Devis créé avec succès");
         
-        // Gérer les callbacks de succès
         if (onCloseDialog) {
-          console.log("Fermeture du dialogue");
           onCloseDialog(false);
         }
         
-        if (onQuoteCreated) {
-          console.log("Appel de onQuoteCreated");
-          onQuoteCreated(newQuote.id);
-        }
-        
         if (onSuccess) {
-          console.log("Appel de onSuccess");
-          onSuccess(newQuote.id);
+          onSuccess(result.id);
         }
         
-        return { success: true, quoteId: newQuote.id };
+        return result.id;
+      } else {
+        throw new Error("Erreur lors de la création du devis: réponse invalide");
       }
+    } catch (error: any) {
+      console.error("Erreur lors de la soumission du devis:", error);
+      toast.error(error.message || "Erreur lors de la création du devis");
       
-      return { success: false };
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde du devis:", error);
-      toast.error("Une erreur est survenue lors de la sauvegarde du devis");
-      return { success: false };
+      if (onError) {
+        onError(error);
+      }
+      return null;
     } finally {
       setIsSubmitting(false);
     }
-  }, [onCloseDialog, onQuoteCreated, onSuccess, validateQuoteData]);
+  }, [onSuccess, onError, onCloseDialog]);
   
   return {
     isSubmitting,
