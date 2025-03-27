@@ -3,8 +3,10 @@ import { useState, useEffect, useCallback } from "react";
 import { contactService } from "@/services/contacts";
 import { Contact } from "@/services/contacts/types";
 import { ContactStatus } from "@/types/database/enums";
+import { useAuth } from "@/hooks/use-auth";
 
-export function useContactsData(isAdmin: boolean, isFreelancer: boolean, isAccountManager: boolean) {
+export function useContactsData() {
+  const { isAdmin, isFreelancer, isAccountManager, user, role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,13 +14,14 @@ export function useContactsData(isAdmin: boolean, isFreelancer: boolean, isAccou
   const [loadAttempt, setLoadAttempt] = useState(0);
   
   const fetchContacts = useCallback(async () => {
-    if (!isAdmin && !isFreelancer && !isAccountManager) return;
+    if (!user) return;
     
     setLoading(true);
-    const data = await contactService.getContacts();
+    // Passer l'ID de l'utilisateur et son rôle pour filtrer les contacts selon le rôle
+    const data = await contactService.getContacts(user.id, role);
     setContacts(data);
     setLoading(false);
-  }, [isAdmin, isFreelancer, isAccountManager]);
+  }, [user, role]);
   
   // Filter contacts based on search term and status
   const filteredContacts = contacts.filter(contact => {
@@ -44,12 +47,27 @@ export function useContactsData(isAdmin: boolean, isFreelancer: boolean, isAccou
   }, []);
   
   useEffect(() => {
-    if ((isAdmin || isFreelancer || isAccountManager) && loadAttempt === 0) {
+    if (user && loadAttempt === 0) {
       console.log("Chargement initial des contacts");
       fetchContacts();
       setLoadAttempt(1);
     }
-  }, [isAdmin, isFreelancer, isAccountManager, loadAttempt, fetchContacts]);
+  }, [user, loadAttempt, fetchContacts]);
+
+  // Mettre en place l'écouteur pour les mises à jour en temps réel
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:contacts')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'contacts' }, 
+        () => fetchContacts()
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchContacts]);
 
   return {
     contacts,
@@ -63,3 +81,6 @@ export function useContactsData(isAdmin: boolean, isFreelancer: boolean, isAccou
     setContacts
   };
 }
+
+// Ajouter l'import manquant
+import { supabase } from "@/lib/supabase";

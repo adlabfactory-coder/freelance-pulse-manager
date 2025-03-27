@@ -33,3 +33,19 @@ export enum AppointmentStatus {
   PENDING = "pending",
   NO_SHOW = "no_show"
 }
+
+// Fonction utilitaire pour normaliser le champ freelancerId/freelancerid
+export function normalizeFreelancerId(appointment: Appointment): Appointment {
+  const normalized = { ...appointment };
+  
+  // Si freelancerid existe mais pas freelancerId, on le copie
+  if (appointment.freelancerid && !appointment.freelancerId) {
+    normalized.freelancerId = appointment.freelancerid;
+  }
+  // Si freelancerId existe mais pas freelancerid, on le copie aussi (pour la cohérence)
+  else if (appointment.freelancerId && !appointment.freelancerid) {
+    normalized.freelancerid = appointment.freelancerId;
+  }
+  
+  return normalized;
+}

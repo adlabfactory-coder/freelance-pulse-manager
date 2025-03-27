@@ -11,6 +11,7 @@ import { formatDateToFrench } from "@/utils/format";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 import { contactService } from "@/services/contact-service";
+import { supabase } from "@/lib/supabase";
 
 interface FreelancerContactsListProps {
   contacts: Contact[];
@@ -38,6 +39,7 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
     } else if (user?.id) {
       const loadContacts = async () => {
         try {
+          setLoading(true);
           const result = await contactService.getContactsByFreelancer(user.id);
           setContacts(result || []);
         } catch (error) {
@@ -53,6 +55,19 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
       };
       
       loadContacts();
+      
+      // Configurer l'écouteur pour les mises à jour en temps réel
+      const channel = supabase
+        .channel('public:contacts')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'contacts', filter: `assignedTo=eq.${user.id}` }, 
+          () => loadContacts()
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [initialContacts, initialLoading, user?.id, toast]);
 

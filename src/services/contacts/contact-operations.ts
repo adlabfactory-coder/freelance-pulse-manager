@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase-client';
 import { Contact, ContactInsert, ContactUpdate } from './types';
 import { toast } from 'sonner';
 import { ContactStatus } from '@/types/database/enums';
+import { useAuth } from '@/hooks/use-auth';
 
 /**
  * Service for basic contact operations
@@ -13,13 +14,22 @@ import { ContactStatus } from '@/types/database/enums';
 export const contactOperationsService = {
   /**
    * Récupère la liste des contacts depuis Supabase
+   * Si l'utilisateur est un freelancer, ne retourne que ses contacts
+   * Si l'utilisateur est un admin ou un chargé de compte, retourne tous les contacts
    */
-  async getContacts(): Promise<Contact[]> {
+  async getContacts(userId?: string, userRole?: string): Promise<Contact[]> {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('contacts')
         .select('*')
         .order('createdAt', { ascending: false });
+      
+      // Si l'utilisateur est un freelancer, filtrer par assignedTo
+      if (userRole === 'freelancer' && userId) {
+        query = query.eq('assignedTo', userId);
+      }
+      
+      const { data, error } = await query;
       
       if (error) {
         console.error('Erreur lors de la récupération des contacts:', error);

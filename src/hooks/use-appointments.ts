@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { appointmentsService } from '@/services/supabase/appointments';
-import { Appointment, AppointmentStatus } from '@/types/appointment';
+import { Appointment, AppointmentStatus, normalizeFreelancerId } from '@/types/appointment';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from './use-auth';
+import { supabase } from '@/lib/supabase';
 
 export function useAppointments(contactId?: string) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -29,16 +30,7 @@ export function useAppointments(contactId?: string) {
       }
       
       // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
-      const normalizedData = data.map(item => {
-        const appointment = { ...item } as Appointment;
-        
-        // Normaliser freelancerid en freelancerId si nécessaire
-        if (item.freelancerid && !item.freelancerId) {
-          appointment.freelancerId = item.freelancerid;
-        }
-        
-        return appointment;
-      });
+      const normalizedData = data.map(normalizeFreelancerId);
       
       setAppointments(normalizedData);
     } catch (err: any) {
@@ -56,7 +48,42 @@ export function useAppointments(contactId?: string) {
 
   useEffect(() => {
     fetchAppointments();
-  }, [fetchAppointments]);
+    
+    // Configurer l'écouteur pour les mises à jour en temps réel
+    let channel;
+    
+    if (user?.role === 'freelancer' && user?.id) {
+      channel = supabase
+        .channel('public:appointments-freelancer')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'appointments', filter: `freelancerid=eq.${user.id}` }, 
+          () => fetchAppointments()
+        )
+        .subscribe();
+    } else if (contactId) {
+      channel = supabase
+        .channel('public:appointments-contact')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'appointments', filter: `contactId=eq.${contactId}` }, 
+          () => fetchAppointments()
+        )
+        .subscribe();
+    } else {
+      channel = supabase
+        .channel('public:appointments')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'appointments' }, 
+          () => fetchAppointments()
+        )
+        .subscribe();
+    }
+    
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [fetchAppointments, user, contactId]);
 
   const createAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
