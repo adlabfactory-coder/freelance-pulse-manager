@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useSupabase } from "@/hooks/use-supabase";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -16,6 +15,7 @@ import { AppointmentStatus } from "@/types/appointment";
 import { useAuth } from "@/hooks/use-auth";
 import { formatDateForAPI } from "@/utils/format";
 import { createAppointment } from "@/services/appointments/create";
+import { supabase } from "@/lib/supabase-client";
 
 const APPOINTMENT_TITLE_OPTIONS = [
   { value: "consultation-initiale", label: "Consultation initiale" },
@@ -52,7 +52,7 @@ const SchedulePlanner: React.FC = () => {
     };
     
     fetchContacts();
-  }, [supabase]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

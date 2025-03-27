@@ -22,9 +22,10 @@ export const SQL_CREATE_TABLE_QUERIES: Record<string, string> = {
       email TEXT UNIQUE NOT NULL,
       role TEXT NOT NULL,
       avatar TEXT,
-      calendly_url TEXT,
-      calendly_sync_email TEXT,
-      calendly_enabled BOOLEAN DEFAULT FALSE
+      schedule_enabled BOOLEAN DEFAULT FALSE,
+      daily_availability JSONB,
+      weekly_availability JSONB,
+      supervisor_id UUID
     );
   `,
   contacts: `
