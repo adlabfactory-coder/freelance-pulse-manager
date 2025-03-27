@@ -1,12 +1,13 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 /**
  * Fonctions de création des rendez-vous
  */
 export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
   /**
-   * Crée un nouveau rendez-vous
+   * Crée un nouveau rendez-vous et assigne le contact au freelancer
    */
   const createAppointment = async (appointmentData: any) => {
     try {
@@ -22,7 +23,8 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
       
       console.log("Données de rendez-vous envoyées à la DB:", dataToSend);
 
-      const { data, error } = await supabase
+      // 1. Créer le rendez-vous
+      const { data: appointmentResult, error: appointmentError } = await supabase
         .rpc('create_appointment', {
           appointment_data: {
             title: dataToSend.title,
@@ -30,20 +32,45 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
             date: dataToSend.date,
             duration: dataToSend.duration || 30,
             status: dataToSend.status || 'scheduled',
-            contactId: dataToSend.contact_id, // Correction ici
-            freelancerid: dataToSend.freelancer_id, // Correction ici
+            contactId: dataToSend.contact_id,
+            freelancerid: dataToSend.freelancer_id,
             location: dataToSend.location || null,
             notes: dataToSend.notes || null,
             folder: dataToSend.folder || 'general'
           }
         });
 
-      if (error) {
-        console.error('Error creating appointment via RPC:', error);
-        throw error;
+      if (appointmentError) {
+        console.error('Error creating appointment via RPC:', appointmentError);
+        throw appointmentError;
       }
 
-      return data;
+      // 2. Assigner explicitement le contact au freelancer si ce n'est pas déjà fait
+      if (dataToSend.freelancer_id && dataToSend.contact_id) {
+        console.log(`Assignation du contact ${dataToSend.contact_id} au freelancer ${dataToSend.freelancer_id}`);
+        
+        const { error: updateError } = await supabase
+          .from('contacts')
+          .update({ 
+            assignedTo: dataToSend.freelancer_id,
+            status: 'prospect'  // Mettre à jour le statut du contact en prospect
+          })
+          .eq('id', dataToSend.contact_id);
+        
+        if (updateError) {
+          console.error('Erreur lors de l\'assignation du contact au freelancer:', updateError);
+          // On continue malgré l'erreur pour que le rendez-vous soit créé
+        } else {
+          console.log('Contact assigné avec succès au freelancer');
+        }
+      } else {
+        console.log('Aucune assignation automatique: ID freelancer ou contact manquant', {
+          freelancerId: dataToSend.freelancer_id,
+          contactId: dataToSend.contact_id
+        });
+      }
+
+      return appointmentResult;
     } catch (err) {
       console.error('Error in createAppointment:', err);
       throw err;
@@ -75,7 +102,7 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
             date: dataToSend.date,
             duration: dataToSend.duration || 30,
             status: 'pending',
-            contactId: dataToSend.contact_id, // Correction ici
+            contactId: dataToSend.contact_id,
             location: dataToSend.location || null,
             notes: dataToSend.notes || null,
             folder: dataToSend.folder || 'general'
@@ -87,6 +114,7 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
         throw error;
       }
 
+      console.log("Rendez-vous auto-assigné créé avec succès, en attente d'assignation manuelle par un chargé de compte");
       return data;
     } catch (err) {
       console.error('Error in createAutoAssignAppointment:', err);

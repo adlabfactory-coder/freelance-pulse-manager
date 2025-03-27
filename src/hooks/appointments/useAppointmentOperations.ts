@@ -5,6 +5,7 @@ import { formatDateForAPI } from "@/utils/format";
 import { AppointmentStatus } from "@/types/appointment";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase-client";
 
 export const useAppointmentOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +53,7 @@ export const useAppointmentOperations = () => {
         return null;
       }
       
-      // Utiliser l'ID de l'utilisateur connecté comme freelancer si aucun n'est spécifié et qu'il est freelancer
+      // Utiliser l'ID de l'utilisateur connecté comme freelancer si c'est un freelancer
       const finalFreelancerId = freelancerId || (user?.role === 'freelancer' ? user.id : undefined);
       
       console.log("useAppointmentOperations: Informations du rendez-vous:", {
@@ -64,12 +65,12 @@ export const useAppointmentOperations = () => {
         userRole: user?.role
       });
       
-      // Décider si on utilise l'auto-assignation
+      // Déterminer si on utilise l'auto-assignation
       const useAutoAssign = autoAssign || (!finalFreelancerId && user?.role !== 'freelancer');
       
       if (useAutoAssign) {
         console.log("useAppointmentOperations: Mode auto-assignation activé");
-        toast.info("Le rendez-vous sera auto-assigné à un freelancer disponible");
+        toast.info("Le rendez-vous sera assigné automatiquement à un freelancer disponible");
       }
       
       const appointmentData = {
@@ -92,6 +93,24 @@ export const useAppointmentOperations = () => {
         result = await createAutoAssignAppointment(appointmentData);
       } else {
         result = await createAppointment(appointmentData);
+        
+        // Mettre à jour explicitement le statut du contact si le rendez-vous est créé par un freelancer
+        if (result && user?.role === 'freelancer' && finalFreelancerId) {
+          console.log("Mise à jour du statut du contact après création de rendez-vous par un freelancer");
+          const { error } = await supabase
+            .from('contacts')
+            .update({ 
+              assignedTo: finalFreelancerId,
+              status: 'prospect'
+            })
+            .eq('id', contactId);
+            
+          if (error) {
+            console.error("Erreur lors de la mise à jour du contact:", error);
+          } else {
+            console.log("Contact mis à jour avec succès: assigné au freelancer et statut 'prospect'");
+          }
+        }
       }
       
       if (result) {

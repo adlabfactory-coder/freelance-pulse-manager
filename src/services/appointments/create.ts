@@ -51,6 +51,27 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
     }
     
     console.log("Rendez-vous créé avec succès:", data);
+    
+    // Si le freelancer est spécifié, assigner explicitement le contact à ce freelancer
+    if (appointmentData.freelancer_id && appointmentData.contact_id) {
+      console.log(`Assignation du contact ${appointmentData.contact_id} au freelancer ${appointmentData.freelancer_id}`);
+      
+      const { error: updateError } = await supabase
+        .from('contacts')
+        .update({ 
+          assignedTo: appointmentData.freelancer_id,
+          status: 'prospect'  // Mettre à jour le statut du contact en prospect
+        })
+        .eq('id', appointmentData.contact_id);
+      
+      if (updateError) {
+        console.error('Erreur lors de l\'assignation du contact au freelancer:', updateError);
+        // On n'abandonne pas l'opération si l'assignation échoue
+      } else {
+        console.log('Contact assigné avec succès au freelancer');
+      }
+    }
+    
     toast.success("Rendez-vous créé avec succès");
     return data as Appointment;
   } catch (error: any) {
