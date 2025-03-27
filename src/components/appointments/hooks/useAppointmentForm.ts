@@ -139,13 +139,13 @@ export const useAppointmentForm = (
         date: appointmentDate,
         duration,
         status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contactId,
+        contact_id: contactId, // Correction : Changé de contactId à contact_id pour correspondre au schéma de la base de données
         // Assurer que freelancerId est toujours présent, même en mode auto-assigné
-        freelancerId: freelancerId || '',
+        freelancer_id: freelancerId || '', // Correction : Changé de freelancerId à freelancer_id pour correspondre au schéma
         location: null,
         notes: null,
         folder: folder,
-        currentUserId: user?.id // Ajouter l'ID de l'utilisateur actuel comme fallback
+        current_user_id: user?.id // Changé de currentUserId à current_user_id pour correspondre au schéma
       };
       
       console.log("useAppointmentForm: Soumission des données de rendez-vous:", appointmentData);

@@ -1,101 +1,104 @@
 
-import { supabase } from '@/lib/supabase';
-import { Appointment, AppointmentStatus } from '@/types/appointment';
-import { toast } from 'sonner';
+import { Appointment, AppointmentStatus } from "@/types/appointment";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase-client";
 
-export interface CreateAppointmentInput {
+// Types pour les données de l'appointment
+interface AppointmentCreateData {
   title: string;
-  description?: string;
+  description?: string | null;
   date: string;
   duration: number;
-  contactId: string;
-  freelancerId?: string;
-  location?: string;
-  notes?: string;
   status: AppointmentStatus;
-  folder?: string; // Ajout du champ folder
+  contact_id: string;  // Utiliser la bonne casse pour correspondre à la base de données
+  freelancer_id?: string;  // Utiliser la bonne casse pour correspondre à la base de données
+  location?: string | null;
+  notes?: string | null;
+  folder?: string;
+  current_user_id?: string;  // Utiliser la bonne casse pour correspondre à la base de données
 }
 
-export const createAppointment = async (data: CreateAppointmentInput): Promise<Appointment | null> => {
+/**
+ * Crée un rendez-vous standard avec un freelancer assigné
+ */
+export const createAppointment = async (appointmentData: AppointmentCreateData): Promise<Appointment | null> => {
   try {
-    // Vérifier que les données requises sont présentes
-    if (!data.title || !data.date || !data.contactId) {
-      toast.error('Informations manquantes pour créer le rendez-vous');
-      throw new Error('Titre, date et contact sont requis');
-    }
-
-    // Récupérer l'utilisateur connecté
-    const { data: authData } = await supabase.auth.getUser();
-    const userId = authData.user?.id;
-    
-    if (!userId && !data.freelancerId) {
-      toast.error('Impossible de créer un rendez-vous sans identification');
-      throw new Error('Identification requise');
-    }
-
-    // Préparation des données
-    const appointmentData = {
-      title: data.title,
-      description: data.description || null,
-      date: data.date,
-      duration: data.duration,
-      status: data.status,
-      contactId: data.contactId,
-      freelancerid: data.freelancerId || userId, // Utiliser l'ID fourni ou l'ID de l'utilisateur connecté
-      location: data.location || null,
-      notes: data.notes || null,
-      currentUserId: userId, // Pour d'autres utilisations potentielles dans les triggers
-      folder: data.folder || 'general' // Utiliser le dossier fourni ou la valeur par défaut
-    };
-    
     console.log("Envoi des données pour création de rendez-vous:", appointmentData);
-
-    // Création du rendez-vous utilisant une fonction RPC (procédure stockée)
-    const { data: result, error } = await supabase.rpc('create_appointment', {
-      appointment_data: appointmentData
+    
+    // Vérifier que les données requises sont présentes
+    if (!appointmentData.title || !appointmentData.date || !appointmentData.contact_id || !appointmentData.freelancer_id) {
+      throw new Error("Données de rendez-vous incomplètes");
+    }
+    
+    // Appeler la procédure stockée ou la fonction RPC pour créer le rendez-vous
+    const { data, error } = await supabase.rpc('create_appointment', {
+      appointment_data: {
+        title: appointmentData.title,
+        description: appointmentData.description || null,
+        date: appointmentData.date,
+        duration: appointmentData.duration || 30,
+        status: appointmentData.status || 'scheduled',
+        contact_id: appointmentData.contact_id,
+        freelancer_id: appointmentData.freelancer_id,
+        location: appointmentData.location || null,
+        notes: appointmentData.notes || null,
+        folder: appointmentData.folder || 'general'
+      }
     });
     
     if (error) {
-      console.error('Erreur lors de la création du rendez-vous:', error);
-      toast.error(`Erreur: ${error.message}`);
+      console.error("Erreur lors de la création du rendez-vous:", error);
       throw error;
     }
     
-    console.log("Rendez-vous créé avec succès:", result);
-    return result as Appointment;
+    console.log("Rendez-vous créé avec succès:", data);
+    return data as Appointment;
   } catch (error: any) {
-    console.error('Erreur lors de la création du rendez-vous:', error);
+    console.error("Erreur lors de la création du rendez-vous:", error);
     throw error;
   }
 };
 
-// Fonction pour créer un rendez-vous avec assignation automatique à un freelancer
-export const createAutoAssignAppointment = async (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment | null> => {
+/**
+ * Crée un rendez-vous en attente d'assignation à un freelancer
+ */
+export const createAutoAssignAppointment = async (appointmentData: AppointmentCreateData): Promise<Appointment | null> => {
   try {
     // Vérifier que les données requises sont présentes
-    if (!data.title || !data.date || !data.contactId) {
-      toast.error('Informations manquantes pour créer le rendez-vous');
-      throw new Error('Titre, date et contact sont requis');
+    if (!appointmentData.title || !appointmentData.date || !appointmentData.contact_id) {
+      throw new Error("Données de rendez-vous incomplètes");
     }
-
-    // Convertir les données au format attendu par createAppointment
-    const appointmentInput: CreateAppointmentInput = {
-      title: data.title,
-      description: data.description || undefined,
-      date: data.date,
-      duration: data.duration,
-      contactId: data.contactId,
-      freelancerId: data.freelancerId,
-      location: data.location || undefined,
-      notes: data.notes || undefined,
-      status: data.status,
-      folder: data.folder || 'general'
-    };
-
-    // Utiliser la fonction createAppointment existante
-    return await createAppointment(appointmentInput);
+    
+    // S'assurer que le statut est "pending" pour les rendez-vous auto-assignés
+    appointmentData.status = AppointmentStatus.PENDING;
+    
+    // Appeler la procédure stockée ou la fonction RPC pour créer le rendez-vous
+    const { data, error } = await supabase.rpc('create_auto_assign_appointment', {
+      appointment_data: {
+        title: appointmentData.title,
+        description: appointmentData.description || null,
+        date: appointmentData.date,
+        duration: appointmentData.duration || 30,
+        status: 'pending',  // Toujours en attente
+        contact_id: appointmentData.contact_id,
+        location: appointmentData.location || null,
+        notes: appointmentData.notes || null,
+        folder: appointmentData.folder || 'general',
+        current_user_id: appointmentData.current_user_id || null
+      }
+    });
+    
+    if (error) {
+      console.error("Erreur lors de la création du rendez-vous auto-assigné:", error);
+      throw error;
+    }
+    
+    console.log("Rendez-vous auto-assigné créé avec succès:", data);
+    toast.success("Rendez-vous en attente d'assignation créé avec succès");
+    
+    return data as Appointment;
   } catch (error: any) {
-    console.error('Erreur lors de la création du rendez-vous auto-assigné:', error);
+    console.error("Erreur lors de la création du rendez-vous auto-assigné:", error);
     throw error;
   }
 };

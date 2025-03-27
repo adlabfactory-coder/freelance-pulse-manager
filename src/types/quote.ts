@@ -1,25 +1,15 @@
 
-export enum QuoteStatus {
-  DRAFT = "draft",
-  PENDING = "pending",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  EXPIRED = "expired",
-  CANCELLED = "cancelled",
-  SENT = "sent"
-}
-
 export interface Quote {
   id: string;
   contactId: string;
   freelancerId: string;
-  totalAmount: number;
   validUntil: Date | string;
   status: QuoteStatus;
-  notes?: string | null;
-  folder: string;
-  createdAt: string | Date;
-  updatedAt: string | Date;
+  totalAmount: number;
+  notes?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  folder?: string;
   items?: QuoteItem[];
 }
 
@@ -34,41 +24,31 @@ export interface QuoteItem {
   serviceId?: string;
 }
 
-export const getQuoteStatusLabel = (status: QuoteStatus): string => {
-  switch (status) {
-    case QuoteStatus.DRAFT:
-      return "Brouillon";
-    case QuoteStatus.PENDING:
-      return "En attente";
-    case QuoteStatus.ACCEPTED:
-      return "Accepté";
-    case QuoteStatus.REJECTED:
-      return "Refusé";
-    case QuoteStatus.EXPIRED:
-      return "Expiré";
-    case QuoteStatus.CANCELLED:
-      return "Annulé";
-    case QuoteStatus.SENT:
-      return "Envoyé";
-    default:
-      return "Inconnu";
-  }
-};
+export enum QuoteStatus {
+  DRAFT = "draft",
+  SENT = "sent",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled"
+}
 
-export const getQuoteStatusColor = (status: QuoteStatus): string => {
-  switch (status) {
-    case QuoteStatus.ACCEPTED:
-      return "green";
-    case QuoteStatus.REJECTED:
-    case QuoteStatus.CANCELLED:
-      return "red";
-    case QuoteStatus.SENT:
-    case QuoteStatus.PENDING:
-      return "blue";
-    case QuoteStatus.EXPIRED:
-      return "orange";
-    case QuoteStatus.DRAFT:
-    default:
-      return "gray";
-  }
-};
+export interface QuoteContact {
+  id: string;
+  name: string;
+  email: string;
+  company?: string;
+}
+
+export interface QuoteFreelancer {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface QuoteService {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+}
