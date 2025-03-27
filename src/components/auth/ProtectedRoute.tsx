@@ -1,29 +1,38 @@
 
-import React, { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
-const ProtectedRoute: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+interface ProtectedRouteProps {
+  requiredRoles?: string[];
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
-  // Show loading indicator while authentication state is being determined
-  if (loading) {
+  // Afficher un spinner pendant le chargement
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-primary">Vérification de l'authentification...</span>
+      <div className="flex h-screen items-center justify-center">
+        <LoadingSpinner size="large" />
       </div>
     );
   }
 
-  // Redirect to login if not authenticated
+  // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  // Render child routes if authenticated
+  // Vérifier les rôles requis si spécifiés
+  if (requiredRoles.length > 0 && user) {
+    const hasRequiredRole = requiredRoles.includes(user.role);
+    if (!hasRequiredRole) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
   return <Outlet />;
 };
 

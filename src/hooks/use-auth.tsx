@@ -1,136 +1,231 @@
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
-import { hasMinimumRole } from "@/types/roles";
+import { mockAuthentication } from "@/services/mock-auth-service";
 
+// Context pour l'authentification
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  role: UserRole | null;
   isAdmin: boolean;
   isFreelancer: boolean;
-  isAccountManager?: boolean;
-  isSuperAdmin?: boolean;
-  isAdminOrSuperAdmin?: boolean;
-  isAuthenticated: boolean;
-  role?: UserRole;
-  signIn: (email: string, password: string) => Promise<User>;
-  signOut: () => Promise<void>;
-  logout: () => Promise<void>; // Alias for signOut for compatibility
+  isSuperAdmin: boolean;
+  isAccountManager: boolean;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
+const defaultContext: AuthContextType = {
   user: null,
-  loading: true,
+  isAuthenticated: false,
+  isLoading: true,
+  role: null,
   isAdmin: false,
   isFreelancer: false,
-  isAuthenticated: false,
-  signIn: async () => ({ id: "", name: "", email: "", role: UserRole.ADMIN, avatar: null }),
-  signOut: async () => {},
+  isSuperAdmin: false,
+  isAccountManager: false,
+  signIn: async () => ({ success: false }),
+  signUp: async () => ({ success: false }),
   logout: async () => {},
-});
-
-// UUID générés pour remplacer les IDs simples (1, 2, 3...)
-const MOCK_USERS = [
-  {
-    id: "7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc", // Remplacé ID "1"
-    name: "Admin Test",
-    email: "admin@example.com",
-    role: UserRole.ADMIN,
-    avatar: null
-  },
-  {
-    id: "487fb1af-4396-49d1-ba36-8711facbb03c", // Remplacé ID "2"
-    name: "Freelancer Test",
-    email: "freelancer@example.com",
-    role: UserRole.FREELANCER,
-    avatar: null
-  },
-  {
-    id: "6a94bd3d-7f5c-49ae-b09e-e570cb01a978", // Remplacé ID "4"
-    name: "Super Admin Test",
-    email: "superadmin@example.com",
-    role: UserRole.SUPER_ADMIN,
-    avatar: null
-  },
-  {
-    id: "3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c", // Remplacé ID "5"
-    name: "Account Manager Test",
-    email: "manager@example.com",
-    role: UserRole.ACCOUNT_MANAGER,
-    avatar: null
-  }
-];
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const currentUser = localStorage.getItem("currentUser");
-    if (currentUser) {
-      setUser(JSON.parse(currentUser));
-    } else {
-      const adminUser = MOCK_USERS[0];
-      setUser(adminUser);
-      localStorage.setItem("currentUser", JSON.stringify(adminUser));
-    }
-    setLoading(false);
-  }, []);
-
-  const signIn = async (email: string, password: string): Promise<User> => {
-    const matchedUser = MOCK_USERS.find(u => u.email === email);
-    
-    if (matchedUser) {
-      setUser(matchedUser);
-      localStorage.setItem("currentUser", JSON.stringify(matchedUser));
-      return matchedUser;
-    } else {
-      throw new Error("Identifiants invalides");
-    }
-  };
-
-  const signOut = async () => {
-    // Déconnexion de l'utilisateur
-    setUser(null);
-    localStorage.removeItem("currentUser");
-    
-    // Supprimer également la session Supabase si elle existe
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion Supabase:", error);
-    }
-  };
-
-  const logout = signOut;
-
-  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_ADMIN;
-  const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
-  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
-  const isFreelancer = user?.role === UserRole.FREELANCER;
-  const isAccountManager = user?.role === UserRole.ACCOUNT_MANAGER;
-  const isAuthenticated = !!user;
-  const role = user?.role;
-
-  return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      isAdmin, 
-      isFreelancer, 
-      isAccountManager, 
-      isSuperAdmin, 
-      isAdminOrSuperAdmin,
-      isAuthenticated,
-      role,
-      signIn, 
-      signOut,
-      logout 
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
 };
 
-export const useAuth = () => useContext(AuthContext);
+const AuthContext = createContext<AuthContextType>(defaultContext);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
+
+  // Vérification de l'état de l'authentification au chargement
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Erreur lors de la récupération de la session:", error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (sessionData.session) {
+          // Session valide, récupérer les informations utilisateur
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", sessionData.session.user.id)
+            .single();
+          
+          if (userError) {
+            console.error("Erreur lors de la récupération des données utilisateur:", userError);
+            setIsLoading(false);
+            return;
+          }
+          
+          if (userData) {
+            setUser(userData as User);
+          }
+        } else {
+          // Mode démonstration avec un utilisateur mocké
+          const mockUser = await mockAuthentication();
+          if (mockUser) {
+            setUser(mockUser);
+          }
+        }
+      } catch (err) {
+        console.error("Erreur lors de la vérification de l'authentification:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Écouteur pour les changements de session
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event);
+      if (event === 'SIGNED_IN' && session) {
+        // Connexion réussie, récupérer les infos utilisateur
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (!userError && userData) {
+          setUser(userData as User);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        navigate('/auth/login');
+      }
+    });
+    
+    checkAuth();
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  // Déterminer les rôles utilisateur
+  const role = user?.role as UserRole | null;
+  const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+  const isSuperAdmin = role === UserRole.SUPER_ADMIN;
+  const isFreelancer = role === UserRole.FREELANCER;
+  const isAccountManager = role === UserRole.ACCOUNT_MANAGER;
+  const isAuthenticated = !!user;
+
+  // Fonction de connexion
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error("Erreur de connexion:", error.message);
+        return { success: false, error: error.message };
+      }
+      
+      if (data?.user) {
+        // Récupérer les informations utilisateur depuis la table users
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+        
+        if (userError) {
+          console.error("Erreur lors de la récupération des données utilisateur:", userError);
+          return { success: true }; // On considère quand même que la connexion est réussie
+        }
+        
+        if (userData) {
+          setUser(userData as User);
+        }
+        
+        return { success: true };
+      }
+      
+      // Mode de démonstration
+      const mockUser = await mockAuthentication(email);
+      if (mockUser) {
+        setUser(mockUser);
+        return { success: true };
+      }
+      
+      return { success: false, error: "Identifiants invalides" };
+    } catch (err: any) {
+      console.error("Erreur lors de la connexion:", err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Fonction d'inscription
+  const signUp = async (email: string, password: string, name: string, role: UserRole) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role,
+          },
+        },
+      });
+      
+      if (error) {
+        return { success: false, error: error.message };
+      }
+      
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message };
+    }
+  };
+
+  // Fonction de déconnexion
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      navigate('/auth/login');
+    } catch (err) {
+      console.error("Erreur lors de la déconnexion:", err);
+    }
+  };
+
+  const value = {
+    user,
+    isAuthenticated,
+    isLoading,
+    role,
+    isAdmin,
+    isFreelancer,
+    isSuperAdmin,
+    isAccountManager,
+    signIn,
+    signUp,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// Hook personnalisé pour utiliser le contexte d'authentification
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
+  }
+  return context;
+};
+
+// Import UserRole from types
+import { UserRole } from '@/types';

@@ -7,3 +7,4 @@ export type { Database } from '@/types/database';
 
 // Re-export commonly used service factories
 export { createAppointmentsService } from '@/services/supabase/appointments';
+export { createQuotesService } from '@/services/supabase/quotes';

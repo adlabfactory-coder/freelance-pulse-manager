@@ -52,7 +52,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         };
       });
       
-      await form.handleSubmit({
+      const quoteData = {
         contactId: form.contactId,
         freelancerId: form.freelancerId,
         validUntil: form.validUntil,
@@ -61,7 +61,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         folder: form.folder || 'general',
         totalAmount: form.totalAmount || 0,
         items: validItems as QuoteItem[]
-      }, safeItems);
+      };
+      
+      await form.handleSubmit(quoteData, safeItems);
     }
   };
 
