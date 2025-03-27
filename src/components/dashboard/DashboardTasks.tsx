@@ -1,6 +1,5 @@
 
 import React from "react";
-import DashboardCard from "./DashboardCard";
 
 interface DashboardTasksProps {
   loading: boolean;
@@ -8,7 +7,7 @@ interface DashboardTasksProps {
 
 const DashboardTasks: React.FC<DashboardTasksProps> = ({ loading }) => {
   return (
-    <DashboardCard title="Tâches à faire">
+    <div className="p-4">
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -18,7 +17,7 @@ const DashboardTasks: React.FC<DashboardTasksProps> = ({ loading }) => {
           Aucune tâche en cours
         </div>
       )}
-    </DashboardCard>
+    </div>
   );
 };
 

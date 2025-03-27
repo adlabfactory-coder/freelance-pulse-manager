@@ -1,6 +1,5 @@
 
 import React from "react";
-import DashboardCard from "./DashboardCard";
 import { DashboardActivity } from "@/hooks/useDashboardData";
 
 interface DashboardActivitiesProps {
@@ -13,7 +12,7 @@ const DashboardActivities: React.FC<DashboardActivitiesProps> = ({
   loading
 }) => {
   return (
-    <DashboardCard title="Activités récentes">
+    <div className="p-4">
       {loading ? (
         <div className="flex items-center justify-center h-40">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -35,7 +34,7 @@ const DashboardActivities: React.FC<DashboardActivitiesProps> = ({
           Aucune activité récente
         </div>
       )}
-    </DashboardCard>
+    </div>
   );
 };
 
