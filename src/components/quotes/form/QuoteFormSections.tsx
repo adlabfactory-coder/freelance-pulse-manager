@@ -73,25 +73,8 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
     loadFreelancerData();
   }, [quoteData.contactId, quoteData.freelancerId]);
 
-  const handleContactChange = (contactId: string) => {
-    onQuoteDataChange({ ...quoteData, contactId });
-  };
-
-  const handleFreelancerChange = (freelancerId: string) => {
-    onQuoteDataChange({ ...quoteData, freelancerId });
-  };
-
-  const handleStatusChange = (status: QuoteStatus) => {
-    onQuoteDataChange({ ...quoteData, status });
-  };
-
-  const handleValidUntilChange = (validUntil: Date) => {
-    onQuoteDataChange({ ...quoteData, validUntil });
-  };
-
-  const handleNotesChange = (notes: string) => {
-    onQuoteDataChange({ ...quoteData, notes });
-  };
+  // Vérifier que les items sont bien du type QuoteItem (et non pas Partial<QuoteItem>)
+  console.log("Items dans QuoteFormSections:", quoteData.items);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

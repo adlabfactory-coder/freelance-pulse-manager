@@ -60,8 +60,10 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
   // Nous nous assurons que les items sont complets et valides ici
   const safeQuoteData: Partial<Quote> = {
     ...quoteData,
-    items: quoteData.items 
-      ? quoteData.items.filter((item): item is QuoteItem => {
+    // Ne gardons que les éléments non marqués pour suppression qui ont toutes les propriétés requises
+    items: quoteData.items
+      ? quoteData.items
+        .filter((item): item is QuoteItem => {
           return Boolean(
             item && 
             item.description !== undefined && 

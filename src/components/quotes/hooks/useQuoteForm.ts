@@ -81,14 +81,25 @@ export const useQuoteForm = ({
 
   // Get the complete quote data with type safety
   const getQuoteData = useCallback(() => {
-    const validItems = items.filter(item => 
-      item && 
-      item.description !== undefined && 
-      item.quantity !== undefined && 
-      item.unitPrice !== undefined
-    );
+    // Filtrer les éléments pour s'assurer qu'ils sont complets et valides
+    const validItems = items
+      .filter(item => 
+        item && 
+        item.description !== undefined && 
+        item.quantity !== undefined && 
+        item.unitPrice !== undefined
+      )
+      .map(item => ({
+        description: item.description!,
+        quantity: item.quantity!,
+        unitPrice: item.unitPrice!,
+        tax: item.tax || 0,
+        discount: item.discount || 0,
+        id: item.id,
+        quoteId: item.quoteId,
+        serviceId: item.serviceId
+      }));
     
-    // Cette fonction renvoie un type compatible avec Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>
     return {
       contactId,
       freelancerId,
@@ -105,7 +116,6 @@ export const useQuoteForm = ({
     if (e) e.preventDefault();
     
     const quoteData = getQuoteData();
-    // Nous nous assurons que les items sont bien filtrés et valides
     console.log("Submit form with data:", quoteData);
     return handleSubmit(quoteData, allItems);
   }, [getQuoteData, handleSubmit, allItems]);
@@ -120,7 +130,7 @@ export const useQuoteForm = ({
     if (data.items) resetItems(data.items);
   }, [resetItems]);
 
-  // Cette propriété est utilisée pour l'affichage uniquement
+  // Cette propriété est utilisée pour l'affichage uniquement - on renvoie les items bruts
   const quoteDataForDisplay = {
     contactId,
     freelancerId,

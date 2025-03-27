@@ -21,11 +21,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   onSubmit,
   onCloseDialog
 }) => {
-  // Nous devons nous assurer que tous les éléments partiels sont complets avant de les passer
-  // au composant QuoteFormSections, pour éviter les erreurs de type
+  // S'assurer que tous les éléments sont des QuoteItem valides
   const safeItems: QuoteItem[] = form.items 
     ? form.items.filter((item): item is QuoteItem => {
-        // Vérifier que chaque élément a les propriétés requises
         return Boolean(
           item && 
           item.description !== undefined && 

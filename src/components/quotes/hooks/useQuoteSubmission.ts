@@ -29,18 +29,12 @@ export const useQuoteSubmission = ({
   ) => {
     console.log("handleSubmit called with data:", quoteData);
     
-    // Assurons-nous que nous avons des items valides
-    const validItems = quoteData.items.filter(item => 
-      item.description !== undefined && 
-      item.quantity !== undefined && 
-      item.unitPrice !== undefined
-    );
-    
+    // Validation des données du devis
     const validation = validateQuoteForm(
       quoteData.contactId,
       quoteData.freelancerId,
       quoteData.validUntil,
-      validItems
+      quoteData.items
     );
     
     if (!validation.isValid) {
@@ -53,12 +47,21 @@ export const useQuoteSubmission = ({
     try {
       console.log("Création d'un nouveau devis");
       
+      // Filtrer et transformer les éléments pour n'inclure que ceux qui ne sont pas marqués pour suppression
+      // Et enlever les propriétés isNew et toDelete qui ne font pas partie du modèle de données
       const itemsToCreate = items
-        .filter(item => !item.toDelete)
-        .map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
+        .filter(item => !item.toDelete && item.description && item.quantity && item.unitPrice)
+        .map(({ isNew, toDelete, id, ...item }) => ({
+          description: item.description!,
+          quantity: item.quantity!,
+          unitPrice: item.unitPrice!,
+          tax: item.tax || 0,
+          discount: item.discount || 0,
+          serviceId: item.serviceId
+        }));
       
       console.log("Données du devis:", quoteData);
-      console.log("Éléments du devis:", itemsToCreate);
+      console.log("Éléments du devis préparés:", itemsToCreate);
       
       const newQuote = await quotesService.createQuote(
         quoteData,
@@ -106,18 +109,12 @@ export const useQuoteSubmission = ({
   ) => {
     console.log("handleSubmitEdit called for ID:", id);
     
-    // Assurons-nous que nous avons des items valides
-    const validItems = quoteData.items.filter(item => 
-      item.description !== undefined && 
-      item.quantity !== undefined && 
-      item.unitPrice !== undefined
-    );
-    
+    // Validation des données du devis
     const validation = validateQuoteForm(
       quoteData.contactId,
       quoteData.freelancerId,
       quoteData.validUntil,
-      validItems
+      quoteData.items
     );
     
     if (!validation.isValid) {
@@ -130,14 +127,24 @@ export const useQuoteSubmission = ({
     try {
       console.log("Mise à jour du devis", id);
       
+      // Filtrer les éléments à ajouter (nouveaux éléments non marqués pour suppression)
       const itemsToAdd = items
-        .filter(item => item.isNew && !item.toDelete)
-        .map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
+        .filter(item => item.isNew && !item.toDelete && item.description && item.quantity && item.unitPrice)
+        .map(({ isNew, toDelete, id, ...item }) => ({
+          description: item.description!,
+          quantity: item.quantity!,
+          unitPrice: item.unitPrice!,
+          tax: item.tax || 0,
+          discount: item.discount || 0,
+          serviceId: item.serviceId
+        }));
         
+      // Filtrer les éléments à mettre à jour (éléments existants non marqués pour suppression)
       const itemsToUpdate = items
         .filter(item => item.id && !item.isNew && !item.toDelete)
-        .map(({ isNew, toDelete, ...item }) => item as Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>);
+        .map(({ isNew, toDelete, ...item }) => item);
         
+      // Obtenir les IDs des éléments à supprimer
       const itemsToDelete = items
         .filter(item => item.toDelete && item.id)
         .map(item => item.id as string);

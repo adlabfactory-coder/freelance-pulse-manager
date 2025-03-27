@@ -29,7 +29,7 @@ export const validateQuoteForm = (
   contactId: string,
   freelancerId: string,
   validUntil: Date | null,
-  items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]
+  items: (Partial<QuoteItem> | QuoteItem)[]
 ): { isValid: boolean; errorMessage?: string } => {
   if (!contactId) {
     return { 
