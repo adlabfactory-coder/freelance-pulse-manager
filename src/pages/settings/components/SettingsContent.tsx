@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import UserProfileTabs from "@/components/settings/tabs/UserTabs";
 import SecurityTab from "@/components/settings/tabs/SecurityTab";
 import UsersManagementTabs from "@/components/settings/UsersManagementTabs";
@@ -26,6 +26,8 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
   const isCurrentUser = currentUser && user ? currentUser.id === user.id : true;
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Simulate loading state to give components time to initialize
@@ -57,32 +59,53 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
       </Alert>
     );
   }
+
+  // Extract the current tab from the URL path
+  const path = location.pathname.split('/settings/')[1] || '';
+  
+  // Render the appropriate component based on the current path
+  const renderContent = () => {
+    // Base routes for all users
+    if (path === '' || path === 'profile') {
+      return <UserProfileTabs onSelectUser={onSelectUser} />;
+    }
+    if (path === 'security') {
+      return <SecurityTab isCurrentUser={isCurrentUser} />;
+    }
+    if (path === 'api-keys') {
+      return <ApiKeysTab />;
+    }
+    
+    // Admin & Super Admin routes
+    if (isAdminOrSuperAdmin) {
+      if (path === 'users') {
+        return <UsersManagementTabs onSelectUser={onSelectUser} />;
+      }
+      if (path === 'services') {
+        return <ServicesSettings />;
+      }
+      if (path === 'commissions') {
+        return <CommissionSettingsTab />;
+      }
+    }
+    
+    // Super Admin only routes
+    if (isSuperAdmin && path === 'database') {
+      return <DatabaseTab />;
+    }
+    
+    // If path doesn't match any valid route, navigate to settings home
+    if (path !== '') {
+      navigate('/settings', { replace: true });
+      return null;
+    }
+    
+    return <UserProfileTabs onSelectUser={onSelectUser} />;
+  };
   
   return (
     <div className="flex-1 space-y-4">
-      <Routes>
-        {/* Base routes for all users */}
-        <Route path="" element={<UserProfileTabs onSelectUser={onSelectUser} />} />
-        <Route path="security" element={<SecurityTab isCurrentUser={isCurrentUser} />} />
-        <Route path="api-keys" element={<ApiKeysTab />} />
-        
-        {/* Admin & Super Admin routes */}
-        {isAdminOrSuperAdmin && (
-          <>
-            <Route path="users" element={<UsersManagementTabs onSelectUser={onSelectUser} />} />
-            <Route path="services" element={<ServicesSettings />} />
-            <Route path="commissions" element={<CommissionSettingsTab />} />
-          </>
-        )}
-        
-        {/* Super Admin only routes */}
-        {isSuperAdmin && (
-          <Route path="database" element={<DatabaseTab />} />
-        )}
-        
-        {/* Fallback redirect for invalid routes */}
-        <Route path="*" element={<Navigate to="/settings" replace />} />
-      </Routes>
+      {renderContent()}
     </div>
   );
 };
