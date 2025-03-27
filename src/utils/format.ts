@@ -48,9 +48,18 @@ export const formatTime = (date: Date): string => {
 
 /**
  * Formatte une date pour l'API (format ISO sans timezone)
+ * Peut également combiner une date et une heure sous forme de chaîne si timeString est fourni
  */
-export const formatDateForAPI = (date: Date): string => {
+export const formatDateForAPI = (date: Date, timeString?: string): string => {
   try {
+    if (timeString) {
+      // Si une heure est fournie sous forme de chaîne, la combiner avec la date
+      const [hours, minutes] = timeString.split(':').map(Number);
+      const newDate = new Date(date);
+      newDate.setHours(hours, minutes, 0, 0);
+      return newDate.toISOString();
+    }
+    // Comportement d'origine si aucune heure n'est fournie
     return date.toISOString().split('T')[0];
   } catch (error) {
     console.error('Erreur de formatage de date pour API:', error);
