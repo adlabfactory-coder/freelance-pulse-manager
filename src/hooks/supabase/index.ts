@@ -1,5 +1,7 @@
+
 // Export the context provider and hook from supabase-provider
-export { SupabaseProvider, useSupabase, SupabaseContextType } from './supabase-provider';
+export { SupabaseProvider, useSupabase } from './supabase-provider';
+export type { SupabaseContextType } from './supabase-provider';
 
 // Export specialized hooks
 export { useAuthOperations } from './use-auth-operations';
