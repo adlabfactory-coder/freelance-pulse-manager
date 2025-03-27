@@ -2,13 +2,13 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { QuoteStatus } from "@/types";
+import { QuoteStatus } from "@/types/quote";
 
 interface StatusSelectorProps {
-  status?: QuoteStatus | string;
+  status?: QuoteStatus;
   onSelect: (status: QuoteStatus) => void;
-  value?: QuoteStatus | string;
-  onChange?: React.Dispatch<React.SetStateAction<QuoteStatus | string>>;
+  value?: QuoteStatus;
+  onChange?: React.Dispatch<React.SetStateAction<QuoteStatus>>;
   disabled?: boolean;
 }
 
@@ -44,11 +44,11 @@ const StatusSelector: React.FC<StatusSelectorProps> = ({
           <SelectValue placeholder="Sélectionner un statut" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="draft">Brouillon</SelectItem>
-          <SelectItem value="sent">Envoyé</SelectItem>
-          <SelectItem value="accepted">Accepté</SelectItem>
-          <SelectItem value="rejected">Rejeté</SelectItem>
-          <SelectItem value="expired">Expiré</SelectItem>
+          <SelectItem value={QuoteStatus.DRAFT}>Brouillon</SelectItem>
+          <SelectItem value={QuoteStatus.SENT}>Envoyé</SelectItem>
+          <SelectItem value={QuoteStatus.ACCEPTED}>Accepté</SelectItem>
+          <SelectItem value={QuoteStatus.REJECTED}>Rejeté</SelectItem>
+          <SelectItem value={QuoteStatus.EXPIRED}>Expiré</SelectItem>
         </SelectContent>
       </Select>
     </div>

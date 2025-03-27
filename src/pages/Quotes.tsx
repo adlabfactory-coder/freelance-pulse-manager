@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { Quote } from "@/types";
+import { Quote, QuoteStatus } from "@/types/quote";
 import { fetchQuotes } from "@/services/quote-service";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +29,11 @@ const Quotes: React.FC = () => {
       console.log("Chargement des devis");
       const data = await fetchQuotes();
       console.log("Devis chargés:", data);
-      setQuotes(data);
+      const typedData: Quote[] = data.map(quote => ({
+        ...quote,
+        status: quote.status as QuoteStatus
+      }));
+      setQuotes(typedData);
     } catch (error) {
       console.error("Erreur lors du chargement des devis:", error);
       toast({

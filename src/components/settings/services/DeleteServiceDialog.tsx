@@ -17,6 +17,7 @@ export interface DeleteServiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  serviceName?: string; // Ajout de cette prop pour la compatibilité
 }
 
 const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
@@ -24,14 +25,18 @@ const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
+  serviceName,
 }) => {
+  // Utiliser serviceName s'il est fourni, sinon utiliser service.name
+  const displayName = serviceName || service.name;
+  
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action supprimera définitivement le service "{service.name}". Cette action ne peut pas être annulée.
+            Cette action supprimera définitivement le service "{displayName}". Cette action ne peut pas être annulée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
-import { Quote, QuoteItem, QuoteStatus } from "@/types";
+import { Quote, QuoteItem, QuoteStatus } from "@/types/quote";
 import { Contact } from "@/services/contacts/types";
 import { Service } from "@/types/service";
 import { User } from "@/types";
@@ -112,7 +113,7 @@ export const useQuoteForm = ({
         setContactId(quote.contactId);
         setFreelancerId(quote.freelancerId);
         setValidUntil(new Date(quote.validUntil));
-        setStatus(quote.status);
+        setStatus(quote.status as QuoteStatus);
         setNotes(quote.notes || "");
         setFolder(quote.folder || "general");
         setItems(quote.items.map(item => ({
@@ -265,7 +266,7 @@ export const useQuoteForm = ({
       console.log("Mise à jour du devis", id);
       
       const itemsToAdd = items.filter(item => item.isNew && !item.toDelete).map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
-      const itemsToUpdate = items.filter(item => item.id && !item.isNew && !item.toDelete).map(({ isNew, toDelete, ...item }) => item as Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>);
+      const itemsToUpdate = items.filter(item => item.id && !item.isNew && !item.toDelete).map(({ isNew, toDelete, ...item }) => item as QuoteItem);
       const itemsToDelete = items.filter(item => item.toDelete && item.id).map(item => item.id as string);
       
       const updatedQuote = await quotesService.updateQuote(
@@ -323,7 +324,7 @@ export const useQuoteForm = ({
         setValidUntil(new Date(data.validUntil));
       }
     }
-    if (data.status) setStatus(data.status);
+    if (data.status) setStatus(data.status as QuoteStatus);
     if (data.notes !== undefined) setNotes(data.notes);
     if (data.folder) setFolder(data.folder);
     if (data.items) setItems(data.items.map(item => ({ ...item, isNew: false, toDelete: false })));

@@ -15,7 +15,7 @@ export interface Quote {
   freelancerId: string;
   totalAmount: number;
   validUntil: Date | string;
-  status: QuoteStatus | string;
+  status: QuoteStatus;
   notes?: string | null;
   folder: string;
   createdAt: string | Date;
@@ -34,7 +34,7 @@ export interface QuoteItem {
   serviceId?: string;
 }
 
-export const getQuoteStatusLabel = (status: QuoteStatus | string): string => {
+export const getQuoteStatusLabel = (status: QuoteStatus): string => {
   switch (status) {
     case QuoteStatus.DRAFT:
       return "Brouillon";
@@ -55,7 +55,7 @@ export const getQuoteStatusLabel = (status: QuoteStatus | string): string => {
   }
 };
 
-export const getQuoteStatusColor = (status: QuoteStatus | string): string => {
+export const getQuoteStatusColor = (status: QuoteStatus): string => {
   switch (status) {
     case QuoteStatus.ACCEPTED:
       return "green";
