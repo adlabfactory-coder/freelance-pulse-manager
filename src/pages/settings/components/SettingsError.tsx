@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 export interface SettingsErrorProps {
   error: string;
   onRetry?: () => void;
+  details?: string;
 }
 
-const SettingsError: React.FC<SettingsErrorProps> = ({ error, onRetry }) => {
+const SettingsError: React.FC<SettingsErrorProps> = ({ error, onRetry, details }) => {
   return (
     <div className="container py-6">
       <Alert variant="destructive" className="mb-6">
@@ -18,11 +19,16 @@ const SettingsError: React.FC<SettingsErrorProps> = ({ error, onRetry }) => {
         <AlertTitle>Erreur</AlertTitle>
         <AlertDescription className="mt-2">
           {error}
+          {details && (
+            <div className="mt-2 text-sm bg-gray-100 dark:bg-gray-800 p-2 rounded">
+              <pre className="whitespace-pre-wrap">{details}</pre>
+            </div>
+          )}
         </AlertDescription>
       </Alert>
       
       {onRetry && (
-        <Button onClick={onRetry}>
+        <Button onClick={onRetry} className="mt-2">
           Réessayer
         </Button>
       )}

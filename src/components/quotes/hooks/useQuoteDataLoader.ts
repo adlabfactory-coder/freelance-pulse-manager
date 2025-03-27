@@ -14,11 +14,16 @@ export const useQuoteDataLoader = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [freelancers, setFreelancers] = useState<User[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    console.log("useQuoteDataLoader: Chargement des données initié");
     setLoading(true);
+    setError(null);
+    
     try {
       // Fetch contacts
+      console.log("useQuoteDataLoader: Chargement des contacts");
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
@@ -26,11 +31,15 @@ export const useQuoteDataLoader = () => {
       
       if (contactsError) {
         console.error('Error fetching contacts:', contactsError);
+        setError('Erreur lors du chargement des contacts');
+        toast.error("Une erreur est survenue lors du chargement des contacts");
       } else {
+        console.log(`useQuoteDataLoader: ${contactsData?.length || 0} contacts chargés`);
         setContacts(contactsData || []);
       }
       
       // Fetch freelancers
+      console.log("useQuoteDataLoader: Chargement des freelancers");
       const { data: freelancersData, error: freelancersError } = await supabase
         .from('users')
         .select('*')
@@ -38,39 +47,52 @@ export const useQuoteDataLoader = () => {
       
       if (freelancersError) {
         console.error('Error fetching freelancers:', freelancersError);
+        setError('Erreur lors du chargement des freelancers');
+        toast.error("Une erreur est survenue lors du chargement des freelancers");
       } else {
+        console.log(`useQuoteDataLoader: ${freelancersData?.length || 0} freelancers chargés`);
         setFreelancers(freelancersData || []);
       }
       
       // Fetch services with proper type handling
+      console.log("useQuoteDataLoader: Chargement des services");
       try {
         const servicesData = await fetchServices();
+        console.log(`useQuoteDataLoader: ${servicesData?.length || 0} services chargés`);
         setServices(servicesData);
-      } catch (servicesError) {
+      } catch (servicesError: any) {
         console.error('Error fetching services:', servicesError);
+        setError(`Erreur lors du chargement des services: ${servicesError.message || 'Erreur inconnue'}`);
         toast.error("Une erreur est survenue lors du chargement des services");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading data:', error);
+      setError(`Erreur lors du chargement des données: ${error.message || 'Erreur inconnue'}`);
       toast.error("Une erreur est survenue lors du chargement des données");
     } finally {
       setLoading(false);
+      console.log("useQuoteDataLoader: Chargement des données terminé");
     }
   }, []);
 
   const loadQuoteData = useCallback(async (quoteId: string): Promise<Quote | null> => {
+    console.log(`useQuoteDataLoader: Chargement du devis ${quoteId} initié`);
     setLoading(true);
+    setError(null);
+    
     try {
       console.log(`Loading quote data for ID: ${quoteId}`);
       const quoteData = await fetchQuoteById(quoteId);
       console.log('Quote data loaded:', quoteData);
       return quoteData;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading quote data:', error);
+      setError(`Erreur lors du chargement du devis: ${error.message || 'Erreur inconnue'}`);
       toast.error("Une erreur est survenue lors du chargement du devis");
       return null;
     } finally {
       setLoading(false);
+      console.log(`useQuoteDataLoader: Chargement du devis ${quoteId} terminé`);
     }
   }, []);
 
@@ -79,6 +101,7 @@ export const useQuoteDataLoader = () => {
     contacts,
     freelancers,
     services,
+    error,
     loadData,
     loadQuoteData
   };

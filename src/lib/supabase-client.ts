@@ -58,3 +58,6 @@ export const checkSupabaseConnection = async (): Promise<{success: boolean, mess
     };
   }
 };
+
+// Log de démarrage pour aider au débogage
+console.info("Fichier src/lib/supabase-client.ts chargé, client supabase initialisé");

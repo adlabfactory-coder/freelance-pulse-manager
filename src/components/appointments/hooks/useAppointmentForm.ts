@@ -36,34 +36,41 @@ export const useAppointmentForm = (
   const [folder, setFolder] = useState(initialFolder);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultFreelancer, setDefaultFreelancer] = useState<string | null>(null);
+  const [isLoadingFreelancer, setIsLoadingFreelancer] = useState(true);
   
   // Récupérer un freelancer par défaut dès le chargement du formulaire
   useEffect(() => {
     const fetchDefaultFreelancer = async () => {
-      if (user?.role === 'freelancer') {
-        // Si l'utilisateur est un freelancer, utiliser son ID
-        setDefaultFreelancer(user.id);
-        console.log("Utilisateur freelancer trouvé, ID utilisé:", user.id);
-      } else {
-        // Sinon, récupérer un freelancer par défaut
-        try {
-          console.log("Recherche d'un freelancer par défaut...");
+      console.log("useAppointmentForm: Recherche d'un freelancer par défaut");
+      setIsLoadingFreelancer(true);
+      
+      try {
+        if (user?.role === 'freelancer') {
+          // Si l'utilisateur est un freelancer, utiliser son ID
+          setDefaultFreelancer(user.id);
+          console.log("useAppointmentForm: Utilisateur freelancer trouvé, ID utilisé:", user.id);
+        } else {
+          // Sinon, récupérer un freelancer par défaut
+          console.log("useAppointmentForm: Recherche d'un freelancer par défaut dans la base de données");
           const { data, error } = await supabase
             .from('users')
             .select('id')
             .eq('role', 'freelancer')
-            .limit(1)
-            .single();
+            .limit(1);
             
-          if (!error && data) {
-            console.log("Freelancer par défaut trouvé:", data.id);
-            setDefaultFreelancer(data.id);
+          if (!error && data && data.length > 0) {
+            console.log("useAppointmentForm: Freelancer par défaut trouvé:", data[0].id);
+            setDefaultFreelancer(data[0].id);
           } else {
-            console.warn("Aucun freelancer trouvé pour l'assignation par défaut:", error);
+            console.warn("useAppointmentForm: Aucun freelancer trouvé pour l'assignation par défaut:", error);
+            toast.warning("Aucun freelancer disponible. Mode auto-assignation activé.");
           }
-        } catch (error) {
-          console.error("Erreur lors de la récupération d'un freelancer par défaut:", error);
         }
+      } catch (error) {
+        console.error("useAppointmentForm: Erreur lors de la récupération d'un freelancer par défaut:", error);
+        toast.error("Erreur lors de la recherche d'un freelancer disponible.");
+      } finally {
+        setIsLoadingFreelancer(false);
       }
     };
     
@@ -85,7 +92,7 @@ export const useAppointmentForm = (
     
     try {
       setIsSubmitting(true);
-      console.log("Début de la soumission du rendez-vous...");
+      console.log("useAppointmentForm: Début de la soumission du rendez-vous...");
       
       // Utiliser la fonction formatDateForAPI pour obtenir une date ISO valide
       const appointmentDate = formatDateForAPI(date, time);
@@ -111,7 +118,7 @@ export const useAppointmentForm = (
       const isUserFreelancer = user?.role === 'freelancer';
       const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
       
-      console.log("Informations du rendez-vous:", {
+      console.log("useAppointmentForm: Informations du rendez-vous:", {
         title,
         contactId,
         freelancerId,
@@ -121,9 +128,8 @@ export const useAppointmentForm = (
       
       // Vérifier si un freelancer est disponible
       if (!freelancerId && !autoAssign) {
-        toast.error("Aucun freelancer disponible pour l'assignation. Veuillez contacter l'administrateur.");
-        setIsSubmitting(false);
-        return;
+        console.log("useAppointmentForm: Aucun freelancer disponible, passage en mode auto-assignation");
+        toast.info("Aucun freelancer disponible, le rendez-vous sera auto-assigné");
       }
       
       // Créer l'objet de rendez-vous à envoyer
@@ -132,29 +138,31 @@ export const useAppointmentForm = (
         description,
         date: appointmentDate,
         duration,
-        status: autoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
+        status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
         contactId,
         // Assurer que freelancerId est toujours présent, même en mode auto-assigné
-        freelancerId: freelancerId || defaultFreelancer || '',
+        freelancerId: freelancerId || '',
         location: null,
         notes: null,
         folder: folder,
         currentUserId: user?.id // Ajouter l'ID de l'utilisateur actuel comme fallback
       };
       
-      console.log("Soumission des données de rendez-vous:", appointmentData);
+      console.log("useAppointmentForm: Soumission des données de rendez-vous:", appointmentData);
       
       let result;
-      if (autoAssign) {
+      if (!freelancerId || autoAssign) {
         // Créer un rendez-vous auto-assigné
+        console.log("useAppointmentForm: Création d'un rendez-vous auto-assigné");
         result = await createAutoAssignAppointment(appointmentData);
       } else {
         // Créer un rendez-vous standard
+        console.log("useAppointmentForm: Création d'un rendez-vous standard");
         result = await createAppointment(appointmentData);
       }
       
       if (result) {
-        console.log("Rendez-vous créé avec succès:", result);
+        console.log("useAppointmentForm: Rendez-vous créé avec succès:", result);
         // Déclencher l'événement de création de rendez-vous pour rafraîchir les données
         window.dispatchEvent(new CustomEvent('appointment-created'));
         
@@ -164,7 +172,7 @@ export const useAppointmentForm = (
         toast.success("Rendez-vous créé avec succès");
       }
     } catch (error) {
-      console.error("Erreur lors de la création du rendez-vous:", error);
+      console.error("useAppointmentForm: Erreur lors de la création du rendez-vous:", error);
       toast.error("Impossible de créer le rendez-vous. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
@@ -188,6 +196,7 @@ export const useAppointmentForm = (
     setFolder,
     isSubmitting,
     handleSubmit,
-    defaultFreelancer
+    defaultFreelancer,
+    isLoadingFreelancer
   };
 };

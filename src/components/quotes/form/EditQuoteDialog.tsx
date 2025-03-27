@@ -5,6 +5,7 @@ import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
 import QuoteDialogContent from "./QuoteDialogContent";
 import { Quote, QuoteItem } from "@/types";
 import { QuoteStatus } from "@/types/quote";
+import { toast } from "sonner";
 
 interface EditQuoteDialogProps {
   open: boolean;
@@ -42,25 +43,41 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
     handleRemoveItem,
     handleSubmitEdit,
     loadData,
-    loadQuoteData
+    loadQuoteData,
+    error
   } = quoteForm;
 
   useEffect(() => {
     if (open) {
-      console.log("EditQuoteDialog opened, loading data");
-      loadData();
-      if (initialQuote) {
-        console.log('Setting initial quote data:', initialQuote);
-        // Convertir le statut en QuoteStatus pour assurer la compatibilité de type
-        const convertedQuote = {
-          ...initialQuote,
-          status: initialQuote.status as QuoteStatus
-        };
-        setQuoteData(convertedQuote);
-      } else if (quoteId) {
-        console.log('Loading quote data for ID:', quoteId);
-        loadQuoteData(quoteId);
-      }
+      console.log("EditQuoteDialog: Dialog ouvert, chargement des données");
+      
+      // On charge d'abord les données de référence (contacts, freelancers, services)
+      // puis on charge les données du devis spécifique
+      loadData()
+        .then(() => {
+          console.log("EditQuoteDialog: Données de référence chargées");
+          
+          if (initialQuote) {
+            console.log('EditQuoteDialog: Utilisation du devis initial fourni:', initialQuote);
+            // Convertir le statut en QuoteStatus pour assurer la compatibilité de type
+            const convertedQuote = {
+              ...initialQuote,
+              status: initialQuote.status as QuoteStatus
+            };
+            setQuoteData(convertedQuote);
+          } else if (quoteId) {
+            console.log('EditQuoteDialog: Chargement du devis par ID:', quoteId);
+            loadQuoteData(quoteId)
+              .catch(err => {
+                console.error("Erreur lors du chargement du devis:", err);
+                toast.error("Impossible de charger les données du devis");
+              });
+          }
+        })
+        .catch(err => {
+          console.error("Erreur lors du chargement des données de référence:", err);
+          toast.error("Impossible de charger les données de référence");
+        });
     }
   }, [open, quoteId, initialQuote, loadData, loadQuoteData, setQuoteData]);
 
@@ -80,6 +97,21 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
         })
       : []
   };
+
+  if (error) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Erreur</DialogTitle>
+            <DialogDescription>
+              {error}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
