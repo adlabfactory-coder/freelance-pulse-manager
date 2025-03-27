@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Contact } from "@/services/contacts/types";
 import { Service } from "@/types/service";
 import { User } from "@/types";
+import { Quote } from "@/types/quote";
+import { fetchQuoteById } from "@/services/quote-service";
 
 export const useQuoteDataLoader = () => {
   const [loading, setLoading] = useState(true);
@@ -56,11 +58,29 @@ export const useQuoteDataLoader = () => {
     }
   }, []);
 
+  // Add the missing loadQuoteData function to the component hook as well
+  const loadQuoteData = useCallback(async (quoteId: string): Promise<Quote | null> => {
+    setLoading(true);
+    try {
+      console.log(`Loading quote data for ID: ${quoteId}`);
+      const quoteData = await fetchQuoteById(quoteId);
+      console.log('Quote data loaded:', quoteData);
+      return quoteData;
+    } catch (error) {
+      console.error('Error loading quote data:', error);
+      toast.error("Une erreur est survenue lors du chargement du devis");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     contacts,
     freelancers,
     services,
-    loadData
+    loadData,
+    loadQuoteData // Export the loadQuoteData function
   };
 };
