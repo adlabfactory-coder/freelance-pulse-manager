@@ -1,4 +1,3 @@
-
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Appointment, AppointmentStatus } from '@/types/appointment';
 
@@ -22,7 +21,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
-      .eq('freelancerId', freelancerId) // Updated from freelancerid to freelancerId
+      .eq('freelancerId', freelancerId)
       .is('deleted_at', null)
       .order('date', { ascending: true });
 
@@ -187,3 +186,4 @@ export const appointmentsService = {
 
 // Import necessary Supabase client
 import { supabase } from '@/lib/supabase';
+import { Appointment } from '@/types/appointment';

@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Appointment } from "@/types/appointment";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { processNotification } from "@/services/notification-service";
 import { NotificationType } from "@/types/notification-settings";
 
