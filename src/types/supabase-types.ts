@@ -11,6 +11,7 @@ export interface DatabaseConnectionStatus {
 export interface DatabaseSetupStatus {
   success: boolean;
   missingTables?: string[];
+  tables?: string[];
   message?: string;
 }
 

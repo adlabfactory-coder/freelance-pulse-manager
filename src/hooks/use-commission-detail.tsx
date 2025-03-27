@@ -1,142 +1,162 @@
 
-import { useState, useEffect } from "react";
-import { useSupabase } from "@/hooks/use-supabase";
-import { toast } from "@/components/ui/use-toast";
-import { Commission, CommissionStatus, CommissionTier } from "@/types/commissions";
+import { useState, useEffect } from 'react';
+import { toast } from '@/components/ui/use-toast';
+import { useSupabase } from './use-supabase';
 
-// Define an extended type for commission detail which includes additional fields
-export interface CommissionDetail extends Omit<Commission, 'period'> {
-  periodStart: Date;
-  periodEnd: Date;
-  paymentRequested: boolean;
-  createdAt: Date;
-}
-
-export const useCommissionDetail = (commissionId: string | undefined) => {
-  const { supabase } = useSupabase();
-  const [loading, setLoading] = useState(true);
-  const [commission, setCommission] = useState<CommissionDetail | null>(null);
-  const [requestingPayment, setRequestingPayment] = useState(false);
+export function useCommissionDetail(commissionId: string) {
+  const { supabaseClient } = useSupabase();
+  const [commission, setCommission] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (commissionId) {
-      fetchCommissionDetail(commissionId);
-    } else {
-      setLoading(false);
+    async function fetchCommissionDetail() {
+      if (!commissionId) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch the commission details
+        const { data, error } = await supabaseClient
+          .from('commissions')
+          .select(`
+            *,
+            freelancer:freelancerId(id, name, email),
+            quote:quoteId(id, totalAmount, contactId, status),
+            subscription:subscriptionId(id, name, price, interval)
+          `)
+          .eq('id', commissionId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching commission:', error);
+          setError('Impossible de récupérer les détails de la commission');
+          return;
+        }
+
+        if (!data) {
+          setError('Commission non trouvée');
+          return;
+        }
+
+        // Fetch contact details if the commission is linked to a quote
+        if (data.quote && data.quote.contactId) {
+          const { data: contactData, error: contactError } = await supabaseClient
+            .from('contacts')
+            .select('id, name, email, company')
+            .eq('id', data.quote.contactId)
+            .single();
+
+          if (!contactError && contactData) {
+            data.contact = contactData;
+          }
+        }
+
+        setCommission(data);
+      } catch (err) {
+        console.error('Error in commission detail fetch:', err);
+        setError('Une erreur est survenue lors de la récupération des détails');
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [commissionId, supabase]);
 
-  const fetchCommissionDetail = async (id: string) => {
+    fetchCommissionDetail();
+  }, [commissionId, supabaseClient]);
+
+  // Function to mark commission as paid
+  const markAsPaid = async () => {
+    if (!commission) return;
+
     try {
-      setLoading(true);
+      const { error } = await supabaseClient
+        .from('commissions')
+        .update({ 
+          status: 'paid',
+          paidDate: new Date().toISOString()
+        })
+        .eq('id', commissionId);
 
-      // Fetch the commission
-      const { data: commissionData, error: commissionError } = await supabase
-        .from("commissions")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (commissionError) {
-        throw commissionError;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de marquer la commission comme payée"
+        });
+        return false;
       }
 
-      // Fetch the freelancer
-      const { data: freelancer, error: freelancerError } = await supabase
-        .from("users")
-        .select("name")
-        .eq("id", commissionData.freelancerId)
-        .single();
+      // Update local state
+      setCommission({
+        ...commission,
+        status: 'paid',
+        paidDate: new Date().toISOString()
+      });
 
-      if (freelancerError) {
-        console.error("Error fetching freelancer:", freelancerError);
-      }
-
-      // Map the data
-      let tierEnum: CommissionTier;
-      
-      switch(commissionData.tier) {
-        case 'bronze':
-          tierEnum = CommissionTier.TIER_1;
-          break;
-        case 'silver':
-          tierEnum = CommissionTier.TIER_2;
-          break;
-        case 'gold':
-          tierEnum = CommissionTier.TIER_3;
-          break;
-        case 'platinum':
-          tierEnum = CommissionTier.TIER_4;
-          break;
-        default:
-          tierEnum = CommissionTier.TIER_1;
-      }
-
-      const mappedCommission: CommissionDetail = {
-        id: commissionData.id,
-        freelancerId: commissionData.freelancerId,
-        freelancerName: freelancer?.name || "Freelancer inconnu",
-        amount: commissionData.amount,
-        tier: tierEnum,
-        periodStart: new Date(commissionData.periodStart),
-        periodEnd: new Date(commissionData.periodEnd),
-        status: commissionData.status as CommissionStatus,
-        paidDate: commissionData.paidDate ? new Date(commissionData.paidDate) : undefined,
-        paymentRequested: commissionData.payment_requested || false,
-        createdAt: new Date(commissionData.createdAt || Date.now()),
-      };
-
-      setCommission(mappedCommission);
-    } catch (error) {
-      console.error("Error fetching commission detail:", error);
+      toast({
+        title: "Commission payée",
+        description: "La commission a été marquée comme payée avec succès"
+      });
+      return true;
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de récupérer les détails de la commission.",
+        description: "Une erreur est survenue lors du paiement de la commission"
       });
-    } finally {
-      setLoading(false);
+      return false;
     }
   };
 
+  // Function to request payment
   const requestPayment = async () => {
-    if (!commissionId) return;
-    
-    setRequestingPayment(true);
+    if (!commission) return;
+
     try {
-      const { error } = await supabase
-        .from("commissions")
+      const { error } = await supabaseClient
+        .from('commissions')
         .update({ payment_requested: true })
-        .eq("id", commissionId);
+        .eq('id', commissionId);
 
       if (error) {
-        throw error;
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de demander le paiement"
+        });
+        return false;
       }
 
-      // Update UI
-      setCommission(prev => prev ? { ...prev, paymentRequested: true } : null);
-      
+      // Update local state
+      setCommission({
+        ...commission,
+        payment_requested: true
+      });
+
       toast({
         title: "Demande envoyée",
-        description: "Votre demande de versement a été envoyée avec succès.",
+        description: "La demande de paiement a été enregistrée avec succès"
       });
-    } catch (error) {
+      return true;
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de l'envoi de votre demande.",
+        description: "Une erreur est survenue lors de la demande de paiement"
       });
-    } finally {
-      setRequestingPayment(false);
+      return false;
     }
   };
 
   return {
     commission,
-    loading,
-    requestingPayment,
-    requestPayment,
+    isLoading,
+    error,
+    markAsPaid,
+    requestPayment
   };
-};
-
-export type { Commission };
+}

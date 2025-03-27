@@ -76,8 +76,8 @@ export function useDatabaseStatus() {
     try {
       const connectionStatus = await checkSupabaseConnection();
       
-      if (!connectionStatus.success) {
-        setConnectionError(connectionStatus.message);
+      if (!connectionStatus) {
+        setConnectionError("Impossible de se connecter à Supabase");
         setStatus("connection_error");
         setTablesStatus([]);
         setRefreshing(false);

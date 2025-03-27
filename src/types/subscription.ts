@@ -44,3 +44,6 @@ export interface Subscription {
   clientName?: string;
   freelancerName?: string;
 }
+
+// Export the enums so they're available for imports
+export { SubscriptionInterval, SubscriptionStatus };

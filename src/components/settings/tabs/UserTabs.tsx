@@ -81,6 +81,10 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
     setIsSubmitting(true);
     try {
       // Try to update user data through Supabase
+      if (!user.id) {
+        throw new Error("User ID is missing");
+      }
+      
       const result = await supabase.updateUser({
         id: user.id,
         name,
@@ -88,7 +92,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
         role: userRole
       });
       
-      if (result.success) {
+      if (result) {
         toast({
           title: "Profil mis à jour",
           description: "Les informations ont été enregistrées avec succès.",

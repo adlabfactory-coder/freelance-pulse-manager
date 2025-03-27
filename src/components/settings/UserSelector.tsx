@@ -1,89 +1,88 @@
 
 import React, { useState, useEffect } from "react";
-import { useSupabase } from "@/hooks/use-supabase";
-import { User, UserRole } from "@/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { useSupabase } from "@/hooks/use-supabase";
+import { User } from "@/types/user";
 
 interface UserSelectorProps {
-  currentUser: string;
-  selectedUserId: string;
-  onSelectUser: (userId: string) => void;
+  onUserSelect: (userId: string) => void;
+  preselectedUserId?: string;
+  label?: string;
+  placeholder?: string;
+  disabled?: boolean;
 }
 
-const UserSelector: React.FC<UserSelectorProps> = ({ currentUser, selectedUserId, onSelectUser }) => {
-  const supabase = useSupabase();
+const UserSelector: React.FC<UserSelectorProps> = ({
+  onUserSelect,
+  preselectedUserId,
+  label = "Utilisateur",
+  placeholder = "Sélectionner un utilisateur",
+  disabled = false,
+}) => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUserData, setCurrentUserData] = useState<User | null>(null);
+  const supabase = useSupabase();
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const loadUsers = async () => {
       setIsLoading(true);
       try {
-        const usersData = await supabase.fetchUsers();
-        setUsers(usersData);
-        
-        // Également récupérer les données de l'utilisateur actuel
-        const userData = await supabase.fetchUserById(currentUser);
-        if (userData) {
-          setCurrentUserData(userData);
-        }
+        const usersList = await supabase.fetchUsers();
+        setUsers(usersList);
       } catch (error) {
-        console.error("Erreur lors de la récupération des utilisateurs:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de récupérer la liste des utilisateurs.",
-        });
+        console.error("Erreur lors du chargement des utilisateurs:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUsers();
-  }, [supabase, currentUser]);
+    loadUsers();
+  }, [supabase]);
 
-  const handleUserChange = (userId: string) => {
-    onSelectUser(userId);
+  // If a preselected user is provided but not in the list, fetch it
+  useEffect(() => {
+    const fetchPreselectedUser = async () => {
+      if (preselectedUserId && !users.some(u => u.id === preselectedUserId)) {
+        try {
+          const user = await supabase.fetchUserById(preselectedUserId);
+          if (user) {
+            setUsers(prev => [...prev, user]);
+          }
+        } catch (error) {
+          console.error("Erreur lors du chargement de l'utilisateur présélectionné:", error);
+        }
+      }
+    };
+
+    if (preselectedUserId && users.length > 0) {
+      fetchPreselectedUser();
+    }
+  }, [preselectedUserId, users, supabase]);
+
+  const handleChange = (value: string) => {
+    onUserSelect(value);
   };
 
-  const isAdmin = currentUserData?.role === UserRole.ADMIN;
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Utilisateurs</CardTitle>
-        <CardDescription>
-          {isAdmin 
-            ? "Sélectionnez un utilisateur pour voir ou modifier son profil" 
-            : "Gérer votre profil utilisateur"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isAdmin ? (
-          <Select 
-            value={selectedUserId} 
-            onValueChange={handleUserChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez un utilisateur" />
-            </SelectTrigger>
-            <SelectContent>
-              {users.map(user => (
-                <SelectItem key={user.id} value={user.id}>
-                  {user.name} ({user.role === UserRole.ADMIN ? "Admin" : user.role === UserRole.FREELANCER ? "Commercial" : "Client"})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <p>Vous visualisez votre profil personnel</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-2">
+      {label && <label className="text-sm font-medium leading-none">{label}</label>}
+      <Select
+        disabled={disabled || isLoading}
+        value={preselectedUserId}
+        onValueChange={handleChange}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder={isLoading ? "Chargement..." : placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {users.map((user) => (
+            <SelectItem key={user.id} value={user.id}>
+              {user.name} ({user.email})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 

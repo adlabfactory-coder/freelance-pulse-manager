@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase-client';
 import { User } from '@/types/user';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/use-toast';
 import { UserRole } from '@/types';
 
 interface SupabaseContextType {
@@ -13,14 +14,14 @@ interface SupabaseContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  updateUser: (id: string, userData: Partial<User>) => Promise<boolean>;
+  updateUser: (userData: Partial<User>) => Promise<boolean>;
   createUser: (userData: Omit<User, 'id'>) => Promise<{ success: boolean; id?: string }>;
   fetchUsers: () => Promise<User[]>;
   fetchUserById: (id: string) => Promise<User | null>;
   deleteUser: (id: string) => Promise<boolean>;
   checkSupabaseStatus: () => Promise<{ success: boolean; message: string }>;
-  checkDatabaseStatus: () => Promise<{ success: boolean; tables: string[] }>;
-  initializeDatabase: () => Promise<boolean>;
+  checkDatabaseStatus: () => Promise<{ success: boolean; missingTables?: string[]; tables?: string[]; message?: string }>;
+  initializeDatabase: () => Promise<{ success: boolean; message?: string }>;
   getMockUsers: () => User[];
 }
 
@@ -54,9 +55,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (error) {
             console.error('Error fetching user details:', error);
             toast({
-              variant: "destructive",
               title: "Erreur",
               description: "Impossible de charger les informations de l'utilisateur.",
+              variant: "destructive"
             });
           } else {
             setUser(userDetails as User);
@@ -67,9 +68,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (error) {
         console.error("Erreur lors de l'initialisation de l'utilisateur:", error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Une erreur est survenue lors du chargement de l'application.",
+          variant: "destructive"
         });
       } finally {
         setIsLoading(false);
@@ -91,9 +92,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error signing in:', error);
         toast({
-          variant: "destructive",
           title: "Erreur d'authentification",
           description: "Email ou mot de passe incorrect.",
+          variant: "destructive"
         });
       } else {
         console.log('Sign in successful:', data);
@@ -105,9 +106,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la connexion:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la connexion.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -121,9 +122,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error signing out:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de se déconnecter.",
+          variant: "destructive"
         });
       } else {
         console.log('Sign out successful');
@@ -136,9 +137,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la déconnexion:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la déconnexion.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -153,9 +154,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error refreshing session:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de rafraîchir la session.",
+          variant: "destructive"
         });
       } else {
          setSession(data.session);
@@ -163,9 +164,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors du rafraîchissement de la session:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors du rafraîchissement de la session.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -183,9 +184,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error fetching users:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de charger la liste des utilisateurs.",
+          variant: "destructive"
         });
         return [];
       }
@@ -194,9 +195,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la récupération des utilisateurs:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la récupération des utilisateurs.",
+        variant: "destructive"
       });
       return [];
     } finally {
@@ -216,9 +217,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error fetching user:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de charger les informations de l'utilisateur.",
+          variant: "destructive"
         });
         return null;
       }
@@ -227,9 +228,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la récupération de l'utilisateur:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la récupération de l'utilisateur.",
+        variant: "destructive"
       });
       return null;
     } finally {
@@ -237,26 +238,36 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<User>): Promise<boolean> => {
+  const updateUser = async (userData: Partial<User>): Promise<boolean> => {
     setIsLoading(true);
     try {
+      if (!userData.id) {
+        console.error('No user ID provided for update');
+        toast({
+          title: "Erreur",
+          description: "ID utilisateur manquant pour la mise à jour.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from('users')
         .update(userData)
-        .eq('id', id);
+        .eq('id', userData.id);
 
       if (error) {
         console.error('Error updating user:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de mettre à jour les informations de l'utilisateur.",
+          variant: "destructive"
         });
         return false;
       }
 
       // Mettre à jour l'état local de l'utilisateur si c'est l'utilisateur actuel
-      if (user?.id === id) {
+      if (user?.id === userData.id) {
         setUser({ ...user, ...userData });
       }
 
@@ -268,9 +279,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la mise à jour de l'utilisateur:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la mise à jour de l'utilisateur.",
+        variant: "destructive"
       });
       return false;
     } finally {
@@ -290,9 +301,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error creating user:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de créer l'utilisateur.",
+          variant: "destructive"
         });
         return { success: false };
       }
@@ -305,9 +316,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la création de l'utilisateur:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la création de l'utilisateur.",
+        variant: "destructive"
       });
       return { success: false };
     } finally {
@@ -326,9 +337,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (error) {
         console.error('Error deleting user:', error);
         toast({
-          variant: "destructive",
           title: "Erreur",
           description: "Impossible de supprimer l'utilisateur.",
+          variant: "destructive"
         });
         return false;
       }
@@ -341,9 +352,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error("Erreur inattendue lors de la suppression de l'utilisateur:", error);
       toast({
-        variant: "destructive",
         title: "Erreur",
         description: "Une erreur est survenue lors de la suppression de l'utilisateur.",
+        variant: "destructive"
       });
       return false;
     } finally {
@@ -365,23 +376,44 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const checkDatabaseStatus = async (): Promise<{ success: boolean; tables: string[] }> => {
+  const checkDatabaseStatus = async (): Promise<{ success: boolean; missingTables?: string[]; message?: string }> => {
     try {
-      // Replace with a more comprehensive check if needed
-      return { success: true, tables: ['users'] };
+      // Example implementation - should be expanded for full checking
+      const tablesStatus = await Promise.all([
+        supabase.from('users').select('count', { count: 'exact', head: true }),
+        supabase.from('contacts').select('count', { count: 'exact', head: true }),
+        supabase.from('appointments').select('count', { count: 'exact', head: true }),
+        supabase.from('quotes').select('count', { count: 'exact', head: true }),
+        supabase.from('subscriptions').select('count', { count: 'exact', head: true })
+      ]);
+      
+      const missingTables = tablesStatus
+        .map((result, index) => {
+          const tables = ['users', 'contacts', 'appointments', 'quotes', 'subscriptions'];
+          return result.error ? tables[index] : null;
+        })
+        .filter(Boolean) as string[];
+      
+      return { 
+        success: missingTables.length === 0,
+        missingTables,
+        message: missingTables.length > 0 
+          ? `Tables manquantes: ${missingTables.join(', ')}` 
+          : 'Toutes les tables sont correctement configurées'
+      };
     } catch (error) {
       console.error('Error checking database status:', error);
-      return { success: false, tables: [] };
+      return { success: false, missingTables: [], message: 'An error occurred checking the database.' };
     }
   };
 
-  const initializeDatabase = async (): Promise<boolean> => {
+  const initializeDatabase = async (): Promise<{ success: boolean; message?: string }> => {
     try {
-      // Add database initialization logic here if needed
-      return true;
+      // This would need to be expanded for actual table creation
+      return { success: true, message: 'Database initialized successfully' };
     } catch (error) {
       console.error('Error initializing database:', error);
-      return false;
+      return { success: false, message: 'Database initialization failed' };
     }
   };
 

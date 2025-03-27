@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,17 +45,15 @@ const InitializeDatabase: React.FC = () => {
       if (dbStatus.success) {
         updateStatus("Toutes les tables existent déjà", 30);
       } else {
-        if (dbStatus.missingTables && dbStatus.missingTables.length > 0) {
-          updateStatus(`Tables manquantes: ${dbStatus.missingTables.join(', ')}`, 10);
+        const missingTablesList = dbStatus.missingTables || dbStatus.tables || [];
+        
+        if (missingTablesList && missingTablesList.length > 0) {
+          updateStatus(`Tables manquantes: ${missingTablesList.join(', ')}`, 10);
         }
         
         // Création des tables manquantes
         updateStatus("Création des tables manquantes...", 10);
-        const setupResult = await supabase.initializeDatabase({
-          onTableCreated: (tableName) => {
-            updateStatus(`Table '${tableName}' créée avec succès`, 5);
-          }
-        });
+        const setupResult = await supabase.initializeDatabase();
         
         if (!setupResult.success) {
           throw new Error(`Erreur lors de la création des tables: ${setupResult.message}`);

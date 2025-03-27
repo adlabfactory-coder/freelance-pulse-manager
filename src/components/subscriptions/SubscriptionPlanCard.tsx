@@ -1,80 +1,76 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { SubscriptionPlan } from "@/types";
-import { formatCurrency } from "@/utils/format";
-import { Check } from "lucide-react";
-import SubscriptionToQuoteDialog from "./SubscriptionToQuoteDialog";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
+import { SubscriptionPlan } from '@/types/subscription';
+import { formatCurrency } from '@/utils/format';
+import { SubscriptionIntervalLabel } from './SubscriptionIntervalLabel';
 
 interface SubscriptionPlanCardProps {
   plan: SubscriptionPlan;
-  onSelectPlan: (plan: SubscriptionPlan) => void;
-  popular?: boolean;
+  onSelect: () => void;
+  isPopular?: boolean;
 }
 
 const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
   plan,
-  onSelectPlan,
-  popular = false
+  onSelect,
+  isPopular = false,
 }) => {
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const handleCreateQuote = () => {
-    setDialogOpen(true);
+  // Helper function to get features array regardless of structure
+  const getFeatures = (): string[] => {
+    if (!plan.features) return [];
+    
+    if (Array.isArray(plan.features)) {
+      return plan.features;
+    }
+    
+    // Handle object with features property
+    if (typeof plan.features === 'object' && 'features' in plan.features) {
+      return plan.features.features;
+    }
+    
+    return [];
   };
 
-  const features = plan.features?.features || [];
-
   return (
-    <>
-      <Card className={`w-full ${popular ? 'border-primary' : ''}`}>
-        <CardHeader>
-          {popular && (
-            <Badge className="w-fit mb-2">Populaire</Badge>
-          )}
-          <CardTitle className="text-xl">{plan.name}</CardTitle>
-          <CardDescription>{plan.description}</CardDescription>
-          <div className="mt-2">
-            <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
-            <span className="text-muted-foreground">/{plan.interval}</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {features.map((feature, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-        <CardFooter className="flex gap-2">
-          <Button 
-            variant="default" 
-            className="w-full" 
-            onClick={() => onSelectPlan(plan)}
-          >
-            Sélectionner
-          </Button>
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={handleCreateQuote}
-          >
-            Créer un devis
-          </Button>
-        </CardFooter>
-      </Card>
-
-      <SubscriptionToQuoteDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        plan={plan} 
-      />
-    </>
+    <Card
+      className={`flex flex-col ${
+        isPopular ? 'border-primary shadow-lg' : ''
+      }`}
+    >
+      {isPopular && (
+        <div className="bg-primary text-primary-foreground text-center py-1 text-sm font-medium rounded-t-lg">
+          Option recommandée
+        </div>
+      )}
+      <CardHeader>
+        <CardTitle className="text-xl">{plan.name}</CardTitle>
+        <CardDescription>{plan.description}</CardDescription>
+        <div className="mt-2">
+          <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
+          <span className="text-muted-foreground ml-1">
+            / <SubscriptionIntervalLabel interval={plan.interval} />
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-grow">
+        <ul className="space-y-2">
+          {getFeatures().map((feature, index) => (
+            <li key={index} className="flex items-center gap-2">
+              <Check className="text-green-500 h-5 w-5 flex-shrink-0" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+      <CardFooter>
+        <Button className="w-full" onClick={onSelect}>
+          Sélectionner
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
