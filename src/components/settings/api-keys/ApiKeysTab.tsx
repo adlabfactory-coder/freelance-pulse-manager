@@ -23,6 +23,7 @@ const ApiKeysTab: React.FC = () => {
     if (user && hasApiKeyAccess) {
       setLoading(true);
       try {
+        console.log("Chargement des clés API pour l'utilisateur:", user.id);
         const keys = await fetchApiKeysByUserId(user.id);
         setApiKeys(keys);
       } catch (error) {
@@ -40,11 +41,13 @@ const ApiKeysTab: React.FC = () => {
   }, [user, hasApiKeyAccess]);
 
   const handleApiKeyCreated = () => {
+    console.log("Clé API créée, rechargement de la liste");
     loadApiKeys();
     setDialogOpen(false);
   };
 
   const handleApiKeyDeleted = () => {
+    console.log("Clé API supprimée, rechargement de la liste");
     loadApiKeys();
   };
 
@@ -69,7 +72,10 @@ const ApiKeysTab: React.FC = () => {
             Gérez vos clés API pour accéder aux services de l'application.
           </CardDescription>
         </div>
-        <Button variant="default" size="sm" onClick={() => setDialogOpen(true)}>
+        <Button variant="default" size="sm" onClick={() => {
+          console.log("Ouverture du dialogue de création de clé API");
+          setDialogOpen(true);
+        }}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Créer une clé API
         </Button>
@@ -77,6 +83,7 @@ const ApiKeysTab: React.FC = () => {
       <CardContent>
         <ApiKeysList 
           apiKeys={apiKeys} 
+          loading={loading}
           onShowKey={(id) => console.log("Afficher la clé:", id)} 
           onCopyKey={(key) => {
             navigator.clipboard.writeText(key);

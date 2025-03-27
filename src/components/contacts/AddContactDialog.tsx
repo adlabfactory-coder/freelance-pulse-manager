@@ -13,6 +13,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) =
   const [open, setOpen] = useState(false);
   
   const handleSuccess = () => {
+    console.log("Contact ajouté avec succès");
     if (onContactAdded) {
       onContactAdded();
     }
@@ -23,7 +24,10 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) =
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" onClick={() => {
+          console.log("Bouton de nouveau contact cliqué");
+          setOpen(true);
+        }}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Nouveau contact
         </Button>
@@ -31,7 +35,13 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) =
       <DialogContent className="sm:max-w-[600px]">
         <div className="space-y-4">
           <div className="text-xl font-semibold">Ajouter un contact</div>
-          <AddContactForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
+          <AddContactForm 
+            onSuccess={handleSuccess} 
+            onCancel={() => {
+              console.log("Annulation de l'ajout de contact");
+              setOpen(false);
+            }} 
+          />
         </div>
       </DialogContent>
     </Dialog>

@@ -10,10 +10,10 @@ export const useUserOperations = () => {
   const fetchUsers = async (): Promise<User[]> => {
     setIsLoading(true);
     try {
+      // Modifié pour ne pas utiliser created_at qui n'existe pas dans la table users
       const { data, error } = await supabase
         .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (error) {
         console.error('Error fetching users:', error);

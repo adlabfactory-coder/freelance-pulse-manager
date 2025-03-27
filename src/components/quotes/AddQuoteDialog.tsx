@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
-import { QuoteItem } from "@/types/quote";
+import { Quote, QuoteItem } from "@/types/quote";
 
 interface AddQuoteDialogProps {
   open: boolean;
@@ -78,6 +78,18 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
       })
     : [];
 
+  // Préparer les données du devis pour submission
+  const quoteData: Omit<Quote, "id" | "createdAt" | "updatedAt"> = {
+    contactId: quoteForm.contactId,
+    freelancerId: quoteForm.freelancerId,
+    validUntil: quoteForm.validUntil,
+    status: quoteForm.status,
+    notes: quoteForm.notes,
+    folder: quoteForm.folder,
+    totalAmount: quoteForm.totalAmount || 0,
+    items: [] // Initialiser sans les items qui sont passés séparément
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -123,7 +135,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
             onCurrentItemChange={quoteForm.setCurrentItem}
             onAddItem={quoteForm.handleAddItem}
             onRemoveItem={quoteForm.handleRemoveItem}
-            onSubmit={() => quoteForm.handleSubmit(quoteForm.quoteData, safeItems)}
+            onSubmit={() => quoteForm.handleSubmit(quoteData, safeItems)}
             onCancel={() => onOpenChange(false)}
           />
         )}

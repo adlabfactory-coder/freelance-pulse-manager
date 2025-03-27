@@ -2,131 +2,101 @@
 import React from "react";
 import { ApiKey } from "@/types/api-keys";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Copy, Trash2, Clock } from "lucide-react";
+import { Copy, Eye, Trash2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/utils/format";
 
 interface ApiKeysListProps {
   apiKeys: ApiKey[];
+  loading?: boolean;
   onShowKey: (id: string) => void;
-  onCopyKey: (apiKey: string) => void;
-  onDeleteKey: (id: string) => void;
+  onCopyKey: (key: string) => void;
+  onDeleteKey: () => void;
 }
 
 const ApiKeysList: React.FC<ApiKeysListProps> = ({
   apiKeys,
+  loading = false,
   onShowKey,
   onCopyKey,
   onDeleteKey
 }) => {
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
+  if (apiKeys.length === 0) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-muted-foreground">
+          Vous n'avez pas encore de clés API. Créez-en une pour commencer.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nom</TableHead>
-            <TableHead>Clé API</TableHead>
-            <TableHead>Date de création</TableHead>
-            <TableHead>Expiration</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Nom</TableHead>
+          <TableHead>Créée le</TableHead>
+          <TableHead>Expire le</TableHead>
+          <TableHead>Dernière utilisation</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {apiKeys.map((apiKey) => (
+          <TableRow key={apiKey.id}>
+            <TableCell className="font-medium">{apiKey.key_name}</TableCell>
+            <TableCell>{formatDate(apiKey.created_at)}</TableCell>
+            <TableCell>
+              {apiKey.expires_at ? formatDate(apiKey.expires_at) : "Jamais"}
+            </TableCell>
+            <TableCell>
+              {apiKey.last_used ? formatDate(apiKey.last_used) : "Jamais utilisée"}
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onShowKey(apiKey.id)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onCopyKey(apiKey.api_key)}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette clé API?")) {
+                      onDeleteKey();
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {apiKeys.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center py-6">
-                Aucune clé API trouvée. Créez votre première clé API.
-              </TableCell>
-            </TableRow>
-          ) : (
-            apiKeys.map((apiKey) => (
-              <TableRow key={apiKey.id}>
-                <TableCell className="font-medium">{apiKey.keyName}</TableCell>
-                <TableCell>
-                  {apiKey.apiKey.startsWith("adlabhub_") 
-                    ? (
-                      <div className="flex items-center">
-                        <span className="text-xs font-mono">
-                          {apiKey.apiKey.substring(0, 12)}...
-                        </span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={() => onShowKey(apiKey.id)}
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ) 
-                    : (
-                      <div className="flex items-center">
-                        <span className="text-xs font-mono">{apiKey.apiKey}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-6 w-6" 
-                          onClick={() => onShowKey(apiKey.id)}
-                        >
-                          <EyeOff className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    )
-                  }
-                </TableCell>
-                <TableCell>{formatDate(apiKey.createdAt)}</TableCell>
-                <TableCell>
-                  {apiKey.expiresAt 
-                    ? (
-                      <div className="flex items-center">
-                        <Clock className="h-3.5 w-3.5 mr-1 text-yellow-500" />
-                        {formatDate(apiKey.expiresAt)}
-                      </div>
-                    ) 
-                    : "N/A"
-                  }
-                </TableCell>
-                <TableCell>
-                  {apiKey.isActive 
-                    ? <Badge className="bg-green-500">Active</Badge>
-                    : <Badge variant="destructive">Inactive</Badge>
-                  }
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-1">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7"
-                      onClick={() => onCopyKey(apiKey.apiKey)}
-                    >
-                      <Copy className="h-3.5 w-3.5 mr-1" /> Copier
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="h-7"
-                      onClick={() => onDeleteKey(apiKey.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 };
 
