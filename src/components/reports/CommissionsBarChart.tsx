@@ -1,10 +1,10 @@
 
 import React from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Commission } from "@/types/commissions";
+import { CommissionWithDetails } from "@/types/commissions";
 
 interface CommissionsBarChartProps {
-  commissions: Commission[];
+  commissions: CommissionWithDetails[];
 }
 
 const CommissionsBarChart: React.FC<CommissionsBarChartProps> = ({ commissions }) => {

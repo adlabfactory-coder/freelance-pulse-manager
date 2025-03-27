@@ -28,6 +28,8 @@ export interface Commission {
   contracts_count?: number;
   createdAt?: Date;
   deleted_at?: Date | null;
+  freelancerName?: string; // Added this property
+  period?: string; // Added this property for display format
 }
 
 export interface CommissionRule {
@@ -41,9 +43,7 @@ export interface CommissionRule {
 
 // Type for commissions with details
 export interface CommissionWithDetails extends Commission {
-  freelancerName?: string;
   freelancerEmail?: string;
-  period?: string; // Format: "MM/YYYY" for display
   // Add subscription details for FreelancerCommissionsList
   subscriptionDetails?: {
     name?: string;

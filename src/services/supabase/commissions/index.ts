@@ -5,7 +5,9 @@ import { fetchCommissions } from './fetch-commissions';
 import { fetchCommissionRules } from './fetch-rules';
 import { requestPayment, approvePayment } from './payment-operations';
 import { generateMonthlyCommissions } from './generate-commissions';
-import { CommissionServiceOptions } from './utils';
+
+// Import from utils separately to avoid re-export conflicts
+import { CommissionServiceOptions } from './types';
 
 export const createCommissionsService = (supabase: SupabaseClient<Database>) => {
   return {
@@ -32,4 +34,3 @@ export * from './fetch-commissions';
 export * from './fetch-rules';
 export * from './payment-operations';
 export * from './generate-commissions';
-// Ne pas réexporter types.ts pour éviter l'ambiguïté

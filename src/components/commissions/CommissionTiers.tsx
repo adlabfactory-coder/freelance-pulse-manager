@@ -2,26 +2,26 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CommissionRule, CommissionTier, CommissionTierEnum } from "@/types/commissions";
+import { CommissionRule, CommissionTier, CommissionTierValues } from "@/types/commissions";
 
 interface CommissionTiersProps {
   commissionRules: CommissionRule[];
   formatCurrency: (amount: number) => string;
-  getTierLabel: (tier: CommissionTier) => string;
+  getTierLabel: (tier: string) => string;
 }
 
 // Fonction utilitaire pour obtenir la classe CSS en fonction du niveau
-const getTierBadgeClass = (tier: CommissionTier): string => {
+const getTierBadgeClass = (tier: string): string => {
   switch (tier) {
-    case CommissionTierEnum.BRONZE:
+    case CommissionTierValues.BRONZE:
       return "bg-amber-800 hover:bg-amber-700";
-    case CommissionTierEnum.SILVER:
+    case CommissionTierValues.SILVER:
       return "bg-gray-400 hover:bg-gray-300";
-    case CommissionTierEnum.GOLD:
+    case CommissionTierValues.GOLD:
       return "bg-amber-400 hover:bg-amber-300";
-    case CommissionTierEnum.PLATINUM:
+    case CommissionTierValues.PLATINUM:
       return "bg-cyan-600 hover:bg-cyan-500";
-    case CommissionTierEnum.DIAMOND:
+    case CommissionTierValues.DIAMOND:
       return "bg-purple-600 hover:bg-purple-500";
     default:
       return "bg-gray-600 hover:bg-gray-500";
@@ -43,7 +43,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
       return [
         {
           id: "1",
-          tier: CommissionTierEnum.BRONZE,
+          tier: CommissionTierValues.BRONZE,
           percentage: 2,
           unit_amount: 0,
           minContracts: 1,
@@ -51,7 +51,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         },
         {
           id: "2",
-          tier: CommissionTierEnum.SILVER,
+          tier: CommissionTierValues.SILVER,
           percentage: 3,
           unit_amount: 0,
           minContracts: 6,
@@ -59,7 +59,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         },
         {
           id: "3",
-          tier: CommissionTierEnum.GOLD,
+          tier: CommissionTierValues.GOLD,
           percentage: 5,
           unit_amount: 100,
           minContracts: 11,
@@ -67,7 +67,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         },
         {
           id: "4",
-          tier: CommissionTierEnum.PLATINUM,
+          tier: CommissionTierValues.PLATINUM,
           percentage: 7,
           unit_amount: 250,
           minContracts: 21,
@@ -75,7 +75,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
         },
         {
           id: "5",
-          tier: CommissionTierEnum.DIAMOND,
+          tier: CommissionTierValues.DIAMOND,
           percentage: 10,
           unit_amount: 500,
           minContracts: 31,

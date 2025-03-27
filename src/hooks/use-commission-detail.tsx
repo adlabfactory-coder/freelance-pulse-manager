@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSupabase } from './use-supabase';
-import { CommissionTier, CommissionStatus } from '@/types/commissions';
+import { CommissionTier, CommissionStatus, CommissionTierValues } from '@/types/commissions';
 
 // Define the CommissionDetail interface
 export interface CommissionDetail {
@@ -9,12 +10,13 @@ export interface CommissionDetail {
   freelancerId: string;
   freelancerName: string;
   amount: number;
-  tier: CommissionTier; // Changed from string to CommissionTier
+  tier: CommissionTier; 
   periodStart: Date;
   periodEnd: Date;
-  status: CommissionStatus; // Changed from string to CommissionStatus
+  status: CommissionStatus; 
   paidDate?: Date;
   paymentRequested: boolean;
+  payment_requested: boolean; // Added for compatibility with Commission interface
   contact?: {
     id: string;
     name: string;
@@ -98,7 +100,9 @@ export function useCommissionDetail(commissionId: string | undefined) {
           periodEnd: new Date(data.periodEnd),
           createdAt: new Date(data.createdAt),
           paidDate: data.paidDate ? new Date(data.paidDate) : undefined,
-          freelancerName: data.freelancer?.name || "Non assigné"
+          freelancerName: data.freelancer?.name || "Non assigné",
+          paymentRequested: !!data.payment_requested,
+          payment_requested: !!data.payment_requested // Keep both for compatibility
         };
 
         setCommission(processedData);
@@ -117,16 +121,16 @@ export function useCommissionDetail(commissionId: string | undefined) {
   const mapTierStringToEnum = (tierString: string): CommissionTier => {
     switch (tierString.toLowerCase()) {
       case 'bronze':
-        return CommissionTier.TIER_1;
+        return CommissionTierValues.BRONZE;
       case 'silver':
-        return CommissionTier.TIER_2;
+        return CommissionTierValues.SILVER;
       case 'gold':
-        return CommissionTier.TIER_3;
+        return CommissionTierValues.GOLD;
       case 'platinum':
-        return CommissionTier.TIER_4;
+        return CommissionTierValues.PLATINUM;
       default:
-        console.warn(`Unknown tier value: ${tierString}, defaulting to TIER_1`);
-        return CommissionTier.TIER_1;
+        console.warn(`Unknown tier value: ${tierString}, defaulting to BRONZE`);
+        return CommissionTierValues.BRONZE;
     }
   };
 
@@ -136,9 +140,11 @@ export function useCommissionDetail(commissionId: string | undefined) {
       case 'paid':
         return 'paid';
       case 'rejected':
-        return 'rejected';
+        return 'rejected' as CommissionStatus;
       case 'processing':
         return 'processing';
+      case 'cancelled':
+        return 'cancelled';
       case 'pending':
       default:
         return 'pending';

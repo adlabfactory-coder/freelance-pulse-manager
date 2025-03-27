@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { CommissionRule, CommissionTier } from "@/types/commissions";
+import { CommissionRule, CommissionTier, CommissionTierValues } from "@/types/commissions";
 import { toast } from "@/components/ui/use-toast";
-import { mapTierFromDb } from "@/services/supabase/commissions/utils";
 
 interface CommissionRulesState {
   commissionRules: CommissionRule[];
@@ -71,10 +70,10 @@ export const useCommissionRules = () => {
         
         // Vérifier si tous les paliers sont présents
         const tiers = [
-          CommissionTier.TIER_1, 
-          CommissionTier.TIER_2, 
-          CommissionTier.TIER_3, 
-          CommissionTier.TIER_4
+          CommissionTierValues.BRONZE, 
+          CommissionTierValues.SILVER, 
+          CommissionTierValues.GOLD, 
+          CommissionTierValues.PLATINUM
         ];
         
         // Pour chaque palier, vérifier s'il existe
@@ -122,7 +121,7 @@ export const useCommissionRules = () => {
     // Vérifier si dbRule est valide
     if (!dbRule) {
       console.warn("Invalid DB rule received:", dbRule);
-      return getDefaultCommissionRule(CommissionTier.TIER_1);
+      return getDefaultCommissionRule(CommissionTierValues.BRONZE);
     }
     
     try {
@@ -140,7 +139,21 @@ export const useCommissionRules = () => {
       };
     } catch (error) {
       console.error("Error mapping DB rule:", error, dbRule);
-      return getDefaultCommissionRule(CommissionTier.TIER_1);
+      return getDefaultCommissionRule(CommissionTierValues.BRONZE);
+    }
+  };
+
+  /**
+   * Maps a tier string from the database
+   */
+  const mapTierFromDb = (tierString: string): CommissionTier => {
+    switch (tierString.toLowerCase()) {
+      case 'bronze': return CommissionTierValues.BRONZE;
+      case 'silver': return CommissionTierValues.SILVER;
+      case 'gold': return CommissionTierValues.GOLD;
+      case 'platinum': return CommissionTierValues.PLATINUM;
+      case 'diamond': return CommissionTierValues.DIAMOND;
+      default: return CommissionTierValues.BRONZE;
     }
   };
 
@@ -149,37 +162,37 @@ export const useCommissionRules = () => {
    */
   const getDefaultCommissionRule = (tier: CommissionTier): CommissionRule => {
     switch (tier) {
-      case CommissionTier.TIER_1:
+      case CommissionTierValues.BRONZE:
         return {
           id: "default-tier-1",
-          tier: CommissionTier.TIER_1,
+          tier: CommissionTierValues.BRONZE,
           minContracts: 1,
           maxContracts: 10,
           percentage: 0,
           unit_amount: 500
         };
-      case CommissionTier.TIER_2:
+      case CommissionTierValues.SILVER:
         return {
           id: "default-tier-2",
-          tier: CommissionTier.TIER_2,
+          tier: CommissionTierValues.SILVER,
           minContracts: 11,
           maxContracts: 20,
           percentage: 0,
           unit_amount: 1000
         };
-      case CommissionTier.TIER_3:
+      case CommissionTierValues.GOLD:
         return {
           id: "default-tier-3",
-          tier: CommissionTier.TIER_3,
+          tier: CommissionTierValues.GOLD,
           minContracts: 21,
           maxContracts: 30,
           percentage: 0,
           unit_amount: 1500
         };
-      case CommissionTier.TIER_4:
+      case CommissionTierValues.PLATINUM:
         return {
           id: "default-tier-4",
-          tier: CommissionTier.TIER_4,
+          tier: CommissionTierValues.PLATINUM,
           minContracts: 31,
           percentage: 0,
           unit_amount: 2000
@@ -187,7 +200,7 @@ export const useCommissionRules = () => {
       default:
         return {
           id: "default-unknown",
-          tier: CommissionTier.TIER_1,
+          tier: CommissionTierValues.BRONZE,
           minContracts: 1,
           maxContracts: 10,
           percentage: 0,
@@ -201,10 +214,10 @@ export const useCommissionRules = () => {
    */
   const getDefaultCommissionRules = (): CommissionRule[] => {
     return [
-      getDefaultCommissionRule(CommissionTier.TIER_1),
-      getDefaultCommissionRule(CommissionTier.TIER_2),
-      getDefaultCommissionRule(CommissionTier.TIER_3),
-      getDefaultCommissionRule(CommissionTier.TIER_4)
+      getDefaultCommissionRule(CommissionTierValues.BRONZE),
+      getDefaultCommissionRule(CommissionTierValues.SILVER),
+      getDefaultCommissionRule(CommissionTierValues.GOLD),
+      getDefaultCommissionRule(CommissionTierValues.PLATINUM)
     ];
   };
 
