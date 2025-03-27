@@ -21,7 +21,7 @@ const Contacts: React.FC = () => {
     fetchContacts,
     handleSearch,
     handleFilterByStatus
-  } = useContactsData(isAdmin, isFreelancer, isAccountManager);
+  } = useContactsData();
   
   // Set up contact status listeners
   useContactStatusListeners(contacts);

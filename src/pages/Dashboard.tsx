@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { BarChart, Calendar, FileText, Users } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
@@ -6,7 +5,7 @@ import DashboardCard from "@/components/dashboard/DashboardCard";
 import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency } from "@/utils/format";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard: React.FC = () => {
   const { user, role, isFreelancer, isAccountManager, isAdminOrSuperAdmin } = useAuth();
