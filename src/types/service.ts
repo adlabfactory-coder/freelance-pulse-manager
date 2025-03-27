@@ -9,11 +9,11 @@ export enum ServiceType {
 export interface Service {
   id: string;
   name: string;
-  description: string; // Obligatoire pour être compatible avec les deux usages
+  description: string;
   price: number;
-  type: ServiceType | string; // Accepte à la fois l'enum et les chaînes directes
+  type: ServiceType | string;
   is_active?: boolean;
-  isActive?: boolean; // Pour la rétrocompatibilité
+  isActive?: boolean; // For compatibility with both naming conventions
   created_at?: string;
   updated_at?: string;
 }

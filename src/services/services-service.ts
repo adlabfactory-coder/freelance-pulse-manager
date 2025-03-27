@@ -1,5 +1,6 @@
+
 import { supabase } from "@/lib/supabase";
-import { Service } from "@/types/services";
+import { Service, ServiceType } from "@/types/service";
 
 export const fetchServices = async (): Promise<Service[]> => {
   try {
@@ -17,9 +18,10 @@ export const fetchServices = async (): Promise<Service[]> => {
       id: service.id,
       name: service.name,
       description: service.description || '',
-      type: service.type as "service" | "product" | "subscription" | "pack",
+      type: service.type as ServiceType,
       price: service.price,
-      isActive: service.is_active
+      is_active: service.is_active,
+      isActive: service.is_active // Add isActive property for components expecting it
     }));
   } catch (error) {
     console.error('Erreur lors de la récupération des services:', error);
@@ -36,7 +38,7 @@ export const createService = async (service: Omit<Service, 'id' | 'created_at' |
         description: service.description,
         type: service.type,
         price: service.price,
-        is_active: service.isActive
+        is_active: service.is_active !== undefined ? service.is_active : service.isActive
       })
       .select()
       .single();
@@ -62,7 +64,7 @@ export const updateService = async (id: string, service: Omit<Service, 'id' | 'c
         description: service.description,
         type: service.type,
         price: service.price,
-        is_active: service.isActive
+        is_active: service.is_active !== undefined ? service.is_active : service.isActive
       })
       .eq('id', id);
     

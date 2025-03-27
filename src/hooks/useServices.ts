@@ -1,54 +1,45 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { Service, ServiceType } from '@/types/service';
-import { supabase } from '@/lib/supabase-client';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase-client';
+import { Service, ServiceType } from '@/types/service'; 
 
 export function useServices() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Partial<Service> | null>(null);
 
   const fetchServices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      setLoading(true);
-      const { data, error: fetchError } = await supabase
+      const { data, error } = await supabase
         .from('services')
         .select('*')
         .order('name');
-
-      if (fetchError) {
-        throw fetchError;
-      }
-
-      // Map database results to Service interface
-      const mappedServices = data.map((service): Service => ({
-        id: service.id,
-        name: service.name,
-        description: service.description || "",
-        price: service.price,
+        
+      if (error) throw error;
+      
+      // Convert to the correct Service type with proper ServiceType enum values
+      // and handle both is_active and isActive properties
+      const typedServices = data.map(service => ({
+        ...service,
         type: service.type as ServiceType,
-        is_active: service.is_active,
-        created_at: service.created_at,
-        updated_at: service.updated_at,
-      }));
-
-      setServices(mappedServices);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch services');
-      toast.error('Impossible de charger les services');
+        isActive: service.is_active, // Add isActive for components expecting that property
+      })) as Service[];
+      
+      setServices(typedServices);
+    } catch (err) {
+      console.error('Error fetching services:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      toast.error('Failed to load services');
     } finally {
       setLoading(false);
     }
   }, []);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
 
   const handleAddClick = () => {
     setSelectedService({
@@ -78,48 +69,44 @@ export function useServices() {
   };
 
   const handleSaveService = async (service: Partial<Service>) => {
-    setLoading(true);
     try {
       if (service.id) {
         // Update existing service
-        const { error: updateError } = await supabase
+        const { error } = await supabase
           .from('services')
           .update({
             name: service.name,
             description: service.description,
             price: service.price,
             type: service.type,
-            is_active: service.is_active,
+            is_active: service.is_active !== undefined ? service.is_active : service.isActive, // Handle both properties
             updated_at: new Date().toISOString()
           })
           .eq('id', service.id);
 
-        if (updateError) throw updateError;
-        toast.success('Service mis à jour avec succès');
+        if (error) throw error;
+        toast.success('Service updated successfully');
       } else {
         // Create new service
-        const { error: insertError } = await supabase
+        const { error } = await supabase
           .from('services')
           .insert({
             name: service.name,
             description: service.description,
             price: service.price,
             type: service.type,
-            is_active: service.is_active
+            is_active: service.is_active !== undefined ? service.is_active : service.isActive, // Handle both properties
           });
 
-        if (insertError) throw insertError;
-        toast.success('Service créé avec succès');
+        if (error) throw error;
+        toast.success('Service created successfully');
       }
       
-      // Refresh services list
-      await fetchServices();
       setEditDialogOpen(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to save service');
-      toast.error('Erreur lors de l\'enregistrement du service');
-    } finally {
-      setLoading(false);
+      fetchServices();
+    } catch (err) {
+      console.error('Error saving service:', err);
+      toast.error('Failed to save service');
     }
   };
 
@@ -128,25 +115,27 @@ export function useServices() {
     
     setLoading(true);
     try {
-      const { error: deleteError } = await supabase
+      const { error } = await supabase
         .from('services')
         .delete()
         .eq('id', selectedService.id);
 
-      if (deleteError) throw deleteError;
+      if (error) throw error;
       
-      toast.success('Service supprimé avec succès');
+      toast.success('Service deleted successfully');
       await fetchServices();
       setConfirmDeleteDialogOpen(false);
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete service');
-      toast.error('Erreur lors de la suppression du service');
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      toast.error('Failed to delete service');
     } finally {
       setLoading(false);
     }
   };
 
-  const refetch = fetchServices;
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
 
   return {
     services,

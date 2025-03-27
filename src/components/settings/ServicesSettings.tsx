@@ -5,7 +5,7 @@ import ServicesHeader from "./services/ServicesHeader";
 import ServicesList from "./services/ServicesList";
 import ServiceForm from "./services/ServiceForm";
 import DeleteServiceDialog from "./services/DeleteServiceDialog";
-import { useServices } from "@/hooks/useServices"; // Correction du chemin d'importation
+import { useServices } from "@/hooks/useServices"; // Using the updated hook
 
 const ServicesSettings: React.FC = () => {
   const {

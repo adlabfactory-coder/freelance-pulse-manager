@@ -1,4 +1,5 @@
-import { Service } from "@/types/services";
+
+import { Service } from "@/types/service";
 import {
   Table,
   TableBody,
@@ -80,12 +81,12 @@ const ServicesList = ({ services, loading, onEditService, onDeleteService }: Ser
                 <TableCell className="text-right">
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      service.isActive
+                      service.isActive || service.is_active
                         ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
                         : "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"
                     }`}
                   >
-                    {service.isActive ? "Actif" : "Inactif"}
+                    {service.isActive || service.is_active ? "Actif" : "Inactif"}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">

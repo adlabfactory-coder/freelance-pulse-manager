@@ -195,7 +195,7 @@ export const useQuoteForm = ({
     loadQuoteData,
     
     // Form actions
-    handleSubmit: submitForm,
+    handleSubmit, // Corrected: using handleSubmit instead of submitForm
     handleSubmitEdit: handleSubmitEditWrapper,
     
     // Helper functions
