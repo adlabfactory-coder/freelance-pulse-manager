@@ -23,19 +23,19 @@ const ContactStatusBadge: React.FC<ContactStatusBadgeProps> = ({ status }) => {
       );
     case "negotiation":
       return (
-        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+        <Badge variant="warning" className="border-amber-200">
           En négociation
         </Badge>
       );
     case "signed":
       return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+        <Badge variant="success" className="border-green-200">
           Signé
         </Badge>
       );
     case "lost":
       return (
-        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+        <Badge variant="destructive" className="bg-red-50 text-red-700 border-red-200">
           Perdu
         </Badge>
       );
