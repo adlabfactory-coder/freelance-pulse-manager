@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Quote, QuoteItem } from "@/types";
+import { Quote, QuoteItem, QuoteStatus } from "@/types/quote";
 import { Contact } from "@/services/contacts/types";
 import { User } from "@/types";
 import { Service } from "@/types/service";
@@ -93,7 +93,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <QuoteDetailsSection
           validUntil={validUntil}
-          status={quoteData.status || "draft"}
+          status={quoteData.status as QuoteStatus || QuoteStatus.DRAFT}
           onValidUntilChange={(validUntil) =>
             onQuoteDataChange({ ...quoteData, validUntil })
           }

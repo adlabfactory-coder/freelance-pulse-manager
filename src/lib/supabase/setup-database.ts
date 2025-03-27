@@ -1,5 +1,5 @@
 
-import { supabase } from './supabase-client';
+import { supabase } from './client';
 import { DatabaseSetupOptions, DatabaseSetupResult, TableSetupStatus } from './types';
 import { checkDatabaseSetup } from './check-database';
 import { getCreateTableSql } from './table-definitions';

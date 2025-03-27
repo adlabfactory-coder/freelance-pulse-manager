@@ -34,3 +34,21 @@ export interface Quote {
   updatedAt?: Date | string;
   items?: QuoteItem[];
 }
+
+/**
+ * Retourne le libellé français correspondant au statut d'un devis
+ */
+export function getQuoteStatusLabel(status: QuoteStatus): string {
+  const statusLabels: Record<QuoteStatus, string> = {
+    [QuoteStatus.DRAFT]: "Brouillon",
+    [QuoteStatus.PENDING]: "En attente",
+    [QuoteStatus.SENT]: "Envoyé",
+    [QuoteStatus.ACCEPTED]: "Accepté",
+    [QuoteStatus.REJECTED]: "Rejeté",
+    [QuoteStatus.EXPIRED]: "Expiré",
+    [QuoteStatus.PAID]: "Payé",
+    [QuoteStatus.CANCELLED]: "Annulé"
+  };
+  
+  return statusLabels[status] || "Inconnu";
+}
