@@ -11,8 +11,8 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
     // S'assurer que freelancerid est utilisé correctement pour la base de données
     const dataToSend = {
       ...appointmentData,
-      // Si freelancerId est présent, le copier vers freelancerid pour la DB
-      freelancerid: appointmentData.freelancerId
+      // freelancerid pour la base de données doit être présent et non-null
+      freelancerid: appointmentData.freelancerId || null
     };
 
     // Supprimer freelancerId car la base de données utilise freelancerid
@@ -55,8 +55,7 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
   try {
     console.log("Création d'un rendez-vous auto-assigné avec les données:", appointmentData);
     
-    // S'assurer que freelancerId est null pour l'auto-assignation
-    // mais utiliser freelancerid pour la base de données
+    // S'assurer que freelancerid est null explicitement pour l'auto-assignation
     const cleanedData = {
       ...appointmentData,
       status: AppointmentStatus.PENDING,

@@ -15,7 +15,7 @@ BEGIN
     date,
     duration,
     status,
-    "freelancerId",
+    "freelancerid",
     "contactId",
     location,
     notes
@@ -26,7 +26,7 @@ BEGIN
     (appointment_data->>'date')::TIMESTAMP WITH TIME ZONE,
     (appointment_data->>'duration')::INTEGER,
     appointment_data->>'status',
-    (appointment_data->>'freelancerId')::UUID,
+    (appointment_data->>'freelancerid')::UUID,
     (appointment_data->>'contactId')::UUID,
     appointment_data->>'location',
     appointment_data->>'notes'
@@ -58,7 +58,7 @@ BEGIN
     date,
     duration,
     status,
-    "freelancerId",
+    "freelancerid",
     "contactId",
     location,
     notes
@@ -103,7 +103,7 @@ BEGIN
   UPDATE public.appointments
   SET 
     status = 'scheduled',
-    "freelancerId" = freelancer_id
+    "freelancerid" = freelancer_id
   WHERE id = appointment_id;
   
   -- Mettre à jour le contact
