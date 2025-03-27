@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSupabase } from './use-supabase';
@@ -7,7 +6,7 @@ import { useSupabase } from './use-supabase';
 export interface CommissionDetail {
   id: string;
   freelancerId: string;
-  freelancerName?: string;
+  freelancerName: string;
   amount: number;
   tier: string;
   periodStart: Date;
