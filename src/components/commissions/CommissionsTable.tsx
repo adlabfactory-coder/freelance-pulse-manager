@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   ColumnDef,
@@ -32,7 +31,7 @@ interface CommissionsTableProps {
   requestPayment: (commissionId: string) => void;
   approvePayment?: (commissionId: string) => void;
   isAdmin?: boolean;
-  getTierLabel: (tier: CommissionTier) => string;
+  getTierLabel: (tier: string) => string;
   getStatusBadge: (status: string, paymentRequested: boolean) => React.ReactNode;
   formatCurrency: (amount: number) => string;
   formatPeriod: (startDate: Date, endDate: Date) => string;
@@ -84,7 +83,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
       accessorKey: "status",
       header: "Statut",
       cell: ({ row }) =>
-        getStatusBadge(row.original.status, row.original.paymentRequested),
+        getStatusBadge(row.original.status, row.original.payment_requested || false),
     },
     {
       id: "actions",
@@ -105,7 +104,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
             {/* Option pour demander le versement (visible par tous) */}
             <DropdownMenuItem
               onClick={() => requestPayment(row.original.id)}
-              disabled={row.original.paymentRequested || requestingPayment || row.original.status === 'paid'}
+              disabled={row.original.payment_requested || requestingPayment || row.original.status === 'paid'}
             >
               Demander le versement
             </DropdownMenuItem>
@@ -116,7 +115,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => approvePayment(row.original.id)}
-                  disabled={!row.original.paymentRequested || row.original.status === 'paid'}
+                  disabled={!row.original.payment_requested || row.original.status === 'paid'}
                   className="text-green-600"
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />

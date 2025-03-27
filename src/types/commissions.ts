@@ -16,6 +16,7 @@ export interface Commission {
   payment_requested?: boolean;
   contracts_count?: number;
   unit_amount?: number;
+  period?: string; // Adding this property since it's used in some components
 }
 
 // Type pour les détails étendus de commissions

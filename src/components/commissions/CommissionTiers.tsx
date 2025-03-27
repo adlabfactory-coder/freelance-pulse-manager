@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface CommissionTiersProps {
   commissionRules: CommissionRule[];
   formatCurrency: (amount: number) => string;
-  getTierLabel: (tier: CommissionTier) => string;
+  getTierLabel: (tier: string) => string;
 }
 
 const CommissionTiers: React.FC<CommissionTiersProps> = ({
@@ -100,7 +101,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
 };
 
 // Fonctions utilitaires pour générer des règles par défaut
-const getDefaultRule = (tier: CommissionTier): CommissionRule => {
+const getDefaultRule = (tier: string): CommissionRule => {
   switch (tier) {
     case CommissionTier.TIER_1:
       return {

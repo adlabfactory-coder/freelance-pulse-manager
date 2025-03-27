@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Commission, CommissionTier } from "@/types/commissions";
@@ -58,6 +59,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
             status: "pending" as any,
             payment_requested: false,
+            createdAt: new Date(),
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           }
         ]);
@@ -73,6 +75,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
             status: "pending" as any,
             payment_requested: true,
+            createdAt: new Date(),
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           },
           {
@@ -86,6 +89,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             status: "paid" as any,
             paidDate: new Date(),
             payment_requested: true,
+            createdAt: new Date(),
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           }
         ]);

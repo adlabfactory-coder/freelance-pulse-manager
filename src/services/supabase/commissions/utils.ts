@@ -7,7 +7,7 @@ import { UserRole } from '@/types';
  * @param tier - Tier de commission de l'énumération
  * @returns - Chaîne compatible avec la base de données
  */
-export const mapTierToDb = (tier: CommissionTier): string => {
+export const mapTierToDb = (tier: string): string => {
   switch (tier) {
     case CommissionTier.TIER_1: return 'bronze';
     case CommissionTier.TIER_2: return 'silver'; 
@@ -22,7 +22,7 @@ export const mapTierToDb = (tier: CommissionTier): string => {
  * @param dbTier - Tier stocké en base de données
  * @returns - Valeur de l'énumération CommissionTier
  */
-export const mapTierFromDb = (dbTier: string): CommissionTier => {
+export const mapTierFromDb = (dbTier: string): string => {
   // Normaliser en minuscules pour éviter les problèmes de casse
   const normalizedTier = dbTier.toLowerCase();
   
@@ -49,10 +49,11 @@ export const mapCommissionFromDb = (dbCommission: any): Commission => {
     periodEnd: new Date(dbCommission.periodEnd),
     status: dbCommission.status,
     paidDate: dbCommission.paidDate ? new Date(dbCommission.paidDate) : undefined,
-    paymentRequested: dbCommission.payment_requested || false,
+    payment_requested: dbCommission.payment_requested || false,
+    createdAt: new Date(dbCommission.createdAt || Date.now()),
     period: `${new Date(dbCommission.periodStart).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`,
-    contractsCount: dbCommission.contracts_count,
-    unitAmount: dbCommission.unit_amount
+    contracts_count: dbCommission.contracts_count,
+    unit_amount: dbCommission.unit_amount
   };
 };
 
@@ -69,7 +70,7 @@ export const mapCommissionRuleFromDb = (dbRule: any): CommissionRule => {
     minContracts: dbRule.minContracts,
     maxContracts: dbRule.maxContracts || null,
     percentage: dbRule.percentage,
-    unitAmount: dbRule.unit_amount || 0 // Assurer qu'on a toujours une valeur
+    unit_amount: dbRule.unit_amount || 0 // Assurer qu'on a toujours une valeur
   };
 };
 
@@ -84,7 +85,7 @@ export const getDefaultCommissionRules = (): CommissionRule[] => {
       minContracts: 1,
       maxContracts: 10,
       percentage: 0, // Non utilisé
-      unitAmount: 500 // 500 MAD par contrat
+      unit_amount: 500 // 500 MAD par contrat
     },
     {
       id: "default-tier-2",
@@ -92,7 +93,7 @@ export const getDefaultCommissionRules = (): CommissionRule[] => {
       minContracts: 11,
       maxContracts: 20,
       percentage: 0, // Non utilisé
-      unitAmount: 1000 // 1000 MAD par contrat
+      unit_amount: 1000 // 1000 MAD par contrat
     },
     {
       id: "default-tier-3",
@@ -100,14 +101,14 @@ export const getDefaultCommissionRules = (): CommissionRule[] => {
       minContracts: 21,
       maxContracts: 30,
       percentage: 0, // Non utilisé
-      unitAmount: 1500 // 1500 MAD par contrat
+      unit_amount: 1500 // 1500 MAD par contrat
     },
     {
       id: "default-tier-4",
       tier: CommissionTier.TIER_4,
       minContracts: 31,
       percentage: 0, // Non utilisé
-      unitAmount: 2000 // 2000 MAD par contrat
+      unit_amount: 2000 // 2000 MAD par contrat
     }
   ];
 };
