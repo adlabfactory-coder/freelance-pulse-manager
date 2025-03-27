@@ -92,7 +92,7 @@ export const useQuoteSubmission = ({
     }
   }, [onSuccess, onError, user]);
   
-  // Correction: Add items parameter to match function signature expected in wrapper
+  // Fonction pour créer un nouveau devis
   const handleSubmit = useCallback(async (quoteData: Partial<Quote>, items: QuoteItem[]) => {
     return await submitQuote(quoteData, items);
   }, [submitQuote]);
