@@ -1,22 +1,45 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import AddContactForm from "./AddContactForm";
 import { toast } from "sonner";
 
 interface AddContactDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
   onContactAdded?: () => void;
 }
 
-const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) => {
-  const [open, setOpen] = useState(false);
+const AddContactDialog: React.FC<AddContactDialogProps> = ({ 
+  open: externalOpen, 
+  onOpenChange: externalOnOpenChange, 
+  onSuccess, 
+  onContactAdded 
+}) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  const isControlled = externalOpen !== undefined;
+  const isOpen = isControlled ? externalOpen : internalOpen;
+  
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(newOpen);
+    }
+    if (externalOnOpenChange) {
+      externalOnOpenChange(newOpen);
+    }
+  };
   
   const handleSuccess = () => {
     console.log("Contact ajouté avec succès");
     if (onContactAdded) {
       onContactAdded();
+    }
+    if (onSuccess) {
+      onSuccess();
     }
     // Ne pas fermer automatiquement le dialogue après l'ajout
     // car nous voulons permettre la planification du rendez-vous
@@ -30,21 +53,12 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) =
     // Attendre un court délai avant de fermer le dialogue pour laisser
     // l'utilisateur voir le message de succès
     setTimeout(() => {
-      setOpen(false);
+      handleOpenChange(false);
     }, 1500);
   };
   
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" onClick={() => {
-          console.log("Bouton de nouveau contact cliqué");
-          setOpen(true);
-        }}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Nouveau contact
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Ajouter un contact</DialogTitle>
@@ -54,7 +68,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) =
             onSuccess={handleFormSuccess} 
             onCancel={() => {
               console.log("Annulation de l'ajout de contact");
-              setOpen(false);
+              handleOpenChange(false);
             }} 
           />
         </div>

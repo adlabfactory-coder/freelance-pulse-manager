@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -42,10 +43,7 @@ const AdminPage: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading users:', error);
-        toast("Impossible de charger les utilisateurs.", {
-          description: "Une erreur est survenue lors du chargement des utilisateurs.",
-          variant: "destructive"
-        });
+        toast("Impossible de charger les utilisateurs.");
         
         // Fall back to mock data in case of error
         setUsers(userOperations.getMockUsers());
@@ -94,27 +92,16 @@ const AdminPage: React.FC = () => {
           setSelectedUser(prev => prev ? { ...prev, ...userData } : null);
         }
         
-        toast({
-          title: "Utilisateur mis à jour",
-          description: "Les modifications ont été enregistrées avec succès."
-        });
+        toast("Utilisateur mis à jour");
         
         return true;
       }
       
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de mettre à jour l'utilisateur."
-      });
+      toast("Impossible de mettre à jour l'utilisateur.");
       return false;
     } catch (error) {
       console.error('Error updating user:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour de l'utilisateur."
-      });
+      toast("Une erreur est survenue lors de la mise à jour de l'utilisateur.");
       return false;
     }
   };
@@ -136,24 +123,13 @@ const AdminPage: React.FC = () => {
           setSelectedUser(null);
         }
         
-        toast({
-          title: "Utilisateur supprimé",
-          description: "L'utilisateur a été supprimé avec succès."
-        });
+        toast("Utilisateur supprimé");
       } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de supprimer l'utilisateur."
-        });
+        toast("Impossible de supprimer l'utilisateur.");
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la suppression de l'utilisateur."
-      });
+      toast("Une erreur est survenue lors de la suppression de l'utilisateur.");
     }
   };
 
