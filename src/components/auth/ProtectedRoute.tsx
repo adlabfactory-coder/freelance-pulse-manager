@@ -22,6 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
 
   // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
+    console.log("Non authentifié, redirection vers la page de connexion");
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
@@ -29,6 +30,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
   if (requiredRoles.length > 0 && user) {
     const hasRequiredRole = requiredRoles.includes(user.role);
     if (!hasRequiredRole) {
+      console.log("Rôle insuffisant, redirection vers le tableau de bord");
       return <Navigate to="/dashboard" replace />;
     }
   }

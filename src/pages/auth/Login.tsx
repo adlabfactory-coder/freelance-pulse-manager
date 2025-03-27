@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 // Define form schema
 const formSchema = z.object({
@@ -28,10 +29,17 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const LoginPage: React.FC = () => {
-  const { signIn } = useAuth();
+  const { signIn, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Rediriger si déjà authentifié
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   // Initialize form
   const form = useForm<FormData>({
@@ -47,6 +55,7 @@ const LoginPage: React.FC = () => {
     { role: "admin", email: "admin@example.com", password: "password" },
     { role: "freelancer", email: "freelancer@example.com", password: "password" },
     { role: "client", email: "client@example.com", password: "password" },
+    { role: "super_admin", email: "superadmin@example.com", password: "password" },
   ];
 
   const onSubmit = async (data: FormData) => {
@@ -54,17 +63,14 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // For demo purposes, find the user in our mock data
-      const user = mockData.find(
-        (u) => u.email === data.email && u.password === data.password
-      );
-
-      if (user) {
-        // Call the signIn function from auth context
-        await signIn(data.email, data.password);
+      // Call the signIn function from auth context
+      const result = await signIn(data.email, data.password);
+      
+      if (result.success) {
+        toast.success("Connexion réussie");
         navigate("/dashboard");
       } else {
-        setError("Identifiants invalides");
+        setError(result.error || "Identifiants invalides");
       }
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue lors de la connexion");
@@ -146,7 +152,7 @@ const LoginPage: React.FC = () => {
           <div className="text-sm text-muted-foreground mb-2">
             Pour la démonstration, vous pouvez vous connecter avec :
           </div>
-          <div className="grid grid-cols-3 gap-2 w-full">
+          <div className="grid grid-cols-2 gap-2 w-full mb-2">
             <Button
               variant="outline"
               size="sm"
@@ -160,6 +166,15 @@ const LoginPage: React.FC = () => {
               onClick={() => autofillForm("freelancer")}
             >
               Freelancer
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => autofillForm("super_admin")}
+            >
+              Super Admin
             </Button>
             <Button
               variant="outline"

@@ -13,7 +13,7 @@ export const useAppointmentOperations = () => {
   const { user } = useAuth();
 
   /**
-   * Soumet un nouveau rendez-vous
+   * Soumet un nouveau rendez-vous en utilisant la fonction RPC create_appointment
    */
   const submitAppointment = useCallback(async (data: any) => {
     console.log("Soumission du rendez-vous:", data);
@@ -50,9 +50,9 @@ export const useAppointmentOperations = () => {
         notes: data.notes || null
       };
 
-      console.log("Insertion du rendez-vous dans Supabase:", appointmentData);
+      console.log("Appel de la fonction RPC create_appointment:", appointmentData);
 
-      // Utiliser la fonction RPC create_appointment au lieu d'une insertion directe
+      // Utiliser la fonction RPC create_appointment qui contourne les politiques RLS
       const { data: result, error } = await supabase
         .rpc('create_appointment', {
           appointment_data: appointmentData
