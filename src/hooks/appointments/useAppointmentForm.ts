@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { createAppointment, createAutoAssignAppointment } from "@/services/appointments/create";
+import { createAppointment, createAutoAssignAppointment, AppointmentCreateData } from "@/services/appointments/create";
 import { toast } from "sonner";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { formatDateForAPI } from "@/utils/format";
@@ -17,22 +17,6 @@ export const APPOINTMENT_TITLE_OPTIONS = [
 ];
 
 export type AppointmentTitleOption = "consultation-initiale" | "session-suivi" | "demo-produit" | "revision-contrat" | "autre" | "";
-
-// Interface pour les données du formulaire d'appointement
-interface AppointmentFormInput {
-  title: string;
-  description?: string;
-  date: string;
-  duration: number;
-  status: AppointmentStatus;
-  // Les champs suivants seront convertis lors de l'envoi
-  contactId: string;
-  freelancerId?: string;
-  location?: string | null;
-  notes?: string | null;
-  folder?: string;
-  currentUserId?: string;
-}
 
 export const useAppointmentForm = (
   initialDate?: Date,
@@ -149,7 +133,7 @@ export const useAppointmentForm = (
       }
       
       // Créer l'objet de rendez-vous à envoyer avec la bonne structure pour l'API
-      const appointmentData = {
+      const appointmentData: AppointmentCreateData = {
         title,
         description,
         date: appointmentDate,

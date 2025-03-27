@@ -4,18 +4,18 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 
 // Types pour les données de l'appointment
-interface AppointmentCreateData {
+export interface AppointmentCreateData {
   title: string;
   description?: string | null;
   date: string;
   duration: number;
   status: AppointmentStatus;
-  contact_id: string;  // Utiliser la bonne casse pour correspondre à la base de données
-  freelancer_id?: string;  // Utiliser la bonne casse pour correspondre à la base de données
+  contact_id: string;
+  freelancer_id?: string;
   location?: string | null;
   notes?: string | null;
   folder?: string;
-  current_user_id?: string;  // Utiliser la bonne casse pour correspondre à la base de données
+  current_user_id?: string;
 }
 
 /**
@@ -38,8 +38,8 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: appointmentData.status || 'scheduled',
-        contactId: appointmentData.contact_id,  // Conversion du nom pour la DB
-        freelancerid: appointmentData.freelancer_id,  // Conversion du nom pour la DB
+        contactId: appointmentData.contact_id,
+        freelancerid: appointmentData.freelancer_id,
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'
@@ -52,9 +52,11 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
     }
     
     console.log("Rendez-vous créé avec succès:", data);
+    toast.success("Rendez-vous créé avec succès");
     return data as Appointment;
   } catch (error: any) {
     console.error("Erreur lors de la création du rendez-vous:", error);
+    toast.error("Erreur: " + (error.message || "Une erreur est survenue"));
     throw error;
   }
 };
@@ -80,11 +82,11 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: 'pending',  // Toujours en attente
-        contactId: appointmentData.contact_id,  // Conversion du nom pour la DB
+        contactId: appointmentData.contact_id,
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general',
-        currentUserId: appointmentData.current_user_id || null  // Conversion du nom pour la DB
+        currentUserId: appointmentData.current_user_id || null
       }
     });
     
@@ -99,6 +101,7 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
     return data as Appointment;
   } catch (error: any) {
     console.error("Erreur lors de la création du rendez-vous auto-assigné:", error);
+    toast.error("Erreur: " + (error.message || "Une erreur est survenue"));
     throw error;
   }
 };

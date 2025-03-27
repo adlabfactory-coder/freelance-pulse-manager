@@ -1,31 +1,10 @@
 
-// Re-export des types depuis les fichiers spécialisés
-export { UserRole } from './roles';
-export type { User } from './user';
-export { 
-  type Quote, 
-  type QuoteItem, 
-  QuoteStatus, 
-  getQuoteStatusLabel, 
-  getQuoteStatusColor 
-} from './quote';
-
-export { 
-  type Subscription, 
-  type SubscriptionPlan,
-  SubscriptionStatus,
-  SubscriptionInterval
-} from './subscription';
-
-// Interface élément de navigation
-export interface NavItem {
-  title: string;
-  href: string;
-  icon?: React.ElementType;
-  submenu?: NavItem[];
-  permission?: string[];
-  disabled?: boolean;
-}
-
-// Export du type Contact
-export type { Contact } from './contact';
+export * from './database';
+export * from './database/enums';
+export * from './user';
+export * from './contact';
+export * from './search';
+export * from './appointment';
+export * from './quote';
+export { QuoteStatus, getQuoteStatusLabel, getQuoteStatusColor } from './quote';
+export * from './sidebar';
