@@ -45,6 +45,7 @@ const StatusSelector: React.FC<StatusSelectorProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={QuoteStatus.DRAFT}>Brouillon</SelectItem>
+          <SelectItem value={QuoteStatus.PENDING}>En attente</SelectItem>
           <SelectItem value={QuoteStatus.SENT}>Envoyé</SelectItem>
           <SelectItem value={QuoteStatus.ACCEPTED}>Accepté</SelectItem>
           <SelectItem value={QuoteStatus.REJECTED}>Rejeté</SelectItem>

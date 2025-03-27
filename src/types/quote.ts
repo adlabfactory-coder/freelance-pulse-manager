@@ -30,7 +30,8 @@ export enum QuoteStatus {
   ACCEPTED = "accepted",
   REJECTED = "rejected",
   EXPIRED = "expired",
-  CANCELLED = "cancelled"
+  CANCELLED = "cancelled",
+  PENDING = "pending"
 }
 
 export interface QuoteContact {
@@ -52,3 +53,47 @@ export interface QuoteService {
   description?: string;
   price: number;
 }
+
+// Fonction utilitaire pour obtenir un libellé lisible du statut
+export const getQuoteStatusLabel = (status: QuoteStatus): string => {
+  switch (status) {
+    case QuoteStatus.DRAFT:
+      return "Brouillon";
+    case QuoteStatus.SENT:
+      return "Envoyé";
+    case QuoteStatus.ACCEPTED:
+      return "Accepté";
+    case QuoteStatus.REJECTED:
+      return "Rejeté";
+    case QuoteStatus.EXPIRED:
+      return "Expiré";
+    case QuoteStatus.CANCELLED:
+      return "Annulé";
+    case QuoteStatus.PENDING:
+      return "En attente";
+    default:
+      return status;
+  }
+};
+
+// Fonction utilitaire pour obtenir une couleur CSS selon le statut
+export const getQuoteStatusColor = (status: QuoteStatus): string => {
+  switch (status) {
+    case QuoteStatus.DRAFT:
+      return "text-gray-500";
+    case QuoteStatus.SENT:
+      return "text-blue-500";
+    case QuoteStatus.ACCEPTED:
+      return "text-green-500";
+    case QuoteStatus.REJECTED:
+      return "text-red-500";
+    case QuoteStatus.EXPIRED:
+      return "text-amber-500";
+    case QuoteStatus.CANCELLED:
+      return "text-red-300";
+    case QuoteStatus.PENDING:
+      return "text-purple-500";
+    default:
+      return "text-gray-700";
+  }
+};

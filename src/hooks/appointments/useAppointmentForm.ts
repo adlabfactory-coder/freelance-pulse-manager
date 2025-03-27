@@ -18,7 +18,7 @@ export const appointmentFormSchema = z.object({
   location: z.string().optional(),
   notes: z.string().optional(),
   status: z.string().default('pending'),
-  folder: z.string().default('general') // Ajout du champ folder
+  folder: z.string().default('general')
 });
 
 export type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
@@ -33,7 +33,7 @@ interface AppointmentFormInput {
   location?: string;
   notes?: string;
   status: AppointmentStatus;
-  folder: string; // Ajout du champ folder
+  folder: string;
 }
 
 export const useAppointmentForm = (
@@ -55,7 +55,7 @@ export const useAppointmentForm = (
       location: initialData?.location || '',
       notes: initialData?.notes || '',
       status: initialData?.status || 'pending',
-      folder: initialData?.folder || 'general' // Valeur par défaut pour le dossier
+      folder: initialData?.folder || 'general'
     }
   });
 
@@ -69,17 +69,18 @@ export const useAppointmentForm = (
       setIsSubmitting(true);
       
       // S'assurer que toutes les données requises sont présentes
-      const appointmentInput: AppointmentFormInput = {
+      const appointmentInput = {
         title: values.title,
         description: values.description,
         date: values.date,
         duration: values.duration,
-        contactId: values.contactId,
-        freelancerId: values.freelancerId || user.id,
+        contact_id: values.contactId, // Conversion de contactId à contact_id pour correspondre à AppointmentCreateData
+        freelancer_id: values.freelancerId || user.id, // Conversion de freelancerId à freelancer_id
         location: values.location,
         notes: values.notes,
         status: values.status as AppointmentStatus,
-        folder: values.folder || 'general' // Utiliser la valeur du formulaire ou la valeur par défaut
+        folder: values.folder || 'general',
+        current_user_id: user.id
       };
       
       console.log("Préparation données rendez-vous:", appointmentInput);
