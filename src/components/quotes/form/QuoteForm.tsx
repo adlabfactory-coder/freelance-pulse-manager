@@ -39,9 +39,29 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     if (onSubmit) {
       onSubmit();
     } else {
-      // Passer les données correctes à la fonction handleSubmit du formulaire
-      const quoteData = form.quoteData;
-      await form.handleSubmit(quoteData, form.items);
+      // Correction: transformer les items partiels en items complets pour le formulaire
+      const validItems = safeItems.map(item => {
+        // Assurez-vous que tous les champs requis sont présents
+        return {
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          tax: item.tax || 0,
+          discount: item.discount || 0,
+          serviceId: item.serviceId
+        };
+      });
+      
+      await form.handleSubmit({
+        contactId: form.contactId,
+        freelancerId: form.freelancerId,
+        validUntil: form.validUntil,
+        status: form.status,
+        notes: form.notes,
+        folder: form.folder || 'general',
+        totalAmount: form.totalAmount || 0,
+        items: validItems as QuoteItem[]
+      }, safeItems);
     }
   };
 

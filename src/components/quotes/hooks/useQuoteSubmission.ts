@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
@@ -52,7 +53,7 @@ export const useQuoteSubmission = ({
     try {
       console.log("Création d'un nouveau devis");
       
-      // Préparation des items avec types corrects
+      // Préparation des items avec types corrects - filtrer pour n'avoir que des éléments valides
       const itemsToCreate = items
         .filter(item => !item.toDelete && item.description && item.quantity && item.unitPrice)
         .map(({ isNew, toDelete, id, ...item }) => ({
@@ -135,7 +136,7 @@ export const useQuoteSubmission = ({
     try {
       console.log("Mise à jour du devis", id);
       
-      // Préparation des items avec les bonnes typologies
+      // Préparation des items à ajouter
       const itemsToAdd = items
         .filter(item => item.isNew && !item.toDelete && item.description && item.quantity && item.unitPrice)
         .map(({ isNew, toDelete, id, ...item }) => ({
@@ -147,14 +148,19 @@ export const useQuoteSubmission = ({
           serviceId: item.serviceId
         }));
         
-      // Conversion explicite des types pour éviter les erreurs TypeScript  
+      // Items à mettre à jour
       const itemsToUpdate = items
         .filter(item => item.id && !item.isNew && !item.toDelete)
         .map(({ isNew, toDelete, ...item }) => ({
-          ...item,
-          id: item.id // S'assurer que l'id est toujours présent
+          id: item.id!,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          tax: item.tax,
+          discount: item.discount
         }));
         
+      // Items à supprimer
       const itemsToDelete = items
         .filter(item => item.toDelete && item.id)
         .map(item => item.id as string);

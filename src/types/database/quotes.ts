@@ -13,6 +13,7 @@ export interface QuotesTable {
       notes: string | null
       createdAt: string
       updatedAt: string
+      folder: string
     }
     Insert: {
       id?: string
@@ -24,6 +25,7 @@ export interface QuotesTable {
       notes?: string | null
       createdAt?: string
       updatedAt?: string
+      folder?: string
     }
     Update: {
       id?: string
@@ -35,6 +37,7 @@ export interface QuotesTable {
       notes?: string | null
       createdAt?: string
       updatedAt?: string
+      folder?: string
     }
   }
   quote_items: {

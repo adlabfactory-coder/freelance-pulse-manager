@@ -40,10 +40,9 @@ export const useQuoteDataLoader = () => {
         setFreelancers(freelancersData || []);
       }
       
-      // Fetch services
+      // Fetch services et s'assurer de la compatibilité avec le type Service
       const servicesData = await fetchServices();
-      // Cast le résultat pour s'assurer de la compatibilité avec le type Service
-      setServices(servicesData as Service[]);
+      setServices(servicesData);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error("Une erreur est survenue lors du chargement des données");

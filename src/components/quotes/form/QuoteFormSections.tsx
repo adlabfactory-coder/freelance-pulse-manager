@@ -126,9 +126,9 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
 
       <div className="space-y-4">
         <QuoteItemForm 
-          currentItem={currentItem}
+          item={currentItem}
           services={services}
-          onChange={onCurrentItemChange}
+          onItemChange={onCurrentItemChange}
           onAddItem={onAddItem}
         />
         

@@ -32,7 +32,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
   const { toast } = useToast();
 
   // Utiliser une requête pour charger les services si non fournis
-  const { data: fetchedServices } = useQuery({
+  const { data: fetchedServices, isLoading } = useQuery({
     queryKey: ['services'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,7 +59,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
   });
 
   // Combiner les services fournis et ceux récupérés
-  const allServices = services.length > 0 ? services : (fetchedServices || []);
+  const allServices: Service[] = services.length > 0 ? services : (fetchedServices || []);
 
   const handleSelectService = (serviceId: string) => {
     if (serviceId === "custom") {
@@ -115,7 +115,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="custom">Personnalisé</SelectItem>
-            {allServices && allServices.map(service => (
+            {allServices && allServices.length > 0 && allServices.map(service => (
               <SelectItem key={service.id} value={service.id}>
                 {service.name} - {formatCurrency(service.price)}
               </SelectItem>
