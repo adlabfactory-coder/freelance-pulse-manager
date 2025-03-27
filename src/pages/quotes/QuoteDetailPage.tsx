@@ -1,395 +1,1169 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchQuoteById, updateQuoteStatus, deleteQuote } from '@/services/quote-service';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Quote, QuoteItem, QuoteStatus } from '@/types';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from 'sonner';
+import { format, parseISO } from 'date-fns';
+import { DatePicker } from "@/components/ui/date-picker"
+import { CalendarIcon } from "@radix-ui/react-icons"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Edit, Trash2, Copy, Download, Mail, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from '@/hooks/use-auth';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  ArrowLeft,
-  Trash2,
-  Edit,
-  AlertTriangle,
-  Folder
-} from 'lucide-react';
-import EditQuoteDialog from '@/components/quotes/form/EditQuoteDialog';
+import { useToast } from '@/hooks/use-toast';
+import { useSupabase } from '@/hooks/use-supabase';
+import { useReactToPrint } from 'react-to-print';
 import { formatCurrency } from '@/utils/format';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
-const QuoteDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user, isAdminOrSuperAdmin } = useAuth();
-  
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { PopoverClose } from '@radix-ui/react-popover';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 
-  const fetchData = async () => {
-    if (!id) return;
-    
-    setLoading(true);
-    try {
-      const data = await fetchQuoteById(id);
-      setQuote(data);
-    } catch (err) {
-      console.error('Erreur lors du chargement du devis:', err);
-      setError('Impossible de charger les détails du devis.');
-    } finally {
-      setLoading(false);
-    }
-  };
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command"
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-  const handleChangeStatus = async (status: QuoteStatus) => {
-    if (!quote || !id) return;
-    
-    try {
-      await updateQuoteStatus(id, status);
-      toast({
-        title: 'Statut mis à jour',
-        description: `Le devis est maintenant ${getStatusLabel(status).toLowerCase()}.`
-      });
-      
-      // Mettre à jour localement
-      setQuote({ ...quote, status });
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: "Impossible de mettre à jour le statut du devis."
-      });
-    }
-  };
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-  const handleDelete = async () => {
-    if (!quote || !id) return;
-    
-    if (!isDeleting) {
-      setIsDeleting(true);
-      return;
-    }
-    
-    try {
-      await deleteQuote(id);
-      toast({
-        title: 'Devis supprimé',
-        description: 'Le devis a été supprimé avec succès.'
-      });
-      
-      navigate('/quotes');
-    } catch (err) {
-      console.error('Erreur lors de la suppression du devis:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: "Impossible de supprimer le devis."
-      });
-      setIsDeleting(false);
-    }
-  };
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+  ResizableSeparator,
+} from "@/components/ui/resizable"
 
-  const canEdit = () => {
-    if (!quote) return false;
-    return isAdminOrSuperAdmin || quote.freelancerId === user?.id;
-  };
+import {
+  ResizableHandleLayout,
+  ResizablePanelLayout,
+  ResizablePanelGroupLayou,
+  ResizableSeparatorLayout,
+} from "@/components/ui/resizable-layout"
 
-  const getStatusLabel = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.DRAFT:
-        return "Brouillon";
-      case QuoteStatus.PENDING:
-        return "En attente";
-      case QuoteStatus.ACCEPTED:
-        return "Accepté";
-      case QuoteStatus.REJECTED:
-        return "Rejeté";
-      case QuoteStatus.EXPIRED:
-        return "Expiré";
-      default:
-        return status;
-    }
-  };
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
-  const getStatusVariant = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.DRAFT:
-        return "outline";
-      case QuoteStatus.PENDING:
-        return "secondary";
-      case QuoteStatus.ACCEPTED:
-        return "success";
-      case QuoteStatus.REJECTED:
-        return "destructive";
-      case QuoteStatus.EXPIRED:
-        return "destructive";
-      default:
-        return "default";
-    }
-  };
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
 
-  const calculateItemTotal = (item: QuoteItem) => {
-    const subtotal = item.quantity * item.unitPrice;
-    const discountAmount = subtotal * ((item.discount || 0) / 100);
-    const taxAmount = (subtotal - discountAmount) * ((item.tax || 0) / 100);
-    
-    return subtotal - discountAmount + taxAmount;
-  };
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
-  if (loading) {
-    return (
-      <div className="container max-w-5xl mx-auto py-6">
-        <div className="animate-pulse">
-          <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded mb-4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+import {
+  AspectRatio,
+} from "@/components/ui/aspect-ratio"
 
-  if (error || !quote) {
-    return (
-      <div className="container max-w-5xl mx-auto py-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
-            <p className="text-red-700">{error || "Devis introuvable."}</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            className="mt-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour aux devis
-          </Button>
-        </div>
-      </div>
-    );
-  }
+import {
+  Progress,
+} from "@/components/ui/progress"
 
-  return (
-    <div className="container max-w-5xl mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <Button variant="outline" onClick={handleBack} className="mr-2">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Retour
-          </Button>
-          <h1 className="text-2xl font-bold">Détails du devis</h1>
-        </div>
-        
-        <div className="flex gap-2">
-          {canEdit() && (
-            <>
-              {isDeleting ? (
-                <>
-                  <Button variant="outline" onClick={() => setIsDeleting(false)}>
-                    Annuler
-                  </Button>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    Confirmer la suppression
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Modifier
-                  </Button>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Supprimer
-                  </Button>
-                </>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations générales</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <span className="text-sm text-muted-foreground">ID:</span>
-              <p>{quote.id}</p>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Statut:</span>
-              <div className="mt-1">
-                <Badge variant={getStatusVariant(quote.status)}>{getStatusLabel(quote.status)}</Badge>
-              </div>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Dossier:</span>
-              <div className="flex items-center mt-1">
-                <Folder className="h-4 w-4 mr-1" />
-                <span className="capitalize">{quote.folder || 'Général'}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Contact</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <span className="text-sm text-muted-foreground">ID:</span>
-              <p>{quote.contactId}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Commercial</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div>
-              <span className="text-sm text-muted-foreground">ID:</span>
-              <p>{quote.freelancerId}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Détails du devis</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-            <div>
-              <span className="text-sm text-muted-foreground">Date de création:</span>
-              <p>{format(new Date(quote.createdAt), 'PP', { locale: fr })}</p>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Dernière mise à jour:</span>
-              <p>{format(new Date(quote.updatedAt), 'PP', { locale: fr })}</p>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Valide jusqu'au:</span>
-              <p>
-                {new Date(quote.validUntil) > new Date() 
-                  ? format(new Date(quote.validUntil), 'PP', { locale: fr })
-                  : <span className="text-red-500">Expiré ({format(new Date(quote.validUntil), 'PP', { locale: fr })})</span>
-                }
-              </p>
-            </div>
-          </div>
-          
-          {quote.notes && (
-            <div className="mb-4">
-              <span className="text-sm text-muted-foreground">Notes:</span>
-              <p className="mt-1 p-3 bg-muted/20 rounded-md">{quote.notes}</p>
-            </div>
-          )}
-          
-          <Separator className="my-4" />
-          
-          <div>
-            <h3 className="font-medium mb-2">Articles du devis</h3>
-            <div className="border rounded-md overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="p-2 text-left">Description</th>
-                    <th className="p-2 text-right">Quantité</th>
-                    <th className="p-2 text-right">Prix unitaire</th>
-                    <th className="p-2 text-right">Remise</th>
-                    <th className="p-2 text-right">TVA</th>
-                    <th className="p-2 text-right">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quote.items.map((item, index) => (
-                    <tr key={index} className="border-t">
-                      <td className="p-2">{item.description}</td>
-                      <td className="p-2 text-right">{item.quantity}</td>
-                      <td className="p-2 text-right">{formatCurrency(item.unitPrice)}</td>
-                      <td className="p-2 text-right">{item.discount ? `${item.discount}%` : '-'}</td>
-                      <td className="p-2 text-right">{item.tax ? `${item.tax}%` : '-'}</td>
-                      <td className="p-2 text-right font-medium">{formatCurrency(calculateItemTotal(item))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-muted/20">
-                  <tr>
-                    <td colSpan={5} className="p-2 text-right font-bold">
-                      Total:
-                    </td>
-                    <td className="p-2 text-right font-bold">
-                      {formatCurrency(quote.totalAmount)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        </CardContent>
-        
-        {canEdit() && (
-          <CardFooter className="border-t pt-4 flex flex-wrap gap-2">
-            {quote.status === QuoteStatus.DRAFT && (
-              <Button onClick={() => handleChangeStatus(QuoteStatus.PENDING)}>
-                <Clock className="mr-2 h-4 w-4" />
-                Marquer comme En attente
-              </Button>
-            )}
-            
-            {(quote.status === QuoteStatus.DRAFT || quote.status === QuoteStatus.PENDING) && (
-              <Button variant="default" onClick={() => handleChangeStatus(QuoteStatus.ACCEPTED)}>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Marquer comme Accepté
-              </Button>
-            )}
-            
-            {(quote.status === QuoteStatus.DRAFT || quote.status === QuoteStatus.PENDING) && (
-              <Button variant="destructive" onClick={() => handleChangeStatus(QuoteStatus.REJECTED)}>
-                <XCircle className="mr-2 h-4 w-4" />
-                Marquer comme Rejeté
-              </Button>
-            )}
-          </CardFooter>
-        )}
-      </Card>
-      
-      {isEditing && (
-        <EditQuoteDialog
-          open={isEditing}
-          onOpenChange={setIsEditing}
-          onQuoteUpdated={fetchData}
-          quoteId={quote.id}
-          initialQuote={quote}
-        />
-      )}
-    </div>
-  );
-};
+import {
+  ScrollArea,
+} from "@/components/ui/scroll-area"
 
-export default QuoteDetailPage;
+import {
+  Skeleton,
+} from "@/components/ui/skeleton"
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+
+import {
+  Calendar,
+} from "@/components/ui/calendar"
+
+import {
+  CommandDialog,
+} from "@/components/ui/command-dialog"
+
+import {
+  ContextMenuCheckboxItem,
+} from "@/components/ui/context-menu"
+
+import {
+  ContextMenuRadioGroup,
+  ContextMenuRadioItem,
+} from "@/components/ui/context-menu"
+
+import {
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+} from "@/components/ui/context-menu"
+
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+
+import {
+  Slider,
+} from "@/components/ui/slider"
+
+import {
+  Switch,
+} from "@/components/ui/switch"
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+import {
+  useFormField,
+} from "@/components/ui/form"
+
+import {
+  useDialog,
+} from "@/components/ui/use-dialog"
+
+import {
+  useHoverCard,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransition,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useTheme,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheet,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollArea,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsible,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useCarousel,
+} from "@/components/ui/use-carousel"
+
+import {
+  useCommandDialog,
+} from "@/components/ui/use-command-dialog"
+
+import {
+  useContextMenu,
+} from "@/components/ui/use-context-menu"
+
+import {
+  useAspectRatio,
+} from "@/components/ui/use-aspect-ratio"
+
+import {
+  useProgress,
+} from "@/components/ui/use-progress"
+
+import {
+  useSlider,
+} from "@/components/ui/use-slider"
+
+import {
+  useSwitch,
+} from "@/components/ui/use-switch"
+
+import {
+  useTooltip,
+} from "@/components/ui/use-tooltip"
+
+import {
+  useDrawer,
+} from "@/components/ui/use-drawer"
+
+import {
+  useCarouselContext,
+} from "@/components/ui/use-carousel"
+
+import {
+  useCommandDialogContext,
+} from "@/components/ui/use-command-dialog"
+
+import {
+  useContextMenuContext,
+} from "@/components/ui/use-context-menu"
+
+import {
+  useSheetContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextLayout,
+} from "@/components/ui/resizable-layout"
+
+import {
+  useResizablePanelContextLayout,
+} from "@/components/ui/resizable-layout"
+
+import {
+  useResizableSeparatorContextLayout,
+} from "@/components/ui/resizable-layout"
+
+import {
+  useCollapsibleContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card"
+
+import {
+  useTransitionContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-transition"
+
+import {
+  useToastContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-toast"
+
+import {
+  useThemeContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-theme"
+
+import {
+  useSheetContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-sheet"
+
+import {
+  useScrollAreaContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-scroll-area"
+
+import {
+  useResizablePanelGroupContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizablePanelContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useResizableSeparatorContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/resizable"
+
+import {
+  useCollapsibleContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-collapsible"
+
+import {
+  useHoverCardContextContextContextContextContextContextContextContextContextContextContext,
+} from "@/components/ui/use-hover-card

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { SubscriptionStatus } from '@/types';
+import { SubscriptionStatus } from '@/types/subscription';
 
 interface SubscriptionStatusBadgeProps {
   status: SubscriptionStatus;

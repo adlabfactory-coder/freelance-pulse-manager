@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
-import { Subscription, SubscriptionStatus, SubscriptionInterval } from "@/types";
+import { Subscription, SubscriptionStatus, SubscriptionInterval } from "@/types/subscription";
 import { toast } from "@/components/ui/use-toast";
 
 export const useSubscriptions = () => {

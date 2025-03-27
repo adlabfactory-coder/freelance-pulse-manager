@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { SubscriptionPlan } from "@/types";
+import { SubscriptionPlan } from "@/types/subscription";
 import { useToast } from "./use-toast";
 import { getSubscriptionPlans } from "@/services/supabase/subscriptions";
 

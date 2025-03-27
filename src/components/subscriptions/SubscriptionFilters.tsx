@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SubscriptionInterval } from "@/types";
+import { SubscriptionInterval } from "@/types/subscription";
 import SubscriptionIntervalLabel from "./SubscriptionIntervalLabel";
 
 interface SubscriptionFiltersProps {

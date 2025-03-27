@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SubscriptionInterval } from '@/types';
+import { SubscriptionInterval } from '@/types/subscription';
 
 interface SubscriptionIntervalLabelProps {
   interval: SubscriptionInterval;

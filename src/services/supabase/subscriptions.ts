@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase-client';
-import { SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from '@/types';
+import { SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from '@/types/subscription';
 
 // Fonction pour récupérer tous les plans d'abonnement
 export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {

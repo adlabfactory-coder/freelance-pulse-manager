@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Service, ServiceType } from "@/types";
+import { Service, ServiceType } from "@/types/service";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,7 +71,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSave, onCancel, on
         <FormItem>
           <FormLabel htmlFor="type">Type de service *</FormLabel>
           <Select
-            value={service.type}
+            value={service.type?.toString() || ServiceType.SERVICE}
             onValueChange={(value) => onChange("type", value)}
           >
             <FormControl>
@@ -84,6 +84,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSave, onCancel, on
               <SelectItem value={ServiceType.PRODUCT}>Produit</SelectItem>
               <SelectItem value={ServiceType.SUBSCRIPTION}>
                 Abonnement
+              </SelectItem>
+              <SelectItem value={ServiceType.PACK}>
+                Pack
               </SelectItem>
             </SelectContent>
           </Select>

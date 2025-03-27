@@ -46,13 +46,11 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   }, {} as Record<string, string>);
 
   return (
-    <>
-      <AppointmentTable 
-        appointments={normalizedAppointments} 
-        contacts={contacts} 
-        onUpdate={onStatusChange || (() => {})}
-      />
-    </>
+    <AppointmentTable 
+      appointments={normalizedAppointments} 
+      contacts={contacts} 
+      onUpdate={onStatusChange || (() => {})}
+    />
   );
 };
 
