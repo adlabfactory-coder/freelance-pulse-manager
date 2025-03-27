@@ -14,6 +14,7 @@ import {
   ArrowUpDown, 
   Eye
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Quote, QuoteStatus } from "@/types/quote";
 import QuoteStatusBadge from "../components/QuoteStatusBadge";
@@ -30,10 +31,14 @@ interface QuotesTableProps {
   previewQuoteId: string | null;
   contactsMap: Record<string, any>;
   freelancersMap: Record<string, any>;
+  selectedQuoteIds: string[];
+  selectAll: boolean;
   onSort: (column: string) => void;
   onEditClick: (quoteId: string) => void;
   onPreviewClick: (quoteId: string) => void;
   onEditComplete: () => void;
+  onSelectQuote: (quoteId: string) => void;
+  onSelectAll: () => void;
   getContactName: (contactId: string) => string;
   getFreelancerFullName: (freelancerId: string) => string;
   formatReference: (id: string) => string;
@@ -50,10 +55,14 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
   previewQuoteId,
   contactsMap,
   freelancersMap,
+  selectedQuoteIds,
+  selectAll,
   onSort,
   onEditClick,
   onPreviewClick,
   onEditComplete,
+  onSelectQuote,
+  onSelectAll,
   getContactName,
   getFreelancerFullName,
   formatReference,
@@ -90,12 +99,28 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
   const previewQuote = getQuoteById(previewQuoteId);
   const previewItems = getQuoteItems(previewQuoteId);
 
+  const isSelected = (quoteId: string) => selectedQuoteIds.includes(quoteId);
+
+  const handleRowClick = (e: React.MouseEvent, quoteId: string) => {
+    // Vérifier si le clic vient d'un bouton ou une checkbox
+    if ((e.target as HTMLElement).closest('button') || 
+        (e.target as HTMLElement).closest('[role="checkbox"]')) {
+      return;
+    }
+    
+    // Sinon gérer le clic sur la ligne comme une sélection
+    onSelectQuote(quoteId);
+  };
+
   if (loading) {
     return (
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox disabled />
+              </TableHead>
               <TableHead>Référence</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Commercial</TableHead>
@@ -108,6 +133,9 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
           <TableBody>
             {Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className="h-4 w-4" />
+                </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-24" />
                 </TableCell>
@@ -150,6 +178,13 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12">
+              <Checkbox 
+                checked={selectAll}
+                onCheckedChange={onSelectAll}
+                aria-label="Sélectionner tous les devis"
+              />
+            </TableHead>
             <TableHead>Référence</TableHead>
             <TableHead>Contact</TableHead>
             <TableHead>Commercial</TableHead>
@@ -175,7 +210,19 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
         </TableHeader>
         <TableBody>
           {quotes.map((quote) => (
-            <TableRow key={quote.id}>
+            <TableRow 
+              key={quote.id}
+              onClick={(e) => handleRowClick(e, quote.id)}
+              className={`cursor-pointer ${isSelected(quote.id) ? 'bg-muted/40' : ''}`}
+            >
+              <TableCell className="w-12">
+                <Checkbox 
+                  checked={isSelected(quote.id)}
+                  onCheckedChange={() => onSelectQuote(quote.id)}
+                  aria-label={`Sélectionner le devis ${formatReference(quote.id)}`}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </TableCell>
               <TableCell>{formatReference(quote.id)}</TableCell>
               <TableCell>
                 {getContactName(quote.contactId)}
@@ -197,14 +244,20 @@ const QuotesTable: React.FC<QuotesTableProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handlePreviewClick(quote.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePreviewClick(quote.id);
+                    }}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onEditClick(quote.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditClick(quote.id);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

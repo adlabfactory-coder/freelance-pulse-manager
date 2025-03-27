@@ -8,6 +8,8 @@ import { fetchUserById } from "@/services/user-service";
 import { Contact } from "@/services/contacts/types";
 import { User } from "@/types";
 import { toast } from "sonner";
+import { createQuotesDeleteService } from "@/services/supabase/quotes/quotes-delete";
+import { supabase } from "@/lib/supabase-client";
 
 const defaultFilters: QuoteFilters = {
   search: "",
@@ -18,7 +20,7 @@ const defaultFilters: QuoteFilters = {
   contactId: null,
   minAmount: null,
   maxAmount: null,
-  folder: null // Add folder property to the QuoteFilters
+  folder: null
 };
 
 export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
@@ -37,6 +39,10 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
   const [freelancersMap, setFreelancersMap] = useState<Record<string, User>>({});
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [previewQuoteId, setPreviewQuoteId] = useState<string | null>(null);
+  const [selectedQuoteIds, setSelectedQuoteIds] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+  
+  const quotesDeleteService = createQuotesDeleteService(supabase);
 
   // Charger les devis
   const loadQuotes = async () => {
@@ -45,6 +51,9 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
     try {
       const data = await fetchQuotes();
       setQuotes(data);
+      // Réinitialiser la sélection lors du rechargement des devis
+      setSelectedQuoteIds([]);
+      setSelectAll(false);
     } catch (error) {
       console.error("Erreur lors du chargement des devis:", error);
       setError("Impossible de charger les devis. Veuillez réessayer plus tard.");
@@ -58,7 +67,7 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Charger les contacts - Change getAllContacts to getContacts
+        // Charger les contacts
         const contactsList = await contactService.getContacts();
         setContacts(contactsList);
         
@@ -105,6 +114,61 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
   useEffect(() => {
     loadQuotes();
   }, []);
+
+  // Gestion de la sélection
+  const toggleSelectQuote = (quoteId: string) => {
+    setSelectedQuoteIds(prev => {
+      if (prev.includes(quoteId)) {
+        return prev.filter(id => id !== quoteId);
+      } else {
+        return [...prev, quoteId];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedQuoteIds([]);
+    } else {
+      setSelectedQuoteIds(filteredQuotes.map(quote => quote.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Supprimer les devis sélectionnés
+  const deleteSelectedQuotes = async () => {
+    if (selectedQuoteIds.length === 0) return;
+    
+    try {
+      setLoading(true);
+      let hasError = false;
+      
+      // Utiliser Promise.all pour supprimer tous les devis en parallèle
+      await Promise.all(
+        selectedQuoteIds.map(async (id) => {
+          const success = await quotesDeleteService.deleteQuote(id);
+          if (!success) {
+            hasError = true;
+          }
+        })
+      );
+      
+      if (hasError) {
+        toast.error("Des erreurs sont survenues lors de la suppression de certains devis");
+      } else {
+        toast.success(`${selectedQuoteIds.length} devis supprimés avec succès`);
+      }
+      
+      // Recharger les devis après la suppression
+      await loadQuotes();
+      
+    } catch (error) {
+      console.error("Erreur lors de la suppression des devis:", error);
+      toast.error("Erreur lors de la suppression des devis");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filtrage des devis
   const filteredQuotes = useMemo(() => {
@@ -236,6 +300,8 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
     previewQuoteId,
     contactOptions,
     freelancerOptions,
+    selectedQuoteIds,
+    selectAll,
     loadQuotes,
     handleSort,
     handleFilterChange,
@@ -247,6 +313,9 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
     setEditingQuoteId,
     setPreviewQuoteId,
     getQuoteById,
-    getQuoteItems
+    getQuoteItems,
+    toggleSelectQuote,
+    handleSelectAll,
+    deleteSelectedQuotes
   };
 };

@@ -36,13 +36,13 @@ const RenewalRateChart: React.FC<RenewalRateChartProps> = ({ subscriptions }) =>
           outerRadius={80}
           paddingAngle={5}
           dataKey="value"
-          label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
+          label={({ name, value }) => `${name}: ${Number(value).toFixed(1)}%`}
         >
           {data.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => [`${value.toFixed(1)}%`, "Taux"]} />
+        <Tooltip formatter={(value) => [`${Number(value).toFixed(1)}%`, "Taux"]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

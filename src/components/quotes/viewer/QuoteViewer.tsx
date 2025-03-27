@@ -3,6 +3,7 @@ import React from "react";
 import { useQuotesViewer } from "./hooks/useQuotesViewer";
 import QuoteFilterBar from "./QuoteFilterBar";
 import QuotesTable from "./QuotesTable";
+import BulkActionsBar from "./BulkActionsBar";
 
 interface QuoteViewerProps {
   title?: string;
@@ -29,6 +30,8 @@ const QuoteViewer: React.FC<QuoteViewerProps> = ({
     freelancersMap,
     editingQuoteId,
     previewQuoteId,
+    selectedQuoteIds,
+    selectAll,
     handleSort,
     handleFilterChange,
     handleSearchChange,
@@ -40,7 +43,10 @@ const QuoteViewer: React.FC<QuoteViewerProps> = ({
     setEditingQuoteId,
     setPreviewQuoteId,
     getQuoteById,
-    getQuoteItems
+    getQuoteItems,
+    toggleSelectQuote,
+    handleSelectAll,
+    deleteSelectedQuotes
   } = useQuotesViewer(initialFilters);
 
   return (
@@ -62,6 +68,15 @@ const QuoteViewer: React.FC<QuoteViewerProps> = ({
         </div>
       )}
 
+      {selectedQuoteIds.length > 0 && (
+        <BulkActionsBar 
+          selectedCount={selectedQuoteIds.length}
+          onDelete={deleteSelectedQuotes}
+          selectedQuoteIds={selectedQuoteIds}
+          getQuoteById={getQuoteById}
+        />
+      )}
+      
       <QuotesTable
         quotes={quotes}
         loading={loading}
@@ -71,6 +86,8 @@ const QuoteViewer: React.FC<QuoteViewerProps> = ({
         previewQuoteId={previewQuoteId}
         contactsMap={contactsMap}
         freelancersMap={freelancersMap}
+        selectedQuoteIds={selectedQuoteIds}
+        selectAll={selectAll}
         onSort={handleSort}
         onEditClick={setEditingQuoteId}
         onPreviewClick={setPreviewQuoteId}
@@ -80,6 +97,8 @@ const QuoteViewer: React.FC<QuoteViewerProps> = ({
         formatReference={formatReference}
         getQuoteById={getQuoteById}
         getQuoteItems={getQuoteItems}
+        onSelectQuote={toggleSelectQuote}
+        onSelectAll={handleSelectAll}
       />
     </div>
   );
