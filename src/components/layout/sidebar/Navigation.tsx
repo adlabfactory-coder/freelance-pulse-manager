@@ -10,7 +10,8 @@ import {
   FileSpreadsheet,
   PieChart,
   Shield,
-  Layers
+  Layers,
+  UserPlus
 } from "lucide-react";
 import { NavItem as NavItemType } from "@/types";
 import { UserRole } from "@/types";
@@ -42,6 +43,17 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
       { title: "Administration", href: "/admin", icon: Shield },
       { title: "Audit", href: "/audit", icon: Layers }
     );
+  } else if (role === UserRole.ADMIN) {
+    allNavItems.push(
+      { title: "Administration", href: "/admin", icon: Shield }
+    );
+  }
+  
+  // Ajout de l'élément de gestion des utilisateurs pour les admins et super admins
+  if (isAdminOrSuperAdmin) {
+    allNavItems.push(
+      { title: "Gestion utilisateurs", href: "/admin/users", icon: UserPlus }
+    );
   }
   
   // La navigation est désormais contrôlée par le rôle de l'utilisateur
@@ -54,7 +66,7 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
   // Accès complet pour admins ordinaires
   else if (role === UserRole.ADMIN) {
     visibleItems = allNavItems.filter(item => 
-      !["/admin", "/audit"].includes(item.href)
+      !["/audit"].includes(item.href)
     );
   } else if (role === UserRole.ACCOUNT_MANAGER) {
     // Accès pour les chargés de compte

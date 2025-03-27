@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { User, UserRole } from '@/types';
 import { useSupabase } from '@/hooks/use-supabase';
 
@@ -13,26 +13,57 @@ interface UserFormProps {
   user?: User;
   onSuccess?: (user: User) => void;
   onCancel?: () => void;
+  defaultRole?: UserRole;
 }
 
-const UserForm: React.FC<UserFormProps> = ({
+export const UserForm: React.FC<UserFormProps> = ({
   user,
   onSuccess,
   onCancel,
+  defaultRole = UserRole.FREELANCER,
 }) => {
   const supabase = useSupabase();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<UserRole>(UserRole.FREELANCER);
+  const [role, setRole] = useState<UserRole>(defaultRole);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [generatePassword, setGeneratePassword] = useState(false);
 
   useEffect(() => {
     if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
-      setRole(user.role || UserRole.FREELANCER);
+      setRole(user.role || defaultRole);
+    } else {
+      // Réinitialiser les champs si on crée un nouvel utilisateur
+      setName('');
+      setEmail('');
+      setRole(defaultRole);
+      setPassword('');
+      setPasswordConfirm('');
+      setGeneratePassword(false);
     }
-  }, [user]);
+  }, [user, defaultRole]);
+
+  const generateRandomPassword = () => {
+    // Générer un mot de passe aléatoire sécurisé
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
+    const passwordLength = 12;
+    let randomPassword = '';
+    
+    for (let i = 0; i < passwordLength; i++) {
+      const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
+      randomPassword += randomChar;
+    }
+    
+    setPassword(randomPassword);
+    setPasswordConfirm(randomPassword);
+    setGeneratePassword(true);
+    
+    return randomPassword;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,21 +72,27 @@ const UserForm: React.FC<UserFormProps> = ({
     try {
       // Validation de base
       if (!name.trim()) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Le nom est requis.",
-        });
+        toast("Le nom est requis.");
+        setIsSubmitting(false);
         return;
       }
 
       if (!email.trim() || !email.includes('@')) {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Email invalide.",
-        });
+        toast("Email invalide.");
+        setIsSubmitting(false);
         return;
+      }
+
+      if (!user && !generatePassword && password !== passwordConfirm) {
+        toast("Les mots de passe ne correspondent pas.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Générer un mot de passe si l'option est activée
+      let finalPassword = password;
+      if (!user && generatePassword) {
+        finalPassword = generateRandomPassword();
       }
 
       // Update existing user or create new one
@@ -68,8 +105,24 @@ const UserForm: React.FC<UserFormProps> = ({
           name,
           email,
           role,
-          schedule_enabled: false // Remplacé calendly_enabled par schedule_enabled
+          schedule_enabled: false
         });
+        
+        if (result) {
+          toast.success(`L'utilisateur ${name} a été mis à jour avec succès.`);
+          
+          if (onSuccess) {
+            onSuccess({
+              id: user.id,
+              name,
+              email,
+              role,
+              avatar: user.avatar
+            });
+          }
+        } else {
+          toast.error(`Impossible de mettre à jour l'utilisateur.`);
+        }
       } else {
         // Create new user
         result = await supabase.createUser({
@@ -77,40 +130,35 @@ const UserForm: React.FC<UserFormProps> = ({
           email,
           role,
           avatar: null,
-          schedule_enabled: false // Remplacé calendly_enabled par schedule_enabled
-        });
-      }
-
-      if (result) {
-        toast({
-          title: user ? "Utilisateur mis à jour" : "Utilisateur créé",
-          description: `L'utilisateur a été ${user ? "mis à jour" : "créé"} avec succès.`,
+          schedule_enabled: false,
+          password: finalPassword
         });
         
-        if (onSuccess && result.id) {
-          onSuccess({
-            id: result.id,
-            name,
-            email,
-            role,
-            avatar: null,
-            schedule_enabled: false // Remplacé calendly_enabled par schedule_enabled
-          });
+        if (result && result.success) {
+          toast.success(`L'utilisateur ${name} a été créé avec succès.`);
+          
+          if (generatePassword) {
+            toast.info(`Mot de passe généré: ${finalPassword}`, {
+              duration: 10000, // Afficher plus longtemps pour que l'admin puisse le copier
+            });
+          }
+          
+          if (onSuccess && result.id) {
+            onSuccess({
+              id: result.id,
+              name,
+              email,
+              role,
+              avatar: null
+            });
+          }
+        } else {
+          toast.error(`Impossible de créer l'utilisateur.`);
         }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: `Impossible de ${user ? "mettre à jour" : "créer"} l'utilisateur.`,
-        });
       }
     } catch (error) {
       console.error(`Erreur lors de ${user ? "la mise à jour" : "la création"} de l'utilisateur:`, error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: `Une erreur est survenue lors de ${user ? "la mise à jour" : "la création"} de l'utilisateur.`,
-      });
+      toast.error(`Une erreur est survenue lors de ${user ? "la mise à jour" : "la création"} de l'utilisateur.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -144,6 +192,87 @@ const UserForm: React.FC<UserFormProps> = ({
               required
             />
           </div>
+          
+          {!user && (
+            <>
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="generate-password"
+                    checked={generatePassword}
+                    onChange={() => {
+                      if (!generatePassword) {
+                        generateRandomPassword();
+                      } else {
+                        setPassword('');
+                        setPasswordConfirm('');
+                        setGeneratePassword(false);
+                      }
+                    }}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="generate-password" className="text-sm font-normal">
+                    Générer un mot de passe aléatoire
+                  </Label>
+                </div>
+              </div>
+              
+              {!generatePassword ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Mot de passe</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required={!user}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password-confirm">Confirmer le mot de passe</Label>
+                    <Input
+                      id="password-confirm"
+                      type="password"
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      placeholder="••••••••"
+                      required={!user}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="generated-password">Mot de passe généré</Label>
+                  <div className="flex">
+                    <Input
+                      id="generated-password"
+                      type="text"
+                      value={password}
+                      readOnly
+                      className="mr-2 flex-1"
+                    />
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(password);
+                        toast.success("Mot de passe copié dans le presse-papier");
+                      }}
+                    >
+                      Copier
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ce mot de passe sera affiché une seule fois après la création du compte.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+          
           <div className="space-y-2">
             <Label>Rôle</Label>
             <RadioGroup value={role} onValueChange={(value) => setRole(value as UserRole)} className="flex flex-col space-y-1">

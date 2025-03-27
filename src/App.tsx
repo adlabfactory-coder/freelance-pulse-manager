@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
@@ -23,6 +22,8 @@ import Layout from "./components/layout/Layout";
 import { AuthProvider } from "./hooks/use-auth";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
 import { SupabaseProvider } from "./hooks/use-supabase";
+import UserManager from "@/pages/admin/UserManager";
+import AccountManagersDistributionPage from "@/pages/admin/AccountManagersDistributionPage";
 
 function App() {
   return (
@@ -47,7 +48,8 @@ function App() {
                 <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
                 <Route path="/settings/*" element={<SettingsRoutes />} />
                 <Route path="/admin" element={<AdminPage />} />
-                <Route path="/audit" element={<AuditPage />} />
+                <Route path="/admin/users" element={<UserManager />} />
+                <Route path="/admin/account-managers" element={<AccountManagersDistributionPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
