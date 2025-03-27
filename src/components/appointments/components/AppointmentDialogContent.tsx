@@ -3,14 +3,18 @@ import React, { useState, useEffect } from "react";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CalendarClock } from "lucide-react";
-import { useAppointmentForm, AppointmentTitleOption } from "../hooks/useAppointmentForm";
+import { useAppointmentForm, AppointmentTitleOption } from "@/hooks/appointments/useAppointmentForm";
 import AppointmentTypeSelect from "./AppointmentTypeSelect";
 import AppointmentDescription from "./AppointmentDescription";
 import AppointmentDateTimePicker from "./AppointmentDateTimePicker";
 import ContactSelector from "./ContactSelector";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import FreelancerSelector from "@/components/quotes/form/FreelancerSelector";
+import { User } from "@/types";
 
 interface AppointmentDialogContentProps {
   onOpenChange: (open: boolean) => void;
@@ -27,6 +31,8 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
   const isFreelancer = user?.role === 'freelancer';
   const isAccountManager = user?.role === 'account_manager';
   const [contactId, setContactId] = useState(initialContactId || "");
+  const [freelancers, setFreelancers] = useState<User[]>([]);
+  const [selectedFreelancerId, setSelectedFreelancerId] = useState<string>("");
   
   const {
     titleOption,
@@ -44,14 +50,42 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
     isSubmitting,
     handleSubmit: formSubmit,
     defaultFreelancer
-  } = useAppointmentForm(selectedDate, () => onOpenChange(false), initialContactId, !isFreelancer);
+  } = useAppointmentForm(selectedDate, () => onOpenChange(false), initialContactId, false);
 
-  // Utilisation pour le débogage
+  // Charger la liste des freelancers
   useEffect(() => {
-    if (defaultFreelancer) {
-      console.log("Freelancer par défaut assigné:", defaultFreelancer);
-    }
-  }, [defaultFreelancer]);
+    const loadFreelancers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('role', 'freelancer');
+        
+        if (error) {
+          console.error("Erreur lors du chargement des freelancers:", error);
+          toast.error("Impossible de charger la liste des freelancers");
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          setFreelancers(data as User[]);
+          // Si l'utilisateur est un freelancer, sélectionner son ID par défaut
+          if (isFreelancer && user) {
+            setSelectedFreelancerId(user.id);
+          } 
+          // Sinon utiliser le premier freelancer de la liste par défaut
+          else if (data.length > 0 && !selectedFreelancerId) {
+            setSelectedFreelancerId(data[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des freelancers:", error);
+        toast.error("Impossible de charger la liste des freelancers");
+      }
+    };
+    
+    loadFreelancers();
+  }, [isFreelancer, user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,8 +95,45 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
       return;
     }
     
-    // Passer l'ID du contact lors de la soumission
-    formSubmit(e, contactId);
+    if (!selectedFreelancerId) {
+      toast.error("Veuillez sélectionner un freelancer pour ce rendez-vous");
+      return;
+    }
+    
+    // Passer l'ID du contact et du freelancer lors de la soumission
+    const originalSubmit = formSubmit;
+    const event = {...e};
+    
+    // Écrasez formSubmit pour injecter l'ID du freelancer
+    const customSubmit = async () => {
+      try {
+        // Préparation des données à soumettre
+        const appointmentData = {
+          title: titleOption === 'autre' ? customTitle : titleOption,
+          description,
+          date,
+          time,
+          duration,
+          contactId,
+          freelancerId: selectedFreelancerId,
+          autoAssign: false
+        };
+        
+        // Soumission du formulaire avec les données modifiées
+        console.log("Soumission du rendez-vous avec freelancer:", appointmentData);
+        const result = await formSubmit(event, contactId);
+        
+        if (result) {
+          toast.success("Rendez-vous planifié avec succès");
+          onOpenChange(false);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la planification du rendez-vous:", error);
+        toast.error("Erreur lors de la planification du rendez-vous");
+      }
+    };
+    
+    customSubmit();
   };
 
   const handleTitleOptionChange = (value: string) => {
@@ -81,11 +152,7 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
           Planifier un nouveau rendez-vous
         </DialogTitle>
         <DialogDescription>
-          {isFreelancer 
-            ? "Ce rendez-vous vous sera attribué directement" 
-            : isAccountManager
-              ? "Vous pouvez planifier un rendez-vous qui sera assigné à un freelancer disponible"
-              : "Ce rendez-vous sera assigné à un freelancer disponible"}
+          Veuillez sélectionner un contact et un freelancer pour ce rendez-vous
         </DialogDescription>
       </DialogHeader>
       
@@ -101,6 +168,18 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
               placeholder="Sélectionner un contact"
             />
           </div>
+          
+          {!isFreelancer && (
+            <div className="grid gap-2">
+              <Label htmlFor="freelancer">Freelancer*</Label>
+              <FreelancerSelector
+                freelancers={freelancers}
+                freelancerId={selectedFreelancerId}
+                onSelect={setSelectedFreelancerId}
+                disabled={isFreelancer}
+              />
+            </div>
+          )}
           
           <AppointmentTypeSelect
             titleOption={titleOption}
@@ -134,7 +213,7 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
           </Button>
           <Button 
             type="submit" 
-            disabled={isSubmitting || !contactId}
+            disabled={isSubmitting || !contactId || !selectedFreelancerId}
           >
             {isSubmitting ? "Planification..." : "Planifier le rendez-vous"}
           </Button>

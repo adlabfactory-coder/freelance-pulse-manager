@@ -81,12 +81,18 @@ export const useAppointmentForm = (
     
     // Logique de détermination du freelancer
     // Si l'utilisateur est un freelancer, toujours utiliser son propre ID
-    const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
+    let assignedFreelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
+    
+    // Vérification que le freelancer est bien assigné
+    if (!assignedFreelancerId) {
+      toast.error("Un freelancer doit être assigné au rendez-vous");
+      return null;
+    }
     
     console.log("useAppointmentForm: Soumission du formulaire", {
       title: finalTitle, 
       contactId: finalContactId,
-      freelancerId,
+      freelancerId: assignedFreelancerId,
       autoAssign,
       userRole: user?.role
     });
@@ -99,10 +105,10 @@ export const useAppointmentForm = (
         time,
         duration,
         contactId: finalContactId,
-        freelancerId,
+        freelancerId: assignedFreelancerId,
         folder,
-        // Si l'utilisateur est un freelancer, jamais d'auto-assignation
-        autoAssign: user?.role === UserRole.FREELANCER ? false : autoAssign
+        // Désactiver l'auto-assignation car un freelancer doit être assigné
+        autoAssign: false
       });
       
       if (result && onSuccess) {

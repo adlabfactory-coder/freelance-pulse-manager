@@ -7,6 +7,7 @@ import { contactCreateUpdateService, ContactFormInput } from '@/services/contact
 import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/lib/supabase-client';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -17,6 +18,9 @@ interface UseContactFormProps {
 export const useContactForm = ({ onSuccess, initialData, isEditing = false }: UseContactFormProps = {}) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  
+  // Déterminer le freelancer assigné par défaut
+  const defaultAssignedTo = initialData?.assignedTo || (user?.role === 'freelancer' ? user?.id : '');
   
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -29,7 +33,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       address: initialData?.address || "",
       notes: initialData?.notes || "",
       status: initialData?.status || "lead" as ContactStatus,
-      assignedTo: initialData?.assignedTo || (user ? user.id : ""),
+      assignedTo: defaultAssignedTo || "",
       folder: initialData?.folder || "general"
     },
   });
@@ -40,6 +44,13 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
     try {
       setLoading(true);
       
+      // Vérifier que l'utilisateur a bien assigné un freelancer
+      if (!data.assignedTo) {
+        toast.error("Vous devez assigner ce contact à un freelancer");
+        setLoading(false);
+        return;
+      }
+      
       const contactInput: ContactFormInput = {
         name: data.name,
         email: data.email,
@@ -49,7 +60,7 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
         address: data.address,
         notes: data.notes,
         status: data.status as ContactStatus,
-        assignedTo: data.assignedTo || (user ? user.id : undefined),
+        assignedTo: data.assignedTo, // Maintenant obligatoire
         folder: data.folder
       };
       

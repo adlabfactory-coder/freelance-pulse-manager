@@ -1,31 +1,96 @@
 
-import { useState } from "react";
-import { useQuoteCreate } from "./submission/useQuoteCreate";
-import { useQuoteUpdate } from "./submission/useQuoteUpdate";
+import { useState, useCallback } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { Quote, QuoteItem, QuoteStatus } from "@/types";
+import { createQuote } from "@/services/quote-service";
 
 export interface UseQuoteSubmissionProps {
-  onSuccess?: (id?: string) => void;
-  onCloseDialog?: (open: boolean) => void;
-  onQuoteCreated?: (id?: string) => void;
+  onSuccess?: (quoteId: string) => void;
+  onError?: (error: any) => void;
 }
 
-/**
- * Hook pour gérer la soumission et mise à jour des devis
- */
-export const useQuoteSubmission = (props: UseQuoteSubmissionProps = {}) => {
-  const [isQuoteSaved, setIsQuoteSaved] = useState(false);
+export const useQuoteSubmission = ({ 
+  onSuccess, 
+  onError 
+}: UseQuoteSubmissionProps = {}) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   
-  // Utiliser les hooks spécialisés pour la création et la mise à jour
-  const { isSubmitting: isSubmittingCreate, handleSubmit } = useQuoteCreate(props);
-  const { isSubmitting: isSubmittingUpdate, handleSubmitEdit } = useQuoteUpdate(props);
-  
-  // Déterminer si une opération est en cours
-  const isSubmitting = isSubmittingCreate || isSubmittingUpdate;
+  const submitQuote = useCallback(async (
+    quoteData: Partial<Quote>,
+    items: QuoteItem[]
+  ) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Valider les données requises
+      if (!quoteData.contactId) {
+        throw new Error("Veuillez sélectionner un contact");
+      }
+      
+      if (!quoteData.freelancerId) {
+        throw new Error("Un freelancer doit être assigné à ce devis");
+      }
+      
+      if (!quoteData.validUntil) {
+        throw new Error("Veuillez spécifier une date de validité");
+      }
+      
+      if (!quoteData.totalAmount && quoteData.totalAmount !== 0) {
+        throw new Error("Le montant total est requis");
+      }
+      
+      if (!items || items.length === 0) {
+        throw new Error("Veuillez ajouter au moins un service au devis");
+      }
+      
+      // Formater les données pour la soumission
+      const formattedItems = items.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount || 0,
+        tax: item.tax || 0
+      }));
+      
+      const result = await createQuote({
+        quote: {
+          contactId: quoteData.contactId,
+          freelancerId: quoteData.freelancerId,
+          totalAmount: quoteData.totalAmount,
+          status: quoteData.status || QuoteStatus.DRAFT,
+          validUntil: quoteData.validUntil,
+          notes: quoteData.notes || "",
+          folder: quoteData.folder || "general"
+        },
+        items: formattedItems
+      });
+      
+      if (result && result.id) {
+        toast.success("Devis créé avec succès");
+        if (onSuccess) {
+          onSuccess(result.id);
+        }
+        return result.id;
+      } else {
+        throw new Error("Erreur lors de la création du devis: réponse invalide");
+      }
+    } catch (error: any) {
+      console.error("Erreur lors de la soumission du devis:", error);
+      toast.error(error.message || "Erreur lors de la création du devis");
+      
+      if (onError) {
+        onError(error);
+      }
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [onSuccess, onError, user]);
   
   return {
     isSubmitting,
-    isQuoteSaved,
-    handleSubmit,
-    handleSubmitEdit
+    submitQuote
   };
 };
