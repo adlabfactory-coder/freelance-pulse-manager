@@ -1,153 +1,130 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CommissionRule, CommissionTier } from "@/types/commissions";
-import { AlertTriangle, MessageCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CommissionRule, CommissionTier, CommissionTierEnum } from "@/types/commissions";
 
 interface CommissionTiersProps {
   commissionRules: CommissionRule[];
   formatCurrency: (amount: number) => string;
-  getTierLabel: (tier: string) => string;
+  getTierLabel: (tier: CommissionTier) => string;
 }
 
-const CommissionTiers: React.FC<CommissionTiersProps> = ({
-  commissionRules,
-  formatCurrency,
-  getTierLabel
-}) => {
-  // Utiliser des règles de commission par défaut si aucune n'est fournie
-  const hasRules = commissionRules && commissionRules.length > 0;
-  const tiers = [CommissionTier.TIER_1, CommissionTier.TIER_2, CommissionTier.TIER_3, CommissionTier.TIER_4];
-  
-  // Assurer que tous les 4 paliers sont disponibles
-  let rules = hasRules ? [...commissionRules] : [];
-  
-  // Si nous n'avons pas les 4 paliers, compléter avec les paliers par défaut
-  if (rules.length < 4) {
-    const existingTiers = rules.map(rule => rule.tier);
-    tiers.forEach(tier => {
-      if (!existingTiers.includes(tier)) {
-        const defaultRule = getDefaultRule(tier);
-        rules.push(defaultRule);
-      }
-    });
-    
-    // Trier les règles par niveau minimum de contrats
-    rules.sort((a, b) => a.minContracts - b.minContracts);
+// Fonction utilitaire pour obtenir la classe CSS en fonction du niveau
+const getTierBadgeClass = (tier: CommissionTier): string => {
+  switch (tier) {
+    case CommissionTierEnum.BRONZE:
+      return "bg-amber-800 hover:bg-amber-700";
+    case CommissionTierEnum.SILVER:
+      return "bg-gray-400 hover:bg-gray-300";
+    case CommissionTierEnum.GOLD:
+      return "bg-amber-400 hover:bg-amber-300";
+    case CommissionTierEnum.PLATINUM:
+      return "bg-cyan-600 hover:bg-cyan-500";
+    case CommissionTierEnum.DIAMOND:
+      return "bg-purple-600 hover:bg-purple-500";
+    default:
+      return "bg-gray-600 hover:bg-gray-500";
   }
+};
 
-  console.log("Affichage des règles de commission:", rules);
+const CommissionTiers: React.FC<CommissionTiersProps> = ({ 
+  commissionRules, 
+  formatCurrency, 
+  getTierLabel 
+}) => {
+  // Tri des règles par nombre minimum de contrats
+  const sortedRules = [...commissionRules].sort((a, b) => a.minContracts - b.minContracts);
+  
+  // Obtenir les règles disponibles pour l'affichage
+  const getAvailableRules = (): CommissionRule[] => {
+    if (sortedRules.length === 0) {
+      // Si aucune règle n'est définie, utiliser des règles par défaut pour la démo
+      return [
+        {
+          id: "1",
+          tier: CommissionTierEnum.BRONZE,
+          percentage: 2,
+          unit_amount: 0,
+          minContracts: 1,
+          maxContracts: 5
+        },
+        {
+          id: "2",
+          tier: CommissionTierEnum.SILVER,
+          percentage: 3,
+          unit_amount: 0,
+          minContracts: 6,
+          maxContracts: 10
+        },
+        {
+          id: "3",
+          tier: CommissionTierEnum.GOLD,
+          percentage: 5,
+          unit_amount: 100,
+          minContracts: 11,
+          maxContracts: 20
+        },
+        {
+          id: "4",
+          tier: CommissionTierEnum.PLATINUM,
+          percentage: 7,
+          unit_amount: 250,
+          minContracts: 21,
+          maxContracts: 30
+        },
+        {
+          id: "5",
+          tier: CommissionTierEnum.DIAMOND,
+          percentage: 10,
+          unit_amount: 500,
+          minContracts: 31,
+          maxContracts: null
+        }
+      ];
+    }
+    return sortedRules;
+  };
+  
+  // Obtenir les règles à afficher (réelles ou de démo)
+  const rulesToShow = getAvailableRules();
 
   return (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">Paliers de Commission</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {!hasRules && (
-          <Alert className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Utilisation des valeurs de paliers par défaut. Les administrateurs peuvent configurer ces valeurs dans les paramètres.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {rules.map((rule, index) => (
+      <CardContent className="pt-6">
+        <div className="text-sm font-medium text-muted-foreground mb-3">
+          Niveaux de commission
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {rulesToShow.map((rule) => (
             <div 
-              key={rule.id || `tier-${index}`}
-              className="border rounded-md p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow"
+              key={rule.id}
+              className="flex flex-col items-center p-4 border rounded-lg hover:bg-accent transition-colors"
             >
-              <Badge 
-                className={
-                  rule.tier === CommissionTier.TIER_1 ? "bg-zinc-200 text-zinc-800 hover:bg-zinc-300" :
-                  rule.tier === CommissionTier.TIER_2 ? "bg-blue-100 text-blue-800 hover:bg-blue-200" :
-                  rule.tier === CommissionTier.TIER_3 ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-200" :
-                  "bg-green-100 text-green-800 hover:bg-green-200"
-                }
-              >
+              <Badge className={`mb-2 ${getTierBadgeClass(rule.tier)}`}>
                 {getTierLabel(rule.tier)}
               </Badge>
-              <div className="mt-2 text-2xl font-bold">
-                {formatCurrency(rule.unit_amount || 0)}
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                par contrat validé
-              </div>
-              <div className="text-xs mt-3 text-muted-foreground">
-                {rule.minContracts} contrat{rule.minContracts > 1 ? 's' : ''} minimum
-                {rule.maxContracts ? ` - ${rule.maxContracts} contrats maximum` : ' et plus'}
+              <div className="text-2xl font-bold">{rule.percentage}%</div>
+              {rule.unit_amount > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  + {formatCurrency(rule.unit_amount)} fixe
+                </div>
+              )}
+              <div className="mt-2 text-xs text-center text-muted-foreground">
+                {rule.minContracts === rule.maxContracts ? (
+                  `${rule.minContracts} contrats`
+                ) : rule.maxContracts ? (
+                  `${rule.minContracts} à ${rule.maxContracts} contrats`
+                ) : (
+                  `${rule.minContracts}+ contrats`
+                )}
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-6 text-sm text-muted-foreground">
-          <p>Les commissions sont calculées à la fin de chaque mois en fonction du nombre de contrats validés.</p>
-          <p className="mt-2">Pour chaque contrat validé dans un palier, une commission fixe est attribuée selon le montant unitaire de ce palier.</p>
-        </div>
-        
-        <Alert className="mt-4 bg-blue-50 border-blue-100">
-          <MessageCircle className="h-4 w-4 text-blue-500" />
-          <AlertDescription>
-            Pour toute question concernant le calcul de vos commissions ou les règles applicables, veuillez contacter l'administrateur via le bouton WhatsApp en haut à droite.
-          </AlertDescription>
-        </Alert>
       </CardContent>
     </Card>
   );
-};
-
-// Fonctions utilitaires pour générer des règles par défaut
-const getDefaultRule = (tier: string): CommissionRule => {
-  switch (tier) {
-    case CommissionTier.TIER_1:
-      return {
-        id: "default-tier-1",
-        tier: CommissionTier.TIER_1,
-        minContracts: 1,
-        maxContracts: 10,
-        percentage: 0,
-        unit_amount: 500
-      };
-    case CommissionTier.TIER_2:
-      return {
-        id: "default-tier-2",
-        tier: CommissionTier.TIER_2,
-        minContracts: 11,
-        maxContracts: 20,
-        percentage: 0,
-        unit_amount: 1000
-      };
-    case CommissionTier.TIER_3:
-      return {
-        id: "default-tier-3",
-        tier: CommissionTier.TIER_3,
-        minContracts: 21,
-        maxContracts: 30,
-        percentage: 0,
-        unit_amount: 1500
-      };
-    case CommissionTier.TIER_4:
-      return {
-        id: "default-tier-4",
-        tier: CommissionTier.TIER_4,
-        minContracts: 31,
-        percentage: 0,
-        unit_amount: 2000
-      };
-    default:
-      return {
-        id: "default-unknown",
-        tier: CommissionTier.TIER_1,
-        minContracts: 1,
-        maxContracts: 10,
-        percentage: 0,
-        unit_amount: 500
-      };
-  }
 };
 
 export default CommissionTiers;

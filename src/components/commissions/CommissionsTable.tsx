@@ -1,29 +1,10 @@
-import React from "react";
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import React from "react";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Commission, CommissionTier } from "@/types/commissions";
-import { CheckCircle, MoreHorizontal, XCircle } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { CheckCircle, Eye } from "lucide-react";
+import { Commission, CommissionStatus, CommissionTier } from "@/types/commissions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CommissionsTableProps {
   commissions: Commission[];
@@ -31,11 +12,11 @@ interface CommissionsTableProps {
   requestPayment: (commissionId: string) => void;
   approvePayment?: (commissionId: string) => void;
   isAdmin?: boolean;
-  getTierLabel: (tier: string) => string;
+  getTierLabel: (tier: CommissionTier) => string;
   getStatusBadge: (status: string, paymentRequested: boolean) => React.ReactNode;
   formatCurrency: (amount: number) => string;
-  formatPeriod: (startDate: Date, endDate: Date) => string;
-  onViewCommission: (commissionId: string) => void;
+  formatPeriod: (start: Date, end: Date) => string;
+  onViewCommission: (id: string) => void;
 }
 
 const CommissionsTable: React.FC<CommissionsTableProps> = ({
@@ -48,135 +29,71 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
   getStatusBadge,
   formatCurrency,
   formatPeriod,
-  onViewCommission,
+  onViewCommission
 }) => {
-  const columns: ColumnDef<Commission>[] = [
-    {
-      accessorKey: "id",
-      header: "ID",
-    },
-    {
-      accessorKey: "freelancerName",
-      header: "Commercial",
-    },
-    {
-      accessorKey: "amount",
-      header: "Montant",
-      cell: ({ row }) => formatCurrency(row.original.amount),
-    },
-    {
-      accessorKey: "tier",
-      header: "Palier",
-      cell: ({ row }) => getTierLabel(row.original.tier),
-    },
-    {
-      accessorKey: "period",
-      header: "Période",
-      cell: ({ row }) => {
-        if (row.original.periodStart && row.original.periodEnd) {
-          return formatPeriod(row.original.periodStart, row.original.periodEnd);
-        }
-        return "";
-      }
-    },
-    {
-      accessorKey: "status",
-      header: "Statut",
-      cell: ({ row }) =>
-        getStatusBadge(row.original.status, row.original.payment_requested || false),
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Ouvrir le menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onViewCommission(row.original.id)}>
-              Voir détails
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            
-            {/* Option pour demander le versement (visible par tous) */}
-            <DropdownMenuItem
-              onClick={() => requestPayment(row.original.id)}
-              disabled={row.original.payment_requested || requestingPayment || row.original.status === 'paid'}
-            >
-              Demander le versement
-            </DropdownMenuItem>
-            
-            {/* Options réservées aux administrateurs */}
-            {isAdmin && approvePayment && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => approvePayment(row.original.id)}
-                  disabled={!row.original.payment_requested || row.original.status === 'paid'}
-                  className="text-green-600"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Valider le paiement
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
-
-  const table = useReactTable({
-    data: commissions,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                );
-              })}
-            </TableRow>
-          ))}
+          <TableRow>
+            <TableHead>Période</TableHead>
+            <TableHead>Niveau</TableHead>
+            <TableHead>Contrats</TableHead>
+            <TableHead>Montant</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                Aucun résultat.
+          {commissions.map((commission) => (
+            <TableRow key={commission.id}>
+              <TableCell>
+                {formatPeriod(
+                  new Date(commission.periodStart), 
+                  new Date(commission.periodEnd)
+                )}
+              </TableCell>
+              <TableCell>{getTierLabel(commission.tier)}</TableCell>
+              <TableCell>{commission.contracts_count || 0}</TableCell>
+              <TableCell>{formatCurrency(commission.amount)}</TableCell>
+              <TableCell>
+                {getStatusBadge(commission.status, commission.payment_requested)}
+              </TableCell>
+              <TableCell className="text-right space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onViewCommission(commission.id)}
+                >
+                  <Eye className="h-4 w-4 mr-1" />
+                  Détails
+                </Button>
+                
+                {commission.status === "pending" && !commission.payment_requested && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={requestingPayment}
+                    onClick={() => requestPayment(commission.id)}
+                  >
+                    Demander
+                  </Button>
+                )}
+                
+                {isAdmin && commission.payment_requested && commission.status !== "paid" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-green-600 text-green-600 hover:bg-green-50 hover:text-green-700"
+                    onClick={() => approvePayment && approvePayment(commission.id)}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Valider
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
     </div>

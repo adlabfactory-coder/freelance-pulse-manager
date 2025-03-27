@@ -1,122 +1,128 @@
 
-import { Commission, CommissionRule, CommissionTier } from '@/types/commissions';
-import { UserRole } from '@/types';
+import { supabase } from '@/lib/supabase-client';
+import { Commission, CommissionRule, CommissionStatus, CommissionTier } from '@/types/commissions';
+import { User } from '@/types/user';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 /**
- * Convertit un tier de commission en format de base de données
- * @param tier - Tier de commission de l'énumération
- * @returns - Chaîne compatible avec la base de données
+ * Récupère les commissions pour un utilisateur
  */
-export const mapTierToDb = (tier: string): string => {
-  switch (tier) {
-    case CommissionTier.TIER_1: return 'bronze';
-    case CommissionTier.TIER_2: return 'silver'; 
-    case CommissionTier.TIER_3: return 'gold';
-    case CommissionTier.TIER_4: return 'platinum';
-    default: return 'bronze';
+export const fetchCommissionsByUserId = async (userId: string): Promise<Commission[]> => {
+  try {
+    // Dans une implémentation réelle, nous ferions un appel à Supabase
+    // Pour l'instant, retournons des données simulées
+    const today = new Date();
+    
+    // Données simulées pour la démonstration
+    return [
+      {
+        id: '1',
+        freelancerId: userId,
+        tier: 'gold',
+        amount: 1250.00,
+        status: 'paid' as CommissionStatus,
+        periodStart: new Date(today.getFullYear(), today.getMonth() - 2, 1),
+        periodEnd: new Date(today.getFullYear(), today.getMonth() - 2, 0),
+        paidDate: new Date(today.getFullYear(), today.getMonth() - 1, 15),
+        payment_requested: true,
+        contracts_count: 15,
+        createdAt: new Date(today.getFullYear(), today.getMonth() - 2, 28)
+      },
+      {
+        id: '2',
+        freelancerId: userId,
+        tier: 'gold',
+        amount: 1400.00,
+        status: 'pending' as CommissionStatus,
+        periodStart: new Date(today.getFullYear(), today.getMonth() - 1, 1),
+        periodEnd: new Date(today.getFullYear(), today.getMonth() - 1, 0),
+        payment_requested: true,
+        contracts_count: 16,
+        createdAt: new Date(today.getFullYear(), today.getMonth() - 1, 28)
+      },
+      {
+        id: '3',
+        freelancerId: userId,
+        tier: 'platinum',
+        amount: 2300.00,
+        status: 'pending' as CommissionStatus,
+        periodStart: new Date(today.getFullYear(), today.getMonth(), 1),
+        periodEnd: new Date(today.getFullYear(), today.getMonth() + 1, 0),
+        payment_requested: false,
+        contracts_count: 23,
+        createdAt: new Date()
+      },
+    ];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des commissions:', error);
+    return [];
   }
 };
 
 /**
- * Convertit un tier de la base de données en énumération CommissionTier
- * @param dbTier - Tier stocké en base de données
- * @returns - Valeur de l'énumération CommissionTier
+ * Récupère tous les règles de commission
  */
-export const mapTierFromDb = (dbTier: string): string => {
-  // Normaliser en minuscules pour éviter les problèmes de casse
-  const normalizedTier = dbTier.toLowerCase();
-  
-  switch (normalizedTier) {
-    case 'bronze': return CommissionTier.TIER_1;
-    case 'silver': return CommissionTier.TIER_2;
-    case 'gold': return CommissionTier.TIER_3;
-    case 'platinum': return CommissionTier.TIER_4;
-    default: return CommissionTier.TIER_1;
+export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
+  try {
+    // Dans une implémentation réelle, nous ferions un appel à Supabase
+    // Pour l'instant, retournons des données simulées
+    return [
+      {
+        id: '1',
+        tier: 'bronze',
+        percentage: 2,
+        unit_amount: 0,
+        minContracts: 1,
+        maxContracts: 5
+      },
+      {
+        id: '2',
+        tier: 'silver',
+        percentage: 3,
+        unit_amount: 0,
+        minContracts: 6,
+        maxContracts: 10
+      },
+      {
+        id: '3',
+        tier: 'gold',
+        percentage: 5,
+        unit_amount: 100,
+        minContracts: 11,
+        maxContracts: 20
+      },
+      {
+        id: '4',
+        tier: 'platinum',
+        percentage: 7,
+        unit_amount: 250,
+        minContracts: 21,
+        maxContracts: 30
+      },
+      {
+        id: '5',
+        tier: 'diamond',
+        percentage: 10,
+        unit_amount: 500,
+        minContracts: 31,
+        maxContracts: null
+      }
+    ];
+  } catch (error) {
+    console.error('Erreur lors de la récupération des règles de commission:', error);
+    return [];
   }
 };
 
 /**
- * Mappe une commission depuis la base de données vers le format de l'application
+ * Formatte la période d'une commission (ex: "Janvier 2023")
  */
-export const mapCommissionFromDb = (dbCommission: any): Commission => {
-  return {
-    id: dbCommission.id,
-    freelancerId: dbCommission.freelancerId,
-    freelancerName: dbCommission.freelancer?.name || 'Freelance inconnu',
-    amount: dbCommission.amount,
-    tier: mapTierFromDb(dbCommission.tier),
-    periodStart: new Date(dbCommission.periodStart),
-    periodEnd: new Date(dbCommission.periodEnd),
-    status: dbCommission.status,
-    paidDate: dbCommission.paidDate ? new Date(dbCommission.paidDate) : undefined,
-    payment_requested: dbCommission.payment_requested || false,
-    createdAt: new Date(dbCommission.createdAt || Date.now()),
-    period: `${new Date(dbCommission.periodStart).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`,
-    contracts_count: dbCommission.contracts_count,
-    unit_amount: dbCommission.unit_amount
-  };
-};
-
-/**
- * Mappe une règle de commission depuis la base de données vers le format de l'application
- */
-export const mapCommissionRuleFromDb = (dbRule: any): CommissionRule => {
-  // Log pour débogage
-  console.log("Mapping commission rule from DB:", dbRule);
+export const formatCommissionPeriod = (commission: Commission): string => {
+  if (!commission.periodStart || !commission.periodEnd) return '-';
   
-  return {
-    id: dbRule.id,
-    tier: mapTierFromDb(dbRule.tier),
-    minContracts: dbRule.minContracts,
-    maxContracts: dbRule.maxContracts || null,
-    percentage: dbRule.percentage,
-    unit_amount: dbRule.unit_amount || 0 // Assurer qu'on a toujours une valeur
-  };
+  const start = new Date(commission.periodStart);
+  
+  // Formater avec date-fns
+  return format(start, 'MMMM yyyy', { locale: fr });
 };
-
-/**
- * Obtient les règles de commission par défaut
- */
-export const getDefaultCommissionRules = (): CommissionRule[] => {
-  return [
-    {
-      id: "default-tier-1",
-      tier: CommissionTier.TIER_1,
-      minContracts: 1,
-      maxContracts: 10,
-      percentage: 0, // Non utilisé
-      unit_amount: 500 // 500 MAD par contrat
-    },
-    {
-      id: "default-tier-2",
-      tier: CommissionTier.TIER_2,
-      minContracts: 11,
-      maxContracts: 20,
-      percentage: 0, // Non utilisé
-      unit_amount: 1000 // 1000 MAD par contrat
-    },
-    {
-      id: "default-tier-3",
-      tier: CommissionTier.TIER_3,
-      minContracts: 21,
-      maxContracts: 30,
-      percentage: 0, // Non utilisé
-      unit_amount: 1500 // 1500 MAD par contrat
-    },
-    {
-      id: "default-tier-4",
-      tier: CommissionTier.TIER_4,
-      minContracts: 31,
-      percentage: 0, // Non utilisé
-      unit_amount: 2000 // 2000 MAD par contrat
-    }
-  ];
-};
-
-/**
- * Options pour le service de commissions
- */
-export interface CommissionServiceOptions {
-  enableNotifications?: boolean;
-  defaultCurrency?: string;
-}

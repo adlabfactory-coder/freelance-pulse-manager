@@ -1,116 +1,130 @@
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Commission, CommissionTier } from "@/types/commissions";
-import { User, UserRole } from "@/types";
-import { createCommissionsService } from "@/services/supabase/commissions";
-import { hasMinimumRole } from "@/types/roles";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase-client";
+import { Commission, CommissionStatus, CommissionTier } from "@/types/commissions";
+import { User } from "@/types/user";
+import { toast } from "sonner";
 
-export const useFetchCommissions = (user: User | null, role: UserRole | undefined) => {
+export const useFetchCommissions = (userId?: string, isAdmin: boolean = false) => {
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const commissionsService = createCommissionsService(supabase as any);
-  const isFreelancer = role === UserRole.FREELANCER;
-  const isAdmin = role === UserRole.ADMIN;
-  const isSuperAdmin = role === UserRole.SUPER_ADMIN;
-  const hasAdminAccess = isAdmin || isSuperAdmin;
-  
-  const dataFetchedRef = useRef(false);
-
-  const fetchCommissions = useCallback(async () => {
-    if (!user) {
-      setCommissions([]);
-      setLoading(false);
-      return;
-    }
+  const fetchCommissions = async () => {
+    setLoading(true);
+    setError(null);
     
     try {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const { data, error } = await supabase.from('commissions').select('count', { count: 'exact', head: true });
-        if (error) {
-          throw new Error(`Problème d'accès à la base de données: ${error.message}`);
-        }
-      } catch (connError: any) {
-        console.warn("Vérification de connexion échouée:", connError.message || connError);
-        throw new Error("Impossible de se connecter à la base de données");
-      }
-      
-      const effectiveRole = role === UserRole.SUPER_ADMIN ? UserRole.ADMIN : role;
-      const data = await commissionsService.fetchCommissions(user.id, effectiveRole || UserRole.FREELANCER);
-      setCommissions(data);
-    } catch (error: any) {
-      console.error("Erreur lors du chargement des commissions:", error);
-      setError("Impossible de récupérer les commissions. Veuillez réessayer plus tard.");
-      
-      if (isFreelancer) {
-        setCommissions([
+      // Utiliser des données simulées en attendant l'intégration avec la base de données
+      // En production, ces données proviendraient de Supabase
+      setTimeout(() => {
+        // Simuler un appel à la base de données
+        const mockCommissions: Commission[] = [
           {
-            id: "offline-commission-1",
-            freelancerId: user.id,
-            freelancerName: user.name || "Freelancer",
-            amount: 1200,
-            tier: CommissionTier.TIER_2,
-            periodStart: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
-            periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
-            status: "pending" as any,
-            payment_requested: false,
-            createdAt: new Date(),
-            period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
-          }
-        ]);
-      } else if (hasAdminAccess) {
-        setCommissions([
-          {
-            id: "offline-commission-admin-1",
-            freelancerId: "offline-user-1",
-            freelancerName: "John Doe (Hors ligne)",
-            amount: 950,
-            tier: CommissionTier.TIER_1,
-            periodStart: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
-            periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
-            status: "pending" as any,
+            id: "1",
+            freelancerId: "1",
+            tier: "gold",
+            amount: 1250.00,
+            status: "paid" as CommissionStatus,
+            periodStart: new Date('2023-01-01'),
+            periodEnd: new Date('2023-01-31'),
+            paidDate: new Date('2023-02-05'),
             payment_requested: true,
-            createdAt: new Date(),
-            period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
+            contracts_count: 15,
+            createdAt: new Date('2023-01-31')
           },
           {
-            id: "offline-commission-admin-2",
-            freelancerId: "offline-user-2",
-            freelancerName: "Jane Smith (Hors ligne)",
-            amount: 1800,
-            tier: CommissionTier.TIER_3,
-            periodStart: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
-            periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
-            status: "paid" as any,
-            paidDate: new Date(),
+            id: "2",
+            freelancerId: "1",
+            tier: "gold",
+            amount: 1400.00,
+            status: "pending" as CommissionStatus,
+            periodStart: new Date('2023-02-01'),
+            periodEnd: new Date('2023-02-28'),
             payment_requested: true,
-            createdAt: new Date(),
-            period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
-          }
-        ]);
-      }
-    } finally {
+            contracts_count: 16,
+            createdAt: new Date('2023-02-28')
+          },
+          {
+            id: "3",
+            freelancerId: "1",
+            tier: "platinum",
+            amount: 2300.00,
+            status: "pending" as CommissionStatus,
+            periodStart: new Date('2023-03-01'),
+            periodEnd: new Date('2023-03-31'),
+            payment_requested: false,
+            contracts_count: 23,
+            createdAt: new Date('2023-03-31')
+          },
+        ];
+
+        setCommissions(mockCommissions);
+        setLoading(false);
+      }, 800);
+      
+    } catch (err: any) {
+      console.error("Erreur lors de la récupération des commissions:", err);
+      setError("Impossible de charger les commissions");
+      toast.error("Erreur lors du chargement des commissions");
       setLoading(false);
     }
-  }, [user, role, commissionsService, isFreelancer, hasAdminAccess]);
-
+  };
+  
   useEffect(() => {
-    if (!dataFetchedRef.current) {
-      dataFetchedRef.current = true;
-      fetchCommissions();
+    fetchCommissions();
+  }, [userId]);
+  
+  const requestPayment = async (commissionId: string) => {
+    try {
+      // Simuler la mise à jour dans la base de données
+      setCommissions(prev => 
+        prev.map(commission => 
+          commission.id === commissionId 
+            ? { ...commission, payment_requested: true } 
+            : commission
+        )
+      );
+      
+      toast.success("Demande de versement envoyée avec succès");
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la demande de versement:", error);
+      toast.error("Erreur lors de la demande de versement");
+      return false;
     }
-  }, [fetchCommissions]);
-
+  };
+  
+  const approvePayment = async (commissionId: string) => {
+    try {
+      // Simuler la mise à jour dans la base de données
+      setCommissions(prev => 
+        prev.map(commission => 
+          commission.id === commissionId 
+            ? { 
+                ...commission, 
+                status: "paid" as CommissionStatus,
+                paidDate: new Date(),
+              } 
+            : commission
+        )
+      );
+      
+      toast.success("Paiement approuvé avec succès");
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de l'approbation du paiement:", error);
+      toast.error("Erreur lors de l'approbation du paiement");
+      return false;
+    }
+  };
+  
   return {
     commissions,
-    setCommissions,
     loading,
     error,
-    fetchCommissions
+    requestPayment,
+    approvePayment,
+    refresh: fetchCommissions
   };
 };
