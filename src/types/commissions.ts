@@ -1,52 +1,36 @@
-export type CommissionStatus = 'pending' | 'paid' | 'rejected' | 'processing';
 
-// We keep the enumeration of tiers for backward compatibility
-export enum CommissionTier {
-  TIER_1 = 'bronze',
-  TIER_2 = 'silver',
-  TIER_3 = 'gold',
-  TIER_4 = 'platinum'
-}
-
-export interface CommissionRule {
-  id: string;
-  tier: CommissionTier;
-  minContracts: number;
-  maxContracts?: number | null;
-  // We now calculate using a fixed amount per contract instead of a percentage
-  unitAmount: number; // Fixed amount per validated contract
-  percentage?: number; // Kept for compatibility but not used
-}
-
+// Type pour les commissions
 export interface Commission {
   id: string;
   freelancerId: string;
-  freelancerName: string;
+  freelancerName?: string;
   amount: number;
-  tier: CommissionTier;
+  tier: string;
+  subscriptionId?: string | null;
+  quoteId?: string | null;
   periodStart: Date;
   periodEnd: Date;
   status: CommissionStatus;
-  paidDate?: Date;
-  paymentRequested: boolean;
-  period?: string;
-  // New properties to detail the calculation
-  contractsCount?: number; // Number of contracts in this period
-  unitAmount?: number; // Unit amount applied
-  subscriptionId?: string; // Add this to connect to subscription
-  quoteId?: string; // Add this to connect to quote
+  paidDate?: Date | null;
+  createdAt: Date;
+  payment_requested?: boolean;
+  contracts_count?: number;
 }
 
-// Define a new interface for commission details including subscription information
-export interface CommissionDetails {
-  subscriptionDetails?: {
-    name?: string;
-    clientId?: string;
-    client?: {
-      name?: string;
-    };
-  };
+// Type pour les règles de commission
+export interface CommissionRule {
+  id: string;
+  tier: string;
+  minContracts: number;
+  maxContracts?: number | null;
+  percentage: number;
+  unit_amount?: number;
 }
 
-// Create a combined type for commissions with details
-export type CommissionWithDetails = Commission & CommissionDetails;
+// Statut d'une commission
+export type CommissionStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+
+// Fonctions utilitaires pour les commissions
+export const formatCommissionAmount = (amount: number): string => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount);
+};

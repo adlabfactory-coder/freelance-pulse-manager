@@ -1,6 +1,6 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase-client';
 import { checkSupabaseConnection } from './connection';
 import { initializeDatabase, checkDatabaseStatus } from './setup';
 import { createStorageService } from './storage';

@@ -35,50 +35,49 @@ const useSettingsData = () => {
         user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN
       );
       
+      console.log("✅ Utilisateurs mockés filtrés:", filteredUsers);
       setUsers(filteredUsers);
-      console.log("✅ Utilisateurs chargés:", filteredUsers.length);
-      
-      // Vérifier la connexion à la base de données
-      try {
-        const status = await supabase.checkSupabaseStatus();
-        setDbStatus({ 
-          isConnected: status.success, 
-          message: status.message || "Connexion établie" 
-        });
-      } catch (e) {
-        console.error("❌ Erreur lors de la vérification de la connexion:", e);
-        setDbStatus({ 
-          isConnected: false, 
-          message: "Impossible de vérifier la connexion à la base de données" 
-        });
-      }
     } catch (error) {
-      console.error("❌ Erreur lors du chargement des données:", error);
-      setError("Impossible de charger les données utilisateur");
+      console.error("❌ Erreur lors du chargement des utilisateurs:", error);
+      setError("Impossible de charger les utilisateurs");
     } finally {
       setLoadingUser(false);
     }
   }, [isAdmin, isSuperAdmin, supabase]);
 
-  // Chargement initial des données - avec limitation à une seule tentative
-  useEffect(() => {
-    // Limiter à 1 tentative maximum
-    if (loadAttempt === 0) {
-      loadUsers();
-      setLoadAttempt(1);
+  const checkDatabaseStatus = useCallback(async () => {
+    try {
+      const result = await supabase.checkSupabaseStatus();
+      setDbStatus({
+        isConnected: result.success,
+        message: result.message || ""
+      });
+    } catch (error) {
+      console.error("Erreur lors de la vérification de la connexion à la base de données:", error);
+      setDbStatus({
+        isConnected: false,
+        message: "Erreur de connexion à la base de données"
+      });
     }
-  }, [loadUsers, loadAttempt]);
+  }, [supabase]);
+
+  // Charger les données au montage
+  useEffect(() => {
+    loadUsers();
+    checkDatabaseStatus();
+  }, [loadUsers, checkDatabaseStatus]);
 
   return {
     currentUser,
     users,
-    isAdmin,
-    isSuperAdmin,
-    isAccountManager,
     loadingUser,
     error,
     dbStatus,
-    reloadUsers: loadUsers
+    isAdmin,
+    isSuperAdmin,
+    isAccountManager,
+    refreshUsers: loadUsers,
+    refreshDbStatus: checkDatabaseStatus
   };
 };
 

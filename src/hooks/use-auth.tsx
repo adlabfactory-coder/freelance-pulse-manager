@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase-client";
@@ -8,7 +7,6 @@ import { AuthContextType } from "@/types/auth";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
 
-// Context pour l'authentification
 const defaultContext: AuthContextType = {
   user: null,
   isAuthenticated: false,
@@ -35,23 +33,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Configuration du mode démo
-  const DEMO_MODE = true; // Mettre à true pour utiliser des utilisateurs simulés
+  const DEMO_MODE = true;
 
-  // Vérification de l'état de l'authentification au chargement
   useEffect(() => {
     const checkAuth = async () => {
       try {
         if (DEMO_MODE) {
-          // Mode démo activé, utiliser un utilisateur simulé par défaut
           const mockUsers = getMockUsers();
-          const defaultUser = mockUsers[0]; // Super Admin
+          const defaultUser = mockUsers[0];
           
           console.log("Mode démonstration activé, utilisation d'un utilisateur par défaut:", defaultUser.email);
           setUser(defaultUser);
           setIsLoading(false);
           
-          // Test de la connexion à Supabase en mode silencieux
           try {
             const { data, error } = await supabase.from('contacts').select('id').limit(1);
             if (error) {
@@ -66,8 +60,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
         
-        // Si le mode démo est désactivé, vérifier la session Supabase
-        // IMPORTANT: D'abord configurer l'écouteur d'événements auth state, puis vérifier la session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event, newSession) => {
             console.log("Auth state changed:", event, newSession?.user?.email);
@@ -75,17 +67,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(newSession?.user ? mapSupabaseUser(newSession.user) : null);
             setIsLoading(false);
             
-            // Ne pas appeler d'autres fonctions Supabase directement ici pour éviter les boucles
             if (newSession?.user && event === 'SIGNED_IN') {
               setTimeout(() => {
-                // Mettre à jour les données utilisateur si nécessaire
                 console.log("Session utilisateur mise à jour");
               }, 0);
             }
           }
         );
 
-        // Ensuite vérifier la session existante
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         if (existingSession) {
           console.log("Session existante trouvée:", existingSession.user.email);
@@ -98,7 +87,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         setIsLoading(false);
         
-        // Cleanup
         return () => {
           subscription.unsubscribe();
         };
@@ -111,7 +99,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     checkAuth();
   }, [navigate]);
 
-  // Convertir un utilisateur Supabase en format d'utilisateur de l'application
   const mapSupabaseUser = (supabaseUser: any): User => {
     return {
       id: supabaseUser.id,
@@ -122,24 +109,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  // Déterminer les rôles utilisateur
-  const role = user?.role as UserRole | null;
-  const isAdmin = role === UserRole.ADMIN;
-  const isSuperAdmin = role === UserRole.SUPER_ADMIN;
-  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
-  const isFreelancer = role === UserRole.FREELANCER;
-  const isAccountManager = role === UserRole.ACCOUNT_MANAGER;
-  const isAuthenticated = !!user;
-
-  // Fonction de connexion
-  const signIn = async (email: string, password: string) => {
+  const handleLogin = async (userData: User) => {
     try {
       if (DEMO_MODE) {
-        console.log("Tentative de connexion en mode démo avec:", email);
+        console.log("Tentative de connexion en mode démo avec:", userData.email);
         
-        // Mode de démonstration
         const mockUsers = getMockUsers();
-        const mockUser = mockUsers.find(u => u.email === email);
+        const mockUser = mockUsers.find(u => u.email === userData.email);
         
         if (mockUser) {
           console.log("Utilisateur de démonstration trouvé:", mockUser.name);
@@ -148,7 +124,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return { success: true };
         }
         
-        // Si l'email ne correspond à aucun utilisateur de démo, utiliser l'admin par défaut
         console.log("Email non reconnu, utilisation de l'admin par défaut");
         const defaultAdmin = mockUsers.find(u => u.role === UserRole.ADMIN) || mockUsers[0];
         setUser(defaultAdmin);
@@ -157,11 +132,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { success: true };
       }
       
-      // Mode réel, utiliser Supabase
-      console.log("Tentative de connexion à Supabase avec:", email);
+      console.log("Tentative de connexion à Supabase avec:", userData.email);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+        email: userData.email,
+        password: userData.password
       });
       
       if (error) {
@@ -171,7 +145,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       console.log("Connexion Supabase réussie:", data.user?.email);
-      // La session sera automatiquement mise à jour par l'écouteur onAuthStateChange
       toast.success(`Connecté en tant que ${data.user?.email}`);
       
       return { success: true };
@@ -182,14 +155,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Fonction d'inscription
   const signUp = async (email: string, password: string, name: string, role: UserRole) => {
     try {
       if (DEMO_MODE) {
-        // En mode démo, simuler une inscription réussie
         console.log("Inscription simulée pour:", email, name, role);
         
-        // Créer un nouvel utilisateur simulé
         const newUser: User = {
           id: crypto.randomUUID(),
           email,
@@ -198,14 +168,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           avatar: null
         };
         
-        // Définir cet utilisateur comme courant
         setUser(newUser);
         toast.success("Compte créé avec succès");
         
         return { success: true };
       }
       
-      // En mode réel, utiliser Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -232,18 +200,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Fonction de déconnexion
   const logout = async () => {
     try {
       if (DEMO_MODE) {
-        // En mode démo, simplement réinitialiser l'état
         setUser(null);
         navigate('/auth/login');
         toast.success("Déconnexion réussie");
         return;
       }
       
-      // En mode réel, utiliser Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -252,7 +217,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      // La session sera automatiquement mise à jour par l'écouteur onAuthStateChange
       navigate('/auth/login');
       toast.success("Déconnexion réussie");
     } catch (err: any) {
@@ -261,11 +225,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const isAdmin = !!user && (user.role === UserRole.ADMIN);
+  const isSuperAdmin = !!user && (user.role === UserRole.SUPER_ADMIN);
+  const isAccountManager = !!user && (user.role === UserRole.ACCOUNT_MANAGER);
+  const isFreelancer = !!user && (user.role === UserRole.FREELANCER);
+
   const value = {
     user,
-    isAuthenticated,
+    isAuthenticated: !!user,
     isLoading,
-    role,
+    role: user?.role as UserRole | null,
     isAdmin,
     isFreelancer,
     isSuperAdmin,
@@ -273,7 +242,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAdminOrSuperAdmin,
     loading: isLoading,
     error,
-    signIn,
+    signIn: handleLogin,
     signUp,
     logout,
   };
@@ -281,7 +250,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook personnalisé pour utiliser le contexte d'authentification
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
