@@ -44,42 +44,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Mode démonstration activé, utilisation d'un utilisateur par défaut:", defaultUser.email);
         setUser(defaultUser);
         setIsLoading(false);
+        
+        // Test de la connexion à Supabase en mode silencieux
+        try {
+          const { data, error } = await supabase.from('contacts').select('id').limit(1);
+          if (error) {
+            console.warn("La connexion à Supabase semble avoir un problème:", error.message);
+          } else {
+            console.log("Connexion à Supabase réussie, contacts accessibles");
+          }
+        } catch (err) {
+          console.warn("Erreur lors du test de connexion à Supabase:", err);
+        }
+        
         return;
-
-        /* Code Supabase désactivé pour le mode démo - À activer en production
-        const { data: sessionData, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Erreur lors de la récupération de la session:", error);
-          setIsLoading(false);
-          return;
-        }
-        
-        if (sessionData.session) {
-          // Session valide, récupérer les informations utilisateur
-          const { data: userData, error: userError } = await supabase
-            .from("users")
-            .select("*")
-            .eq("id", sessionData.session.user.id)
-            .single();
-          
-          if (userError) {
-            console.error("Erreur lors de la récupération des données utilisateur:", userError);
-            setIsLoading(false);
-            return;
-          }
-          
-          if (userData) {
-            setUser(userData as User);
-          }
-        } else {
-          // Mode démonstration avec un utilisateur mocké
-          const mockUsers = getMockUsers();
-          if (mockUsers && mockUsers.length > 0) {
-            setUser(mockUsers[0]);
-          }
-        }
-        */
       } catch (err) {
         console.error("Erreur lors de la vérification de l'authentification:", err);
       } finally {
@@ -87,34 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
-    /* Écouteur pour les changements de session - À activer en production
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change:", event);
-      if (event === 'SIGNED_IN' && session) {
-        // Connexion réussie, récupérer les infos utilisateur
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        
-        if (!userError && userData) {
-          setUser(userData as User);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        navigate('/auth/login');
-      }
-    });
-    */
-    
     checkAuth();
-    
-    /* À activer en production
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-    */
   }, [navigate]);
 
   // Déterminer les rôles utilisateur
@@ -149,38 +100,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success(`Connecté en tant que ${defaultAdmin.name}`);
       
       return { success: true };
-      
-      /* Code Supabase désactivé pour le mode démo - À activer en production
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        console.error("Erreur de connexion:", error.message);
-        return { success: false, error: error.message };
-      }
-      
-      if (data?.user) {
-        // Récupérer les informations utilisateur depuis la table users
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
-        
-        if (userError) {
-          console.error("Erreur lors de la récupération des données utilisateur:", userError);
-          return { success: true }; // On considère quand même que la connexion est réussie
-        }
-        
-        if (userData) {
-          setUser(userData as User);
-        }
-        
-        return { success: true };
-      }
-      */
     } catch (err: any) {
       console.error("Erreur lors de la connexion:", err.message);
       return { success: false, error: err.message };
@@ -207,25 +126,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       toast.success("Compte créé avec succès");
       
       return { success: true };
-      
-      /* Code Supabase désactivé pour le mode démo - À activer en production
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role,
-          },
-        },
-      });
-      
-      if (error) {
-        return { success: false, error: error.message };
-      }
-      
-      return { success: true };
-      */
     } catch (err: any) {
       return { success: false, error: err.message };
     }
@@ -238,12 +138,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       navigate('/auth/login');
       toast.success("Déconnexion réussie");
-      
-      /* Code Supabase désactivé pour le mode démo - À activer en production
-      await supabase.auth.signOut();
-      setUser(null);
-      navigate('/auth/login');
-      */
     } catch (err) {
       console.error("Erreur lors de la déconnexion:", err);
     }

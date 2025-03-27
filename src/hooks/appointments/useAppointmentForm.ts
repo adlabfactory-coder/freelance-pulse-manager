@@ -47,6 +47,13 @@ export const useAppointmentForm = (
     }
   }, [initialDate]);
   
+  // Si un contactId initial est fourni, l'utiliser
+  useEffect(() => {
+    if (initialContactId) {
+      setContactId(initialContactId);
+    }
+  }, [initialContactId, setContactId]);
+  
   // Détermine le titre final à partir de l'option sélectionnée
   const getFinalTitle = (): string => {
     const titleOptions = {
@@ -64,6 +71,11 @@ export const useAppointmentForm = (
     e.preventDefault();
     
     const finalContactId = overrideContactId || contactId;
+    if (!finalContactId) {
+      toast.error("Veuillez sélectionner un contact");
+      return null;
+    }
+    
     const finalTitle = getFinalTitle();
     
     // Logique de détermination du freelancer
@@ -95,6 +107,8 @@ export const useAppointmentForm = (
     if (result && onSuccess) {
       onSuccess();
     }
+    
+    return result;
   };
 
   return {
@@ -128,4 +142,9 @@ export const useAppointmentForm = (
     // Constantes
     APPOINTMENT_TITLE_OPTIONS
   };
+};
+
+// Pour éviter les erreurs circulaires
+const toast = {
+  error: (message: string) => console.error(message)
 };
