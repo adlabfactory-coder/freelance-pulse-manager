@@ -1,35 +1,40 @@
 
+export enum AppointmentStatus {
+  SCHEDULED = "scheduled",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  PENDING = "pending",
+  RESCHEDULED = "rescheduled"
+}
+
 export interface Appointment {
   id: string;
   title: string;
-  description: string | null;
+  description: string;
   contactId: string;
   contactName?: string;
   freelancerId: string;
-  managerId?: string;
   freelancerName?: string;
+  managerId?: string;
   managerName?: string;
   date: string;
   duration: number;
   status: AppointmentStatus;
   location: string | null;
   notes: string | null;
-  folder?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  folder: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export enum AppointmentStatus {
-  PENDING = "pending",
-  SCHEDULED = "scheduled",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled",
-  NO_SHOW = "no_show"
-}
-
-export const normalizeFreelancerId = (appointment: Appointment) => {
-  return {
-    ...appointment,
-    freelancerId: appointment.freelancerId || 'system'
-  };
+// Utility function to normalize freelancerId from database (handling inconsistent naming)
+export const normalizeFreelancerId = (appointment: any): Appointment => {
+  // Handle case where the property is named 'freelancerid' instead of 'freelancerId'
+  if (appointment.freelancerid && !appointment.freelancerId) {
+    return {
+      ...appointment,
+      freelancerId: appointment.freelancerid
+    };
+  }
+  return appointment as Appointment;
 };

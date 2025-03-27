@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Appointment } from '@/types/appointment';
+import { Appointment, AppointmentStatus } from '@/types/appointment';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
@@ -24,22 +24,27 @@ export const useAppointmentList = () => {
       if (error) throw error;
       
       // Format appointments
-      const formattedAppointments = data.map(appointment => ({
-        id: appointment.id,
-        title: appointment.title,
-        description: appointment.description,
-        contactId: appointment.contactId,
-        freelancerId: appointment.freelancerId, // Fixed property name
-        managerId: null,
-        date: appointment.date,
-        duration: appointment.duration,
-        status: appointment.status,
-        location: appointment.location,
-        notes: appointment.notes,
-        folder: appointment.folder,
-        createdAt: appointment.createdAt,
-        updatedAt: appointment.updatedAt
-      }));
+      const formattedAppointments = data.map(appointment => {
+        // Convert status string to AppointmentStatus enum
+        const status = appointment.status as AppointmentStatus;
+        
+        return {
+          id: appointment.id,
+          title: appointment.title,
+          description: appointment.description,
+          contactId: appointment.contactId,
+          freelancerId: appointment.freelancerid, // Note the lowercase 'id' in DB
+          managerId: null,
+          date: appointment.date,
+          duration: appointment.duration,
+          status: status,
+          location: appointment.location,
+          notes: appointment.notes,
+          folder: appointment.folder,
+          createdAt: appointment.createdAt,
+          updatedAt: appointment.updatedAt
+        } as Appointment;
+      });
       
       setAppointments(formattedAppointments);
     } catch (error) {

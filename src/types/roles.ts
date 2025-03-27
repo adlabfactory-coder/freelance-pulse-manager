@@ -14,3 +14,60 @@ export const roleLabels: Record<UserRole, string> = {
   [UserRole.FREELANCER]: "Freelancer",
   [UserRole.CLIENT]: "Client"
 };
+
+// Add missing exports for the role-related components
+export const USER_ROLE_LABELS = roleLabels;
+
+export const ROLE_HIERARCHY = [
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.ACCOUNT_MANAGER,
+  UserRole.FREELANCER,
+  UserRole.CLIENT
+];
+
+export enum PermissionCategory {
+  USERS = "users",
+  CONTACTS = "contacts",
+  QUOTES = "quotes",
+  APPOINTMENTS = "appointments",
+  SERVICES = "services",
+  SUBSCRIPTIONS = "subscriptions",
+  COMMISSIONS = "commissions",
+  SETTINGS = "settings"
+}
+
+export interface RolePermission {
+  role: UserRole;
+  category: PermissionCategory;
+  create: boolean;
+  read: boolean;
+  update: boolean;
+  delete: boolean;
+  approve?: boolean;
+}
+
+export const DEFAULT_PERMISSIONS: RolePermission[] = [
+  // Super Admin has all permissions
+  {
+    role: UserRole.SUPER_ADMIN,
+    category: PermissionCategory.USERS,
+    create: true,
+    read: true,
+    update: true,
+    delete: true,
+    approve: true
+  },
+  // Add more default permissions...
+];
+
+// Helper function to check if a user has at least the specified role
+export const hasMinimumRole = (userRole: UserRole | undefined, requiredRole: UserRole): boolean => {
+  if (!userRole) return false;
+  
+  const userRoleIndex = ROLE_HIERARCHY.indexOf(userRole);
+  const requiredRoleIndex = ROLE_HIERARCHY.indexOf(requiredRole);
+  
+  // Lower index means higher role (SUPER_ADMIN is index 0)
+  return userRoleIndex <= requiredRoleIndex;
+};

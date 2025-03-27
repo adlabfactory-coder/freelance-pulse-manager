@@ -1,7 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { Quote, QuoteItem, QuoteStatus } from "@/types";
-import { mapDatabaseQuoteToQuote } from "./quote-service";
+import { Quote, QuoteItem, QuoteStatus } from "@/types/quote";
 import { createQuotesService } from "./supabase/quotes";
 
 // Créer une instance du service de devis avec RPCMODE activé pour contourner la RLS

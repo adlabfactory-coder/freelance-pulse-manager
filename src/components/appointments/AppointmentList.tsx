@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import AppointmentListHeader from "./list/AppointmentListHeader";
@@ -53,6 +54,12 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   }, [normalizedAppointments, searchQuery, statusFilter]);
 
   const hasFilters = Boolean(searchQuery || statusFilter);
+  
+  const handleRefresh = () => {
+    if (hookResult.refetch) {
+      hookResult.refetch();
+    }
+  };
 
   if (loading) {
     return (
@@ -92,7 +99,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
       />
       <AppointmentTable 
         appointments={filteredAppointments} 
-        contacts={contacts} 
+        contacts={contacts}
+        onUpdate={handleRefresh}
       />
     </Card>
   );

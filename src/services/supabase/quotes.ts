@@ -1,7 +1,6 @@
-
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
-import { Quote, QuoteItem, QuoteStatus } from '@/types';
+import { Quote, QuoteItem, QuoteStatus } from '@/types/quote';
 import { toast } from 'sonner';
 
 export const createQuotesService = (supabase: SupabaseClient<Database>) => {
@@ -88,20 +87,17 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         
         // S'assurer que le statut est "draft" (brouillon)
         const finalQuoteData = {
-          ...quoteData,
-          status: QuoteStatus.DRAFT // Forcer le statut à "brouillon"
+          contactId: quoteData.contactId,
+          freelancerId: quoteData.freelancerId,
+          totalAmount: quoteData.totalAmount,
+          validUntil: quoteData.validUntil.toISOString(),
+          status: QuoteStatus.DRAFT, // Forcer le statut à "brouillon"
+          notes: quoteData.notes || ''
         };
         
         // 1. Insérer le devis principal en utilisant le service role pour contourner la RLS
         const { data: quote, error: quoteError } = await supabase.rpc('create_quote', {
-          quote_data: {
-            contactId: finalQuoteData.contactId,
-            freelancerId: finalQuoteData.freelancerId,
-            totalAmount: finalQuoteData.totalAmount,
-            validUntil: finalQuoteData.validUntil.toISOString(),
-            status: finalQuoteData.status,
-            notes: finalQuoteData.notes || ''
-          }
+          quote_data: finalQuoteData
         });
         
         if (quoteError) {
