@@ -6,14 +6,14 @@ import { SupabaseClient } from '@supabase/supabase-js';
  */
 export const createAppointmentsUpdateService = (supabase: SupabaseClient) => {
   /**
-   * Accepte un rendez-vous et l'assigne à un freelancer
+   * Accepte un rendez-vous et l'assigne à un chargé de compte
    */
-  const acceptAppointment = async (appointmentId: string, freelancerId: string) => {
+  const acceptAppointment = async (appointmentId: string, managerId: string) => {
     try {
       const { error } = await supabase
         .rpc('accept_appointment', {
           appointment_id: appointmentId,
-          freelancer_id: freelancerId
+          manager_id: managerId
         });
 
       if (error) {

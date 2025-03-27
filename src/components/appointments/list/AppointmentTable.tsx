@@ -25,7 +25,7 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
     <CardContent>
       <div className="rounded-md border">
         <Table>
-          <AppointmentTableHeader />
+          <AppointmentTableHeader showManager={true} />
           <TableBody>
             {enrichedAppointments.map((appointment) => (
               <AppointmentRow 

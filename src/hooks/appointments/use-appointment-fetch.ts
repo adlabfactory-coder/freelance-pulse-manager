@@ -30,7 +30,7 @@ export function useAppointmentFetch(contactId?: string) {
         data = await appointmentsService.getAppointments();
       } else if (isAccountManager && user?.id) {
         // Account managers see appointments assigned to them
-        data = await appointmentsService.getAppointmentsByFreelancer(user.id);
+        data = await appointmentsService.getAppointmentsByManager(user.id);
       } else if (user?.role === 'freelancer' && user?.id) {
         // Fetch appointments for the current freelancer
         data = await appointmentsService.getAppointmentsByFreelancer(user.id);
@@ -65,25 +65,32 @@ export function useAppointmentFetch(contactId?: string) {
         }
       }
       
-      // Récupérer les noms des freelancers aussi
-      const freelancerIds = [...new Set(normalizedData.map(app => app.freelancerId).filter(Boolean))];
-      if (freelancerIds.length > 0) {
-        const { data: freelancersData } = await supabase
+      // Récupérer les noms des freelancers et managers
+      const userIds = [
+        ...new Set([
+          ...normalizedData.map(app => app.freelancerId).filter(Boolean),
+          ...normalizedData.map(app => app.managerId).filter(Boolean)
+        ])
+      ];
+      
+      if (userIds.length > 0) {
+        const { data: usersData } = await supabase
           .from('users')
           .select('id, name')
-          .in('id', freelancerIds);
+          .in('id', userIds);
           
-        if (freelancersData) {
-          // Créer un map des IDs de freelancers vers leurs noms
-          const freelancersMap = freelancersData.reduce((map, freelancer) => {
-            map[freelancer.id] = freelancer.name;
+        if (usersData) {
+          // Créer un map des IDs d'utilisateurs vers leurs noms
+          const usersMap = usersData.reduce((map, user) => {
+            map[user.id] = user.name;
             return map;
           }, {} as Record<string, string>);
           
-          // Ajouter le nom du freelancer à chaque rendez-vous
+          // Ajouter les noms des utilisateurs à chaque rendez-vous
           normalizedData = normalizedData.map(appointment => ({
             ...appointment,
-            freelancerName: appointment.freelancerId ? (freelancersMap[appointment.freelancerId] || 'Freelancer inconnu') : 'Non assigné'
+            freelancerName: appointment.freelancerId ? (usersMap[appointment.freelancerId] || 'Freelancer inconnu') : 'Non assigné',
+            managerName: appointment.managerId ? (usersMap[appointment.managerId] || 'Manager inconnu') : 'Non assigné'
           }));
         }
       }

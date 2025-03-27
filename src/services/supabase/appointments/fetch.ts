@@ -44,6 +44,25 @@ export const createAppointmentsFetchService = (supabase: SupabaseClient) => {
   };
 
   /**
+   * Récupère les rendez-vous gérés par un chargé de compte spécifique
+   */
+  const getAppointmentsByManager = async (managerId: string) => {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('managerId', managerId)
+      .is('deleted_at', null)
+      .order('date', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching appointments by manager:', error);
+      return [];
+    }
+
+    return data;
+  };
+
+  /**
    * Récupère les rendez-vous d'un contact spécifique
    */
   const getAppointmentsByContact = async (contactId: string) => {
@@ -84,6 +103,7 @@ export const createAppointmentsFetchService = (supabase: SupabaseClient) => {
   return {
     getAppointments,
     getAppointmentsByFreelancer,
+    getAppointmentsByManager,
     getAppointmentsByContact,
     getPendingAppointments
   };

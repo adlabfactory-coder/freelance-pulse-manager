@@ -66,7 +66,7 @@ export const usePendingAppointments = () => {
       const { error } = await supabase
         .rpc('accept_appointment', {
           appointment_id: appointmentId,
-          freelancer_id: userId
+          manager_id: userId
         });
       
       if (error) {
@@ -77,6 +77,9 @@ export const usePendingAppointments = () => {
       
       // Mettre à jour la liste
       setAppointments(prev => prev.filter(app => app.id !== appointmentId));
+      
+      // Déclencher un événement pour mettre à jour les autres composants
+      window.dispatchEvent(new CustomEvent('appointment-status-updated'));
       
     } catch (error) {
       console.error("Erreur lors de l'acceptation du rendez-vous:", error);
@@ -107,6 +110,9 @@ export const usePendingAppointments = () => {
       // Mettre à jour la liste
       setAppointments(prev => prev.filter(app => app.id !== appointmentId));
       
+      // Déclencher un événement pour mettre à jour les autres composants
+      window.dispatchEvent(new CustomEvent('appointment-status-updated'));
+      
     } catch (error) {
       console.error("Erreur lors du refus du rendez-vous:", error);
       toast.error("Impossible de refuser le rendez-vous. Veuillez réessayer.");
@@ -117,6 +123,19 @@ export const usePendingAppointments = () => {
 
   useEffect(() => {
     loadAppointments();
+    
+    // Écouter les événements de mise à jour des rendez-vous
+    const handleAppointmentUpdated = () => {
+      loadAppointments();
+    };
+    
+    window.addEventListener('appointment-created', handleAppointmentUpdated);
+    window.addEventListener('appointment-status-updated', handleAppointmentUpdated);
+    
+    return () => {
+      window.removeEventListener('appointment-created', handleAppointmentUpdated);
+      window.removeEventListener('appointment-status-updated', handleAppointmentUpdated);
+    };
   }, []);
 
   return {

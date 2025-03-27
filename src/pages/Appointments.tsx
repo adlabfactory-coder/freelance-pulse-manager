@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import AppointmentHeader from "@/components/appointments/AppointmentHeader";
 import AddAppointmentDialog from "@/components/appointments/AddAppointmentDialog";
@@ -31,10 +32,18 @@ const Appointments: React.FC = () => {
       refresh();
     };
 
+    const handleAppointmentStatusUpdated = () => {
+      console.log("Événement de mise à jour de statut de rendez-vous détecté, rafraîchissement des données");
+      refreshNotifications();
+      refresh();
+    };
+
     window.addEventListener('appointment-created', handleAppointmentCreated);
+    window.addEventListener('appointment-status-updated', handleAppointmentStatusUpdated);
 
     return () => {
       window.removeEventListener('appointment-created', handleAppointmentCreated);
+      window.removeEventListener('appointment-status-updated', handleAppointmentStatusUpdated);
     };
   }, [refreshNotifications, refresh]);
 

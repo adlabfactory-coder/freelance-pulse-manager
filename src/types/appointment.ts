@@ -8,6 +8,7 @@ export interface Appointment {
   status: AppointmentStatus;
   contactId: string;
   freelancerId: string;
+  managerId?: string; // New field for account manager
   location: string | null;
   notes: string | null;
   createdAt: string;
@@ -16,6 +17,7 @@ export interface Appointment {
   // Propriétés dérivées pour l'affichage
   contactName?: string;
   freelancerName?: string;
+  managerName?: string; // New field for display
   currentUserId?: string;
   
   // Support pour la propriété freelancerid (legacy de la base de données)

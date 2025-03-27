@@ -18,6 +18,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     // Récupération de rendez-vous
     getAppointments: fetchService.getAppointments,
     getAppointmentsByFreelancer: fetchService.getAppointmentsByFreelancer,
+    getAppointmentsByManager: fetchService.getAppointmentsByManager,
     getAppointmentsByContact: fetchService.getAppointmentsByContact,
     getPendingAppointments: fetchService.getPendingAppointments,
     
@@ -42,6 +43,8 @@ export const appointmentsService = {
   getAppointments: () => createAppointmentsService(supabase).getAppointments(),
   getAppointmentsByFreelancer: (freelancerId: string) => 
     createAppointmentsService(supabase).getAppointmentsByFreelancer(freelancerId),
+  getAppointmentsByManager: (managerId: string) => 
+    createAppointmentsService(supabase).getAppointmentsByManager(managerId),
   getAppointmentsByContact: (contactId: string) => 
     createAppointmentsService(supabase).getAppointmentsByContact(contactId),
   getPendingAppointments: () => createAppointmentsService(supabase).getPendingAppointments(),
@@ -49,8 +52,8 @@ export const appointmentsService = {
     createAppointmentsService(supabase).createAppointment(appointmentData),
   createAutoAssignAppointment: (appointmentData: any) => 
     createAppointmentsService(supabase).createAutoAssignAppointment(appointmentData),
-  acceptAppointment: (appointmentId: string, freelancerId: string) => 
-    createAppointmentsService(supabase).acceptAppointment(appointmentId, freelancerId),
+  acceptAppointment: (appointmentId: string, managerId: string) => 
+    createAppointmentsService(supabase).acceptAppointment(appointmentId, managerId),
   updateAppointment: (appointmentId: string, updateData: any) => 
     createAppointmentsService(supabase).updateAppointment(appointmentId, updateData),
   deleteAppointment: (appointmentId: string) => 

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +39,7 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
   onView,
   onEdit,
 }) => {
-  const { isAdmin, isFreelancer, isAdminOrSuperAdmin, user } = useAuth();
+  const { isAdmin, isFreelancer, isAdminOrSuperAdmin, isAccountManager, user } = useAuth();
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,11 +103,13 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
     setQuoteDialogOpen(true);
   };
 
-  // Un utilisateur peut agir sur le rendez-vous s'il est admin/superadmin, ou s'il est le freelancer concerné
-  const isActionable = isAdminOrSuperAdmin || (isFreelancer && appointment.freelancerId === currentUserId);
+  const isActionable = isAdminOrSuperAdmin || 
+    (isFreelancer && appointment.freelancerId === currentUserId) ||
+    (isAccountManager && appointment.managerId === currentUserId);
 
   const contactName = appointment.contactName || "Client";
   const freelancerName = appointment.freelancerName || "Commercial";
+  const managerName = appointment.managerName || "Non assigné";
 
   return (
     <TableRow>
@@ -120,6 +121,7 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
       <TableCell>{appointment.duration} min</TableCell>
       <TableCell>{contactName}</TableCell>
       <TableCell>{freelancerName}</TableCell>
+      {appointment.managerId && <TableCell>{managerName}</TableCell>}
       <TableCell>
         <Badge variant={getStatusBadgeVariant(appointment.status)}>
           {appointment.status === AppointmentStatus.SCHEDULED
@@ -251,6 +253,12 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
                 <h4 className="font-medium mb-1">Commercial</h4>
                 <p className="text-sm text-muted-foreground">
                   {freelancerName}
+                </p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-1">Chargé de compte</h4>
+                <p className="text-sm text-muted-foreground">
+                  {managerName}
                 </p>
               </div>
               {appointment.notes && (
