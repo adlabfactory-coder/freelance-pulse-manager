@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { UserRole } from "@/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, EyeOff, Eye } from "lucide-react";
+import { RefreshCw, Trash2, Archive } from "lucide-react";
 
 const ContactsPage: React.FC = () => {
   const { 
@@ -18,11 +18,11 @@ const ContactsPage: React.FC = () => {
     error,
     searchTerm, 
     statusFilter, 
-    includeDeleted,
+    includeTrash,
     fetchContacts, 
     handleSearch, 
     handleFilterByStatus,
-    toggleDeletedContacts
+    toggleTrashContacts
   } = useContactsData();
   
   const { role, isAdminOrSuperAdmin } = useAuth();
@@ -46,7 +46,7 @@ const ContactsPage: React.FC = () => {
           <AlertTitle>Erreur de chargement</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-        <Button onClick={() => fetchContacts(includeDeleted)} variant="outline">
+        <Button onClick={() => fetchContacts(includeTrash)} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Réessayer
         </Button>
@@ -60,21 +60,21 @@ const ContactsPage: React.FC = () => {
         <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
         <div className="flex items-center gap-2">
           {isAdminOrSuperAdmin && (
-            <Button onClick={toggleDeletedContacts} variant="outline" size="sm">
-              {includeDeleted ? (
+            <Button onClick={toggleTrashContacts} variant="outline" size="sm">
+              {includeTrash ? (
                 <>
-                  <EyeOff className="mr-2 h-4 w-4" />
-                  Masquer supprimés
+                  <Archive className="mr-2 h-4 w-4" />
+                  Masquer archivés
                 </>
               ) : (
                 <>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Afficher supprimés
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Afficher archivés
                 </>
               )}
             </Button>
           )}
-          <Button onClick={() => fetchContacts(includeDeleted)} variant="outline" size="sm" disabled={loading}>
+          <Button onClick={() => fetchContacts(includeTrash)} variant="outline" size="sm" disabled={loading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualiser
           </Button>
@@ -90,7 +90,7 @@ const ContactsPage: React.FC = () => {
           statusFilter={statusFilter}
           onSearch={handleSearch}
           onStatusFilterChange={handleFilterByStatus}
-          onImportComplete={() => fetchContacts(includeDeleted)}
+          onImportComplete={() => fetchContacts(includeTrash)}
         />
       ) : role === UserRole.ACCOUNT_MANAGER ? (
         // Vue account manager avec accès limité
@@ -114,7 +114,7 @@ const ContactsPage: React.FC = () => {
         <Alert>
           <AlertTitle>Aucun contact trouvé</AlertTitle>
           <AlertDescription>
-            Aucun contact n'a été trouvé dans la base de données{includeDeleted ? ' (même supprimés)' : ''}. 
+            Aucun contact n'a été trouvé dans la base de données{includeTrash ? ' (même dans la corbeille)' : ''}. 
             Utilisez le bouton d'importation ou ajoutez des contacts manuellement.
           </AlertDescription>
         </Alert>

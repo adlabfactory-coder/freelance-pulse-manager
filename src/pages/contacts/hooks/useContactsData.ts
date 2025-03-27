@@ -14,9 +14,9 @@ export function useContactsData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
-  const [includeDeleted, setIncludeDeleted] = useState(false);
+  const [includeTrash, setIncludeTrash] = useState(false);
   
-  const fetchContacts = useCallback(async (showDeleted: boolean = false) => {
+  const fetchContacts = useCallback(async (showTrash: boolean = false) => {
     if (!user) {
       setLoading(false);
       return;
@@ -29,10 +29,10 @@ export function useContactsData() {
         userId: user.id, 
         role, 
         isAdmin: isAdminOrSuperAdmin,
-        includeDeleted: showDeleted
+        includeTrash: showTrash
       });
       
-      const data = await contactService.getContacts(user.id, role, showDeleted);
+      const data = await contactService.getContacts(user.id, role, showTrash);
       console.log("Contacts récupérés:", data.length);
       setContacts(data);
       
@@ -62,8 +62,8 @@ export function useContactsData() {
       return false;
     }
     
-    // Filtrer les contacts supprimés si includeDeleted est false
-    if (!includeDeleted && contact.deleted_at) {
+    // Filtrer les contacts dans le dossier trash si includeTrash est false
+    if (!includeTrash && contact.folder === 'trash') {
       return false;
     }
     
@@ -78,17 +78,17 @@ export function useContactsData() {
     setStatusFilter(status);
   }, []);
   
-  const toggleDeletedContacts = useCallback(() => {
-    const newIncludeDeleted = !includeDeleted;
-    setIncludeDeleted(newIncludeDeleted);
-    fetchContacts(newIncludeDeleted);
-  }, [includeDeleted, fetchContacts]);
+  const toggleTrashContacts = useCallback(() => {
+    const newIncludeTrash = !includeTrash;
+    setIncludeTrash(newIncludeTrash);
+    fetchContacts(newIncludeTrash);
+  }, [includeTrash, fetchContacts]);
   
   useEffect(() => {
     if (user) {
-      fetchContacts(includeDeleted);
+      fetchContacts(includeTrash);
     }
-  }, [user, fetchContacts, includeDeleted]);
+  }, [user, fetchContacts, includeTrash]);
 
   // Écouteur en temps réel
   useEffect(() => {
@@ -101,7 +101,7 @@ export function useContactsData() {
         { event: '*', schema: 'public', table: 'contacts' }, 
         () => {
           console.log("Changement détecté dans la table contacts");
-          fetchContacts(includeDeleted);
+          fetchContacts(includeTrash);
         }
       )
       .subscribe();
@@ -110,7 +110,7 @@ export function useContactsData() {
       console.log("Nettoyage de l'écouteur Supabase pour contacts");
       supabase.removeChannel(channel);
     };
-  }, [user, fetchContacts, includeDeleted]);
+  }, [user, fetchContacts, includeTrash]);
 
   return {
     contacts,
@@ -119,11 +119,11 @@ export function useContactsData() {
     error,
     searchTerm,
     statusFilter,
-    includeDeleted,
+    includeTrash,
     fetchContacts,
     handleSearch,
     handleFilterByStatus,
-    toggleDeletedContacts,
+    toggleTrashContacts,
     setContacts
   };
 }

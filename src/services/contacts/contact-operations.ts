@@ -13,9 +13,9 @@ export const contactOperationsService = {
         .from('contacts')
         .select('*');
       
-      // Si includeDeleted est false, ne récupérer que les contacts non supprimés
+      // Si includeDeleted est false, ne pas récupérer les contacts dans le dossier "trash"
       if (!includeDeleted) {
-        query = query.is('deleted_at', null);
+        query = query.not('folder', 'eq', 'trash');
       }
       
       // Tri par date de création décroissante
@@ -41,7 +41,7 @@ export const contactOperationsService = {
         throw error;
       }
       
-      console.log(`✅ ${data?.length || 0} contacts récupérés${includeDeleted ? ' (y compris supprimés)' : ''}`);
+      console.log(`✅ ${data?.length || 0} contacts récupérés${includeDeleted ? ' (y compris dossier trash)' : ''}`);
       
       // Si aucun contact n'est récupéré, afficher un message de débogage
       if (!data || data.length === 0) {
@@ -58,9 +58,9 @@ export const contactOperationsService = {
           console.log(`La table 'contacts' contient ${count} enregistrements au total`);
         }
       } else {
-        // Afficher la répartition des contacts par statut et supprimés/non supprimés
-        const deletedCount = data.filter(contact => contact.deleted_at !== null).length;
-        console.log(`Répartition des contacts: ${deletedCount} supprimés, ${data.length - deletedCount} actifs`);
+        // Afficher la répartition des contacts par dossier et par statut
+        const trashCount = data.filter(contact => contact.folder === 'trash').length;
+        console.log(`Répartition des contacts: ${trashCount} dans le dossier trash, ${data.length - trashCount} actifs`);
         
         // Afficher la répartition par statut
         const statusCounts = data.reduce((acc, contact) => {
@@ -152,9 +152,14 @@ export const contactOperationsService = {
 
   async deleteContact(contactId: string): Promise<boolean> {
     try {
+      // Au lieu de marquer le contact comme supprimé avec deleted_at, 
+      // nous le déplaçons dans le dossier 'trash'
       const { error } = await supabase
         .from('contacts')
-        .update({ deleted_at: new Date().toISOString() })
+        .update({ 
+          folder: 'trash',
+          updatedAt: new Date().toISOString()
+        })
         .eq('id', contactId);
       
       if (error) {
@@ -162,7 +167,7 @@ export const contactOperationsService = {
       }
       
       toast.success("Contact supprimé", {
-        description: "Le contact a été supprimé avec succès.",
+        description: "Le contact a été déplacé dans la corbeille.",
       });
       
       return true;
