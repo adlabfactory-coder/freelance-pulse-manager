@@ -3,6 +3,7 @@ import { useState } from "react";
 import { createAppointment, createAutoAssignAppointment } from "@/services/appointments/create";
 import { toast } from "sonner";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
+import { formatDateForAPI } from "@/utils/format";
 
 // Export the title options for reuse in other components
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -41,10 +42,14 @@ export const useAppointmentForm = (
     try {
       setIsSubmitting(true);
       
-      // Construire la date avec l'heure
-      const [hours, minutes] = time.split(':').map(Number);
-      const appointmentDate = new Date(date);
-      appointmentDate.setHours(hours, minutes, 0, 0);
+      // Utiliser la fonction formatDateForAPI pour obtenir une date ISO valide
+      const appointmentDate = formatDateForAPI(date, time);
+      
+      if (!appointmentDate) {
+        toast.error("Format de date ou d'heure invalide");
+        setIsSubmitting(false);
+        return;
+      }
       
       // Déterminer le titre final
       const titleOptions = {
@@ -61,7 +66,7 @@ export const useAppointmentForm = (
       const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {
         title,
         description,
-        date: appointmentDate.toISOString(),
+        date: appointmentDate,
         duration,
         status: AppointmentStatus.SCHEDULED,
         contactId,

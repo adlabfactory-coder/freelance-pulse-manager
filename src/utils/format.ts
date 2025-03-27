@@ -53,6 +53,26 @@ export const formatDate = (date: string | Date): string => {
   return d.toLocaleDateString('fr-FR');
 };
 
+// Fonction pour convertir une date en format ISO pour l'API
+export const formatDateForAPI = (date: Date, time: string): string => {
+  if (!date || !time) return '';
+  
+  try {
+    // Récupérer les heures et minutes à partir de la chaîne time (format HH:MM)
+    const [hours, minutes] = time.split(':').map(Number);
+    
+    // Créer une nouvelle date avec la date et l'heure
+    const dateTime = new Date(date);
+    dateTime.setHours(hours, minutes, 0, 0);
+    
+    // Retourner le format ISO 8601 compatible avec l'API
+    return dateTime.toISOString();
+  } catch (error) {
+    console.error('Error formatting date for API:', error);
+    return '';
+  }
+};
+
 // Fonction pour formater un montant (en MAD - Dirham marocain)
 export const formatAmount = (amount: number): string => {
   return new Intl.NumberFormat('fr-MA', {
