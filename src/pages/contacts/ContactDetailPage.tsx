@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -25,7 +26,6 @@ const ContactDetailPage: React.FC = () => {
       return;
     }
 
-    // Charger les données du contact
     const loadContact = async () => {
       try {
         const contactData = await contactService.getContactById(contactId);

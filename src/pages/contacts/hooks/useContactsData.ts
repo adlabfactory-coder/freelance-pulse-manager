@@ -4,9 +4,10 @@ import { contactService } from "@/services/contacts";
 import { Contact } from "@/services/contacts/types";
 import { ContactStatus } from "@/types/database/enums";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase-client";
 
 export function useContactsData() {
-  const { isAdmin, isFreelancer, isAccountManager, user, role } = useAuth();
+  const { user, role } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,20 +18,17 @@ export function useContactsData() {
     if (!user) return;
     
     setLoading(true);
-    // Passer l'ID de l'utilisateur et son rôle pour filtrer les contacts selon le rôle
     const data = await contactService.getContacts(user.id, role);
     setContacts(data);
     setLoading(false);
   }, [user, role]);
   
-  // Filter contacts based on search term and status
+  // Filtrage des contacts
   const filteredContacts = contacts.filter(contact => {
-    // Filtrer par terme de recherche
     if (searchTerm && !contact.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     
-    // Filtrer par statut
     if (statusFilter && contact.status !== statusFilter) {
       return false;
     }
@@ -48,13 +46,12 @@ export function useContactsData() {
   
   useEffect(() => {
     if (user && loadAttempt === 0) {
-      console.log("Chargement initial des contacts");
       fetchContacts();
       setLoadAttempt(1);
     }
   }, [user, loadAttempt, fetchContacts]);
 
-  // Mettre en place l'écouteur pour les mises à jour en temps réel
+  // Écouteur en temps réel
   useEffect(() => {
     const channel = supabase
       .channel('public:contacts')
@@ -81,6 +78,3 @@ export function useContactsData() {
     setContacts
   };
 }
-
-// Ajouter l'import manquant
-import { supabase } from "@/lib/supabase";

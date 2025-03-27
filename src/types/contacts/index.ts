@@ -1,7 +1,6 @@
 
 import { ContactStatus as ContactStatusUnion } from "@/types/database/enums";
 
-// Définir un enum pour le statut des contacts
 export enum ContactStatusEnum {
   LEAD = "lead",
   PROSPECT = "prospect",
@@ -10,19 +9,13 @@ export enum ContactStatusEnum {
   LOST = "lost"
 }
 
-/**
- * This helper function converts between the two types of ContactStatus used in the application.
- * Use this to ensure type consistency when needed.
- */
 export function normalizeContactStatus(status: ContactStatusEnum | ContactStatusUnion | string): ContactStatusUnion {
   if (typeof status === 'string') {
-    // Check if it's already a valid ContactStatusUnion
     const validStatuses: ContactStatusUnion[] = ['lead', 'prospect', 'negotiation', 'signed', 'lost'];
     if (validStatuses.includes(status as ContactStatusUnion)) {
       return status as ContactStatusUnion;
     }
     
-    // Convert from enum string representation to union type
     switch (status.toUpperCase()) {
       case 'LEAD':
       case ContactStatusEnum.LEAD:
@@ -44,7 +37,6 @@ export function normalizeContactStatus(status: ContactStatusEnum | ContactStatus
     }
   }
   
-  // Convert from enum to string
   switch (status) {
     case ContactStatusEnum.LEAD:
       return 'lead';
@@ -61,9 +53,6 @@ export function normalizeContactStatus(status: ContactStatusEnum | ContactStatus
   }
 }
 
-/**
- * Maps from string union type to enum
- */
 export function contactStatusToEnum(status: ContactStatusUnion): ContactStatusEnum {
   switch (status) {
     case 'lead':

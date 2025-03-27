@@ -1,11 +1,9 @@
 
-// Re-export all appointment-related functions
+// Export direct des fonctions liées aux rendez-vous
 import { fetchAppointments, fetchAppointmentById } from './fetch';
-import { updateAppointmentStatus } from './update';
-import { deleteAppointment } from './update';
+import { updateAppointmentStatus, deleteAppointment } from './update';
 import { createAppointment, createAutoAssignAppointment } from './create';
 
-// Export all functions with proper names to avoid ambiguity
 export {
   fetchAppointments,
   fetchAppointmentById,

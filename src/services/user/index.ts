@@ -1,5 +1,4 @@
 
-// Re-export all user service functions
 export * from './fetch-users';
 export * from './fetch-user-by-id';
 export * from './update-user';

@@ -5,7 +5,6 @@ import { contactService } from "@/services/contacts";
 import { ContactStatus } from "@/types/database/enums";
 import { toast } from "sonner";
 import { contactSchema, ContactFormValues } from "../schema/contactFormSchema";
-import { Contact } from "@/services/contacts/types";
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -41,7 +40,6 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
         position: data.position || "",
         address: data.address || "",
         notes: data.notes || "",
-        // Toujours définir le statut à "lead" lors de la création d'un nouveau contact
         status: isEditing ? data.status as ContactStatus : "lead" as ContactStatus,
         assignedTo: data.assignedTo
       };
@@ -61,7 +59,6 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
       }
       
       if (result && onSuccess) {
-        // Pass both id and name to onSuccess callback
         const contactInfo = {
           id: typeof result === 'string' ? result : initialData?.id || '',
           name: data.name

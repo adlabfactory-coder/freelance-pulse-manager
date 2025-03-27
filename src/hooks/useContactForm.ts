@@ -14,12 +14,10 @@ interface UseContactFormProps {
   isEditing?: boolean;
 }
 
-// Export as a named export to match the import in components
 export const useContactForm = ({ onSuccess, initialData, isEditing = false }: UseContactFormProps = {}) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   
-  // Add react-hook-form integration
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
@@ -38,12 +36,10 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
 
   const isSubmitting = form.formState.isSubmitting;
 
-  // Form submission handler
   const onSubmit = async (data: ContactFormValues) => {
     try {
       setLoading(true);
       
-      // S'assurer que toutes les données requises sont présentes
       const contactInput: ContactFormInput = {
         name: data.name,
         email: data.email,
@@ -56,8 +52,6 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
         assignedTo: data.assignedTo || (user ? user.id : undefined),
         folder: data.folder
       };
-      
-      console.log("Préparation données contact:", contactInput);
       
       if (isEditing && initialData?.id) {
         const success = await contactCreateUpdateService.updateContact(initialData.id, contactInput);
@@ -89,5 +83,4 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
   };
 };
 
-// Also export as default to maintain backward compatibility
 export default useContactForm;
