@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ interface AuditTableProps {
   selectedLogs: string[];
   onSelectAll: () => void;
   onToggleSelect: (id: string) => void;
+  onRowClick: (log: AuditLog) => void;
 }
 
 const AuditTable: React.FC<AuditTableProps> = ({
@@ -22,7 +24,8 @@ const AuditTable: React.FC<AuditTableProps> = ({
   toggleSortDirection,
   selectedLogs,
   onSelectAll,
-  onToggleSelect
+  onToggleSelect,
+  onRowClick
 }) => {
   const getActionBadgeColor = (action: string) => {
     switch (action) {
@@ -79,7 +82,11 @@ const AuditTable: React.FC<AuditTableProps> = ({
             <TableHead className="w-[50px]">
               <Checkbox 
                 checked={allSelected} 
-                indeterminate={someSelected}
+                ref={(input) => {
+                  if (input) {
+                    input.indeterminate = someSelected;
+                  }
+                }}
                 onCheckedChange={onSelectAll}
                 aria-label="Sélectionner tous les journaux"
               />
@@ -113,9 +120,15 @@ const AuditTable: React.FC<AuditTableProps> = ({
             logs.map((log) => (
               <TableRow 
                 key={log.id} 
-                className={selectedLogs.includes(log.id) ? "bg-muted/50" : ""}
+                className={`${selectedLogs.includes(log.id) ? "bg-muted/50" : ""} cursor-pointer`}
+                onClick={(e) => {
+                  // Ignore click on checkbox
+                  const target = e.target as HTMLElement;
+                  if (target.closest('input[type="checkbox"]')) return;
+                  onRowClick(log);
+                }}
               >
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox 
                     checked={selectedLogs.includes(log.id)}
                     onCheckedChange={() => onToggleSelect(log.id)}
