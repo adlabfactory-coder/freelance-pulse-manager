@@ -72,8 +72,8 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
           if (data.notes !== undefined) form.setNotes(data.notes);
         }}
         onCurrentItemChange={form.setCurrentItem}
-        onAddItem={form.handleAddItem || form.addItem}
-        onRemoveItem={form.handleRemoveItem || form.removeItem}
+        onAddItem={form.handleAddItem}
+        onRemoveItem={form.handleRemoveItem}
       />
 
       <div className="flex justify-end space-x-2">

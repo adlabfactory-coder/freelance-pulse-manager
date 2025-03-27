@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { useSubscriptionPlans } from "@/hooks/use-subscription-plans";
 import { useSubscriptions } from "@/hooks/use-subscriptions";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionPlan } from "@/types";
 import { fetchServices } from "@/services/services-service";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import { formatCurrency } from "@/utils/format";
 
 import SubscriptionHeader from "@/components/subscriptions/SubscriptionHeader";
@@ -32,7 +31,8 @@ const SubscriptionsPage: React.FC = () => {
         setServicesLoading(true);
         try {
           const servicesData = await fetchServices();
-          setServices(servicesData);
+          // Cast le résultat pour s'assurer de la compatibilité avec le type Service
+          setServices(servicesData as Service[]);
         } catch (error) {
           console.error("Erreur lors du chargement des services:", error);
           toast({

@@ -13,7 +13,7 @@ export interface Service {
   price: number;
   type: ServiceType | string;
   is_active?: boolean;
-  isActive?: boolean; // For compatibility with both naming conventions
+  isActive?: boolean; // Pour compatibilité avec les deux conventions de nommage
   created_at?: string;
   updated_at?: string;
 }

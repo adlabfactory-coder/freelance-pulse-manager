@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { createQuotesService } from "@/services/supabase/quotes";
@@ -6,7 +5,7 @@ import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import { Quote, QuoteItem, QuoteStatus } from "@/types";
 import { Contact } from "@/services/contacts/types";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import { User } from "@/types";
 import { fetchServices } from "@/services/services-service";
 
@@ -96,7 +95,7 @@ export const useQuoteForm = ({
       }
       
       const servicesData = await fetchServices();
-      setServices(servicesData || []);
+      setServices(servicesData as Service[]);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error("Une erreur est survenue lors du chargement des données");

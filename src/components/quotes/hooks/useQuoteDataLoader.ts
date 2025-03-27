@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase-client";
 import { fetchServices } from "@/services/services-service";
 import { toast } from "sonner";
 import { Contact } from "@/services/contacts/types";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import { User } from "@/types";
 
 export const useQuoteDataLoader = () => {
@@ -42,7 +42,8 @@ export const useQuoteDataLoader = () => {
       
       // Fetch services
       const servicesData = await fetchServices();
-      setServices(servicesData || []);
+      // Cast le résultat pour s'assurer de la compatibilité avec le type Service
+      setServices(servicesData as Service[]);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error("Une erreur est survenue lors du chargement des données");
