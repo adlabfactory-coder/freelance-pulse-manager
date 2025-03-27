@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
 import { getMockUsers } from "@/utils/supabase-mock-data";
 import { AuthContextType } from "@/types/auth";
+import { toast } from "sonner";
 
 // Context pour l'authentification
 const defaultContext: AuthContextType = {
@@ -36,6 +37,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Pour le mode démo, utiliser un utilisateur simulé par défaut
+        const mockUsers = getMockUsers();
+        const defaultUser = mockUsers[0]; // Super Admin
+        
+        console.log("Mode démonstration activé, utilisation d'un utilisateur par défaut:", defaultUser.email);
+        setUser(defaultUser);
+        setIsLoading(false);
+        return;
+
+        /* Code Supabase désactivé pour le mode démo - À activer en production
         const { data: sessionData, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -68,6 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(mockUsers[0]);
           }
         }
+        */
       } catch (err) {
         console.error("Erreur lors de la vérification de l'authentification:", err);
       } finally {
@@ -75,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
     
-    // Écouteur pour les changements de session
+    /* Écouteur pour les changements de session - À activer en production
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state change:", event);
       if (event === 'SIGNED_IN' && session) {
@@ -94,12 +106,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         navigate('/auth/login');
       }
     });
+    */
     
     checkAuth();
     
+    /* À activer en production
     return () => {
       authListener.subscription.unsubscribe();
     };
+    */
   }, [navigate]);
 
   // Déterminer les rôles utilisateur
@@ -111,9 +126,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isAccountManager = role === UserRole.ACCOUNT_MANAGER;
   const isAuthenticated = !!user;
 
-  // Fonction de connexion
+  // Fonction de connexion - Mode démo
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Tentative de connexion en mode démo avec:", email);
+      
+      // Mode de démonstration
+      const mockUsers = getMockUsers();
+      const mockUser = mockUsers.find(u => u.email === email);
+      
+      if (mockUser) {
+        console.log("Utilisateur de démonstration trouvé:", mockUser.name);
+        setUser(mockUser);
+        toast.success(`Connecté en tant que ${mockUser.name}`);
+        return { success: true };
+      }
+      
+      // Si l'email ne correspond à aucun utilisateur de démo, utiliser l'admin par défaut
+      console.log("Email non reconnu, utilisation de l'admin par défaut");
+      const defaultAdmin = mockUsers.find(u => u.role === UserRole.ADMIN) || mockUsers[0];
+      setUser(defaultAdmin);
+      toast.success(`Connecté en tant que ${defaultAdmin.name}`);
+      
+      return { success: true };
+      
+      /* Code Supabase désactivé pour le mode démo - À activer en production
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -143,16 +180,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         return { success: true };
       }
-      
-      // Mode de démonstration
-      const mockUsers = getMockUsers();
-      const mockUser = mockUsers.find(u => u.email === email);
-      if (mockUser) {
-        setUser(mockUser);
-        return { success: true };
-      }
-      
-      return { success: false, error: "Identifiants invalides" };
+      */
     } catch (err: any) {
       console.error("Erreur lors de la connexion:", err.message);
       return { success: false, error: err.message };
@@ -162,6 +190,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Fonction d'inscription
   const signUp = async (email: string, password: string, name: string, role: UserRole) => {
     try {
+      // En mode démo, simuler une inscription réussie
+      console.log("Inscription simulée pour:", email, name, role);
+      
+      // Créer un nouvel utilisateur simulé
+      const newUser: User = {
+        id: crypto.randomUUID(),
+        email,
+        name,
+        role,
+        avatar: null
+      };
+      
+      // Définir cet utilisateur comme courant
+      setUser(newUser);
+      toast.success("Compte créé avec succès");
+      
+      return { success: true };
+      
+      /* Code Supabase désactivé pour le mode démo - À activer en production
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -178,6 +225,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       return { success: true };
+      */
     } catch (err: any) {
       return { success: false, error: err.message };
     }
@@ -186,9 +234,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Fonction de déconnexion
   const logout = async () => {
     try {
+      // En mode démo, simplement réinitialiser l'état
+      setUser(null);
+      navigate('/auth/login');
+      toast.success("Déconnexion réussie");
+      
+      /* Code Supabase désactivé pour le mode démo - À activer en production
       await supabase.auth.signOut();
       setUser(null);
       navigate('/auth/login');
+      */
     } catch (err) {
       console.error("Erreur lors de la déconnexion:", err);
     }

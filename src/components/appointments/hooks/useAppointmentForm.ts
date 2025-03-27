@@ -5,6 +5,7 @@ import { useAppointmentContacts } from "@/hooks/appointments/useAppointmentConta
 import { useAppointmentFreelancers } from "@/hooks/appointments/useAppointmentFreelancers";
 import { AppointmentTitleOption } from "@/types/appointment";
 import { useAuth } from "@/hooks/use-auth";
+import { UserRole } from "@/types";
 
 // Export les options de titre pour réutilisation dans d'autres composants
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -88,7 +89,7 @@ export const useAppointmentForm = (
       folder,
       // Si l'utilisateur est un freelancer, jamais d'auto-assignation
       // Sinon, auto-assignation par défaut
-      autoAssign: user?.role === 'freelancer' ? false : (autoAssign === undefined ? true : autoAssign)
+      autoAssign: user?.role === UserRole.FREELANCER ? false : (autoAssign === undefined ? true : autoAssign)
     });
     
     if (result && onSuccess) {

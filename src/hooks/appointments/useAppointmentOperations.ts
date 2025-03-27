@@ -6,6 +6,7 @@ import { AppointmentStatus } from "@/types/appointment";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase-client";
+import { UserRole } from "@/types";
 
 export const useAppointmentOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,9 +43,18 @@ export const useAppointmentOperations = () => {
       return null;
     }
     
+    if (!user) {
+      console.error("Erreur d'authentification: aucun utilisateur connecté");
+      toast.error("Vous devez être connecté pour créer un rendez-vous");
+      return null;
+    }
+    
     try {
       setIsSubmitting(true);
-      console.log("useAppointmentOperations: Début de la soumission du rendez-vous...");
+      console.log("useAppointmentOperations: Début de la soumission du rendez-vous...", {
+        userId: user.id, 
+        userRole: user.role
+      });
       
       const appointmentDate = formatDateForAPI(date, time);
       
@@ -53,8 +63,10 @@ export const useAppointmentOperations = () => {
         return null;
       }
       
-      // Utiliser l'ID de l'utilisateur connecté comme freelancer si c'est un freelancer
-      const finalFreelancerId = freelancerId || (user?.role === 'freelancer' ? user.id : null);
+      // Déterminer le freelancer à assigner
+      const finalFreelancerId = user.role === UserRole.FREELANCER 
+        ? user.id 
+        : freelancerId;
       
       console.log("useAppointmentOperations: Informations du rendez-vous:", {
         title,
@@ -62,14 +74,16 @@ export const useAppointmentOperations = () => {
         freelancerId: finalFreelancerId,
         appointmentDate,
         autoAssign,
-        userRole: user?.role
+        userRole: user.role
       });
       
       // Si l'utilisateur est un freelancer, toujours lui assigner le rendez-vous
-      const useAutoAssign = autoAssign || (user?.role !== 'freelancer' && !finalFreelancerId);
+      // Sinon, respecter la valeur d'autoAssign
+      const useAutoAssign = user.role !== UserRole.FREELANCER && 
+                           (autoAssign || !finalFreelancerId);
       
       if (useAutoAssign) {
-        console.log("useAppointmentOperations: Mode auto-assignation activé pour un chargé de compte");
+        console.log("useAppointmentOperations: Mode auto-assignation activé");
         toast.info("Le rendez-vous sera assigné à un chargé de compte");
       }
       
@@ -79,11 +93,12 @@ export const useAppointmentOperations = () => {
         date: appointmentDate,
         duration,
         status: useAutoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId,
-        freelancer_id: useAutoAssign ? undefined : finalFreelancerId,
+        contactId: contactId,
+        freelancerId: useAutoAssign ? undefined : finalFreelancerId,
         location: null,
         notes: null,
-        folder: folder
+        folder: folder,
+        currentUserId: user.id // Ajout pour tracking
       };
       
       console.log("useAppointmentOperations: Soumission des données de rendez-vous:", appointmentData);
@@ -94,21 +109,26 @@ export const useAppointmentOperations = () => {
       } else {
         result = await createAppointment(appointmentData);
         
-        // Mettre à jour explicitement le statut du contact si le rendez-vous est créé par un freelancer
-        if (result && user?.role === 'freelancer' && finalFreelancerId) {
+        // Si le rendez-vous est créé par un freelancer, mettre à jour le statut du contact
+        if (result && user.role === UserRole.FREELANCER && finalFreelancerId) {
           console.log("Mise à jour du statut du contact après création de rendez-vous par un freelancer");
-          const { error } = await supabase
-            .from('contacts')
-            .update({ 
-              assignedTo: finalFreelancerId,
-              status: 'prospect'
-            })
-            .eq('id', contactId);
-            
-          if (error) {
-            console.error("Erreur lors de la mise à jour du contact:", error);
-          } else {
-            console.log("Contact mis à jour avec succès: assigné au freelancer et statut 'prospect'");
+          try {
+            const { error } = await supabase
+              .from('contacts')
+              .update({ 
+                assignedTo: finalFreelancerId,
+                status: 'prospect'
+              })
+              .eq('id', contactId);
+              
+            if (error) {
+              console.error("Erreur lors de la mise à jour du contact:", error);
+              toast.error("Le rendez-vous a été créé, mais nous n'avons pas pu mettre à jour le statut du contact");
+            } else {
+              console.log("Contact mis à jour avec succès: assigné au freelancer et statut 'prospect'");
+            }
+          } catch (err) {
+            console.error("Erreur inattendue lors de la mise à jour du contact:", err);
           }
         }
       }
@@ -118,6 +138,9 @@ export const useAppointmentOperations = () => {
         window.dispatchEvent(new CustomEvent('appointment-created'));
         toast.success("Rendez-vous créé avec succès");
         return result;
+      } else {
+        console.error("Aucun résultat retourné lors de la création du rendez-vous");
+        toast.error("Erreur lors de la création du rendez-vous");
       }
       
       return null;

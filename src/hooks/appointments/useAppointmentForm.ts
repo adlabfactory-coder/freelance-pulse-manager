@@ -5,6 +5,7 @@ import { useAppointmentContacts } from "./useAppointmentContacts";
 import { useAppointmentFreelancers } from "./useAppointmentFreelancers";
 import { AppointmentTitleOption } from "@/types/appointment";
 import { useAuth } from "@/hooks/use-auth";
+import { UserRole } from "@/types";
 
 // Export les options de titre pour réutilisation dans d'autres composants
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -65,9 +66,8 @@ export const useAppointmentForm = (
     const finalContactId = overrideContactId || contactId;
     const finalTitle = getFinalTitle();
     
-    // Déterminer l'ID du freelancer à utiliser
-    // Pour les utilisateurs freelancers, utilisez toujours leur propre ID
-    // Pour les autres types d'utilisateurs, le comportement dépend du flag autoAssign
+    // Logique de détermination du freelancer
+    // Si l'utilisateur est un freelancer, toujours utiliser son propre ID
     const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
     
     console.log("useAppointmentForm: Soumission du formulaire", {
@@ -87,9 +87,9 @@ export const useAppointmentForm = (
       contactId: finalContactId,
       freelancerId,
       folder,
-      // Si l'utilisateur est un freelancer, jamais d'auto-assignation
-      // Sinon, utiliser la valeur de autoAssign ou définir à true si non spécifié
-      autoAssign: user?.role === 'freelancer' ? false : (autoAssign === undefined ? true : autoAssign)
+      // Si l'utilisateur est un freelancer, jamais d'auto-assignation car il est automatiquement assigné
+      // Sinon (pour les admin, account managers), respecter la valeur autoAssign
+      autoAssign: user?.role === UserRole.FREELANCER ? false : autoAssign
     });
     
     if (result && onSuccess) {
