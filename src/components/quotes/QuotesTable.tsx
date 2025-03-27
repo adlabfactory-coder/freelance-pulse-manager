@@ -17,7 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchUserById } from "@/services/user-service";
 import { contactService } from "@/services/contact-service";
 import { User } from "@/types";
-import { Contact } from "@/types/contact";
+// Import the correct Contact type from the contacts services
+import { Contact } from "@/services/contacts/types";
 
 interface QuotesTableProps {
   quotes: Quote[];
@@ -187,9 +188,13 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
     return contactsMap[contactId]?.name || 'Contact inconnu';
   };
 
-  // Obtenir le nom du commercial à partir de l'ID
-  const getFreelancerName = (freelancerId: string) => {
-    return freelancersMap[freelancerId]?.name || 'Commercial inconnu';
+  // Obtenir le nom complet du commercial à partir de l'ID
+  const getFreelancerFullName = (freelancerId: string) => {
+    const freelancer = freelancersMap[freelancerId];
+    if (freelancer) {
+      return freelancer.name || 'Commercial inconnu';
+    }
+    return 'Commercial inconnu';
   };
 
   // Formater la référence du devis
@@ -289,7 +294,7 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
               <TableRow key={quote.id}>
                 <TableCell>{formatReference(quote.id)}</TableCell>
                 <TableCell>{getContactName(quote.contactId)}</TableCell>
-                <TableCell>{getFreelancerName(quote.freelancerId)}</TableCell>
+                <TableCell>{getFreelancerFullName(quote.freelancerId)}</TableCell>
                 <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(quote.status)}>
