@@ -1,64 +1,64 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PlusCircle } from 'lucide-react';
 import { Service, ServiceType } from '@/types/service';
-import ServicesList from './services/ServicesList';
-import ServiceForm from './services/ServiceForm';
-import { useServices } from './services/hooks/useServices';
-import { toast } from 'sonner';
+import { useServices } from '@/hooks/useServices';
+import ServicesTabList from './services/ServicesTabList';
+import ServicesListView from './services/ServicesListView';
+import ServiceFormView from './services/ServiceFormView';
 
 const ServicesSettings: React.FC = () => {
-  const { services, loading, error, getServices, addService, editService, removeService } = useServices();
+  const { 
+    services, 
+    loading, 
+    createService, 
+    updateService, 
+    deleteService 
+  } = useServices();
+  
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('list');
 
-  const handleSaveService = async (service: Service) => {
-    setIsSaving(true);
-    try {
-      if (service.id) {
-        await editService(service);
-        toast.success("Service mis à jour avec succès");
-      } else {
-        await addService(service);
-        toast.success("Service ajouté avec succès");
-      }
-      setShowAddForm(false);
-      setEditingService(null);
-    } catch (error) {
-      toast.error("Une erreur est survenue lors de l'enregistrement du service");
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteService = async (service: Service) => {
-    try {
-      await removeService(service.id);
-      toast.success("Service supprimé avec succès");
-    } catch (error) {
-      toast.error("Une erreur est survenue lors de la suppression du service");
-      console.error(error);
-    }
+  const handleAddNewClick = () => {
+    setEditingService(null);
+    setShowAddForm(true);
+    setActiveTab('form');
   };
 
   const handleEditService = (service: Service) => {
     setEditingService(service);
     setShowAddForm(false);
+    setActiveTab('form');
   };
 
   const handleCancelForm = () => {
     setShowAddForm(false);
     setEditingService(null);
+    setActiveTab('list');
   };
 
-  const handleAddNewClick = () => {
-    setEditingService(null);
-    setShowAddForm(true);
+  const handleSaveService = async (service: Service) => {
+    try {
+      if (service.id) {
+        await updateService(service.id, service);
+      } else {
+        await createService(service);
+      }
+      setShowAddForm(false);
+      setEditingService(null);
+      setActiveTab('list');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleDeleteService = async (service: Service) => {
+    try {
+      await deleteService(service.id);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const emptyService: Service = {
@@ -71,56 +71,28 @@ const ServicesSettings: React.FC = () => {
   };
 
   return (
-    <Tabs defaultValue="list" className="w-full">
-      <div className="flex justify-between items-center mb-4">
-        <TabsList>
-          <TabsTrigger value="list">Liste des services</TabsTrigger>
-          {(showAddForm || editingService) && (
-            <TabsTrigger value="form">
-              {editingService ? "Modifier le service" : "Ajouter un service"}
-            </TabsTrigger>
-          )}
-        </TabsList>
-        
-        {!showAddForm && !editingService && (
-          <Button onClick={handleAddNewClick} className="flex items-center">
-            <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un service
-          </Button>
-        )}
-      </div>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <ServicesTabList 
+        showForm={showAddForm || !!editingService}
+        isEditing={!!editingService}
+        onAddNew={handleAddNewClick}
+      />
 
       <TabsContent value="list">
-        <Card>
-          <CardHeader>
-            <CardTitle>Services</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ServicesList 
-              services={services} 
-              loading={loading} 
-              onEditService={handleEditService}
-              onDeleteService={handleDeleteService}
-            />
-          </CardContent>
-        </Card>
+        <ServicesListView 
+          services={services}
+          loading={loading}
+          onEditService={handleEditService}
+          onDeleteService={handleDeleteService}
+        />
       </TabsContent>
 
       <TabsContent value="form">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {editingService ? "Modifier le service" : "Ajouter un service"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ServiceForm 
-              service={editingService || emptyService} 
-              onSave={handleSaveService} 
-              onCancel={handleCancelForm}
-              isSaving={isSaving}
-            />
-          </CardContent>
-        </Card>
+        <ServiceFormView 
+          service={editingService || emptyService}
+          onSave={handleSaveService}
+          onCancel={handleCancelForm}
+        />
       </TabsContent>
     </Tabs>
   );
