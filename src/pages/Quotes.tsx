@@ -24,7 +24,9 @@ const Quotes: React.FC = () => {
   const loadQuotes = async () => {
     setLoading(true);
     try {
+      console.log("Chargement des devis");
       const data = await fetchQuotes();
+      console.log("Devis chargés:", data);
       setQuotes(data);
     } catch (error) {
       console.error("Erreur lors du chargement des devis:", error);
@@ -57,11 +59,18 @@ const Quotes: React.FC = () => {
     );
   });
 
-  const handleAddClick = () => setAddDialogOpen(true);
+  const handleAddClick = () => {
+    console.log("Ouverture du dialogue d'ajout de devis");
+    setAddDialogOpen(true);
+  };
   
   const handleQuoteCreated = () => {
     console.log("Devis créé, rechargement de la liste des devis");
     loadQuotes();
+    toast({
+      title: "Succès",
+      description: "Le devis a été créé avec succès.",
+    });
   };
 
   // Si c'est un freelancer qui n'est pas admin, afficher la vue freelancer

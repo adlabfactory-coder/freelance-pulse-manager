@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useQuoteForm } from '../hooks/useQuoteForm';
 import QuoteFormSections from './QuoteFormSections';
 import { Quote, QuoteItem } from '@/types';
+import { Loader2 } from 'lucide-react';
 
 interface QuoteFormProps {
   form: ReturnType<typeof useQuoteForm>;
@@ -17,7 +18,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   form, 
   onDiscard,
   isSubmitting = form.isSubmitting, 
-  onSubmit = form.handleSubmit,
+  onSubmit,
   onCloseDialog
 }) => {
   // Nous devons nous assurer que tous les éléments partiels sont complets avant de les passer
@@ -34,11 +35,18 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
       })
     : [];
 
-  return (
-    <form onSubmit={(e) => {
-      e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted, calling handleSubmit");
+    if (onSubmit) {
       onSubmit();
-    }} className="space-y-6">
+    } else {
+      await form.handleSubmit(e);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
       <QuoteFormSections
         quoteData={{
           contactId: form.contactId,
@@ -72,7 +80,14 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
           </Button>
         )}
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Enregistrement..." : "Enregistrer le devis"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enregistrement...
+            </>
+          ) : (
+            "Enregistrer le devis"
+          )}
         </Button>
       </div>
     </form>

@@ -1,6 +1,4 @@
-
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { useState, useEffect, useCallback } from "react";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
@@ -35,6 +33,7 @@ const calculateTotalAmount = (items: Partial<QuoteItem>[]) => {
 };
 
 interface UseQuoteFormProps {
+  onSuccess?: (id?: string) => void;
   onCloseDialog?: (open: boolean) => void;
   onQuoteCreated?: (id?: string) => void;
   isEditing?: boolean;
@@ -42,6 +41,7 @@ interface UseQuoteFormProps {
 }
 
 export const useQuoteForm = ({
+  onSuccess,
   onCloseDialog,
   onQuoteCreated,
   isEditing = false,
@@ -75,7 +75,7 @@ export const useQuoteForm = ({
   });
   
   // Load data (contacts, freelancers, services)
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch contacts
@@ -111,10 +111,10 @@ export const useQuoteForm = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   
   // Load quote data for editing
-  const loadQuoteData = async (id: string) => {
+  const loadQuoteData = useCallback(async (id: string) => {
     setLoading(true);
     try {
       const quote = await quotesService.fetchQuoteById(id);
@@ -136,10 +136,10 @@ export const useQuoteForm = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
   
   // Form validation
-  const isFormValid = () => {
+  const isFormValid = useCallback(() => {
     if (!contactId) {
       toast.error("Veuillez sélectionner un client pour ce devis");
       return false;
@@ -178,17 +178,17 @@ export const useQuoteForm = ({
     }
     
     return true;
-  };
+  }, [contactId, freelancerId, validUntil, items]);
   
   // Add a new item to the quote
-  const handleAddItem = () => {
+  const handleAddItem = useCallback(() => {
     if (!currentItem.description || !currentItem.quantity || !currentItem.unitPrice) {
       toast.error("Veuillez remplir tous les champs de l'article");
       return;
     }
     
-    setItems([
-      ...items,
+    setItems(prevItems => [
+      ...prevItems,
       {
         ...currentItem,
         isNew: true
@@ -203,28 +203,29 @@ export const useQuoteForm = ({
       tax: 20, // Default tax rate
       discount: 0,
     });
-  };
+  }, [currentItem]);
   
   // Remove an item from the quote
-  const handleRemoveItem = (index: number) => {
-    const newItems = [...items];
-    
-    if (newItems[index].id) {
-      // Mark existing items for deletion instead of removing them from the array
-      newItems[index] = { ...newItems[index], toDelete: true };
-      setItems(newItems);
-    } else {
-      // Remove new items directly
-      newItems.splice(index, 1);
-      setItems(newItems);
-    }
-  };
+  const handleRemoveItem = useCallback((index: number) => {
+    setItems(prevItems => {
+      const newItems = [...prevItems];
+      
+      if (newItems[index].id) {
+        // Mark existing items for deletion instead of removing them from the array
+        newItems[index] = { ...newItems[index], toDelete: true };
+        return newItems;
+      } else {
+        // Remove new items directly
+        return newItems.filter((_, i) => i !== index);
+      }
+    });
+  }, []);
   
   // Calculate the total amount
   const totalAmount = calculateTotalAmount(items.filter(item => !item.toDelete));
   
   // Get quote data for submit
-  const getQuoteData = (): Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> => {
+  const getQuoteData = useCallback((): Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> => {
     return {
       contactId,
       freelancerId,
@@ -234,11 +235,13 @@ export const useQuoteForm = ({
       totalAmount,
       items: items.filter(item => !item.toDelete) as QuoteItem[]
     };
-  };
+  }, [contactId, freelancerId, validUntil, status, notes, totalAmount, items]);
   
   // Submit the form to create a quote
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    console.log("handleSubmit called");
     
     if (!isFormValid()) return;
     
@@ -252,17 +255,34 @@ export const useQuoteForm = ({
         .filter(item => !item.toDelete)
         .map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
       
+      const quoteData = getQuoteData();
+      console.log("Données du devis:", quoteData);
+      console.log("Éléments du devis:", validItems);
+      
       const newQuote = await quotesService.createQuote(
-        getQuoteData(),
+        quoteData,
         validItems
       );
       
       if (newQuote) {
+        console.log("Devis créé avec succès:", newQuote);
         toast.success("Devis créé avec succès");
         setIsQuoteSaved(true);
         
-        if (onCloseDialog) onCloseDialog(false);
-        if (onQuoteCreated) onQuoteCreated(newQuote.id);
+        if (onCloseDialog) {
+          console.log("Fermeture du dialogue");
+          onCloseDialog(false);
+        }
+        
+        if (onQuoteCreated) {
+          console.log("Appel de onQuoteCreated");
+          onQuoteCreated(newQuote.id);
+        }
+        
+        if (onSuccess) {
+          console.log("Appel de onSuccess");
+          onSuccess(newQuote.id);
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la sauvegarde du devis:", error);
@@ -270,7 +290,7 @@ export const useQuoteForm = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isFormValid, items, getQuoteData, onCloseDialog, onQuoteCreated, onSuccess]);
   
   // Handle editing a quote
   const handleSubmitEdit = async (id: string) => {
@@ -352,16 +372,17 @@ export const useQuoteForm = ({
     items: items.filter(item => !item.toDelete),
     addItem: handleAddItem,
     updateItem: (index: number, updatedItem: Partial<QuoteItem>) => {
-      const newItems = [...items];
-      newItems[index] = { ...newItems[index], ...updatedItem };
-      setItems(newItems);
+      setItems(prevItems => {
+        const newItems = [...prevItems];
+        newItems[index] = { ...newItems[index], ...updatedItem };
+        return newItems;
+      });
     },
     removeItem: handleRemoveItem,
     totalAmount,
     isSubmitting,
     isQuoteSaved,
     handleSubmit,
-    handleSubmitEdit,
     loadData,
     loadQuoteData,
     loading,
