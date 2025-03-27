@@ -84,7 +84,8 @@ const AuditTable: React.FC<AuditTableProps> = ({
                 checked={allSelected} 
                 ref={(input) => {
                   if (input) {
-                    input.indeterminate = someSelected;
+                    // Fix: explicitly cast to HTMLInputElement
+                    (input as HTMLInputElement).indeterminate = someSelected;
                   }
                 }}
                 onCheckedChange={onSelectAll}
