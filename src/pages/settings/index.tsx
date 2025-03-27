@@ -29,7 +29,8 @@ const SettingsRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<SettingsPage />}>
-        <Route path="" element={<Navigate to="/settings" replace />} />
+        <Route index element={<Navigate to="/settings/profile" replace />} />
+        <Route path="profile" element={null} />
         <Route path="security" element={null} />
         <Route path="api-keys" element={null} />
         <Route path="users" element={null} />

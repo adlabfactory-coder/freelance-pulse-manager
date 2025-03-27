@@ -26,6 +26,10 @@ const UserProfileMenu: React.FC = () => {
     navigate("/auth/login");
   };
 
+  const handleExternalNavigation = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,11 +55,11 @@ const UserProfileMenu: React.FC = () => {
           <span>Paramètres</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => window.open('/docs', '_blank')}>
+        <DropdownMenuItem onClick={() => handleExternalNavigation('/docs')}>
           <BookOpen className="mr-2 h-4 w-4" />
           <span>Documentation</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => window.open('/support', '_blank')}>
+        <DropdownMenuItem onClick={() => handleExternalNavigation('/support')}>
           <HelpCircle className="mr-2 h-4 w-4" />
           <span>Support</span>
         </DropdownMenuItem>

@@ -6,19 +6,18 @@ import { toast } from "sonner";
 import { Contact } from "@/services/contacts/types";
 import { Service } from "@/types/service";
 import { User } from "@/types";
-import { createQuotesService } from "@/services/supabase/quotes";
-import { Quote, QuoteItem } from "@/types/quote";
-
-const quotesService = createQuotesService(supabase);
 
 export const useQuoteDataLoader = () => {
   const [loading, setLoading] = useState(true);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [freelancers, setFreelancers] = useState<User[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError(null);
+    
     try {
       // Fetch contacts
       const { data: contactsData, error: contactsError } = await supabase
@@ -28,6 +27,8 @@ export const useQuoteDataLoader = () => {
       
       if (contactsError) {
         console.error('Error fetching contacts:', contactsError);
+        setError('Erreur lors du chargement des contacts');
+        toast.error("Une erreur est survenue lors du chargement des contacts");
       } else {
         setContacts(contactsData || []);
       }
@@ -40,6 +41,8 @@ export const useQuoteDataLoader = () => {
       
       if (freelancersError) {
         console.error('Error fetching freelancers:', freelancersError);
+        setError('Erreur lors du chargement des freelancers');
+        toast.error("Une erreur est survenue lors du chargement des freelancers");
       } else {
         setFreelancers(freelancersData || []);
       }
@@ -48,27 +51,15 @@ export const useQuoteDataLoader = () => {
       try {
         const servicesData = await fetchServices();
         setServices(servicesData);
-      } catch (servicesError) {
+      } catch (servicesError: any) {
         console.error('Error fetching services:', servicesError);
+        setError(`Erreur lors du chargement des services: ${servicesError.message || 'Erreur inconnue'}`);
         toast.error("Une erreur est survenue lors du chargement des services");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading data:', error);
+      setError(`Erreur lors du chargement des données: ${error.message || 'Erreur inconnue'}`);
       toast.error("Une erreur est survenue lors du chargement des données");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const loadQuoteData = useCallback(async (id: string) => {
-    setLoading(true);
-    try {
-      const quote = await quotesService.fetchQuoteById(id);
-      return quote;
-    } catch (error) {
-      console.error('Error loading quote data:', error);
-      toast.error("Une erreur est survenue lors du chargement du devis");
-      return null;
     } finally {
       setLoading(false);
     }
@@ -79,7 +70,7 @@ export const useQuoteDataLoader = () => {
     contacts,
     freelancers,
     services,
-    loadData,
-    loadQuoteData
+    error,
+    loadData
   };
 };

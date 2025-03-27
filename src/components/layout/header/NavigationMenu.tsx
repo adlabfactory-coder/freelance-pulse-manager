@@ -34,6 +34,13 @@ const NavigationMenu: React.FC = () => {
   const isMobile = useIsMobile();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
 
+  const handleNavigation = (href: string) => {
+    // Assurer que toutes les routes commencent par /
+    const normalizedPath = href.startsWith('/') ? href : `/${href}`;
+    navigate(normalizedPath);
+    setNavMenuOpen(false);
+  };
+
   // Navigation items based on role
   const getNavItems = (): NavItem[] => {
     const allNavItems: NavItem[] = [
@@ -84,7 +91,7 @@ const NavigationMenu: React.FC = () => {
           <DropdownMenuLabel>Menu de navigation</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {navItems.map((item) => (
-            <DropdownMenuItem key={item.href} onClick={() => navigate(item.href)}>
+            <DropdownMenuItem key={item.href} onClick={() => handleNavigation(item.href)}>
               <item.icon className="mr-2 h-4 w-4" />
               <span>{item.title}</span>
             </DropdownMenuItem>
@@ -106,10 +113,7 @@ const NavigationMenu: React.FC = () => {
                 key={item.href} 
                 variant="ghost" 
                 className="justify-start" 
-                onClick={() => {
-                  navigate(item.href);
-                  setNavMenuOpen(false);
-                }}
+                onClick={() => handleNavigation(item.href)}
               >
                 <item.icon className="mr-2 h-4 w-4" />
                 <span>{item.title}</span>

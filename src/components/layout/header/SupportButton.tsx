@@ -2,10 +2,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
+import { formatUrl } from '@/utils/url-utils';
 
 const SupportButton: React.FC = () => {
   const handleWhatsAppContact = () => {
-    window.open('https://wa.me/+212663529031', '_blank');
+    // Utilisation d'une URL WhatsApp correctement formatée
+    const whatsappUrl = formatUrl('https://wa.me/+212663529031');
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (

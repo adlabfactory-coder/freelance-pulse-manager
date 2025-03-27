@@ -15,11 +15,19 @@ interface NavItemProps {
 const NavItem: React.FC<NavItemProps> = ({ item, collapsed, renderIcon }) => {
   const isMobile = useIsMobile();
   
+  // Normaliser l'URL pour éviter les problèmes de routage
+  const normalizeHref = (href: string): string => {
+    // S'assurer que les chemins commencent toujours par /
+    return href.startsWith('/') ? href : `/${href}`;
+  };
+  
+  const href = normalizeHref(item.href);
+  
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <NavLink
-          to={item.href}
+          to={href}
           className={({ isActive }) =>
             cn(
               "sidebar-nav-item group flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200",

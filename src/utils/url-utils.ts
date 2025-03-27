@@ -15,7 +15,9 @@ export const normalizeUrl = (url: string): string => {
  */
 export const isValidUrl = (url: string): boolean => {
   try {
-    new URL(url);
+    // Ajout du protocole si nécessaire
+    const urlToCheck = url.startsWith('http') ? url : `https://${url}`;
+    new URL(urlToCheck);
     return true;
   } catch (error) {
     return false;
@@ -32,6 +34,25 @@ export const sanitizeUrl = (url: string): string => {
 };
 
 /**
+ * Format une URL en ajoutant le protocole si nécessaire
+ * @param url L'URL à formater
+ * @returns L'URL formatée avec le protocole
+ */
+export const formatUrl = (url: string): string => {
+  if (!url) return '';
+  
+  url = url.trim();
+  if (!url) return '';
+  
+  // Ajout du protocole si nécessaire
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `https://${url}`;
+  }
+  
+  return url;
+};
+
+/**
  * Vérifie si une URL est accessible (renvoie un code HTTP 200)
  * Note: Cette fonction doit être utilisée côté serveur ou dans une fonction edge
  * @param url L'URL à vérifier
@@ -39,7 +60,9 @@ export const sanitizeUrl = (url: string): string => {
  */
 export const checkLinkStatus = async (url: string): Promise<boolean> => {
   try {
-    const response = await fetch(url, { method: 'HEAD' });
+    // Formatage de l'URL avant vérification
+    const formattedUrl = formatUrl(url);
+    const response = await fetch(formattedUrl, { method: 'HEAD' });
     return response.status === 200;
   } catch (error) {
     return false;

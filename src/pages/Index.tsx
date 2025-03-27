@@ -49,7 +49,7 @@ const Index: React.FC = () => {
                       <Link to="/auth/login">Se Connecter</Link>
                     </Button>
                     <Button asChild variant="outline" size="lg" className="w-full">
-                      <Link to="/register">Créer un Compte</Link>
+                      <Link to="/auth/register">Créer un Compte</Link>
                     </Button>
                   </div>
                 )}
