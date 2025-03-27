@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -14,7 +15,8 @@ import {
   TabsTrigger 
 } from '@/components/ui/tabs';
 import { UserForm } from '@/components/settings/UserForm';
-import { User, UserRole } from '@/types';
+import { User } from '@/types';
+import { UserRole } from '@/types/roles';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, ChevronRight } from 'lucide-react';
 
@@ -48,12 +50,6 @@ const UserProfileTemplates = () => {
       name: 'Administrateur',
       role: UserRole.ADMIN,
       description: 'Accès complet à la gestion des utilisateurs et des données'
-    },
-    {
-      id: '4',
-      name: 'Client',
-      role: UserRole.CLIENT,
-      description: 'Accès limité aux fonctionnalités spécifiques aux clients'
     }
   ];
 
@@ -127,8 +123,7 @@ const USER_ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.SUPER_ADMIN]: "Super Administrateur",
   [UserRole.ADMIN]: "Administrateur",
   [UserRole.ACCOUNT_MANAGER]: "Chargé de compte",
-  [UserRole.FREELANCER]: "Freelancer",
-  [UserRole.CLIENT]: "Client"
+  [UserRole.FREELANCER]: "Freelancer"
 };
 
 export default UserProfileTemplates;
