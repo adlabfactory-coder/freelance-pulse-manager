@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { Quote, QuoteItem, QuoteStatus } from "@/types";
-import { createQuote } from "@/services/quote-service";
+import { createQuote, updateQuote } from "@/services/quote-service";
 
 export interface UseQuoteSubmissionProps {
   onSuccess?: (quoteId: string) => void;
@@ -97,10 +97,78 @@ export const useQuoteSubmission = ({
   }, [submitQuote]);
   
   const handleSubmitEdit = useCallback(async (quoteId: string, quoteData: Partial<Quote>, items: QuoteItem[]) => {
-    console.log("Updating quote:", quoteId);
-    // This function would normally call an update service instead of create
-    return await submitQuote(quoteData, items);
-  }, [submitQuote]);
+    setIsSubmitting(true);
+    
+    try {
+      // Validation checks - similar to submitQuote
+      if (!quoteData.contactId) {
+        throw new Error("Veuillez sélectionner un contact");
+      }
+      
+      if (!quoteData.freelancerId) {
+        throw new Error("Un freelancer doit être assigné à ce devis");
+      }
+      
+      if (!quoteData.validUntil) {
+        throw new Error("Veuillez spécifier une date de validité");
+      }
+      
+      if (!quoteData.totalAmount && quoteData.totalAmount !== 0) {
+        throw new Error("Le montant total est requis");
+      }
+      
+      if (!items || items.length === 0) {
+        throw new Error("Veuillez ajouter au moins un service au devis");
+      }
+      
+      // Format the data for submission
+      const formattedItems = items.map(item => ({
+        id: item.id,
+        quoteId: item.quoteId,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount || 0,
+        tax: item.tax || 0,
+        serviceId: item.serviceId
+      }));
+      
+      // Using the updateQuote function which needs to be used or imported
+      const result = await updateQuote(quoteId, {
+        quote: {
+          contactId: quoteData.contactId,
+          freelancerId: quoteData.freelancerId,
+          totalAmount: quoteData.totalAmount,
+          status: quoteData.status || QuoteStatus.DRAFT,
+          validUntil: quoteData.validUntil,
+          notes: quoteData.notes || "",
+          folder: quoteData.folder || "general"
+        },
+        items: formattedItems
+      });
+      
+      if (result && result.id) {
+        toast.success("Devis mis à jour avec succès");
+        setIsQuoteSaved(true);
+        if (onSuccess) {
+          onSuccess(result.id);
+        }
+        return result.id;
+      } else {
+        throw new Error("Erreur lors de la mise à jour du devis: réponse invalide");
+      }
+    } catch (error: any) {
+      console.error("Erreur lors de la mise à jour du devis:", error);
+      toast.error(error.message || "Erreur lors de la mise à jour du devis");
+      
+      if (onError) {
+        onError(error);
+      }
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [onSuccess, onError]);
   
   return {
     isSubmitting,
