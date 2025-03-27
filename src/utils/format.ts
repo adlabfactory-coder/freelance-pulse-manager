@@ -80,17 +80,17 @@ export function formatTime(date: Date | string | undefined): string {
 }
 
 /**
- * Format a number as currency (€)
+ * Format a number as currency (MAD)
  * @param amount Number to format
  * @param options Intl.NumberFormatOptions
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number | undefined | null, options?: Intl.NumberFormatOptions): string {
-  if (amount === undefined || amount === null) return '0,00 €';
+  if (amount === undefined || amount === null) return '0,00 MAD';
   
   const defaultOptions: Intl.NumberFormatOptions = {
     style: 'currency',
-    currency: 'EUR',
+    currency: 'MAD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     ...options
