@@ -10,7 +10,7 @@ export function useAppointments(contactId?: string) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, isAdminOrSuperAdmin } = useAuth();
+  const { user, isAdminOrSuperAdmin, isAccountManager } = useAuth();
 
   const fetchAppointments = useCallback(async () => {
     setIsLoading(true);
@@ -25,6 +25,9 @@ export function useAppointments(contactId?: string) {
       } else if (isAdminOrSuperAdmin) {
         // Admin and super admin see all appointments
         data = await appointmentsService.getAppointments();
+      } else if (isAccountManager && user?.id) {
+        // Account managers see appointments assigned to them
+        data = await appointmentsService.getAppointmentsByFreelancer(user.id);
       } else if (user?.role === 'freelancer' && user?.id) {
         // Fetch appointments for the current freelancer
         data = await appointmentsService.getAppointmentsByFreelancer(user.id);
@@ -34,7 +37,30 @@ export function useAppointments(contactId?: string) {
       }
       
       // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
-      const normalizedData = data.map(normalizeFreelancerId);
+      let normalizedData = data.map(normalizeFreelancerId);
+      
+      // Récupérer les noms des contacts pour améliorer l'affichage
+      const contactIds = [...new Set(normalizedData.map(app => app.contactId))];
+      if (contactIds.length > 0) {
+        const { data: contactsData } = await supabase
+          .from('contacts')
+          .select('id, name')
+          .in('id', contactIds);
+        
+        if (contactsData) {
+          // Créer un map des IDs de contacts vers leurs noms
+          const contactsMap = contactsData.reduce((map, contact) => {
+            map[contact.id] = contact.name;
+            return map;
+          }, {} as Record<string, string>);
+          
+          // Ajouter le nom du contact à chaque rendez-vous
+          normalizedData = normalizedData.map(appointment => ({
+            ...appointment,
+            contactName: contactsMap[appointment.contactId] || 'Contact inconnu'
+          }));
+        }
+      }
       
       setAppointments(normalizedData);
     } catch (err: any) {
@@ -44,7 +70,7 @@ export function useAppointments(contactId?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [contactId, user, isAdminOrSuperAdmin]);
+  }, [contactId, user, isAdminOrSuperAdmin, isAccountManager]);
 
   useEffect(() => {
     fetchAppointments();

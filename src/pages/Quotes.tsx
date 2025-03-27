@@ -10,6 +10,7 @@ import QuotesToolbar from "@/components/quotes/QuotesToolbar";
 import QuotesTable from "@/components/quotes/QuotesTable";
 import FreelancerQuotesList from "@/components/quotes/FreelancerQuotesList";
 import { useAuth } from "@/hooks/use-auth";
+import AppointmentsListSection from "@/components/quotes/AppointmentsListSection";
 
 const Quotes: React.FC = () => {
   const { toast } = useToast();
@@ -65,6 +66,7 @@ const Quotes: React.FC = () => {
         <div className="space-y-6">
           <QuotesHeader onAddClick={handleAddClick} />
           <FreelancerQuotesList />
+          <AppointmentsListSection />
           <AddQuoteDialog 
             open={addDialogOpen} 
             onOpenChange={setAddDialogOpen} 
@@ -92,6 +94,8 @@ const Quotes: React.FC = () => {
           loading={loading}
           onStatusChange={loadQuotes}
         />
+        
+        <AppointmentsListSection />
         
         <AddQuoteDialog 
           open={addDialogOpen} 
