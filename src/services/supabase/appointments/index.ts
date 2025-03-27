@@ -1,201 +1,36 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
-import { AppointmentStatus } from '@/types/appointment';
+import { createAppointmentsFetchService } from './fetch';
+import { createAppointmentsCreateService } from './create';
+import { createAppointmentsUpdateService } from './update';
+import { createAppointmentsDeleteService } from './delete';
 
+/**
+ * Service centralisé pour la gestion des rendez-vous
+ */
 export const createAppointmentsService = (supabase: SupabaseClient) => {
-  const getAppointments = async () => {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .is('deleted_at', null)
-      .order('date', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching appointments:', error);
-      return [];
-    }
-
-    return data;
-  };
-
-  const getAppointmentsByFreelancer = async (freelancerId: string) => {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('freelancerid', freelancerId)  // Utiliser le nom exact de la colonne dans la DB
-      .is('deleted_at', null)
-      .order('date', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching appointments by freelancer:', error);
-      return [];
-    }
-
-    return data;
-  };
-
-  const getAppointmentsByContact = async (contactId: string) => {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('contactId', contactId)
-      .is('deleted_at', null)
-      .order('date', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching appointments by contact:', error);
-      return [];
-    }
-
-    return data;
-  };
-
-  const getPendingAppointments = async () => {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*, contacts(*)')
-      .eq('status', AppointmentStatus.PENDING)
-      .is('deleted_at', null)
-      .order('date', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching pending appointments:', error);
-      return [];
-    }
-
-    return data;
-  };
-
-  const createAppointment = async (appointmentData) => {
-    try {
-      // S'assurer que nous utilisons freelancerid pour la base de données
-      const dataToSend = { 
-        ...appointmentData 
-      };
-      
-      // Si freelancerId est fourni, le copier vers freelancerid pour la DB
-      if (appointmentData.freelancerId !== undefined) {
-        dataToSend.freelancerid = appointmentData.freelancerId;
-        // Supprimer freelancerId pour éviter les conflits
-        delete dataToSend.freelancerId;
-      }
-      
-      const { data, error } = await supabase
-        .rpc('create_appointment', {
-          appointment_data: dataToSend
-        });
-
-      if (error) {
-        console.error('Error creating appointment via RPC:', error);
-        throw error;
-      }
-
-      // Normaliser la réponse pour l'application
-      if (data && data.freelancerid) {
-        data.freelancerId = data.freelancerid;
-      }
-
-      return data;
-    } catch (err) {
-      console.error('Error in createAppointment:', err);
-      throw err;
-    }
-  };
-
-  const createAutoAssignAppointment = async (appointmentData) => {
-    try {
-      // S'assurer que nous utilisons freelancerid pour la base de données
-      const dataToSend = { 
-        ...appointmentData
-      };
-      
-      // Supprimer freelancerId pour la base de données
-      if (dataToSend.freelancerId !== undefined) {
-        delete dataToSend.freelancerId;
-      }
-      
-      const { data, error } = await supabase
-        .rpc('create_auto_assign_appointment', {
-          appointment_data: dataToSend
-        });
-
-      if (error) {
-        console.error('Error creating auto-assign appointment via RPC:', error);
-        throw error;
-      }
-
-      return data;
-    } catch (err) {
-      console.error('Error in createAutoAssignAppointment:', err);
-      throw err;
-    }
-  };
-
-  const acceptAppointment = async (appointmentId: string, freelancerId: string) => {
-    try {
-      const { error } = await supabase
-        .rpc('accept_appointment', {
-          appointment_id: appointmentId,
-          freelancer_id: freelancerId
-        });
-
-      if (error) {
-        console.error('Error accepting appointment:', error);
-        throw error;
-      }
-
-      return true;
-    } catch (err) {
-      console.error('Error in acceptAppointment:', err);
-      throw err;
-    }
-  };
-
-  const updateAppointment = async (appointmentId: string, updateData) => {
-    // Si updateData contient freelancerId, le convertir en freelancerid pour la DB
-    const dataToUpdate = { ...updateData };
-    if (dataToUpdate.freelancerId !== undefined) {
-      dataToUpdate.freelancerid = dataToUpdate.freelancerId;
-      delete dataToUpdate.freelancerId;
-    }
-    
-    const { error } = await supabase
-      .from('appointments')
-      .update(dataToUpdate)
-      .eq('id', appointmentId);
-
-    if (error) {
-      console.error('Error updating appointment:', error);
-      return false;
-    }
-
-    return true;
-  };
-
-  const deleteAppointment = async (appointmentId: string) => {
-    const { error } = await supabase
-      .from('appointments')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', appointmentId);
-
-    if (error) {
-      console.error('Error deleting appointment:', error);
-      return false;
-    }
-
-    return true;
-  };
+  const fetchService = createAppointmentsFetchService(supabase);
+  const createService = createAppointmentsCreateService(supabase);
+  const updateService = createAppointmentsUpdateService(supabase);
+  const deleteService = createAppointmentsDeleteService(supabase);
 
   return {
-    getAppointments,
-    getAppointmentsByFreelancer,
-    getAppointmentsByContact,
-    getPendingAppointments,
-    createAppointment,
-    createAutoAssignAppointment,
-    acceptAppointment,
-    updateAppointment,
-    deleteAppointment
+    // Récupération de rendez-vous
+    getAppointments: fetchService.getAppointments,
+    getAppointmentsByFreelancer: fetchService.getAppointmentsByFreelancer,
+    getAppointmentsByContact: fetchService.getAppointmentsByContact,
+    getPendingAppointments: fetchService.getPendingAppointments,
+    
+    // Création de rendez-vous
+    createAppointment: createService.createAppointment,
+    createAutoAssignAppointment: createService.createAutoAssignAppointment,
+    
+    // Mise à jour de rendez-vous
+    acceptAppointment: updateService.acceptAppointment,
+    updateAppointment: updateService.updateAppointment,
+    
+    // Suppression de rendez-vous
+    deleteAppointment: deleteService.deleteAppointment
   };
 };
 
@@ -210,13 +45,13 @@ export const appointmentsService = {
   getAppointmentsByContact: (contactId: string) => 
     createAppointmentsService(supabase).getAppointmentsByContact(contactId),
   getPendingAppointments: () => createAppointmentsService(supabase).getPendingAppointments(),
-  createAppointment: (appointmentData) => 
+  createAppointment: (appointmentData: any) => 
     createAppointmentsService(supabase).createAppointment(appointmentData),
-  createAutoAssignAppointment: (appointmentData) => 
+  createAutoAssignAppointment: (appointmentData: any) => 
     createAppointmentsService(supabase).createAutoAssignAppointment(appointmentData),
   acceptAppointment: (appointmentId: string, freelancerId: string) => 
     createAppointmentsService(supabase).acceptAppointment(appointmentId, freelancerId),
-  updateAppointment: (appointmentId: string, updateData) => 
+  updateAppointment: (appointmentId: string, updateData: any) => 
     createAppointmentsService(supabase).updateAppointment(appointmentId, updateData),
   deleteAppointment: (appointmentId: string) => 
     createAppointmentsService(supabase).deleteAppointment(appointmentId)
