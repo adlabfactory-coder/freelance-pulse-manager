@@ -10,8 +10,8 @@ export interface AppointmentCreateData {
   date: string;
   duration: number;
   status: AppointmentStatus;
-  contact_id: string;
-  freelancer_id?: string;
+  contactId: string;
+  freelancerId?: string;
   location?: string | null;
   notes?: string | null;
   folder?: string;
@@ -25,7 +25,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
     console.log("Envoi des données pour création de rendez-vous:", appointmentData);
     
     // Vérifier que les données requises sont présentes
-    if (!appointmentData.title || !appointmentData.date || !appointmentData.contact_id) {
+    if (!appointmentData.title || !appointmentData.date || !appointmentData.contactId) {
       throw new Error("Données de rendez-vous incomplètes");
     }
     
@@ -37,8 +37,8 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: appointmentData.status || 'scheduled',
-        contactId: appointmentData.contact_id, // Structure correcte
-        freelancerid: appointmentData.freelancer_id, // Structure correcte
+        contactId: appointmentData.contactId, // Garde le nom cohérent
+        freelancerid: appointmentData.freelancerId, // Garde le nom cohérent
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'
@@ -53,16 +53,16 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
     console.log("Rendez-vous créé avec succès:", data);
     
     // Si le freelancer est spécifié, assigner explicitement le contact à ce freelancer
-    if (appointmentData.freelancer_id && appointmentData.contact_id) {
-      console.log(`Assignation du contact ${appointmentData.contact_id} au freelancer ${appointmentData.freelancer_id}`);
+    if (appointmentData.freelancerId && appointmentData.contactId) {
+      console.log(`Assignation du contact ${appointmentData.contactId} au freelancer ${appointmentData.freelancerId}`);
       
       const { error: updateError } = await supabase
         .from('contacts')
         .update({ 
-          assignedTo: appointmentData.freelancer_id,
+          assignedTo: appointmentData.freelancerId,
           status: 'prospect'  // Mettre à jour le statut du contact en prospect
         })
-        .eq('id', appointmentData.contact_id);
+        .eq('id', appointmentData.contactId);
       
       if (updateError) {
         console.error('Erreur lors de l\'assignation du contact au freelancer:', updateError);
@@ -87,7 +87,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
 export const createAutoAssignAppointment = async (appointmentData: AppointmentCreateData): Promise<Appointment | null> => {
   try {
     // Vérifier que les données requises sont présentes
-    if (!appointmentData.title || !appointmentData.date || !appointmentData.contact_id) {
+    if (!appointmentData.title || !appointmentData.date || !appointmentData.contactId) {
       throw new Error("Données de rendez-vous incomplètes");
     }
     
@@ -102,7 +102,7 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: 'pending',
-        contactId: appointmentData.contact_id, // Structure correcte
+        contactId: appointmentData.contactId, // Garde le nom cohérent
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'

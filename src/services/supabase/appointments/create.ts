@@ -32,8 +32,8 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
             date: dataToSend.date,
             duration: dataToSend.duration || 30,
             status: dataToSend.status || 'scheduled',
-            contactId: dataToSend.contact_id,
-            freelancerid: dataToSend.freelancer_id,
+            contactId: dataToSend.contactId,
+            freelancerid: dataToSend.freelancerId,
             location: dataToSend.location || null,
             notes: dataToSend.notes || null,
             folder: dataToSend.folder || 'general'
@@ -46,17 +46,17 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
       }
 
       // 2. Assigner explicitement le contact au freelancer si ce n'est pas déjà fait
-      if (dataToSend.freelancer_id && dataToSend.contact_id) {
-        console.log(`Assignation du contact ${dataToSend.contact_id} au freelancer ${dataToSend.freelancer_id}`);
+      if (dataToSend.freelancerId && dataToSend.contactId) {
+        console.log(`Assignation du contact ${dataToSend.contactId} au freelancer ${dataToSend.freelancerId}`);
         
         // Mettre à jour explicitement le statut du contact en prospect et assigner au freelancer
         const { error: updateError } = await supabase
           .from('contacts')
           .update({ 
-            assignedTo: dataToSend.freelancer_id,
+            assignedTo: dataToSend.freelancerId,
             status: 'prospect'  // Mettre à jour le statut du contact en prospect
           })
-          .eq('id', dataToSend.contact_id);
+          .eq('id', dataToSend.contactId);
         
         if (updateError) {
           console.error('Erreur lors de l\'assignation du contact au freelancer:', updateError);
@@ -66,8 +66,8 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
         }
       } else {
         console.log('Aucune assignation automatique: ID freelancer ou contact manquant', {
-          freelancerId: dataToSend.freelancer_id,
-          contactId: dataToSend.contact_id
+          freelancerId: dataToSend.freelancerId,
+          contactId: dataToSend.contactId
         });
       }
 
@@ -104,7 +104,7 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
             date: dataToSend.date,
             duration: dataToSend.duration || 30,
             status: 'pending',
-            contactId: dataToSend.contact_id,
+            contactId: dataToSend.contactId,
             location: dataToSend.location || null,
             notes: dataToSend.notes || null,
             folder: dataToSend.folder || 'general'
