@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase-client";
-import { SubscriptionPlan, SubscriptionInterval } from "@/types";
+import { SubscriptionPlan, SubscriptionInterval } from "@/types/subscription";
 
 /**
  * Fetch all subscription plans
@@ -26,7 +26,9 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
       interval: plan.interval as SubscriptionInterval,
       features: plan.features || [], 
       isActive: plan.is_active,
-      code: plan.code
+      code: plan.code,
+      created_at: plan.created_at ? new Date(plan.created_at) : undefined,
+      updated_at: plan.updated_at ? new Date(plan.updated_at) : undefined
     }));
   } catch (error) {
     console.error('Unexpected error fetching subscription plans:', error);
@@ -58,7 +60,9 @@ export const fetchSubscriptionPlanById = async (id: string): Promise<Subscriptio
       interval: data.interval as SubscriptionInterval,
       features: data.features || [],
       isActive: data.is_active,
-      code: data.code
+      code: data.code,
+      created_at: data.created_at ? new Date(data.created_at) : undefined,
+      updated_at: data.updated_at ? new Date(data.updated_at) : undefined
     };
   } catch (error) {
     console.error('Unexpected error fetching subscription plan:', error);
@@ -69,7 +73,7 @@ export const fetchSubscriptionPlanById = async (id: string): Promise<Subscriptio
 /**
  * Create a new subscription plan
  */
-export const createSubscriptionPlan = async (plan: Omit<SubscriptionPlan, 'id'>): Promise<{ success: boolean; id?: string; error?: string }> => {
+export const createSubscriptionPlan = async (plan: Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
     const { data, error } = await supabase
       .from('subscription_plans')

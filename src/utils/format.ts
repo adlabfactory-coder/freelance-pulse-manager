@@ -29,6 +29,36 @@ export function formatDate(date: Date | string | undefined, options?: Intl.DateT
 }
 
 /**
+ * Format a date to a French format (DD/MM/YYYY)
+ * @param date Date to format
+ * @returns Formatted date string
+ */
+export function formatDateToFrench(date: Date | string | undefined): string {
+  return formatDate(date);
+}
+
+/**
+ * Format a date for API submission (ISO format)
+ * @param date Date to format
+ * @param timeString Time string in format HH:MM
+ * @returns ISO formatted date string
+ */
+export function formatDateForAPI(date: Date | undefined, timeString?: string): string | undefined {
+  if (!date) return undefined;
+  
+  const formattedDate = date.toISOString().split('T')[0];
+  
+  if (timeString) {
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const dateWithTime = new Date(date);
+    dateWithTime.setHours(hours, minutes, 0, 0);
+    return dateWithTime.toISOString();
+  }
+  
+  return formattedDate + 'T00:00:00.000Z';
+}
+
+/**
  * Format a time from a date object
  * @param date Date to extract time from
  * @returns Formatted time string (HH:MM)

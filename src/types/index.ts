@@ -1,7 +1,7 @@
 
-// Re-export properly to avoid ambiguity
+// Use export type for re-exporting types to solve the isolatedModules issue
 import { ContactStatus } from './database/enums';
-export { ContactStatus };
+export type { ContactStatus };
 
 export * from './database';
 export * from './database/enums';
@@ -9,6 +9,9 @@ export * from './user';
 export * from './contact';
 export * from './quote';
 export * from './appointment';
+
+// Export subscription types from subscription.ts
+export * from './subscription';
 
 // Création et exportation des types manquants
 export enum UserRole {
@@ -28,50 +31,6 @@ export interface NavItem {
   disabled?: boolean; // Ajout de la propriété manquante
 }
 
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  interval: SubscriptionInterval;
-  features?: string[];
-  isActive?: boolean;
-  code: string;
-}
-
-export enum SubscriptionInterval {
-  MONTHLY = "monthly",
-  QUARTERLY = "quarterly",
-  YEARLY = "yearly",
-  BIANNUAL = "biannual",
-  ANNUAL = "annual"
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = "active",
-  CANCELLED = "cancelled",
-  PENDING = "pending",
-  EXPIRED = "expired",
-  INACTIVE = "inactive",
-  TRIAL = "trial"
-}
-
-export interface Subscription {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  interval: SubscriptionInterval;
-  startDate: Date;
-  endDate?: Date;
-  renewalDate?: Date;
-  status: SubscriptionStatus;
-  clientId: string;
-  freelancerId: string;
-  clientName?: string;
-  freelancerName?: string;
-}
-
 export interface SearchOptions {
   query?: string;
   filters?: Record<string, any>;
@@ -85,40 +44,4 @@ export interface SidebarItem {
   href: string;
   icon: React.ElementType; // Modifié pour accepter des éléments React (icônes)
   roles?: UserRole[];
-}
-
-// Export des types du quote
-export interface Quote {
-  id: string;
-  contactId: string;
-  freelancerId: string;
-  totalAmount: number;
-  status: QuoteStatus;
-  validUntil: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-  notes?: string;
-  items?: QuoteItem[];
-  folder?: string;
-}
-
-export enum QuoteStatus {
-  DRAFT = "draft",
-  PENDING = "pending",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  EXPIRED = "expired",
-  PAID = "paid",
-  CANCELLED = "cancelled"
-}
-
-export interface QuoteItem {
-  id: string;
-  quoteId: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  tax?: number;
-  discount?: number;
-  serviceId?: string;
 }

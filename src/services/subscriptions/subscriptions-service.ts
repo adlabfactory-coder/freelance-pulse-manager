@@ -1,82 +1,48 @@
 
-import { supabase } from "@/lib/supabase-client";
-import { Subscription, SubscriptionStatus, SubscriptionInterval } from "@/types";
-import { User } from "@/types";
+import { supabase } from '@/lib/supabase-client';
+import { Subscription, SubscriptionStatus } from '@/types/subscription';
+import { toast } from 'sonner';
 
 /**
- * Fetch subscriptions for a specific client
- */
-export const fetchClientSubscriptions = async (clientId: string): Promise<Subscription[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*, clients:clientId(*), freelancers:freelancerId(*)')
-      .eq('clientId', clientId)
-      .is('deleted_at', null)
-      .order('startDate', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching client subscriptions:', error);
-      return [];
-    }
-
-    return mapSubscriptions(data);
-  } catch (error) {
-    console.error('Unexpected error fetching client subscriptions:', error);
-    return [];
-  }
-};
-
-/**
- * Fetch subscriptions managed by a specific freelancer
- */
-export const fetchFreelancerSubscriptions = async (freelancerId: string): Promise<Subscription[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*, clients:clientId(*)')
-      .eq('freelancerId', freelancerId)
-      .is('deleted_at', null)
-      .order('startDate', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching freelancer subscriptions:', error);
-      return [];
-    }
-
-    return mapSubscriptions(data);
-  } catch (error) {
-    console.error('Unexpected error fetching freelancer subscriptions:', error);
-    return [];
-  }
-};
-
-/**
- * Fetch all subscriptions (admin only)
+ * Fetch all subscriptions
  */
 export const fetchAllSubscriptions = async (): Promise<Subscription[]> => {
   try {
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('*, clients:contacts!subscriptions_clientId_fkey(*), freelancers:users!subscriptions_freelancerId_fkey(*)')
+      .select(`
+        *,
+        clients:contacts(name),
+        freelancers:users(name)
+      `)
       .is('deleted_at', null)
-      .order('startDate', { ascending: false });
+      .order('createdAt', { ascending: false });
 
     if (error) {
-      console.error('Error fetching all subscriptions:', error);
+      console.error('Error fetching subscriptions:', error);
       return [];
     }
 
-    // Mock data for development - remove in production when DB is fully set up
-    if (!data || data.length === 0) {
-      return getMockSubscriptions();
-    }
-
-    return mapSubscriptions(data);
+    // Transform database data to the application model
+    return data.map(sub => ({
+      id: sub.id,
+      name: sub.name,
+      description: sub.description || '',
+      price: sub.price,
+      interval: sub.interval,
+      startDate: new Date(sub.startDate),
+      endDate: sub.endDate ? new Date(sub.endDate) : undefined,
+      renewalDate: sub.renewalDate ? new Date(sub.renewalDate) : undefined,
+      status: sub.status as SubscriptionStatus,
+      clientId: sub.clientId,
+      freelancerId: sub.freelancerId,
+      // Extract names from relations
+      clientName: sub.clients?.name || 'Client inconnu',
+      freelancerName: sub.freelancers?.name || 'Freelancer inconnu'
+    }));
   } catch (error) {
-    console.error('Unexpected error fetching all subscriptions:', error);
-    // Return mock data for now
-    return getMockSubscriptions();
+    console.error('Unexpected error fetching subscriptions:', error);
+    return [];
   }
 };
 
@@ -87,7 +53,11 @@ export const fetchSubscriptionById = async (id: string): Promise<Subscription | 
   try {
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('*, clients:clientId(*), freelancers:freelancerId(*)')
+      .select(`
+        *,
+        clients:contacts(name),
+        freelancers:users(name)
+      `)
       .eq('id', id)
       .is('deleted_at', null)
       .single();
@@ -102,15 +72,16 @@ export const fetchSubscriptionById = async (id: string): Promise<Subscription | 
       name: data.name,
       description: data.description || '',
       price: data.price,
-      interval: data.interval as SubscriptionInterval,
+      interval: data.interval,
       startDate: new Date(data.startDate),
       endDate: data.endDate ? new Date(data.endDate) : undefined,
       renewalDate: data.renewalDate ? new Date(data.renewalDate) : undefined,
       status: data.status as SubscriptionStatus,
       clientId: data.clientId,
       freelancerId: data.freelancerId,
-      clientName: data.clients?.name,
-      freelancerName: data.freelancers?.name
+      // Extract names from relations
+      clientName: data.clients?.name || 'Client inconnu',
+      freelancerName: data.freelancers?.name || 'Freelancer inconnu'
     };
   } catch (error) {
     console.error('Unexpected error fetching subscription:', error);
@@ -118,55 +89,159 @@ export const fetchSubscriptionById = async (id: string): Promise<Subscription | 
   }
 };
 
-// Helper function to map subscription data from the database to the application model
-const mapSubscriptions = (data: any[]): Subscription[] => {
-  return data.map(sub => ({
-    id: sub.id,
-    name: sub.name,
-    description: sub.description || '',
-    price: sub.price,
-    interval: sub.interval as SubscriptionInterval,
-    startDate: new Date(sub.startDate),
-    endDate: sub.endDate ? new Date(sub.endDate) : undefined,
-    renewalDate: sub.renewalDate ? new Date(sub.renewalDate) : undefined,
-    status: sub.status as SubscriptionStatus,
-    clientId: sub.clientId,
-    freelancerId: sub.freelancerId,
-    clientName: sub.clients?.name,
-    freelancerName: sub.freelancers?.name
-  }));
+/**
+ * Create a new subscription
+ */
+export const createSubscription = async (
+  subscription: Omit<Subscription, 'id'>
+): Promise<{ success: boolean; id?: string; error?: string }> => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .insert({
+        name: subscription.name,
+        description: subscription.description,
+        price: subscription.price,
+        interval: subscription.interval,
+        startDate: subscription.startDate.toISOString(),
+        endDate: subscription.endDate?.toISOString(),
+        renewalDate: subscription.renewalDate?.toISOString(),
+        status: subscription.status,
+        clientId: subscription.clientId,
+        freelancerId: subscription.freelancerId
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast.error(`Erreur: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+
+    toast.success('Abonnement créé avec succès');
+    return { success: true, id: data.id };
+  } catch (error: any) {
+    toast.error(`Erreur: ${error.message || 'Erreur inconnue'}`);
+    return { success: false, error: error.message || 'Une erreur est survenue' };
+  }
 };
 
-// Mock data for development - remove in production
-const getMockSubscriptions = (): Subscription[] => {
-  return [
-    {
-      id: '1',
-      name: 'Plan Basique',
-      description: 'Plan basique pour petites entreprises',
-      price: 49.99,
-      interval: SubscriptionInterval.MONTHLY,
-      startDate: new Date('2023-01-15'),
-      endDate: new Date('2023-12-15'),
-      renewalDate: new Date('2023-12-15'),
-      status: SubscriptionStatus.ACTIVE,
-      clientId: '101',
-      freelancerId: '201',
-      clientName: 'Entreprise ABC',
-      freelancerName: 'Jean Dupont'
-    },
-    {
-      id: '2',
-      name: 'Plan Pro',
-      description: 'Plan pour entreprises de taille moyenne',
-      price: 199.99,
-      interval: SubscriptionInterval.YEARLY,
-      startDate: new Date('2023-02-20'),
-      status: SubscriptionStatus.PENDING,
-      clientId: '102',
-      freelancerId: '202',
-      clientName: 'Société XYZ',
-      freelancerName: 'Marie Martin'
+/**
+ * Update an existing subscription
+ */
+export const updateSubscription = async (
+  id: string,
+  updates: Partial<Omit<Subscription, 'id'>>
+): Promise<boolean> => {
+  try {
+    const updateData: any = {};
+    
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.price !== undefined) updateData.price = updates.price;
+    if (updates.interval !== undefined) updateData.interval = updates.interval;
+    if (updates.startDate !== undefined) updateData.startDate = updates.startDate.toISOString();
+    if (updates.endDate !== undefined) updateData.endDate = updates.endDate.toISOString();
+    if (updates.renewalDate !== undefined) updateData.renewalDate = updates.renewalDate.toISOString();
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.clientId !== undefined) updateData.clientId = updates.clientId;
+    if (updates.freelancerId !== undefined) updateData.freelancerId = updates.freelancerId;
+    
+    updateData.updatedAt = new Date().toISOString();
+    
+    const { error } = await supabase
+      .from('subscriptions')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      toast.error(`Erreur: ${error.message}`);
+      return false;
     }
-  ];
+
+    toast.success('Abonnement mis à jour avec succès');
+    return true;
+  } catch (error: any) {
+    toast.error(`Erreur: ${error.message || 'Erreur inconnue'}`);
+    return false;
+  }
+};
+
+/**
+ * Cancel a subscription
+ */
+export const cancelSubscription = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        status: SubscriptionStatus.CANCELLED,
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast.error(`Erreur: ${error.message}`);
+      return false;
+    }
+
+    toast.success('Abonnement annulé avec succès');
+    return true;
+  } catch (error: any) {
+    toast.error(`Erreur: ${error.message || 'Erreur inconnue'}`);
+    return false;
+  }
+};
+
+/**
+ * Renew a subscription
+ */
+export const renewSubscription = async (id: string, newEndDate: Date): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        status: SubscriptionStatus.ACTIVE,
+        endDate: newEndDate.toISOString(),
+        renewalDate: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast.error(`Erreur: ${error.message}`);
+      return false;
+    }
+
+    toast.success('Abonnement renouvelé avec succès');
+    return true;
+  } catch (error: any) {
+    toast.error(`Erreur: ${error.message || 'Erreur inconnue'}`);
+    return false;
+  }
+};
+
+/**
+ * Delete a subscription (logical delete)
+ */
+export const deleteSubscription = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        deleted_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast.error(`Erreur: ${error.message}`);
+      return false;
+    }
+
+    toast.success('Abonnement supprimé avec succès');
+    return true;
+  } catch (error: any) {
+    toast.error(`Erreur: ${error.message || 'Erreur inconnue'}`);
+    return false;
+  }
 };

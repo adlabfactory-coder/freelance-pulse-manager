@@ -6,6 +6,7 @@ export enum QuoteStatus {
   ACCEPTED = "accepted",
   REJECTED = "rejected",
   EXPIRED = "expired",
+  PAID = "paid",
   CANCELLED = "cancelled"  // Ajout du statut CANCELLED manquant
 }
 
@@ -45,6 +46,7 @@ export const getQuoteStatusLabel = (status: QuoteStatus): string => {
     [QuoteStatus.ACCEPTED]: "Accepté",
     [QuoteStatus.REJECTED]: "Rejeté",
     [QuoteStatus.EXPIRED]: "Expiré",
+    [QuoteStatus.PAID]: "Payé",
     [QuoteStatus.CANCELLED]: "Annulé"  // Ajout du label pour CANCELLED
   };
   
@@ -62,6 +64,7 @@ export const getQuoteStatusColor = (status: QuoteStatus): string => {
     [QuoteStatus.ACCEPTED]: "green",
     [QuoteStatus.REJECTED]: "red",
     [QuoteStatus.EXPIRED]: "gray",
+    [QuoteStatus.PAID]: "green",
     [QuoteStatus.CANCELLED]: "red"  // Ajout de la couleur pour CANCELLED
   };
   

@@ -1,9 +1,8 @@
 
-// Re-export all subscription service functions
-export { 
-  fetchSubscriptionPlans,
-  fetchSubscriptionById, 
-  fetchSubscriptions, 
+// Re-export subscription service functions from appropriate modules
+import { 
+  fetchSubscriptionById,
+  fetchAllSubscriptions as fetchSubscriptions,
   createSubscription,
   updateSubscription,
   cancelSubscription,
@@ -11,6 +10,20 @@ export {
   deleteSubscription 
 } from './subscriptions-service';
 
-export {
-  createSubscriptionPlanService
+import {
+  fetchSubscriptionPlans,
+  createSubscriptionPlan
 } from './subscription-plan-service';
+
+// Export all functions with proper names to avoid ambiguity
+export {
+  fetchSubscriptionPlans,
+  fetchSubscriptionById, 
+  fetchSubscriptions, 
+  createSubscription,
+  updateSubscription,
+  cancelSubscription,
+  renewSubscription,
+  deleteSubscription,
+  createSubscriptionPlan
+};

@@ -1,5 +1,20 @@
 
-import { SubscriptionInterval, SubscriptionStatus } from './index';
+export enum SubscriptionInterval {
+  MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  YEARLY = "yearly",
+  BIANNUAL = "biannual",
+  ANNUAL = "annual"
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = "active",
+  CANCELLED = "cancelled",
+  PENDING = "pending",
+  EXPIRED = "expired",
+  INACTIVE = "inactive",
+  TRIAL = "trial"
+}
 
 export interface SubscriptionPlan {
   id: string;
@@ -7,9 +22,11 @@ export interface SubscriptionPlan {
   description: string;
   price: number;
   interval: SubscriptionInterval;
-  features?: string[];
+  features?: string[] | { features: string[] };
   isActive?: boolean;
   code: string;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface Subscription {
