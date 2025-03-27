@@ -13,7 +13,7 @@ export function useDashboard(): UseDashboardDataReturn {
   const [lastUpdated, setLastUpdated] = useState<Date | undefined>(undefined);
   const [isConnected, setIsConnected] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
-  const [shouldRefresh, setShouldRefresh] = useState(true);
+  // Suppression du shouldRefresh pour le mode manuel uniquement
   
   const { stats, dataSources, fetchStats } = useDashboardStats();
   const { activities, fetchActivities } = useDashboardActivities();
@@ -46,9 +46,8 @@ export function useDashboard(): UseDashboardDataReturn {
         setIsConnected(false);
         setRetryCount(prev => prev + 1);
         
-        // Après 3 essais infructueux, arrêter les tentatives automatiques
+        // Notification d'erreur après échec
         if (retryCount >= 3) {
-          setShouldRefresh(false);
           toast.error("Impossible de se connecter au serveur après plusieurs tentatives.", {
             description: "Veuillez vérifier votre connexion et actualiser manuellement."
           });
@@ -68,7 +67,7 @@ export function useDashboard(): UseDashboardDataReturn {
   // S'abonner aux mises à jour en temps réel
   useRealtimeSubscriptions(fetchDashboardData);
 
-  // Charger les données au montage du composant
+  // Charger les données au montage du composant, mais ne pas effectuer d'actualisation automatique
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);

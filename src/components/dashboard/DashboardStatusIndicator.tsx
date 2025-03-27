@@ -69,7 +69,23 @@ const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
   };
   
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-3">
+      {/* Ajout d'un bouton d'actualisation visible en dehors du popover */}
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={handleRefreshClick}
+        disabled={isRefreshing}
+        className="flex items-center gap-1"
+      >
+        {isRefreshing ? (
+          <RefreshCw className="h-4 w-4 animate-spin" />
+        ) : (
+          <RefreshCw className="h-4 w-4" />
+        )}
+        <span className="hidden sm:inline">Actualiser</span>
+      </Button>
+      
       <Popover>
         <PopoverTrigger asChild>
           <button className="flex items-center space-x-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md px-2 py-1">
@@ -77,9 +93,6 @@ const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
             <span className={`text-xs ${connectivityStatus.color}`}>
               {connectivityStatus.label}
             </span>
-            {isRefreshing && (
-              <RefreshCw className="h-3 w-3 text-blue-500 animate-spin ml-1" />
-            )}
             {lastUpdated && (
               <span className="text-xs text-muted-foreground hidden md:inline">
                 {timeAgo}
