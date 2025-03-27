@@ -17,7 +17,8 @@ const defaultFilters: QuoteFilters = {
   freelancerId: null,
   contactId: null,
   minAmount: null,
-  maxAmount: null
+  maxAmount: null,
+  folder: null // Add folder property to the QuoteFilters
 };
 
 export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
@@ -56,8 +57,8 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Charger les contacts
-        const contactsList = await contactService.getAllContacts();
+        // Charger les contacts - Change getAllContacts to getContacts
+        const contactsList = await contactService.getContacts();
         setContacts(contactsList);
         
         const contactsMapObj: Record<string, Contact> = {};
@@ -131,8 +132,11 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
       const minAmountMatch = !filters.minAmount || quote.totalAmount >= filters.minAmount;
       const maxAmountMatch = !filters.maxAmount || quote.totalAmount <= filters.maxAmount;
       
+      // Filtrer par dossier
+      const folderMatch = !filters.folder || quote.folder === filters.folder;
+      
       return searchMatch && statusMatch && dateFromMatch && dateToMatch && 
-             freelancerMatch && contactMatch && minAmountMatch && maxAmountMatch;
+             freelancerMatch && contactMatch && minAmountMatch && maxAmountMatch && folderMatch;
     });
   }, [quotes, filters]);
 
@@ -205,7 +209,7 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
   }));
 
   return {
-    quotes: sortedQuotes,
+    quotes: filteredQuotes,
     loading,
     error,
     filters,

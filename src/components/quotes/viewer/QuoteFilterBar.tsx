@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ export interface QuoteFilters {
   contactId: string | null;
   minAmount: number | null;
   maxAmount: number | null;
+  folder: string | null;
 }
 
 interface QuoteFilterBarProps {
