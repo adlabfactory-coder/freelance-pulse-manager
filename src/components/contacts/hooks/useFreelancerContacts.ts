@@ -1,56 +1,42 @@
 
-import { useState, useEffect } from "react";
-import { Contact } from "@/types";
-import { contactService } from "@/services/contact-service";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect, useCallback } from 'react';
+import { Contact } from '@/types';
+import { contactService } from '@/services/contacts';
+import { useAuth } from '@/hooks/use-auth';
+import { toast } from 'sonner';
 
-export function useFreelancerContacts(initialContacts?: Contact[], initialLoading?: boolean) {
-  const { toast } = useToast();
-  const { user } = useAuth();
+export function useFreelancerContacts(
+  initialContacts?: Contact[],
+  initialLoading?: boolean
+) {
   const [contacts, setContacts] = useState<Contact[]>(initialContacts || []);
-  const [loading, setLoading] = useState<boolean>(initialLoading || true);
+  const [loading, setLoading] = useState(initialLoading !== undefined ? initialLoading : true);
+  const { user } = useAuth();
 
-  // Load contacts if not provided as props
-  useEffect(() => {
-    if (initialContacts) {
-      setContacts(initialContacts);
-      setLoading(initialLoading || false);
-    } else if (user?.id) {
-      const loadContacts = async () => {
-        try {
-          setLoading(true);
-          const result = await contactService.getContactsByFreelancer(user.id);
-          setContacts(result || []);
-        } catch (error) {
-          console.error("Erreur lors du chargement des contacts:", error);
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: "Impossible de charger vos contacts."
-          });
-        } finally {
-          setLoading(false);
-        }
-      };
-      
-      loadContacts();
-      
-      // Set up real-time listener
-      const channel = supabase
-        .channel('public:contacts')
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'contacts', filter: `assignedTo=eq.${user.id}` }, 
-          () => loadContacts()
-        )
-        .subscribe();
-        
-      return () => {
-        supabase.removeChannel(channel);
-      };
+  const fetchContacts = useCallback(async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    try {
+      const fetchedContacts = await contactService.getContactsByAssignedFreelancer(user.id);
+      setContacts(fetchedContacts);
+    } catch (error) {
+      console.error('Error fetching freelancer contacts:', error);
+      toast.error("Impossible de charger vos contacts");
+    } finally {
+      setLoading(false);
     }
-  }, [initialContacts, initialLoading, user?.id, toast]);
+  }, [user]);
 
-  return { contacts, loading };
+  useEffect(() => {
+    if (!initialContacts) {
+      fetchContacts();
+    }
+  }, [fetchContacts, initialContacts]);
+
+  return {
+    contacts,
+    loading,
+    refresh: fetchContacts
+  };
 }

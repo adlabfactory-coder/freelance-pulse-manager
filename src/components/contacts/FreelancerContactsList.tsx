@@ -17,7 +17,7 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
   contacts: initialContacts,
   loading: initialLoading
 }) => {
-  const { contacts, loading } = useFreelancerContacts(initialContacts, initialLoading);
+  const { contacts, loading, refresh } = useFreelancerContacts(initialContacts, initialLoading);
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
@@ -34,9 +34,19 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
     setQuoteDialogOpen(true);
   };
 
+  const handleAppointmentCreated = () => {
+    setAppointmentDialogOpen(false);
+    refresh();
+  };
+
+  const handleQuoteCreated = () => {
+    setQuoteDialogOpen(false);
+    refresh();
+  };
+
   return (
     <div className="space-y-4">
-      <FreelancerContactsHeader loading={loading} />
+      <FreelancerContactsHeader loading={loading} onRefresh={refresh} />
       
       {loading ? (
         <ContactsLoadingState />
@@ -68,6 +78,7 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
         open={quoteDialogOpen}
         onOpenChange={setQuoteDialogOpen}
         initialContactId={selectedContactId}
+        onQuoteCreated={handleQuoteCreated}
       />
     </div>
   );

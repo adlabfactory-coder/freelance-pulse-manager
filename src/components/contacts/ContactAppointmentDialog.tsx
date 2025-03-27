@@ -7,6 +7,7 @@ import { useAppointmentForm, AppointmentTitleOption } from "@/components/appoint
 import AppointmentTypeSelect from "@/components/appointments/components/AppointmentTypeSelect";
 import AppointmentDescription from "@/components/appointments/components/AppointmentDescription";
 import AppointmentDateTimePicker from "@/components/appointments/components/AppointmentDateTimePicker";
+import { toast } from "sonner";
 
 interface ContactAppointmentDialogProps {
   open: boolean;
@@ -43,7 +44,12 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     handleSubmit
   } = useAppointmentForm(
     open ? new Date() : undefined, // Réinitialiser la date à chaque ouverture du dialogue
-    () => onOpenChange(false), 
+    () => {
+      onOpenChange(false);
+      // Déclencher l'événement de création de rendez-vous
+      window.dispatchEvent(new CustomEvent('appointment-created'));
+      toast.success("Rendez-vous planifié avec succès");
+    }, 
     contactId,
     autoAssign
   );
@@ -65,6 +71,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     e.preventDefault();
     if (!contactId) {
       console.error("ID de contact manquant pour la création du rendez-vous");
+      toast.error("ID de contact manquant");
       return;
     }
     handleSubmit(e, contactId);

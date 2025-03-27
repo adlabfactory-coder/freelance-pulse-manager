@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { appointmentsService } from '@/services/supabase/appointments';
 import { Appointment, AppointmentStatus, normalizeFreelancerId } from '@/types/appointment';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { useAuth } from './use-auth';
 import { supabase } from '@/lib/supabase';
 
@@ -36,11 +37,7 @@ export function useAppointments(contactId?: string) {
     } catch (err: any) {
       const errorMsg = err?.message || 'Erreur lors du chargement des rendez-vous';
       setError(errorMsg);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: errorMsg
-      });
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -90,21 +87,14 @@ export function useAppointments(contactId?: string) {
       const result = await appointmentsService.createAppointment(appointmentData);
       
       if (result) {
-        toast({
-          title: "Rendez-vous créé",
-          description: "Le rendez-vous a été créé avec succès."
-        });
+        toast.success("Rendez-vous créé avec succès");
         await fetchAppointments(); // Refresh the list
         return result;
       }
       throw new Error("Échec de la création du rendez-vous");
     } catch (err: any) {
       const errorMsg = err?.message || 'Erreur lors de la création du rendez-vous';
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: errorMsg
-      });
+      toast.error(errorMsg);
       throw err;
     }
   };
@@ -114,21 +104,14 @@ export function useAppointments(contactId?: string) {
       const success = await appointmentsService.updateAppointment(appointmentId, { status });
       
       if (success) {
-        toast({
-          title: "Statut mis à jour",
-          description: `Le rendez-vous a été marqué comme ${status}.`
-        });
+        toast.success(`Le rendez-vous a été marqué comme ${status}.`);
         await fetchAppointments(); // Refresh the list
         return true;
       }
       throw new Error("Échec de la mise à jour du statut");
     } catch (err: any) {
       const errorMsg = err?.message || 'Erreur lors de la mise à jour du statut';
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: errorMsg
-      });
+      toast.error(errorMsg);
       return false;
     }
   };
@@ -138,21 +121,14 @@ export function useAppointments(contactId?: string) {
       const success = await appointmentsService.deleteAppointment(appointmentId);
       
       if (success) {
-        toast({
-          title: "Rendez-vous supprimé",
-          description: "Le rendez-vous a été supprimé avec succès."
-        });
+        toast.success("Rendez-vous supprimé avec succès");
         await fetchAppointments(); // Refresh the list
         return true;
       }
       throw new Error("Échec de la suppression du rendez-vous");
     } catch (err: any) {
       const errorMsg = err?.message || 'Erreur lors de la suppression du rendez-vous';
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: errorMsg
-      });
+      toast.error(errorMsg);
       return false;
     }
   };
