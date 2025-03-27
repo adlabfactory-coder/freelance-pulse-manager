@@ -236,6 +236,7 @@ export type Database = {
           createdAt: string | null
           deleted_at: string | null
           email: string
+          folder: string | null
           id: string
           name: string
           notes: string | null
@@ -252,6 +253,7 @@ export type Database = {
           createdAt?: string | null
           deleted_at?: string | null
           email: string
+          folder?: string | null
           id?: string
           name: string
           notes?: string | null
@@ -268,6 +270,7 @@ export type Database = {
           createdAt?: string | null
           deleted_at?: string | null
           email?: string
+          folder?: string | null
           id?: string
           name?: string
           notes?: string | null
@@ -635,6 +638,12 @@ export type Database = {
       create_auto_assign_appointment: {
         Args: {
           appointment_data: Json
+        }
+        Returns: Json
+      }
+      create_contact: {
+        Args: {
+          contact_data: Json
         }
         Returns: Json
       }

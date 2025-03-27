@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { contactCreateUpdateService } from '@/services/contacts/contact-create-update';
 import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
-import { Contact } from '@/services/contacts/types';
 import { useAuth } from '@/hooks/use-auth';
 
 interface UseContactFormProps {
@@ -32,7 +31,8 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       address: initialData?.address || "",
       notes: initialData?.notes || "",
       status: initialData?.status || "lead" as ContactStatus,
-      assignedTo: initialData?.assignedTo || (user ? user.id : "")
+      assignedTo: initialData?.assignedTo || (user ? user.id : ""),
+      folder: initialData?.folder || "general"
     },
   });
 
@@ -43,22 +43,16 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
     try {
       setLoading(true);
       
-      // Make sure assignedTo is set
-      const contactData = {
-        ...data,
-        assignedTo: data.assignedTo || (user ? user.id : "")
-      };
-      
-      console.log("Préparation données contact:", contactData);
+      console.log("Préparation données contact:", data);
       
       if (isEditing && initialData?.id) {
-        const success = await contactCreateUpdateService.updateContact(initialData.id, contactData);
+        const success = await contactCreateUpdateService.updateContact(initialData.id, data);
         if (success) {
           toast.success("Contact mis à jour avec succès");
           if (onSuccess) onSuccess({id: initialData.id, name: data.name});
         }
       } else {
-        const contactId = await contactCreateUpdateService.createContact(contactData);
+        const contactId = await contactCreateUpdateService.createContact(data);
         if (contactId) {
           toast.success("Contact ajouté avec succès");
           form.reset();
