@@ -69,8 +69,8 @@ export const useAppointmentOperations = () => {
         date: appointmentDate,
         duration,
         status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId,
-        freelancer_id: freelancerId || undefined,
+        contact_id: contactId, // Changé pour correspondre à l'interface AppointmentCreateData
+        freelancer_id: freelancerId || undefined, // Changé pour correspondre à l'interface AppointmentCreateData
         location: null,
         notes: null,
         folder: folder

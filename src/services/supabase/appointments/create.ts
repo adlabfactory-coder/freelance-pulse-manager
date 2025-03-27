@@ -10,17 +10,10 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
    */
   const createAppointment = async (appointmentData: any) => {
     try {
-      // S'assurer que nous utilisons freelancerid pour la base de données
+      // Préparer les données pour l'envoi à la base de données
       const dataToSend = { 
         ...appointmentData 
       };
-      
-      // Si freelancerId est fourni, le copier vers freelancerid pour la DB
-      if (appointmentData.freelancerId !== undefined) {
-        dataToSend.freelancerid = appointmentData.freelancerId;
-        // Supprimer freelancerId pour éviter les conflits
-        delete dataToSend.freelancerId;
-      }
 
       // S'assurer que le dossier a une valeur par défaut
       if (!dataToSend.folder) {
@@ -39,11 +32,6 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
         throw error;
       }
 
-      // Normaliser la réponse pour l'application
-      if (data && data.freelancerid) {
-        data.freelancerId = data.freelancerid;
-      }
-
       return data;
     } catch (err) {
       console.error('Error in createAppointment:', err);
@@ -56,15 +44,10 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
    */
   const createAutoAssignAppointment = async (appointmentData: any) => {
     try {
-      // S'assurer que nous utilisons freelancerid pour la base de données
+      // Préparer les données pour l'envoi à la base de données
       const dataToSend = { 
         ...appointmentData
       };
-      
-      // Supprimer freelancerId pour la base de données
-      if (dataToSend.freelancerId !== undefined) {
-        delete dataToSend.freelancerId;
-      }
 
       // S'assurer que le dossier a une valeur par défaut
       if (!dataToSend.folder) {
