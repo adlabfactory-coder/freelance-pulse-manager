@@ -14,11 +14,24 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
       return [];
     }
 
-    // Cast the string status to our TypeScript union type
-    return (data || []).map(item => ({
-      ...item,
-      status: item.status as Appointment['status']
-    }));
+    // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
+    const normalizedData = (data || []).map(item => {
+      // Création d'un nouvel objet avec les propriétés normalisées
+      const appointment: any = {
+        ...item,
+        status: item.status as Appointment['status']
+      };
+      
+      // Normaliser freelancerid en freelancerId si nécessaire
+      if ('freelancerid' in item && !('freelancerId' in item)) {
+        appointment.freelancerId = item.freelancerid;
+        delete appointment.freelancerid;
+      }
+      
+      return appointment as Appointment;
+    });
+
+    return normalizedData;
   } catch (error) {
     console.error('Unexpected error fetching appointments:', error);
     return [];
@@ -39,11 +52,20 @@ export const fetchAppointmentById = async (id: string): Promise<Appointment | nu
       return null;
     }
 
-    // Cast the string status to our TypeScript union type
-    return data ? {
+    if (!data) return null;
+    
+    // Normaliser freelancerid en freelancerId si nécessaire
+    const appointment: any = {
       ...data,
       status: data.status as Appointment['status']
-    } : null;
+    };
+    
+    if ('freelancerid' in data && !('freelancerId' in data)) {
+      appointment.freelancerId = data.freelancerid;
+      delete appointment.freelancerid;
+    }
+    
+    return appointment as Appointment;
   } catch (error) {
     console.error('Unexpected error fetching appointment by ID:', error);
     return null;

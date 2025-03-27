@@ -29,7 +29,20 @@ export function useAppointments(contactId?: string) {
         data = await appointmentsService.getAppointments();
       }
       
-      setAppointments(data);
+      // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
+      const normalizedData = data.map(item => {
+        const appointment: any = { ...item };
+        
+        // Normaliser freelancerid en freelancerId si nécessaire
+        if ('freelancerid' in item && !('freelancerId' in item)) {
+          appointment.freelancerId = item.freelancerid;
+          delete appointment.freelancerid;
+        }
+        
+        return appointment as Appointment;
+      });
+      
+      setAppointments(normalizedData);
     } catch (err: any) {
       const errorMsg = err?.message || 'Erreur lors du chargement des rendez-vous';
       setError(errorMsg);
