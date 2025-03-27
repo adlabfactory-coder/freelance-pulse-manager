@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,10 @@ import EditQuoteDialog from "./form/EditQuoteDialog";
 import { deleteQuote, updateQuoteStatus } from "@/services/quote-service";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { fetchUserById } from "@/services/user-service";
+import { contactService } from "@/services/contact-service";
+import { User } from "@/types";
+import { Contact } from "@/types/contact";
 
 interface QuotesTableProps {
   quotes: Quote[];
@@ -27,6 +32,52 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [sortColumn, setSortColumn] = useState<string>("updatedAt");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [contactsMap, setContactsMap] = useState<Record<string, Contact>>({});
+  const [freelancersMap, setFreelancersMap] = useState<Record<string, User>>({});
+
+  // Charger les informations des contacts et des commerciaux
+  useEffect(() => {
+    // Collecte des IDs uniques
+    const contactIds = Array.from(new Set(quotes.map(quote => quote.contactId)));
+    const freelancerIds = Array.from(new Set(quotes.map(quote => quote.freelancerId)));
+    
+    // Charger les contacts
+    const loadContacts = async () => {
+      const contactsData: Record<string, Contact> = {};
+      for (const contactId of contactIds) {
+        try {
+          const contact = await contactService.getContactById(contactId);
+          if (contact) {
+            contactsData[contactId] = contact;
+          }
+        } catch (error) {
+          console.error(`Erreur lors du chargement du contact ${contactId}:`, error);
+        }
+      }
+      setContactsMap(contactsData);
+    };
+    
+    // Charger les commerciaux
+    const loadFreelancers = async () => {
+      const freelancersData: Record<string, User> = {};
+      for (const freelancerId of freelancerIds) {
+        try {
+          const freelancer = await fetchUserById(freelancerId);
+          if (freelancer) {
+            freelancersData[freelancerId] = freelancer;
+          }
+        } catch (error) {
+          console.error(`Erreur lors du chargement du commercial ${freelancerId}:`, error);
+        }
+      }
+      setFreelancersMap(freelancersData);
+    };
+    
+    if (quotes.length > 0) {
+      loadContacts();
+      loadFreelancers();
+    }
+  }, [quotes]);
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -131,6 +182,21 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
     }
   };
 
+  // Obtenir le nom du contact à partir de l'ID
+  const getContactName = (contactId: string) => {
+    return contactsMap[contactId]?.name || 'Contact inconnu';
+  };
+
+  // Obtenir le nom du commercial à partir de l'ID
+  const getFreelancerName = (freelancerId: string) => {
+    return freelancersMap[freelancerId]?.name || 'Commercial inconnu';
+  };
+
+  // Formater la référence du devis
+  const formatReference = (id: string) => {
+    return `DEV-${id.substring(0, 8).toUpperCase()}`;
+  };
+
   if (loading) {
     return (
       <div className="w-full overflow-auto">
@@ -221,9 +287,9 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
           <TableBody>
             {sortedQuotes.map((quote) => (
               <TableRow key={quote.id}>
-                <TableCell>{quote.id.substring(0, 8)}</TableCell>
-                <TableCell>{quote.contactId}</TableCell>
-                <TableCell>{quote.freelancerId}</TableCell>
+                <TableCell>{formatReference(quote.id)}</TableCell>
+                <TableCell>{getContactName(quote.contactId)}</TableCell>
+                <TableCell>{getFreelancerName(quote.freelancerId)}</TableCell>
                 <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(quote.status)}>
