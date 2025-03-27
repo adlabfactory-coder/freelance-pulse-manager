@@ -61,6 +61,11 @@ export const formatAmount = (amount: number): string => {
   }).format(amount);
 };
 
+// Fonction pour formater un montant (alias pour formatAmount)
+export const formatCurrency = (amount: number): string => {
+  return formatAmount(amount);
+};
+
 // Fonction pour formater un pourcentage
 export const formatPercentage = (value: number): string => {
   return new Intl.NumberFormat('fr-FR', {

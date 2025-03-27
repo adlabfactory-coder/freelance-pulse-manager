@@ -1,5 +1,6 @@
+
 import { SupabaseClient } from '@supabase/supabase-js';
-import { Appointment, AppointmentStatus } from '@/types/appointment';
+import { AppointmentStatus } from '@/types/appointment';
 
 export const createAppointmentsService = (supabase: SupabaseClient) => {
   const getAppointments = async () => {
@@ -14,7 +15,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
       return [];
     }
 
-    return data as Appointment[];
+    return data;
   };
 
   const getAppointmentsByFreelancer = async (freelancerId: string) => {
@@ -30,7 +31,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
       return [];
     }
 
-    return data as Appointment[];
+    return data;
   };
 
   const getAppointmentsByContact = async (contactId: string) => {
@@ -46,7 +47,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
       return [];
     }
 
-    return data as Appointment[];
+    return data;
   };
 
   const getPendingAppointments = async () => {
@@ -65,7 +66,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     return data;
   };
 
-  const createAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createAppointment = async (appointmentData) => {
     try {
       const { data, error } = await supabase
         .rpc('create_appointment', {
@@ -84,7 +85,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     }
   };
 
-  const createAutoAssignAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'freelancerId'>) => {
+  const createAutoAssignAppointment = async (appointmentData) => {
     try {
       const { data, error } = await supabase
         .rpc('create_auto_assign_appointment', {
@@ -123,7 +124,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     }
   };
 
-  const updateAppointment = async (appointmentId: string, updateData: Partial<Appointment>) => {
+  const updateAppointment = async (appointmentId: string, updateData) => {
     const { error } = await supabase
       .from('appointments')
       .update(updateData)
@@ -172,13 +173,13 @@ export const appointmentsService = {
   getAppointmentsByContact: (contactId: string) => 
     createAppointmentsService(supabase).getAppointmentsByContact(contactId),
   getPendingAppointments: () => createAppointmentsService(supabase).getPendingAppointments(),
-  createAppointment: (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => 
+  createAppointment: (appointmentData) => 
     createAppointmentsService(supabase).createAppointment(appointmentData),
-  createAutoAssignAppointment: (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt' | 'freelancerId'>) => 
+  createAutoAssignAppointment: (appointmentData) => 
     createAppointmentsService(supabase).createAutoAssignAppointment(appointmentData),
   acceptAppointment: (appointmentId: string, freelancerId: string) => 
     createAppointmentsService(supabase).acceptAppointment(appointmentId, freelancerId),
-  updateAppointment: (appointmentId: string, updateData: Partial<Appointment>) => 
+  updateAppointment: (appointmentId: string, updateData) => 
     createAppointmentsService(supabase).updateAppointment(appointmentId, updateData),
   deleteAppointment: (appointmentId: string) => 
     createAppointmentsService(supabase).deleteAppointment(appointmentId)
@@ -186,4 +187,3 @@ export const appointmentsService = {
 
 // Import necessary Supabase client
 import { supabase } from '@/lib/supabase';
-import { Appointment } from '@/types/appointment';
