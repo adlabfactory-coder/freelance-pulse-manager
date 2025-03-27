@@ -42,7 +42,7 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
     handleRemoveItem,
     handleSubmitEdit,
     loadData,
-    loadQuoteData
+    loadQuoteData // Make sure this is used here
   } = quoteForm;
 
   useEffect(() => {

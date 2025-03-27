@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { fetchServices } from "@/services/services-service";
@@ -67,7 +66,6 @@ export const useQuoteDataLoader = () => {
     }
   }, []);
 
-  // Add the missing loadQuoteData function
   const loadQuoteData = useCallback(async (quoteId: string): Promise<Quote | null> => {
     setLoading(true);
     setError(null);
@@ -94,6 +92,6 @@ export const useQuoteDataLoader = () => {
     services,
     error,
     loadData,
-    loadQuoteData // Export the loadQuoteData function
+    loadQuoteData
   };
 };

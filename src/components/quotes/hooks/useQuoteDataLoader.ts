@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { fetchServices } from "@/services/services-service";
@@ -58,7 +57,6 @@ export const useQuoteDataLoader = () => {
     }
   }, []);
 
-  // Add the missing loadQuoteData function to the component hook as well
   const loadQuoteData = useCallback(async (quoteId: string): Promise<Quote | null> => {
     setLoading(true);
     try {
@@ -81,6 +79,6 @@ export const useQuoteDataLoader = () => {
     freelancers,
     services,
     loadData,
-    loadQuoteData // Export the loadQuoteData function
+    loadQuoteData
   };
 };

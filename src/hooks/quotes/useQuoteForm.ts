@@ -34,7 +34,7 @@ export const useQuoteForm = ({
     freelancers, 
     services, 
     loadData,
-    loadQuoteData
+    loadQuoteData // Make sure this is properly destructured
   } = useQuoteDataLoader();
   
   const { 
