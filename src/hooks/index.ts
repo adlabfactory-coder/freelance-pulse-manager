@@ -10,3 +10,6 @@ export * from "./use-subscriptions";
 
 // Export des hooks spécifiques
 export * from "./commission";
+
+// Export des hooks d'appointments depuis le nouveau dossier
+export * from "./appointments";
