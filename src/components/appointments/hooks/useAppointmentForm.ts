@@ -4,6 +4,7 @@ import { createAppointment, createAutoAssignAppointment } from "@/services/appoi
 import { toast } from "sonner";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { formatDateForAPI } from "@/utils/format";
+import { useAuth } from "@/hooks/use-auth";
 
 // Export the title options for reuse in other components
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -22,6 +23,7 @@ export const useAppointmentForm = (
   initialContactId?: string,
   autoAssign = false
 ) => {
+  const { user } = useAuth();
   // États du formulaire
   const [titleOption, setTitleOption] = useState<AppointmentTitleOption>('consultation-initiale');
   const [customTitle, setCustomTitle] = useState('');
@@ -62,6 +64,9 @@ export const useAppointmentForm = (
       
       const title = titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
       
+      // Utiliser l'ID de l'utilisateur connecté pour le freelancerId s'il n'y a pas d'auto-attribution
+      const freelancerId = autoAssign ? null : user?.id || "00000000-0000-0000-0000-000000000000";
+      
       // Créer l'objet de rendez-vous à envoyer
       const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {
         title,
@@ -70,7 +75,7 @@ export const useAppointmentForm = (
         duration,
         status: AppointmentStatus.SCHEDULED,
         contactId,
-        freelancerId: null, // Use null instead of empty string
+        freelancerId, // Use default ID if not auto-assigning
         location: null,
         notes: null
       };

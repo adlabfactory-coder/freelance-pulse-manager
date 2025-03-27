@@ -16,8 +16,8 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       return null;
     }
 
-    // Ensure freelancerId is never an empty string
-    const freelancerId = appointmentData.freelancerId === "" ? null : appointmentData.freelancerId;
+    // Si freelancerId est null, utiliser une valeur par défaut (cela ne devrait pas arriver avec les modifications)
+    const freelancerId = appointmentData.freelancerId || "00000000-0000-0000-0000-000000000000";
 
     console.log('Creating appointment with data:', {
       ...appointmentData,
@@ -52,7 +52,7 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       };
 
       // Only process notification if we have required data
-      if (freelancerId) {
+      if (freelancerId && freelancerId !== "00000000-0000-0000-0000-000000000000") {
         // Get freelancer name
         const { data: freelancer } = await supabase
           .from('users')
@@ -105,10 +105,11 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       return null;
     }
 
-    // Ensure freelancerId is null, not empty string
+    // Pour l'auto-assignation, nous utilisons une valeur par défaut temporaire
+    // qui sera remplacée lorsqu'un chargé de compte acceptera le rendez-vous
     const appointmentDataCleaned = {
       ...appointmentData,
-      freelancerId: null
+      freelancerId: "00000000-0000-0000-0000-000000000000" // UUID par défaut temporaire
     };
 
     console.log('Création d\'un rendez-vous auto-assigné:', {
