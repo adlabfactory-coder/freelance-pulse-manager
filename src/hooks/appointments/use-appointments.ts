@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase-client";
-import { Appointment, AppointmentStatus } from "@/types/appointment";
+import { Appointment, AppointmentStatus, normalizeFreelancerId } from "@/types/appointment";
 import { toast } from "sonner";
 
 export const useAppointments = () => {
@@ -29,7 +29,10 @@ export const useAppointments = () => {
       }
       
       console.log(`${data.length} rendez-vous chargés`);
-      setAppointments(data as Appointment[]);
+      
+      // Normaliser les freelancer IDs pour résoudre les différences de casse
+      const normalizedData = data.map(normalizeFreelancerId);
+      setAppointments(normalizedData as Appointment[]);
     } catch (e) {
       console.error("Exception lors du chargement des rendez-vous:", e);
       setError("Une erreur est survenue lors du chargement des rendez-vous");

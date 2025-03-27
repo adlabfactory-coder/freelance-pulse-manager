@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { createAppointment, createAutoAssignAppointment, AppointmentCreateData } from "@/services/appointments/create";
 import { toast } from "sonner";
@@ -7,7 +6,6 @@ import { formatDateForAPI } from "@/utils/format";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase-client";
 
-// Export the title options for reuse in other components
 export const APPOINTMENT_TITLE_OPTIONS = [
   { value: "consultation-initiale", label: "Consultation initiale" },
   { value: "session-suivi", label: "Session de suivi" },
@@ -26,19 +24,18 @@ export const useAppointmentForm = (
   initialFolder: string = "general"
 ) => {
   const { user } = useAuth();
-  // États du formulaire
+  
   const [titleOption, setTitleOption] = useState<AppointmentTitleOption>('consultation-initiale');
   const [customTitle, setCustomTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
-  const [time, setTime] = useState('10:00'); // Heure par défaut
-  const [duration, setDuration] = useState(30); // Minutes
+  const [time, setTime] = useState('10:00');
+  const [duration, setDuration] = useState(30);
   const [folder, setFolder] = useState(initialFolder);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultFreelancer, setDefaultFreelancer] = useState<string | null>(null);
   const [isLoadingFreelancer, setIsLoadingFreelancer] = useState(true);
   
-  // Récupérer un freelancer par défaut dès le chargement du formulaire
   useEffect(() => {
     const fetchDefaultFreelancer = async () => {
       console.log("useAppointmentForm: Recherche d'un freelancer par défaut");
@@ -46,11 +43,9 @@ export const useAppointmentForm = (
       
       try {
         if (user?.role === 'freelancer') {
-          // Si l'utilisateur est un freelancer, utiliser son ID
           setDefaultFreelancer(user.id);
           console.log("useAppointmentForm: Utilisateur freelancer trouvé, ID utilisé:", user.id);
         } else {
-          // Sinon, récupérer un freelancer par défaut
           console.log("useAppointmentForm: Recherche d'un freelancer par défaut dans la base de données");
           const { data, error } = await supabase
             .from('users')
@@ -94,7 +89,6 @@ export const useAppointmentForm = (
       setIsSubmitting(true);
       console.log("useAppointmentForm: Début de la soumission du rendez-vous...");
       
-      // Utiliser la fonction formatDateForAPI pour obtenir une date ISO valide
       const appointmentDate = formatDateForAPI(date, time);
       
       if (!appointmentDate) {
@@ -103,7 +97,6 @@ export const useAppointmentForm = (
         return;
       }
       
-      // Déterminer le titre final
       const titleOptions = {
         "consultation-initiale": "Consultation initiale",
         "session-suivi": "Session de suivi",
@@ -114,7 +107,6 @@ export const useAppointmentForm = (
       
       const title = titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
       
-      // Déterminer le freelancer - Utiliser l'ID utilisateur connecté s'il est freelancer
       const isUserFreelancer = user?.role === 'freelancer';
       const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
       
@@ -126,48 +118,38 @@ export const useAppointmentForm = (
         autoAssign
       });
       
-      // Vérifier si un freelancer est disponible
       if (!freelancerId && !autoAssign) {
         console.log("useAppointmentForm: Aucun freelancer disponible, passage en mode auto-assignation");
         toast.info("Aucun freelancer disponible, le rendez-vous sera auto-assigné");
       }
       
-      // Créer l'objet de rendez-vous à envoyer avec la bonne structure pour l'API
       const appointmentData: AppointmentCreateData = {
         title,
         description,
         date: appointmentDate,
         duration,
         status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId, // Utilisez contact_id pour correspondre à l'API
-        freelancer_id: freelancerId || undefined, // Utilisez freelancer_id pour correspondre à l'API
+        contact_id: contactId,
+        freelancer_id: freelancerId || undefined,
         location: null,
         notes: null,
         folder: folder,
-        current_user_id: user?.id // Utilisez current_user_id pour correspondre à l'API
+        current_user_id: user?.id
       };
       
       console.log("useAppointmentForm: Soumission des données de rendez-vous:", appointmentData);
       
       let result;
       if (!freelancerId || autoAssign) {
-        // Créer un rendez-vous auto-assigné
-        console.log("useAppointmentForm: Création d'un rendez-vous auto-assigné");
         result = await createAutoAssignAppointment(appointmentData);
       } else {
-        // Créer un rendez-vous standard
-        console.log("useAppointmentForm: Création d'un rendez-vous standard");
         result = await createAppointment(appointmentData);
       }
       
       if (result) {
         console.log("useAppointmentForm: Rendez-vous créé avec succès:", result);
-        // Déclencher l'événement de création de rendez-vous pour rafraîchir les données
         window.dispatchEvent(new CustomEvent('appointment-created'));
-        
-        // Appeler le callback de succès si fourni
         if (onSuccess) onSuccess();
-        
         toast.success("Rendez-vous créé avec succès");
       }
     } catch (error) {
