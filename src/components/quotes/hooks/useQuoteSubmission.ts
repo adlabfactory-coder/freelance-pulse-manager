@@ -23,14 +23,24 @@ export const useQuoteSubmission = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSaved, setIsQuoteSaved] = useState(false);
   
-  const handleSubmit = useCallback(async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]) => {
-    console.log("handleSubmit called");
+  const handleSubmit = useCallback(async (
+    quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, 
+    items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]
+  ) => {
+    console.log("handleSubmit called with data:", quoteData);
+    
+    // Assurons-nous que nous avons des items valides
+    const validItems = quoteData.items.filter(item => 
+      item.description !== undefined && 
+      item.quantity !== undefined && 
+      item.unitPrice !== undefined
+    );
     
     const validation = validateQuoteForm(
       quoteData.contactId,
       quoteData.freelancerId,
       quoteData.validUntil,
-      items
+      validItems
     );
     
     if (!validation.isValid) {
@@ -43,16 +53,16 @@ export const useQuoteSubmission = ({
     try {
       console.log("Création d'un nouveau devis");
       
-      const validItems = items
+      const itemsToCreate = items
         .filter(item => !item.toDelete)
         .map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
       
       console.log("Données du devis:", quoteData);
-      console.log("Éléments du devis:", validItems);
+      console.log("Éléments du devis:", itemsToCreate);
       
       const newQuote = await quotesService.createQuote(
         quoteData,
-        validItems
+        itemsToCreate
       );
       
       if (newQuote) {
@@ -91,14 +101,23 @@ export const useQuoteSubmission = ({
   // Handle editing an existing quote
   const handleSubmitEdit = useCallback(async (
     id: string, 
-    quoteData: Partial<Quote>, 
+    quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>,
     items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]
   ) => {
+    console.log("handleSubmitEdit called for ID:", id);
+    
+    // Assurons-nous que nous avons des items valides
+    const validItems = quoteData.items.filter(item => 
+      item.description !== undefined && 
+      item.quantity !== undefined && 
+      item.unitPrice !== undefined
+    );
+    
     const validation = validateQuoteForm(
-      quoteData.contactId || '',
-      quoteData.freelancerId || '',
-      quoteData.validUntil || null,
-      items.filter(item => !item.toDelete)
+      quoteData.contactId,
+      quoteData.freelancerId,
+      quoteData.validUntil,
+      validItems
     );
     
     if (!validation.isValid) {

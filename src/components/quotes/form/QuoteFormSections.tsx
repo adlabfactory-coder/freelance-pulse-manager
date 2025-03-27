@@ -14,7 +14,7 @@ import { contactService } from "@/services/contacts";
 import { fetchUserById } from "@/services/supabase-user-service";
 
 interface QuoteFormProps {
-  quoteData: Partial<Quote>;
+  quoteData: Partial<Quote> & { items: QuoteItem[] };
   currentItem: Partial<QuoteItem>;
   contacts: Contact[];
   freelancers: User[];
@@ -99,7 +99,7 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
         <ClientSelector 
           contactId={quoteData.contactId} 
           contacts={contacts} 
-          onSelect={handleContactChange} 
+          onSelect={(contactId) => onQuoteDataChange({ ...quoteData, contactId })} 
         />
         
         {selectedContact && (
@@ -114,7 +114,7 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
         <FreelancerSelector 
           freelancerId={quoteData.freelancerId} 
           freelancers={freelancers} 
-          onSelect={handleFreelancerChange} 
+          onSelect={(freelancerId) => onQuoteDataChange({ ...quoteData, freelancerId })} 
         />
         
         {selectedFreelancer && (
@@ -127,17 +127,17 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
 
         <StatusSelector 
           status={quoteData.status} 
-          onSelect={handleStatusChange} 
+          onSelect={(status) => onQuoteDataChange({ ...quoteData, status })} 
         />
 
         <QuoteValidityDatePicker 
           date={quoteData.validUntil} 
-          onSelect={handleValidUntilChange} 
+          onSelect={(validUntil) => onQuoteDataChange({ ...quoteData, validUntil })} 
         />
 
         <QuoteNotesField 
           notes={quoteData.notes} 
-          onChange={handleNotesChange} 
+          onChange={(notes) => onQuoteDataChange({ ...quoteData, notes })} 
         />
       </div>
 

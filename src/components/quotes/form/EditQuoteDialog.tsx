@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuoteForm } from "../hooks/useQuoteForm";
 import QuoteDialogContent from "./QuoteDialogContent";
-import { Quote } from "@/types";
+import { Quote, QuoteItem } from "@/types";
 
 interface EditQuoteDialogProps {
   open: boolean;
@@ -57,6 +57,21 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
     }
   }, [open, quoteId, initialQuote, loadData, loadQuoteData, setQuoteData]);
 
+  // Nous nous assurons que les items sont complets et valides ici
+  const safeQuoteData: Partial<Quote> = {
+    ...quoteData,
+    items: quoteData.items 
+      ? quoteData.items.filter((item): item is QuoteItem => {
+          return Boolean(
+            item && 
+            item.description !== undefined && 
+            item.quantity !== undefined && 
+            item.unitPrice !== undefined
+          );
+        })
+      : []
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -70,7 +85,7 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
         <QuoteDialogContent
           loading={loading}
           isSubmitting={isSubmitting}
-          quoteData={quoteData}
+          quoteData={safeQuoteData}
           currentItem={currentItem}
           contacts={contacts}
           freelancers={freelancers}

@@ -79,8 +79,16 @@ export const useQuoteForm = ({
     }
   }, [resetItems]);
 
-  // Get the complete quote data
+  // Get the complete quote data with type safety
   const getQuoteData = useCallback(() => {
+    const validItems = items.filter(item => 
+      item && 
+      item.description !== undefined && 
+      item.quantity !== undefined && 
+      item.unitPrice !== undefined
+    );
+    
+    // Cette fonction renvoie un type compatible avec Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>
     return {
       contactId,
       freelancerId,
@@ -88,15 +96,7 @@ export const useQuoteForm = ({
       status,
       notes,
       totalAmount,
-      items: items.filter(item => {
-        // Vérifier que l'élément a toutes les propriétés requises pour être un QuoteItem valide
-        return (
-          item &&
-          item.description !== undefined &&
-          item.quantity !== undefined &&
-          item.unitPrice !== undefined
-        );
-      })
+      items: validItems
     };
   }, [contactId, freelancerId, validUntil, status, notes, totalAmount, items]);
 
@@ -105,6 +105,8 @@ export const useQuoteForm = ({
     if (e) e.preventDefault();
     
     const quoteData = getQuoteData();
+    // Nous nous assurons que les items sont bien filtrés et valides
+    console.log("Submit form with data:", quoteData);
     return handleSubmit(quoteData, allItems);
   }, [getQuoteData, handleSubmit, allItems]);
 
@@ -117,6 +119,24 @@ export const useQuoteForm = ({
     if (data.notes !== undefined) setNotes(data.notes);
     if (data.items) resetItems(data.items);
   }, [resetItems]);
+
+  // Cette propriété est utilisée pour l'affichage uniquement
+  const quoteDataForDisplay = {
+    contactId,
+    freelancerId,
+    validUntil,
+    status,
+    notes,
+    totalAmount,
+    items: items
+  };
+
+  // Fonction spécifique pour gérer la soumission de l'édition
+  const handleSubmitEditWrapper = useCallback((id: string) => {
+    console.log("Handling edit submit for ID:", id);
+    const quoteData = getQuoteData();
+    return handleSubmitEdit(id, quoteData, allItems);
+  }, [getQuoteData, handleSubmitEdit, allItems]);
 
   return {
     // Basic quote data
@@ -156,10 +176,10 @@ export const useQuoteForm = ({
     
     // Form actions
     handleSubmit: submitForm,
-    handleSubmitEdit: (id: string) => handleSubmitEdit(id, getQuoteData(), allItems),
+    handleSubmitEdit: handleSubmitEditWrapper,
     
     // Helper functions
-    quoteData: getQuoteData(),
+    quoteData: quoteDataForDisplay,
     setQuoteData
   };
 };
