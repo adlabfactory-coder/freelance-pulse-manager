@@ -52,7 +52,8 @@ export const useQuoteSubmission = ({
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         discount: item.discount || 0,
-        tax: item.tax || 0
+        tax: item.tax || 0,
+        serviceId: item.serviceId
       }));
       
       const result = await createQuote({
@@ -91,16 +92,17 @@ export const useQuoteSubmission = ({
     }
   }, [onSuccess, onError, user]);
   
-  // Add the missing handleSubmit and handleSubmitEdit functions
+  // Fonction simplifiée pour créer un nouveau devis
   const handleSubmit = useCallback(async (quoteData: Partial<Quote>, items: QuoteItem[]) => {
     return await submitQuote(quoteData, items);
   }, [submitQuote]);
   
+  // Fonction pour éditer un devis existant
   const handleSubmitEdit = useCallback(async (quoteId: string, quoteData: Partial<Quote>, items: QuoteItem[]) => {
     setIsSubmitting(true);
     
     try {
-      // Validation checks - similar to submitQuote
+      // Validation des données requises - similaire à submitQuote
       if (!quoteData.contactId) {
         throw new Error("Veuillez sélectionner un contact");
       }
@@ -133,7 +135,7 @@ export const useQuoteSubmission = ({
         serviceId: item.serviceId
       }));
       
-      // Using the updateQuote function which needs to be used or imported
+      // Utiliser la fonction updateQuote avec les données formatées
       const result = await updateQuote(quoteId, {
         quote: {
           contactId: quoteData.contactId,

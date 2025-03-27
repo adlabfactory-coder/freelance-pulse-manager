@@ -50,13 +50,12 @@ export const useQuoteForm = ({
     resetItems
   } = useQuoteItems();
   
-  // Pass proper props to useQuoteSubmission, ensuring onCloseDialog is not passed
+  // Pass proper props to useQuoteSubmission
   const { 
     isSubmitting, 
     isQuoteSaved, 
     handleSubmit, 
-    handleSubmitEdit,
-    submitQuote
+    handleSubmitEdit
   } = useQuoteSubmission({ 
     onSuccess, 
     onError: (error) => console.error("Error in quote submission:", error)
@@ -86,7 +85,7 @@ export const useQuoteForm = ({
 
   // Récupération complète des données du devis
   const getQuoteData = useCallback(() => {
-    // Filtrer les éléments pour s'assurer qu'ils sont complets et valides
+    // Récupérer les éléments valides pour s'assurer qu'ils sont complets
     const validItems = items
       .filter(item => 
         item && 
@@ -100,8 +99,8 @@ export const useQuoteForm = ({
         unitPrice: item.unitPrice!,
         tax: item.tax || 0,
         discount: item.discount || 0,
-        id: item.id,
-        quoteId: item.quoteId,
+        id: item.id || "",  // Assurer que l'ID est présent ou une chaîne vide
+        quoteId: item.quoteId || "",  // Assurer que quoteId est présent ou une chaîne vide
         serviceId: item.serviceId
       }));
     
@@ -124,7 +123,7 @@ export const useQuoteForm = ({
     console.log("Handling edit submit for ID:", id);
     const data = getQuoteData();
     
-    // Convert allItems to QuoteItem[] by ensuring required properties
+    // Convertir les éléments en QuoteItem complets en veillant à ce que toutes les propriétés nécessaires soient présentes
     const validQuoteItems = allItems
       .filter(item => !item.toDelete)
       .map(item => ({
@@ -133,8 +132,8 @@ export const useQuoteForm = ({
         description: item.description || '',
         quantity: item.quantity || 0,
         unitPrice: item.unitPrice || 0,
-        tax: item.tax,
-        discount: item.discount,
+        tax: item.tax || 0,
+        discount: item.discount || 0,
         serviceId: item.serviceId
       }));
     
