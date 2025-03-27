@@ -60,7 +60,26 @@ export const createQuote = async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'u
 export const updateQuote = async (id: string, quoteData: Partial<Quote>, items: QuoteItem[]) => {
   try {
     console.log(`Mise à jour du devis ${id}...`);
-    return await quotesService.updateQuote(id, quoteData, items);
+    console.log(`Items fournis:`, items);
+    
+    // Préparer les items dans le format attendu par quotesService.updateQuote
+    const formattedItems = {
+      add: items.filter(item => !item.id).map(({ id, quoteId, ...rest }) => rest),
+      update: items.filter(item => !!item.id).map(item => ({
+        id: item.id!,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount || 0,
+        tax: item.tax || 0,
+        serviceId: item.serviceId
+      })),
+      delete: [] // Dans cet exemple simple, nous ne gérons pas encore les suppressions
+    };
+    
+    console.log(`Items formatés:`, formattedItems);
+    
+    return await quotesService.updateQuote(id, quoteData, formattedItems);
   } catch (error) {
     console.error(`Erreur lors de la mise à jour du devis ${id}:`, error);
     toast.error("Erreur lors de la mise à jour du devis");
