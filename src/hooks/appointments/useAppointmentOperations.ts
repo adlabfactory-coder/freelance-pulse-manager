@@ -93,8 +93,8 @@ export const useAppointmentOperations = () => {
         date: appointmentDate,
         duration,
         status: useAutoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId, // Changed from contactId to contact_id to match expected parameter
-        freelancer_id: useAutoAssign ? undefined : finalFreelancerId, // Changed from freelancerId to freelancer_id
+        contact_id: contactId, // Corrected property name to match AppointmentCreateData
+        freelancer_id: useAutoAssign ? undefined : finalFreelancerId, // Corrected property name
         location: null,
         notes: null,
         folder: folder,
