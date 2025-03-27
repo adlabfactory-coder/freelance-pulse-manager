@@ -12,9 +12,9 @@ export interface Contact {
   status: ContactStatus;
   createdAt?: Date;
   updatedAt?: Date;
-  folder?: string;
+  folder?: string; // Ajout de la propriété folder
   subscription_plan_id?: string;
-  deleted_at?: Date; // Ajout du champ deleted_at
+  deleted_at?: Date; 
 }
 
 export enum ContactStatus {

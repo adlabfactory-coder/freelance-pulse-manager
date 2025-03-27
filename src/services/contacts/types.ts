@@ -14,7 +14,8 @@ export interface Contact {
   updatedAt: string;
   status: ContactStatus;
   subscriptionPlanId?: string;
-  deleted_at?: string; // Ajout du champ deleted_at
+  deleted_at?: string;
+  folder?: string;
 }
 
 export interface ContactInsert {
