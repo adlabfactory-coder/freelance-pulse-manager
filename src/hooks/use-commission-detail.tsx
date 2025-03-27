@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSupabase } from './use-supabase';
+import { CommissionTier } from '@/types/commissions';
 
 // Define the CommissionDetail interface
 export interface CommissionDetail {
@@ -8,7 +10,7 @@ export interface CommissionDetail {
   freelancerId: string;
   freelancerName: string;
   amount: number;
-  tier: string;
+  tier: CommissionTier; // Changed from string to CommissionTier
   periodStart: Date;
   periodEnd: Date;
   status: string;
@@ -88,7 +90,18 @@ export function useCommissionDetail(commissionId: string | undefined) {
           }
         }
 
-        setCommission(data);
+        // Convert string tier to CommissionTier enum
+        const processedData = {
+          ...data,
+          tier: mapTierStringToEnum(data.tier), // Convert the tier string to enum
+          periodStart: new Date(data.periodStart),
+          periodEnd: new Date(data.periodEnd),
+          createdAt: new Date(data.createdAt),
+          paidDate: data.paidDate ? new Date(data.paidDate) : undefined,
+          freelancerName: data.freelancer?.name || "Non assigné"
+        };
+
+        setCommission(processedData);
       } catch (err) {
         console.error('Error in commission detail fetch:', err);
         setError('Une erreur est survenue lors de la récupération des détails');
@@ -99,6 +112,23 @@ export function useCommissionDetail(commissionId: string | undefined) {
 
     fetchCommissionDetail();
   }, [commissionId, supabase.supabaseClient]);
+
+  // Function to map string tier values to CommissionTier enum
+  const mapTierStringToEnum = (tierString: string): CommissionTier => {
+    switch (tierString.toLowerCase()) {
+      case 'bronze':
+        return CommissionTier.TIER_1;
+      case 'silver':
+        return CommissionTier.TIER_2;
+      case 'gold':
+        return CommissionTier.TIER_3;
+      case 'platinum':
+        return CommissionTier.TIER_4;
+      default:
+        console.warn(`Unknown tier value: ${tierString}, defaulting to TIER_1`);
+        return CommissionTier.TIER_1;
+    }
+  };
 
   // Function to mark commission as paid
   const markAsPaid = async () => {

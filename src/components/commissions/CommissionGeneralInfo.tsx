@@ -67,7 +67,7 @@ const CommissionGeneralInfo: React.FC<CommissionGeneralInfoProps> = ({ commissio
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Palier</p>
-            <p className="font-medium">{getTierLabel(commission.tier as CommissionTier)}</p>
+            <p className="font-medium">{getTierLabel(commission.tier)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Date de paiement</p>
