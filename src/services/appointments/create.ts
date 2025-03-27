@@ -16,8 +16,12 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       return null;
     }
 
+    // Ensure freelancerId is never an empty string
+    const freelancerId = appointmentData.freelancerId === "" ? null : appointmentData.freelancerId;
+
     console.log('Creating appointment with data:', {
       ...appointmentData,
+      freelancerId,
       date: appointmentDate.toISOString()
     });
     
@@ -26,6 +30,7 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       .rpc('create_appointment', {
         appointment_data: {
           ...appointmentData,
+          freelancerId,
           date: appointmentDate.toISOString() // Standardiser le format de date
         }
       });
@@ -47,12 +52,12 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
       };
 
       // Only process notification if we have required data
-      if (appointmentData.freelancerId) {
+      if (freelancerId) {
         // Get freelancer name
         const { data: freelancer } = await supabase
           .from('users')
           .select('name')
-          .eq('id', appointmentData.freelancerId)
+          .eq('id', freelancerId)
           .single();
         
         if (freelancer) {
@@ -100,8 +105,14 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       return null;
     }
 
-    console.log('Création d\'un rendez-vous auto-assigné:', {
+    // Ensure freelancerId is null, not empty string
+    const appointmentDataCleaned = {
       ...appointmentData,
+      freelancerId: null
+    };
+
+    console.log('Création d\'un rendez-vous auto-assigné:', {
+      ...appointmentDataCleaned,
       date: appointmentDate.toISOString()
     });
     
@@ -125,7 +136,7 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
     
     // Préparer les données pour l'auto-assignation
     const autoAssignData = {
-      ...appointmentData,
+      ...appointmentDataCleaned,
       date: appointmentDate.toISOString()
     };
     

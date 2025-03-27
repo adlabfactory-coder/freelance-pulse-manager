@@ -70,7 +70,7 @@ export const useAppointmentForm = (
         duration,
         status: AppointmentStatus.SCHEDULED,
         contactId,
-        freelancerId: "", // Sera utilisé pour le RPC avec la structure correcte
+        freelancerId: null, // Use null instead of empty string
         location: null,
         notes: null
       };
