@@ -6,6 +6,7 @@ import QuoteDialogContent from "./QuoteDialogContent";
 import { Quote, QuoteItem } from "@/types";
 import { QuoteStatus } from "@/types/quote";
 import { toast } from "sonner";
+import SettingsError from "@/pages/settings/components/SettingsError";
 
 interface EditQuoteDialogProps {
   open: boolean;
@@ -108,6 +109,11 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
               {error}
             </DialogDescription>
           </DialogHeader>
+          <SettingsError 
+            error="Impossible de charger les données du devis"
+            details={error}
+            onRetry={() => loadData().then(() => quoteId && loadQuoteData(quoteId))}
+          />
         </DialogContent>
       </Dialog>
     );

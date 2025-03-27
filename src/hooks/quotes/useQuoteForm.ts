@@ -34,7 +34,8 @@ export const useQuoteForm = ({
     freelancers, 
     services, 
     loadData,
-    loadQuoteData 
+    loadQuoteData,
+    error 
   } = useQuoteDataLoader();
   
   const { 
@@ -160,6 +161,9 @@ export const useQuoteForm = ({
     
     // Helper functions
     quoteData: quoteDataForDisplay,
-    setQuoteData: quoteData.setQuoteData
+    setQuoteData: quoteData.setQuoteData,
+    
+    // Ajout de la propriété error manquante
+    error
   };
 };
