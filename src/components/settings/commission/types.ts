@@ -6,7 +6,7 @@ export interface CommissionRuleForm {
   tier: string;
   minContracts: number;
   maxContracts?: number | null;
-  unitAmount: number;
+  unit_amount: number;
 }
 
 export interface MappingFunctions {

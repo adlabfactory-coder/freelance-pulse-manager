@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +71,7 @@ const CommissionTiers: React.FC<CommissionTiersProps> = ({
                 {getTierLabel(rule.tier)}
               </Badge>
               <div className="mt-2 text-2xl font-bold">
-                {formatCurrency(rule.unitAmount || 0)}
+                {formatCurrency(rule.unit_amount || 0)}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
                 par contrat validé
@@ -110,7 +109,7 @@ const getDefaultRule = (tier: CommissionTier): CommissionRule => {
         minContracts: 1,
         maxContracts: 10,
         percentage: 0,
-        unitAmount: 500
+        unit_amount: 500
       };
     case CommissionTier.TIER_2:
       return {
@@ -119,7 +118,7 @@ const getDefaultRule = (tier: CommissionTier): CommissionRule => {
         minContracts: 11,
         maxContracts: 20,
         percentage: 0,
-        unitAmount: 1000
+        unit_amount: 1000
       };
     case CommissionTier.TIER_3:
       return {
@@ -128,7 +127,7 @@ const getDefaultRule = (tier: CommissionTier): CommissionRule => {
         minContracts: 21,
         maxContracts: 30,
         percentage: 0,
-        unitAmount: 1500
+        unit_amount: 1500
       };
     case CommissionTier.TIER_4:
       return {
@@ -136,7 +135,7 @@ const getDefaultRule = (tier: CommissionTier): CommissionRule => {
         tier: CommissionTier.TIER_4,
         minContracts: 31,
         percentage: 0,
-        unitAmount: 2000
+        unit_amount: 2000
       };
     default:
       return {
@@ -145,7 +144,7 @@ const getDefaultRule = (tier: CommissionTier): CommissionRule => {
         minContracts: 1,
         maxContracts: 10,
         percentage: 0,
-        unitAmount: 500
+        unit_amount: 500
       };
   }
 };

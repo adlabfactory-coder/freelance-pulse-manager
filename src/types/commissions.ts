@@ -15,6 +15,19 @@ export interface Commission {
   createdAt: Date;
   payment_requested?: boolean;
   contracts_count?: number;
+  unit_amount?: number;
+}
+
+// Type pour les détails étendus de commissions
+export interface CommissionWithDetails extends Commission {
+  subscriptionDetails?: {
+    id: string;
+    name: string;
+    client?: {
+      id: string;
+      name: string;
+    };
+  };
 }
 
 // Type pour les règles de commission
@@ -28,7 +41,15 @@ export interface CommissionRule {
 }
 
 // Statut d'une commission
-export type CommissionStatus = 'pending' | 'approved' | 'paid' | 'rejected';
+export type CommissionStatus = 'pending' | 'approved' | 'paid' | 'rejected' | 'processing';
+
+// Niveaux de commission
+export enum CommissionTier {
+  TIER_1 = 'TIER_1',
+  TIER_2 = 'TIER_2',
+  TIER_3 = 'TIER_3',
+  TIER_4 = 'TIER_4'
+}
 
 // Fonctions utilitaires pour les commissions
 export const formatCommissionAmount = (amount: number): string => {

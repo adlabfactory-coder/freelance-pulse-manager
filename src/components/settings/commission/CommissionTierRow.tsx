@@ -29,11 +29,11 @@ const CommissionTierRow: React.FC<CommissionTierRowProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor={`unitAmount-${index}`}>Commission par contrat (MAD)</Label>
+        <Label htmlFor={`unit_amount-${index}`}>Commission par contrat (MAD)</Label>
         <Input 
-          id={`unitAmount-${index}`} 
-          value={tier.unitAmount} 
-          onChange={(e) => onInputChange(index, 'unitAmount', e.target.value)}
+          id={`unit_amount-${index}`} 
+          value={tier.unit_amount} 
+          onChange={(e) => onInputChange(index, 'unit_amount', e.target.value)}
           type="number"
           min="0"
         />

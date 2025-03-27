@@ -109,13 +109,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  const handleLogin = async (userData: User) => {
+  const handleLogin = async (email: string, password: string) => {
     try {
       if (DEMO_MODE) {
-        console.log("Tentative de connexion en mode démo avec:", userData.email);
+        console.log("Tentative de connexion en mode démo avec:", email);
         
         const mockUsers = getMockUsers();
-        const mockUser = mockUsers.find(u => u.email === userData.email);
+        const mockUser = mockUsers.find(u => u.email === email);
         
         if (mockUser) {
           console.log("Utilisateur de démonstration trouvé:", mockUser.name);
@@ -132,10 +132,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { success: true };
       }
       
-      console.log("Tentative de connexion à Supabase avec:", userData.email);
+      console.log("Tentative de connexion à Supabase avec:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: userData.email,
-        password: userData.password
+        email,
+        password
       });
       
       if (error) {
@@ -229,6 +229,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isSuperAdmin = !!user && (user.role === UserRole.SUPER_ADMIN);
   const isAccountManager = !!user && (user.role === UserRole.ACCOUNT_MANAGER);
   const isFreelancer = !!user && (user.role === UserRole.FREELANCER);
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
 
   const value = {
     user,

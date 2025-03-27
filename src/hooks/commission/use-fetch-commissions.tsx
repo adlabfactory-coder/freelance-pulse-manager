@@ -16,7 +16,6 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
   const isSuperAdmin = role === UserRole.SUPER_ADMIN;
   const hasAdminAccess = isAdmin || isSuperAdmin;
   
-  // Utiliser useRef pour suivre si les données ont déjà été chargées
   const dataFetchedRef = useRef(false);
 
   const fetchCommissions = useCallback(async () => {
@@ -30,7 +29,6 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
       setLoading(true);
       setError(null);
       
-      // Vérifier d'abord la connexion Supabase
       try {
         const { data, error } = await supabase.from('commissions').select('count', { count: 'exact', head: true });
         if (error) {
@@ -41,7 +39,6 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
         throw new Error("Impossible de se connecter à la base de données");
       }
       
-      // Utiliser le rôle pour le fetch, les super admins doivent obtenir l'accès complet
       const effectiveRole = role === UserRole.SUPER_ADMIN ? UserRole.ADMIN : role;
       const data = await commissionsService.fetchCommissions(user.id, effectiveRole || UserRole.FREELANCER);
       setCommissions(data);
@@ -49,7 +46,6 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
       console.error("Erreur lors du chargement des commissions:", error);
       setError("Impossible de récupérer les commissions. Veuillez réessayer plus tard.");
       
-      // Simuler des données pour l'interface utilisateur en cas d'erreur
       if (isFreelancer) {
         setCommissions([
           {
@@ -61,7 +57,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             periodStart: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
             periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
             status: "pending" as any,
-            paymentRequested: false,
+            payment_requested: false,
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           }
         ]);
@@ -76,7 +72,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             periodStart: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
             periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
             status: "pending" as any,
-            paymentRequested: true,
+            payment_requested: true,
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           },
           {
@@ -89,7 +85,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             periodEnd: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0),
             status: "paid" as any,
             paidDate: new Date(),
-            paymentRequested: true,
+            payment_requested: true,
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           }
         ]);
@@ -100,7 +96,6 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
   }, [user, role, commissionsService, isFreelancer, hasAdminAccess]);
 
   useEffect(() => {
-    // Chargement unique des données seulement
     if (!dataFetchedRef.current) {
       dataFetchedRef.current = true;
       fetchCommissions();

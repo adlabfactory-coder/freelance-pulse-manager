@@ -136,7 +136,7 @@ export const useCommissionRules = () => {
         maxContracts: dbRule.maxContracts ? parseInt(dbRule.maxContracts) : null,
         percentage: parseFloat(dbRule.percentage) || 0,
         // Prioritize unit_amount from DB or 0 as fallback
-        unitAmount: parseFloat(dbRule.unit_amount) || 500 // Valeur par défaut
+        unit_amount: parseFloat(dbRule.unit_amount) || 500 // Valeur par défaut
       };
     } catch (error) {
       console.error("Error mapping DB rule:", error, dbRule);
@@ -156,7 +156,7 @@ export const useCommissionRules = () => {
           minContracts: 1,
           maxContracts: 10,
           percentage: 0,
-          unitAmount: 500
+          unit_amount: 500
         };
       case CommissionTier.TIER_2:
         return {
@@ -165,7 +165,7 @@ export const useCommissionRules = () => {
           minContracts: 11,
           maxContracts: 20,
           percentage: 0,
-          unitAmount: 1000
+          unit_amount: 1000
         };
       case CommissionTier.TIER_3:
         return {
@@ -174,7 +174,7 @@ export const useCommissionRules = () => {
           minContracts: 21,
           maxContracts: 30,
           percentage: 0,
-          unitAmount: 1500
+          unit_amount: 1500
         };
       case CommissionTier.TIER_4:
         return {
@@ -182,7 +182,7 @@ export const useCommissionRules = () => {
           tier: CommissionTier.TIER_4,
           minContracts: 31,
           percentage: 0,
-          unitAmount: 2000
+          unit_amount: 2000
         };
       default:
         return {
@@ -191,7 +191,7 @@ export const useCommissionRules = () => {
           minContracts: 1,
           maxContracts: 10,
           percentage: 0,
-          unitAmount: 500
+          unit_amount: 500
         };
     }
   };

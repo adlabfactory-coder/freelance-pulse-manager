@@ -1,13 +1,7 @@
 
-import { User, UserRole } from './index';
+import { User, UserRole } from "@/types";
 
-export interface AuthState {
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-}
-
-export interface AuthContextType extends AuthState {
+export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -17,7 +11,15 @@ export interface AuthContextType extends AuthState {
   isSuperAdmin: boolean;
   isAccountManager: boolean;
   isAdminOrSuperAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
+  error: string | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
   logout: () => Promise<void>;
 }
