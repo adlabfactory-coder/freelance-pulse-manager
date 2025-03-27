@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useQuoteForm } from '../hooks/useQuoteForm';
 import QuoteFormSections from './QuoteFormSections';
 import { Quote, QuoteItem } from '@/types';
 import { Loader2 } from 'lucide-react';
+import { QuoteStatus } from '@/types/quote';
 
 interface QuoteFormProps {
   form: ReturnType<typeof useQuoteForm>;

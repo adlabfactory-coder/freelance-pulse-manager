@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Edit, Trash2, FileText, ArrowUpDown, Clock, CheckCircle, XCircle } from "lucide-react";
-import { Quote, QuoteStatus } from "@/types";
+import { Quote, QuoteStatus } from "@/types/quote";
 import { formatCurrency } from "@/utils/format";
 import { formatDistance } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -74,12 +74,13 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
     }
   };
 
-  const handleStatusChange = async (id: string, status: QuoteStatus) => {
+  const handleStatusChange = async (id: string, status: string) => {
     try {
-      await updateQuoteStatus(id, status);
+      const quoteStatus = status as QuoteStatus;
+      await updateQuoteStatus(id, quoteStatus);
       toast({
         title: "Succès",
-        description: `Le statut du devis a été mis à jour: ${getStatusLabel(status)}`,
+        description: `Le statut du devis a été mis à jour: ${getStatusLabel(quoteStatus)}`,
       });
       onStatusChange();
     } catch (error) {

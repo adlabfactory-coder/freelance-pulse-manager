@@ -1,8 +1,10 @@
+
 import { useState, useCallback } from "react";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
-import { Quote, QuoteItem } from "@/types";
+import { QuoteItem, QuoteStatus } from "@/types/quote";
+import { Quote } from "@/types/quote";
 import { validateQuoteForm } from "./utils/quoteCalculations";
 
 const quotesService = createQuotesService(supabase);
@@ -60,7 +62,7 @@ export const useQuoteSubmission = ({
           serviceId: item.serviceId
         }));
       
-      const quoteDataWithFolder: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> = {
+      const quoteDataWithFolder = {
         contactId: quoteData.contactId,
         freelancerId: quoteData.freelancerId,
         totalAmount: quoteData.totalAmount,
@@ -68,11 +70,10 @@ export const useQuoteSubmission = ({
         status: quoteData.status,
         notes: quoteData.notes || null,
         folder: quoteData.folder || 'general',
-        items: quoteData.items || []
       };
       
       const newQuote = await quotesService.createQuote(
-        quoteDataWithFolder,
+        quoteDataWithFolder as Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>,
         itemsToCreate
       );
       
@@ -160,14 +161,17 @@ export const useQuoteSubmission = ({
         .filter(item => item.toDelete && item.id)
         .map(item => item.id as string);
       
-      const quoteDataWithFolder = {
+      // Assurez-vous que status est de type QuoteStatus
+      const processedQuoteData = {
         ...quoteData,
-        folder: quoteData.folder || 'general'
+        folder: quoteData.folder || 'general',
+        // Convertir explicitement status en QuoteStatus s'il existe
+        status: quoteData.status ? quoteData.status as QuoteStatus : undefined
       };
       
       const updatedQuote = await quotesService.updateQuote(
         id,
-        quoteDataWithFolder,
+        processedQuoteData,
         {
           add: itemsToAdd,
           update: itemsToUpdate,

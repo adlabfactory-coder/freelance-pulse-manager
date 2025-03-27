@@ -1,5 +1,6 @@
+
 import { useState, useCallback, useEffect } from "react";
-import { Quote, QuoteStatus } from "@/types";
+import { Quote, QuoteStatus } from "@/types/quote";
 import { useQuoteDataLoader } from "./useQuoteDataLoader";
 import { useQuoteItems } from "./useQuoteItems";
 import { useQuoteSubmission } from "./useQuoteSubmission";
@@ -131,7 +132,7 @@ export const useQuoteForm = ({
     if (data.contactId) setContactId(data.contactId);
     if (data.freelancerId) setFreelancerId(data.freelancerId);
     if (data.validUntil) setValidUntil(convertToDate(data.validUntil));
-    if (data.status) setStatus(data.status);
+    if (data.status) setStatus(data.status as QuoteStatus);
     if (data.notes !== undefined) setNotes(data.notes);
     if (data.folder) setFolder(data.folder);
     if (data.items) resetItems(data.items);
