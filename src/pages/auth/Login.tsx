@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,11 +19,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Define form schema
 const formSchema = z.object({
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
   password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  rememberMe: z.boolean().optional().default(false)
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -31,15 +33,19 @@ type FormData = z.infer<typeof formSchema>;
 const LoginPage: React.FC = () => {
   const { signIn, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // État pour stocker la page d'origine
+  const from = location.state?.from?.pathname || "/dashboard";
+
   // Rediriger si déjà authentifié
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated) {
-      navigate("/dashboard");
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   // Initialize form
   const form = useForm<FormData>({
@@ -47,6 +53,7 @@ const LoginPage: React.FC = () => {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false
     },
   });
 
@@ -63,12 +70,19 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Configurer les options de persistance en fonction de "Se souvenir de moi"
+      if (data.rememberMe) {
+        localStorage.setItem('auth_persistence', 'true');
+      } else {
+        localStorage.removeItem('auth_persistence');
+      }
+
       // Call the signIn function from auth context
       const result = await signIn(data.email, data.password);
       
       if (result.success) {
         toast.success("Connexion réussie");
-        navigate("/dashboard");
+        navigate(from, { replace: true });
       } else {
         setError(result.error || "Identifiants invalides");
       }
@@ -135,6 +149,25 @@ const LoginPage: React.FC = () => {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Rester connecté
+                      </FormLabel>
+                    </div>
                   </FormItem>
                 )}
               />

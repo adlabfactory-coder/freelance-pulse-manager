@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase-client";
@@ -231,7 +232,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isFreelancer = !!user && (user.role === UserRole.FREELANCER);
   const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
