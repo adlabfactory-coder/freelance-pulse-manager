@@ -67,7 +67,8 @@ const UserForm: React.FC<UserFormProps> = ({
           id: user.id,
           name,
           email,
-          role
+          role,
+          schedule_enabled: false // Remplacé calendly_enabled par schedule_enabled
         });
       } else {
         // Create new user
@@ -76,7 +77,7 @@ const UserForm: React.FC<UserFormProps> = ({
           email,
           role,
           avatar: null,
-          calendly_enabled: false
+          schedule_enabled: false // Remplacé calendly_enabled par schedule_enabled
         });
       }
 
@@ -93,7 +94,7 @@ const UserForm: React.FC<UserFormProps> = ({
             email,
             role,
             avatar: null,
-            calendly_enabled: false
+            schedule_enabled: false // Remplacé calendly_enabled par schedule_enabled
           });
         }
       } else {
