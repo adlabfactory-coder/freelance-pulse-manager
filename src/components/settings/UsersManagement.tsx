@@ -35,6 +35,11 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
     fetchUsersData();
   };
 
+  // Ensure this function returns a Promise<void> to match the expected type
+  const handleUserUpdated = async (): Promise<void> => {
+    return fetchUsersData();
+  };
+
   // Vérification des permissions administratives
   if (!isAdminOrSuperAdmin) {
     return (
@@ -71,10 +76,7 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
             selectedUserId={selectedUserId}
             currentUserRole={currentUserRole as UserRole}
             onUserClick={handleUserClick}
-            onUserUpdated={async () => {
-              await Promise.resolve();
-              handleRetry();
-            }}
+            onUserUpdated={handleUserUpdated}
           />
         )}
       </CardContent>
