@@ -85,7 +85,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
     if (checked && !isEditing) {
       setIsAutoAssigning(true);
       try {
-        const nextManager = await accountManagerService.getNextAccountManager();
+        const nextManager = await accountManagerService.getNextAvailableAccountManager();
         
         if (nextManager) {
           form.setValue('assignedTo', nextManager.id);

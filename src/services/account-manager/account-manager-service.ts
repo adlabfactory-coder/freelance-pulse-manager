@@ -68,6 +68,11 @@ class AccountManagerService {
       return null;
     }
   }
+
+  // Méthode alias pour maintenir la compatibilité avec le code existant
+  async getNextAccountManager(): Promise<User | null> {
+    return this.getNextAvailableAccountManager();
+  }
 }
 
 export const accountManagerService = new AccountManagerService();

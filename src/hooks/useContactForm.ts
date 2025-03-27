@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useForm } from "react-hook-form";
@@ -54,7 +53,7 @@ export const useContactForm = ({
       
       // Si le mode d'attribution automatique est activé et qu'aucun chargé n'est assigné
       if (useAutoAssign && !data.assignedTo && !isEditing) {
-        const nextManager = await accountManagerService.getNextAccountManager();
+        const nextManager = await accountManagerService.getNextAvailableAccountManager();
         if (nextManager) {
           data.assignedTo = nextManager.id;
         } else {

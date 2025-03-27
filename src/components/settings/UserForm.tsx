@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +13,11 @@ interface UserFormProps {
   onSuccess?: (user: User) => void;
   onCancel?: () => void;
   defaultRole?: UserRole;
+}
+
+interface UserCreateInput extends Omit<User, "id"> {
+  password?: string;
+  schedule_enabled?: boolean;
 }
 
 export const UserForm: React.FC<UserFormProps> = ({
@@ -37,7 +41,6 @@ export const UserForm: React.FC<UserFormProps> = ({
       setEmail(user.email || '');
       setRole(user.role || defaultRole);
     } else {
-      // Réinitialiser les champs si on crée un nouvel utilisateur
       setName('');
       setEmail('');
       setRole(defaultRole);
@@ -48,7 +51,6 @@ export const UserForm: React.FC<UserFormProps> = ({
   }, [user, defaultRole]);
 
   const generateRandomPassword = () => {
-    // Générer un mot de passe aléatoire sécurisé
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
     const passwordLength = 12;
     let randomPassword = '';
@@ -70,7 +72,6 @@ export const UserForm: React.FC<UserFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Validation de base
       if (!name.trim()) {
         toast("Le nom est requis.");
         setIsSubmitting(false);
@@ -89,17 +90,14 @@ export const UserForm: React.FC<UserFormProps> = ({
         return;
       }
 
-      // Générer un mot de passe si l'option est activée
       let finalPassword = password;
       if (!user && generatePassword) {
         finalPassword = generateRandomPassword();
       }
 
-      // Update existing user or create new one
       let result;
       
       if (user?.id) {
-        // Update existing user
         result = await supabase.updateUser({
           id: user.id,
           name,
@@ -124,22 +122,23 @@ export const UserForm: React.FC<UserFormProps> = ({
           toast.error(`Impossible de mettre à jour l'utilisateur.`);
         }
       } else {
-        // Create new user
-        result = await supabase.createUser({
+        const userInput: UserCreateInput = {
           name,
           email,
           role,
           avatar: null,
           schedule_enabled: false,
           password: finalPassword
-        });
+        };
+        
+        result = await supabase.createUser(userInput);
         
         if (result && result.success) {
           toast.success(`L'utilisateur ${name} a été créé avec succès.`);
           
           if (generatePassword) {
             toast.info(`Mot de passe généré: ${finalPassword}`, {
-              duration: 10000, // Afficher plus longtemps pour que l'admin puisse le copier
+              duration: 10000,
             });
           }
           

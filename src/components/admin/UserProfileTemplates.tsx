@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
   CardContent, 
   CardDescription, 
-  CardFooter, 
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
@@ -17,7 +15,7 @@ import {
 } from '@/components/ui/tabs';
 import { UserForm } from '@/components/settings/UserForm';
 import { User, UserRole } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { UserPlus, ChevronRight } from 'lucide-react';
 
 interface Template {
@@ -32,7 +30,6 @@ const UserProfileTemplates = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Templates pré-définis pour les différents types d'utilisateurs
   const templates: Template[] = [
     {
       id: '1',
@@ -126,7 +123,6 @@ const UserProfileTemplates = () => {
   );
 };
 
-// Constantes pour l'affichage lisible des rôles
 const USER_ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.SUPER_ADMIN]: "Super Administrateur",
   [UserRole.ADMIN]: "Administrateur",
