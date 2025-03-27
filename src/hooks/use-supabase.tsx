@@ -8,7 +8,7 @@ export {
   useDatabaseStatus
 } from './supabase';
 
-// Export the provider and hook for backward compatibility
+// Export the provider and hook directly (avoid duplicate exports)
 export { SupabaseProvider, useSupabase } from './supabase/supabase-provider';
 
 // Export types

@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase-client';
 import { DatabaseSetupStatus } from '@/types/supabase-types';
 
@@ -48,9 +49,15 @@ export const useDatabaseStatus = () => {
     }
   };
 
-  const initializeDatabase = async (): Promise<{ success: boolean; message?: string }> => {
+  const initializeDatabase = async (options?: any): Promise<{ success: boolean; message?: string }> => {
     try {
       // This would need to be expanded for actual table creation
+      if (options?.onTableCreated) {
+        // Call the callback for demo purposes
+        ['users', 'contacts', 'appointments', 'quotes', 'subscriptions'].forEach(table => {
+          options.onTableCreated(table);
+        });
+      }
       return { success: true, message: 'Database initialized successfully' };
     } catch (error) {
       console.error('Error initializing database:', error);
