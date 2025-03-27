@@ -1,5 +1,4 @@
 
-export { useSupabase, SupabaseProvider } from './supabase-provider';
 export { useSupabaseContext, SupabaseContextProvider } from './supabase-context';
 export { useAuthOperations } from './use-auth-operations';
 export { useUserOperations } from './use-user-operations';
