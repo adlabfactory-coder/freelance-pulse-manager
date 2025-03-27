@@ -38,8 +38,8 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: appointmentData.status || 'scheduled',
-        contact_id: appointmentData.contact_id,
-        freelancer_id: appointmentData.freelancer_id,
+        contactId: appointmentData.contact_id,  // Conversion du nom pour la DB
+        freelancerid: appointmentData.freelancer_id,  // Conversion du nom pour la DB
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'
@@ -80,11 +80,11 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: 'pending',  // Toujours en attente
-        contact_id: appointmentData.contact_id,
+        contactId: appointmentData.contact_id,  // Conversion du nom pour la DB
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general',
-        current_user_id: appointmentData.current_user_id || null
+        currentUserId: appointmentData.current_user_id || null  // Conversion du nom pour la DB
       }
     });
     

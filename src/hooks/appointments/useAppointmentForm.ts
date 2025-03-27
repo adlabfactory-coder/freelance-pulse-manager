@@ -18,6 +18,22 @@ export const APPOINTMENT_TITLE_OPTIONS = [
 
 export type AppointmentTitleOption = "consultation-initiale" | "session-suivi" | "demo-produit" | "revision-contrat" | "autre" | "";
 
+// Interface pour les données du formulaire d'appointement
+interface AppointmentFormInput {
+  title: string;
+  description?: string;
+  date: string;
+  duration: number;
+  status: AppointmentStatus;
+  // Les champs suivants seront convertis lors de l'envoi
+  contactId: string;
+  freelancerId?: string;
+  location?: string | null;
+  notes?: string | null;
+  folder?: string;
+  currentUserId?: string;
+}
+
 export const useAppointmentForm = (
   initialDate?: Date,
   onSuccess?: () => void,
@@ -132,20 +148,19 @@ export const useAppointmentForm = (
         toast.info("Aucun freelancer disponible, le rendez-vous sera auto-assigné");
       }
       
-      // Créer l'objet de rendez-vous à envoyer
+      // Créer l'objet de rendez-vous à envoyer avec la bonne structure pour l'API
       const appointmentData = {
         title,
         description,
         date: appointmentDate,
         duration,
         status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId, // Correction : Changé de contactId à contact_id pour correspondre au schéma de la base de données
-        // Assurer que freelancerId est toujours présent, même en mode auto-assigné
-        freelancer_id: freelancerId || '', // Correction : Changé de freelancerId à freelancer_id pour correspondre au schéma
+        contact_id: contactId, // Utilisez contact_id pour correspondre à l'API
+        freelancer_id: freelancerId || undefined, // Utilisez freelancer_id pour correspondre à l'API
         location: null,
         notes: null,
         folder: folder,
-        current_user_id: user?.id // Changé de currentUserId à current_user_id pour correspondre au schéma
+        current_user_id: user?.id // Utilisez current_user_id pour correspondre à l'API
       };
       
       console.log("useAppointmentForm: Soumission des données de rendez-vous:", appointmentData);
