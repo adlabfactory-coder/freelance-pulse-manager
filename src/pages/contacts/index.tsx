@@ -10,6 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Trash2, Archive } from "lucide-react";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
+import ArchivedContactsTable from "@/components/contacts/ArchivedContactsTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ContactsPage: React.FC = () => {
   const { 
@@ -28,6 +30,7 @@ const ContactsPage: React.FC = () => {
   
   const { role, isAdminOrSuperAdmin } = useAuth();
   const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("active");
 
   // Message de déboggage
   console.log("État actuel de la page contacts:", { 
@@ -37,7 +40,8 @@ const ContactsPage: React.FC = () => {
     error,
     role,
     isAdmin: isAdminOrSuperAdmin,
-    includeTrash
+    includeTrash,
+    activeTab
   });
 
   // Afficher un message d'erreur si nécessaire
@@ -57,27 +61,16 @@ const ContactsPage: React.FC = () => {
     );
   }
 
+  const handleContactsChange = () => {
+    fetchContacts(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
         <div className="flex items-center gap-2">
-          {isAdminOrSuperAdmin && (
-            <Button onClick={toggleTrashContacts} variant="outline" size="sm">
-              {includeTrash ? (
-                <>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Masquer archivés
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Afficher archivés
-                </>
-              )}
-            </Button>
-          )}
-          <Button onClick={() => fetchContacts(includeTrash)} variant="outline" size="sm" disabled={loading}>
+          <Button onClick={() => fetchContacts(true)} variant="outline" size="sm" disabled={loading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualiser
           </Button>
@@ -88,20 +81,47 @@ const ContactsPage: React.FC = () => {
       </div>
       
       {isAdminOrSuperAdmin ? (
-        // Vue admin avec toutes les fonctionnalités
-        <AdminContactsView 
-          contacts={filteredContacts}
-          loading={loading}
-          searchTerm={searchTerm}
-          statusFilter={statusFilter}
-          onSearch={handleSearch}
-          onStatusFilterChange={handleFilterByStatus}
-          onImportComplete={() => fetchContacts(includeTrash)}
-        />
+        // Vue admin avec onglets pour contacts actifs et archivés
+        <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="active">Contacts actifs</TabsTrigger>
+            <TabsTrigger value="archived">Archives</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="active">
+            <AdminContactsView 
+              contacts={filteredContacts.filter(contact => contact.folder !== 'trash')}
+              loading={loading}
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+              onSearch={handleSearch}
+              onStatusFilterChange={handleFilterByStatus}
+              onImportComplete={() => fetchContacts(includeTrash)}
+            />
+            
+            {contacts.filter(contact => contact.folder !== 'trash').length === 0 && !loading && (
+              <Alert>
+                <AlertTitle>Aucun contact actif trouvé</AlertTitle>
+                <AlertDescription>
+                  Aucun contact actif n'a été trouvé dans la base de données. 
+                  Utilisez le bouton d'importation ou ajoutez des contacts manuellement.
+                </AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="archived">
+            <ArchivedContactsTable 
+              contacts={contacts}
+              loading={loading}
+              onContactsChange={handleContactsChange}
+            />
+          </TabsContent>
+        </Tabs>
       ) : role === UserRole.ACCOUNT_MANAGER ? (
         // Vue account manager avec accès limité
         <AccountManagerContactsView 
-          contacts={filteredContacts}
+          contacts={filteredContacts.filter(contact => contact.folder !== 'trash')}
           loading={loading}
           searchTerm={searchTerm}
           statusFilter={statusFilter}
@@ -111,16 +131,17 @@ const ContactsPage: React.FC = () => {
       ) : (
         // Vue freelancer avec accès limité
         <FreelancerContactsList 
-          contacts={contacts}
+          contacts={contacts.filter(contact => contact.folder !== 'trash')}
           loading={loading}
         />
       )}
 
-      {contacts.length === 0 && !loading && (
+      {contacts.filter(contact => contact.folder !== 'trash' && activeTab === 'active').length === 0 && 
+        !loading && activeTab === 'active' && (
         <Alert>
           <AlertTitle>Aucun contact trouvé</AlertTitle>
           <AlertDescription>
-            Aucun contact n'a été trouvé dans la base de données{includeTrash ? ' (même dans la corbeille)' : ''}. 
+            Aucun contact actif n'a été trouvé dans la base de données. 
             Utilisez le bouton d'importation ou ajoutez des contacts manuellement.
           </AlertDescription>
         </Alert>

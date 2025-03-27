@@ -84,7 +84,6 @@ export const contactOperationsService = {
         .from('contacts')
         .select('*')
         .eq('id', contactId)
-        .is('deleted_at', null)
         .single();
       
       if (error) {
@@ -104,7 +103,7 @@ export const contactOperationsService = {
         .from('contacts')
         .select('*')
         .eq('assignedTo', freelancerId)
-        .is('deleted_at', null)
+        .not('folder', 'eq', 'trash')
         .order('createdAt', { ascending: false });
       
       if (error) {
@@ -176,6 +175,65 @@ export const contactOperationsService = {
       
       toast.error("Erreur", {
         description: `Impossible de supprimer le contact: ${error.message}`,
+      });
+      
+      return false;
+    }
+  },
+
+  async restoreContact(contactId: string): Promise<boolean> {
+    try {
+      // Restaurer le contact en le déplaçant du dossier 'trash' vers 'general'
+      const { error } = await supabase
+        .from('contacts')
+        .update({ 
+          folder: 'general',
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', contactId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Contact restauré", {
+        description: "Le contact a été restauré avec succès.",
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error(`Erreur lors de la restauration du contact ${contactId}:`, error);
+      
+      toast.error("Erreur", {
+        description: `Impossible de restaurer le contact: ${error.message}`,
+      });
+      
+      return false;
+    }
+  },
+
+  async permanentlyDeleteContact(contactId: string): Promise<boolean> {
+    try {
+      // Supprimer définitivement le contact de la base de données
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', contactId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Contact supprimé définitivement", {
+        description: "Le contact a été supprimé définitivement de la base de données.",
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error(`Erreur lors de la suppression définitive du contact ${contactId}:`, error);
+      
+      toast.error("Erreur", {
+        description: `Impossible de supprimer définitivement le contact: ${error.message}`,
       });
       
       return false;

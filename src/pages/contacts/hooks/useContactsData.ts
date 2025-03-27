@@ -14,9 +14,9 @@ export function useContactsData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
-  const [includeTrash, setIncludeTrash] = useState(false);
+  const [includeTrash, setIncludeTrash] = useState(true);
   
-  const fetchContacts = useCallback(async (showTrash: boolean = false) => {
+  const fetchContacts = useCallback(async (showTrash: boolean = true) => {
     if (!user) {
       setLoading(false);
       return;
@@ -62,11 +62,6 @@ export function useContactsData() {
       return false;
     }
     
-    // Filtrer les contacts dans le dossier trash si includeTrash est false
-    if (!includeTrash && contact.folder === 'trash') {
-      return false;
-    }
-    
     return true;
   });
 
@@ -80,12 +75,12 @@ export function useContactsData() {
   
   const toggleTrashContacts = useCallback(() => {
     setIncludeTrash(prevState => !prevState);
-    console.log("Toggling trash contacts, new value will be:", !includeTrash);
+    console.log("Basculer l'affichage des contacts archivés, nouvelle valeur sera:", !includeTrash);
   }, [includeTrash]);
   
   useEffect(() => {
     if (user) {
-      console.log("Fetching contacts with includeTrash:", includeTrash);
+      console.log("Chargement des contacts avec includeTrash:", includeTrash);
       fetchContacts(includeTrash);
     }
   }, [user, fetchContacts, includeTrash]);

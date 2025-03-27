@@ -1,3 +1,4 @@
+
 import { contactOperationsService } from './contact-operations';
 import { contactCreateUpdateService } from './contact-create-update';
 import { contactExcelService } from './contact-excel';
@@ -25,9 +26,19 @@ export const contactService = {
     return contactOperationsService.updateContact(contactId, contactData);
   },
 
-  // Suppression d'un contact
+  // Suppression d'un contact (déplace vers trash)
   async deleteContact(contactId: string): Promise<boolean> {
     return contactOperationsService.deleteContact(contactId);
+  },
+
+  // Restauration d'un contact depuis trash
+  async restoreContact(contactId: string): Promise<boolean> {
+    return contactOperationsService.restoreContact(contactId);
+  },
+
+  // Suppression définitive d'un contact
+  async permanentlyDeleteContact(contactId: string): Promise<boolean> {
+    return contactOperationsService.permanentlyDeleteContact(contactId);
   },
 
   // Création d'un contact
