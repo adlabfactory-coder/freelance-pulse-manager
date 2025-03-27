@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { User } from '@/types';
@@ -68,9 +67,24 @@ export const useAdminUsers = () => {
     setSelectedUser(newUser);
   };
 
-  const handleUpdateSuccess = (updatedUser: User) => {
-    setUsers(prev => prev.map(user => user.id === updatedUser.id ? updatedUser : user));
-    setSelectedUser(updatedUser);
+  const handleUpdateSuccess = async (updatedUser: User): Promise<void> => {
+    try {
+      // Update the user in the state
+      setUsers(prev => prev.map(user => 
+        user.id === updatedUser.id ? updatedUser : user
+      ));
+      
+      if (selectedUser && selectedUser.id === updatedUser.id) {
+        setSelectedUser(updatedUser);
+      }
+
+      toast.success("Utilisateur mis à jour avec succès");
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
+      toast.error("Une erreur est survenue lors de la mise à jour");
+      return Promise.reject(error);
+    }
   };
 
   const handleUpdateUser = async (userData: Partial<User>) => {
