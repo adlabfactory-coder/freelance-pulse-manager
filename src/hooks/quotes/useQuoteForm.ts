@@ -123,7 +123,22 @@ export const useQuoteForm = ({
   const handleSubmitEditWrapper = useCallback((id: string) => {
     console.log("Handling edit submit for ID:", id);
     const data = getQuoteData();
-    return handleSubmitEdit(id, data, allItems);
+    
+    // Convert allItems to QuoteItem[] by ensuring required properties
+    const validQuoteItems = allItems
+      .filter(item => !item.toDelete)
+      .map(item => ({
+        id: item.id || '',
+        quoteId: item.quoteId || '',
+        description: item.description || '',
+        quantity: item.quantity || 0,
+        unitPrice: item.unitPrice || 0,
+        tax: item.tax,
+        discount: item.discount,
+        serviceId: item.serviceId
+      }));
+    
+    return handleSubmitEdit(id, data, validQuoteItems);
   }, [getQuoteData, handleSubmitEdit, allItems]);
 
   return {

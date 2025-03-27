@@ -15,7 +15,7 @@ export const useQuoteSubmission = ({
   onError 
 }: UseQuoteSubmissionProps = {}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isQuoteSaved, setIsQuoteSaved] = useState(false); // Added missing state
+  const [isQuoteSaved, setIsQuoteSaved] = useState(false); 
   const { user } = useAuth();
   
   const submitQuote = useCallback(async (
