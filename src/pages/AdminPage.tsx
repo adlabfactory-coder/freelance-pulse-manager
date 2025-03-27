@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { User, UserRole } from '@/types';
-import { useSupabase } from '@/hooks/use-supabase';
+import { useUserOperations } from '@/hooks/supabase/use-user-operations';
 import UserForm from '@/components/settings/UserForm';
 import UserProfile from '@/components/settings/UserProfile';
+import { checkSupabaseConnection } from '@/lib/supabase-client';
 
 const AdminPage: React.FC = () => {
-  const supabase = useSupabase();
+  const userOperations = useUserOperations();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -16,47 +16,46 @@ const AdminPage: React.FC = () => {
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
 
   useEffect(() => {
-    const checkSupabaseConnection = async () => {
+    const checkConnection = async () => {
       try {
-        const status = await supabase.checkSupabaseStatus();
-        setIsSupabaseConnected(status.success);
+        const connected = await checkSupabaseConnection();
+        setIsSupabaseConnected(connected);
       } catch (error) {
         console.error('Error checking Supabase connection:', error);
         setIsSupabaseConnected(false);
       }
     };
 
-    checkSupabaseConnection();
-  }, [supabase]);
+    checkConnection();
+  }, []);
 
   useEffect(() => {
     const loadUsers = async () => {
       setLoading(true);
       try {
         if (isSupabaseConnected) {
-          const fetchedUsers = await supabase.fetchUsers();
+          const fetchedUsers = await userOperations.fetchUsers();
           setUsers(fetchedUsers);
         } else {
           // Fall back to mock data if Supabase is not connected
-          setUsers(supabase.getMockUsers());
+          setUsers(userOperations.getMockUsers());
         }
       } catch (error) {
         console.error('Error loading users:', error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les utilisateurs."
+        toast("Impossible de charger les utilisateurs.", {
+          description: "Une erreur est survenue lors du chargement des utilisateurs.",
+          variant: "destructive"
         });
         
         // Fall back to mock data in case of error
-        setUsers(supabase.getMockUsers());
+        setUsers(userOperations.getMockUsers());
       } finally {
         setLoading(false);
       }
     };
 
     loadUsers();
-  }, [supabase, isSupabaseConnected]);
+  }, [userOperations, isSupabaseConnected]);
 
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
@@ -83,7 +82,7 @@ const AdminPage: React.FC = () => {
     if (!userData.id) return false;
     
     try {
-      const result = await supabase.updateUser(userData);
+      const result = await userOperations.updateUser(userData);
       
       if (result) {
         // Update the user in the local state
@@ -128,7 +127,7 @@ const AdminPage: React.FC = () => {
     }
     
     try {
-      const success = await supabase.deleteUser(userId);
+      const success = await userOperations.deleteUser(userId);
       
       if (success) {
         setUsers(prev => prev.filter(user => user.id !== userId));

@@ -5,6 +5,7 @@ import { Contact } from "@/services/contacts/types";
 import { ContactStatus } from "@/types/database/enums";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase-client";
+import { toast } from "sonner";
 
 export function useContactsData() {
   const { user, role } = useAuth();
@@ -12,23 +13,35 @@ export function useContactsData() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
-  const [loadAttempt, setLoadAttempt] = useState(0);
   
   const fetchContacts = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
-    const data = await contactService.getContacts(user.id, role);
-    setContacts(data);
-    setLoading(false);
+    try {
+      console.log("Récupération des contacts avec:", { userId: user.id, role });
+      const data = await contactService.getContacts(user.id, role);
+      console.log("Contacts récupérés:", data.length);
+      setContacts(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des contacts:", error);
+      toast.error("Impossible de charger les contacts");
+    } finally {
+      setLoading(false);
+    }
   }, [user, role]);
   
   // Filtrage des contacts
   const filteredContacts = contacts.filter(contact => {
+    // Filtrer par terme de recherche
     if (searchTerm && !contact.name.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     
+    // Filtrer par statut
     if (statusFilter && contact.status !== statusFilter) {
       return false;
     }
@@ -45,26 +58,32 @@ export function useContactsData() {
   }, []);
   
   useEffect(() => {
-    if (user && loadAttempt === 0) {
+    if (user) {
       fetchContacts();
-      setLoadAttempt(1);
     }
-  }, [user, loadAttempt, fetchContacts]);
+  }, [user, fetchContacts]);
 
   // Écouteur en temps réel
   useEffect(() => {
+    if (!user) return;
+    
+    console.log("Configuration de l'écouteur Supabase pour contacts");
     const channel = supabase
       .channel('public:contacts')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'contacts' }, 
-        () => fetchContacts()
+        () => {
+          console.log("Changement détecté dans la table contacts");
+          fetchContacts();
+        }
       )
       .subscribe();
       
     return () => {
+      console.log("Nettoyage de l'écouteur Supabase pour contacts");
       supabase.removeChannel(channel);
     };
-  }, [fetchContacts]);
+  }, [user, fetchContacts]);
 
   return {
     contacts,

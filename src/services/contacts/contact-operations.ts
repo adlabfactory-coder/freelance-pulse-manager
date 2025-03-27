@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase-client';
 import { Contact } from './types';
 import { toast } from 'sonner';
@@ -6,6 +5,8 @@ import { toast } from 'sonner';
 export const contactOperationsService = {
   async getContacts(userId?: string, userRole?: string): Promise<Contact[]> {
     try {
+      console.log("🔄 Récupération des contacts...", { userId, userRole });
+      
       let query = supabase
         .from('contacts')
         .select('*')
@@ -13,18 +14,21 @@ export const contactOperationsService = {
         .order('createdAt', { ascending: false });
       
       if (userRole === 'freelancer' && userId) {
+        console.log("Filtrage des contacts pour le freelancer:", userId);
         query = query.eq('assignedTo', userId);
       }
       
       const { data, error } = await query;
       
       if (error) {
+        console.error("Erreur Supabase:", error);
         throw error;
       }
       
+      console.log(`✅ ${data?.length || 0} contacts récupérés`);
       return data || [];
     } catch (error) {
-      console.error('Erreur lors de la récupération des contacts:', error);
+      console.error('❌ Erreur lors de la récupération des contacts:', error);
       return [];
     }
   },
