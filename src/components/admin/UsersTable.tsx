@@ -54,7 +54,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
         {selectedUser ? (
           <UserProfile 
             user={selectedUser} 
-            onUpdate={(updatedUser) => onUpdateSuccess(updatedUser)}
+            onUpdate={async (updatedUser) => await onUpdateSuccess(updatedUser)}
             onDelete={() => onDelete(selectedUser.id)}
             canDelete={selectedUser.role !== UserRole.SUPER_ADMIN}
           />
