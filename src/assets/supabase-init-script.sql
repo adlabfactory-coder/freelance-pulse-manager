@@ -12,9 +12,10 @@ CREATE TABLE IF NOT EXISTS public.users (
   email TEXT UNIQUE NOT NULL,
   role TEXT NOT NULL,
   avatar TEXT,
-  calendly_url TEXT,
-  calendly_sync_email TEXT,
-  calendly_enabled BOOLEAN DEFAULT FALSE
+  schedule_enabled BOOLEAN DEFAULT FALSE,
+  daily_availability JSONB,
+  weekly_availability JSONB,
+  supervisor_id UUID
 );
 
 -- Création de la table contacts
@@ -127,10 +128,10 @@ END;
 $$;
 
 -- Insertion de données de démonstration pour les utilisateurs
-INSERT INTO public.users (name, email, role, calendly_url, calendly_enabled, calendly_sync_email)
+INSERT INTO public.users (name, email, role, schedule_enabled)
 VALUES 
-  ('Admin Démo', 'admin@example.com', 'admin', 'https://calendly.com/admin-demo', true, 'admin@example.com'),
-  ('Commercial Démo', 'commercial@example.com', 'freelancer', 'https://calendly.com/commercial-demo', true, 'commercial@example.com'),
-  ('Client Démo', 'client@example.com', 'client', '', false, ''),
-  ('Freelance Démo', 'freelance@example.com', 'freelancer', 'https://calendly.com/freelance-demo', true, 'freelance@example.com')
+  ('Admin Démo', 'admin@example.com', 'admin', true),
+  ('Commercial Démo', 'commercial@example.com', 'freelancer', true),
+  ('Client Démo', 'client@example.com', 'client', false),
+  ('Freelance Démo', 'freelance@example.com', 'freelancer', true)
 ON CONFLICT (email) DO NOTHING;

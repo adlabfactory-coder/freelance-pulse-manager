@@ -26,7 +26,6 @@ const APPOINTMENT_TITLE_OPTIONS = [
 ];
 
 const SchedulePlanner: React.FC = () => {
-  const supabase = useSupabase();
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [titleOption, setTitleOption] = useState("consultation-initiale");
@@ -39,7 +38,7 @@ const SchedulePlanner: React.FC = () => {
   const [contacts, setContacts] = useState<{id: string, name: string}[]>([]);
 
   // Charger les contacts au chargement du composant
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchContacts = async () => {
       const { data, error } = await supabase
         .from('contacts')

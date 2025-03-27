@@ -8,9 +8,9 @@ export interface User {
   role: UserRole;
   avatar?: string | null;
   supervisor_id?: string | null;
-  calendly_enabled?: boolean;
-  calendly_url?: string;
-  calendly_sync_email?: string;
+  schedule_enabled?: boolean;
+  daily_availability?: Record<string, any> | null;
+  weekly_availability?: Record<string, any> | null;
 }
 
 export interface UserAuthData extends User {

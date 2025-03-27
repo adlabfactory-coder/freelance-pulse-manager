@@ -577,9 +577,6 @@ export type Database = {
       users: {
         Row: {
           avatar: string | null
-          calendly_enabled: boolean | null
-          calendly_sync_email: string | null
-          calendly_url: string | null
           email: string
           id: string
           name: string
@@ -587,9 +584,6 @@ export type Database = {
         }
         Insert: {
           avatar?: string | null
-          calendly_enabled?: boolean | null
-          calendly_sync_email?: string | null
-          calendly_url?: string | null
           email: string
           id?: string
           name: string
@@ -597,9 +591,6 @@ export type Database = {
         }
         Update: {
           avatar?: string | null
-          calendly_enabled?: boolean | null
-          calendly_sync_email?: string | null
-          calendly_url?: string | null
           email?: string
           id?: string
           name?: string
