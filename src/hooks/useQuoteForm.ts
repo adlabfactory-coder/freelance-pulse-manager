@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { createQuotesService } from "@/services/supabase/quotes";
@@ -10,22 +9,18 @@ import { Service } from "@/types/services";
 import { User } from "@/types";
 import { fetchServices } from "@/services/services-service";
 
-// Initialiser le service
 const quotesService = createQuotesService(supabase);
 
-// Function to calculate the total amount of a quote
 const calculateTotalAmount = (items: Partial<QuoteItem>[]) => {
   return items.reduce((total, item) => {
     if (!item.quantity || !item.unitPrice) return total;
     
     let itemTotal = item.quantity * item.unitPrice;
     
-    // Apply tax if present
     if (item.tax && item.tax > 0) {
       itemTotal += (itemTotal * item.tax) / 100;
     }
     
-    // Apply discount if present
     if (item.discount && item.discount > 0) {
       itemTotal -= (itemTotal * item.discount) / 100;
     }
@@ -49,7 +44,6 @@ export const useQuoteForm = ({
   isEditing = false,
   quoteId = ''
 }: UseQuoteFormProps = {}) => {
-  // State for form fields
   const [contactId, setContactId] = useState<string>("");
   const [freelancerId, setFreelancerId] = useState<string>("");
   const [validUntil, setValidUntil] = useState<Date>(
@@ -61,26 +55,22 @@ export const useQuoteForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSaved, setIsQuoteSaved] = useState(false);
   
-  // State for loading data
   const [loading, setLoading] = useState(true);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [freelancers, setFreelancers] = useState<User[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   
-  // Current item being added
   const [currentItem, setCurrentItem] = useState<Partial<QuoteItem>>({
     description: "",
     quantity: 1,
     unitPrice: 0,
-    tax: 20, // Default tax rate
+    tax: 20,
     discount: 0,
   });
   
-  // Load data (contacts, freelancers, services)
   const loadData = async () => {
     setLoading(true);
     try {
-      // Fetch contacts
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
@@ -92,7 +82,6 @@ export const useQuoteForm = ({
         setContacts(contactsData || []);
       }
       
-      // Fetch freelancers
       const { data: freelancersData, error: freelancersError } = await supabase
         .from('users')
         .select('*')
@@ -104,7 +93,6 @@ export const useQuoteForm = ({
         setFreelancers(freelancersData || []);
       }
       
-      // Fetch services
       const servicesData = await fetchServices();
       setServices(servicesData || []);
     } catch (error) {
@@ -115,7 +103,6 @@ export const useQuoteForm = ({
     }
   };
   
-  // Load quote data for editing
   const loadQuoteData = async (id: string) => {
     setLoading(true);
     try {
@@ -140,7 +127,6 @@ export const useQuoteForm = ({
     }
   };
   
-  // Form validation
   const isFormValid = () => {
     if (!contactId) {
       toast.error("Veuillez sélectionner un client pour ce devis");
@@ -182,7 +168,6 @@ export const useQuoteForm = ({
     return true;
   };
   
-  // Add a new item to the quote
   const handleAddItem = () => {
     if (!currentItem.description || !currentItem.quantity || !currentItem.unitPrice) {
       toast.error("Veuillez remplir tous les champs de l'article");
@@ -197,35 +182,29 @@ export const useQuoteForm = ({
       }
     ]);
     
-    // Reset current item
     setCurrentItem({
       description: "",
       quantity: 1,
       unitPrice: 0,
-      tax: 20, // Default tax rate
+      tax: 20,
       discount: 0,
     });
   };
   
-  // Remove an item from the quote
   const handleRemoveItem = (index: number) => {
     const newItems = [...items];
     
     if (newItems[index].id) {
-      // Mark existing items for deletion instead of removing them from the array
       newItems[index] = { ...newItems[index], toDelete: true };
       setItems(newItems);
     } else {
-      // Remove new items directly
       newItems.splice(index, 1);
       setItems(newItems);
     }
   };
   
-  // Calculate the total amount
   const totalAmount = calculateTotalAmount(items.filter(item => !item.toDelete));
   
-  // Get quote data for submit
   const getQuoteData = (): Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> => {
     return {
       contactId,
@@ -238,7 +217,6 @@ export const useQuoteForm = ({
     };
   };
   
-  // Submit the form to create a quote
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
@@ -247,7 +225,6 @@ export const useQuoteForm = ({
     setIsSubmitting(true);
     
     try {
-      // Create new quote
       console.log("Création d'un nouveau devis");
       
       const validItems = items
@@ -276,7 +253,6 @@ export const useQuoteForm = ({
     }
   };
   
-  // Handle editing a quote
   const handleSubmitEdit = async (id: string) => {
     if (!isFormValid()) return;
     
@@ -322,7 +298,6 @@ export const useQuoteForm = ({
     }
   };
   
-  // Prepare quote data for component
   const quoteData: Partial<Quote> = {
     contactId,
     freelancerId,
@@ -333,7 +308,6 @@ export const useQuoteForm = ({
     items: items.filter(item => !item.toDelete) as QuoteItem[]
   };
   
-  // Set quote data from outside
   const setQuoteData = (data: Partial<Quote>) => {
     if (data.contactId) setContactId(data.contactId);
     if (data.freelancerId) setFreelancerId(data.freelancerId);

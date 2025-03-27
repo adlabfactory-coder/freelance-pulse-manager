@@ -58,6 +58,11 @@ const Quotes: React.FC = () => {
   });
 
   const handleAddClick = () => setAddDialogOpen(true);
+  
+  const handleQuoteCreated = () => {
+    console.log("Devis créé, rechargement de la liste des devis");
+    loadQuotes();
+  };
 
   // Si c'est un freelancer qui n'est pas admin, afficher la vue freelancer
   if (isFreelancer && !isAdminOrSuperAdmin) {
@@ -70,7 +75,7 @@ const Quotes: React.FC = () => {
           <AddQuoteDialog 
             open={addDialogOpen} 
             onOpenChange={setAddDialogOpen} 
-            onQuoteCreated={() => {}} 
+            onQuoteCreated={handleQuoteCreated} 
           />
         </div>
       </TooltipProvider>
@@ -100,7 +105,7 @@ const Quotes: React.FC = () => {
         <AddQuoteDialog 
           open={addDialogOpen} 
           onOpenChange={setAddDialogOpen} 
-          onQuoteCreated={loadQuotes}
+          onQuoteCreated={handleQuoteCreated}
         />
       </div>
     </TooltipProvider>
