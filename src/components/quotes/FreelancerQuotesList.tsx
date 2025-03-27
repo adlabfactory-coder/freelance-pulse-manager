@@ -91,8 +91,7 @@ const FreelancerQuotesList: React.FC = () => {
     <div className="space-y-6">
       {Object.entries(quotesByClient).map(([contactId, clientQuotes]) => {
         // Obtenir le nom du client à partir du premier devis
-        const contactInfo = clientQuotes[0]?.contact || { name: `Client ${contactId}` };
-        const contactName = contactInfo.name || `Client ${contactId}`;
+        const contactName = `Client ${contactId}`;
         
         return (
           <Card key={contactId} className="overflow-hidden">
