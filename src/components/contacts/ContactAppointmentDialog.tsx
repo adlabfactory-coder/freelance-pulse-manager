@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const isFreelancer = user?.role === 'freelancer';
+  const isAccountManager = user?.role === 'account_manager';
 
   // Utiliser le hook de formulaire pour les rendez-vous avec données explicites
   const {
@@ -45,7 +46,8 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     duration,
     setDuration,
     isSubmitting,
-    handleSubmit
+    handleSubmit,
+    defaultFreelancer
   } = useAppointmentForm(
     open ? new Date() : undefined, // Réinitialiser la date à chaque ouverture du dialogue
     () => {
@@ -58,8 +60,15 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     !isFreelancer || autoAssign // Si l'utilisateur n'est pas freelancer, auto-assignation automatique
   );
 
+  // Utilisation pour le débogage
+  useEffect(() => {
+    if (defaultFreelancer) {
+      console.log("ContactAppointmentDialog - Freelancer par défaut assigné:", defaultFreelancer);
+    }
+  }, [defaultFreelancer]);
+
   // Définir le type initial lors de l'ouverture du dialogue
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && initialType) {
       setTitleOption(initialType as AppointmentTitleOption);
       
@@ -100,7 +109,9 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
           <DialogDescription>
             {isFreelancer 
               ? "Ce rendez-vous vous sera attribué directement" 
-              : "Ce rendez-vous sera assigné à un chargé de compte"}
+              : isAccountManager
+                ? "Vous pouvez planifier un rendez-vous qui sera assigné à un freelancer disponible"
+                : "Ce rendez-vous sera assigné à un freelancer disponible"}
           </DialogDescription>
         </DialogHeader>
         

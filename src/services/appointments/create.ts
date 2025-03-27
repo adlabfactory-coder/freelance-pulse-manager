@@ -61,7 +61,7 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
   }
 };
 
-// Créer un rendez-vous auto-assigné (sans freelancer)
+// Créer un rendez-vous auto-assigné (pour les account managers)
 export const createAutoAssignAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment | null> => {
   try {
     console.log("Création d'un rendez-vous auto-assigné avec les données:", appointmentData);
@@ -76,11 +76,11 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       
     if (freelancerError || !defaultFreelancer) {
       console.error("Erreur: Impossible de trouver un freelancer par défaut", freelancerError);
-      toast.error("Impossible de créer un rendez-vous sans freelancer");
+      toast.error("Impossible de créer un rendez-vous sans freelancer disponible");
       throw new Error("Un freelancer par défaut est requis pour créer un rendez-vous auto-assigné");
     }
     
-    // S'assurer que freelancerid est présent pour satisfaire la contrainte not-null
+    // S'assurer que freelancerid est TOUJOURS présent pour satisfaire la contrainte not-null
     const cleanedData = {
       ...appointmentData,
       status: AppointmentStatus.PENDING,
@@ -92,9 +92,12 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
       delete (cleanedData as any).freelancerId;
     }
     
-    const { data, error } = await supabase.rpc('create_auto_assign_appointment', {
-      appointment_data: cleanedData
-    });
+    // Supprimer currentUserId s'il existe
+    if ('currentUserId' in cleanedData) {
+      delete (cleanedData as any).currentUserId;
+    }
+    
+    const { data, error } = await supabase.from('appointments').insert([cleanedData]).select().single();
 
     if (error) {
       console.error('Erreur lors de la création du rendez-vous auto-assigné:', error);

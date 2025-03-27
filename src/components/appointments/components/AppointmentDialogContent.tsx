@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CalendarClock } from "lucide-react";
@@ -10,6 +10,7 @@ import AppointmentDateTimePicker from "./AppointmentDateTimePicker";
 import ContactSelector from "./ContactSelector";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 
 interface AppointmentDialogContentProps {
   onOpenChange: (open: boolean) => void;
@@ -24,6 +25,7 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
 }) => {
   const { user } = useAuth();
   const isFreelancer = user?.role === 'freelancer';
+  const isAccountManager = user?.role === 'account_manager';
   const [contactId, setContactId] = useState(initialContactId || "");
   
   const {
@@ -40,8 +42,16 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
     duration,
     setDuration,
     isSubmitting,
-    handleSubmit: formSubmit
+    handleSubmit: formSubmit,
+    defaultFreelancer
   } = useAppointmentForm(selectedDate, () => onOpenChange(false), initialContactId, !isFreelancer);
+
+  // Utilisation pour le débogage
+  useEffect(() => {
+    if (defaultFreelancer) {
+      console.log("Freelancer par défaut assigné:", defaultFreelancer);
+    }
+  }, [defaultFreelancer]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +83,9 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
         <DialogDescription>
           {isFreelancer 
             ? "Ce rendez-vous vous sera attribué directement" 
-            : "Ce rendez-vous sera assigné à un chargé de compte"}
+            : isAccountManager
+              ? "Vous pouvez planifier un rendez-vous qui sera assigné à un freelancer disponible"
+              : "Ce rendez-vous sera assigné à un freelancer disponible"}
         </DialogDescription>
       </DialogHeader>
       

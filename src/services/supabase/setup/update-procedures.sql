@@ -51,7 +51,19 @@ AS $function$
 DECLARE
   new_appointment JSONB;
   inserted_id UUID;
+  default_freelancer_id UUID;
 BEGIN
+  -- Récupérer l'ID d'un freelancer par défaut
+  SELECT id INTO default_freelancer_id
+  FROM public.users
+  WHERE role = 'freelancer'
+  LIMIT 1;
+  
+  -- Vérifier qu'un freelancer a été trouvé
+  IF default_freelancer_id IS NULL THEN
+    RAISE EXCEPTION 'Aucun freelancer disponible pour l''assignation par défaut';
+  END IF;
+
   INSERT INTO public.appointments (
     title,
     description,
@@ -69,7 +81,8 @@ BEGIN
     (appointment_data->>'date')::TIMESTAMP WITH TIME ZONE,
     (appointment_data->>'duration')::INTEGER,
     'pending',
-    NULL,
+    -- Utiliser le freelancer du paramètre si présent, sinon utiliser le freelancer par défaut
+    COALESCE((appointment_data->>'freelancerid')::UUID, default_freelancer_id),
     (appointment_data->>'contactId')::UUID,
     appointment_data->>'location',
     appointment_data->>'notes'

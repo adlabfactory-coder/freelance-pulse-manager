@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createAppointment, createAutoAssignAppointment } from "@/services/appointments/create";
 import { toast } from "sonner";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { formatDateForAPI } from "@/utils/format";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/lib/supabase";
 
 // Export the title options for reuse in other components
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -32,12 +33,48 @@ export const useAppointmentForm = (
   const [time, setTime] = useState('10:00'); // Heure par défaut
   const [duration, setDuration] = useState(30); // Minutes
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [defaultFreelancer, setDefaultFreelancer] = useState<string | null>(null);
+  
+  // Récupérer un freelancer par défaut dès le chargement du formulaire pour éviter l'erreur au moment de la soumission
+  useEffect(() => {
+    const fetchDefaultFreelancer = async () => {
+      if (user?.role === 'freelancer') {
+        // Si l'utilisateur est un freelancer, utiliser son ID
+        setDefaultFreelancer(user.id);
+      } else {
+        // Sinon, récupérer un freelancer par défaut
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('id')
+            .eq('role', 'freelancer')
+            .limit(1)
+            .single();
+            
+          if (!error && data) {
+            setDefaultFreelancer(data.id);
+          } else {
+            console.warn("Aucun freelancer trouvé pour l'assignation par défaut, des erreurs pourront survenir");
+          }
+        } catch (error) {
+          console.error("Erreur lors de la récupération d'un freelancer par défaut:", error);
+        }
+      }
+    };
+    
+    fetchDefaultFreelancer();
+  }, [user]);
   
   const handleSubmit = async (e: React.FormEvent, contactId: string) => {
     e.preventDefault();
     
     if (!date) {
       toast.error("Veuillez sélectionner une date valide");
+      return;
+    }
+    
+    if (!contactId) {
+      toast.error("Veuillez sélectionner un contact pour ce rendez-vous");
       return;
     }
     
@@ -66,10 +103,11 @@ export const useAppointmentForm = (
       
       // Déterminer le freelancer - Utiliser l'ID utilisateur connecté s'il est freelancer
       const isUserFreelancer = user?.role === 'freelancer';
-      const freelancerId = isUserFreelancer ? user?.id : null;
+      const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
       
+      // Vérifier si un freelancer est disponible
       if (!freelancerId && !autoAssign) {
-        toast.error("Identifiant du freelancer manquant");
+        toast.error("Aucun freelancer disponible pour l'assignation. Veuillez contacter l'administrateur.");
         setIsSubmitting(false);
         return;
       }
@@ -80,9 +118,10 @@ export const useAppointmentForm = (
         description,
         date: appointmentDate,
         duration,
-        status: AppointmentStatus.SCHEDULED,
+        status: autoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
         contactId,
-        freelancerId: freelancerId as string, // Utiliser freelancerId pour la cohérence de l'application
+        // Assurer que freelancerId est toujours présent, même en mode auto-assigné
+        freelancerId: freelancerId || defaultFreelancer || '',
         location: null,
         notes: null,
         currentUserId: user?.id // Ajouter l'ID de l'utilisateur actuel comme fallback
@@ -130,6 +169,7 @@ export const useAppointmentForm = (
     duration,
     setDuration,
     isSubmitting,
-    handleSubmit
+    handleSubmit,
+    defaultFreelancer
   };
 };
