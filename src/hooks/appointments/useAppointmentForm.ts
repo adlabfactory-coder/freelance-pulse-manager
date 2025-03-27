@@ -91,25 +91,30 @@ export const useAppointmentForm = (
       userRole: user?.role
     });
     
-    const result = await submitAppointment({
-      title: finalTitle,
-      description,
-      date,
-      time,
-      duration,
-      contactId: finalContactId,
-      freelancerId,
-      folder,
-      // Si l'utilisateur est un freelancer, jamais d'auto-assignation car il est automatiquement assigné
-      // Sinon (pour les admin, account managers), respecter la valeur autoAssign
-      autoAssign: user?.role === UserRole.FREELANCER ? false : autoAssign
-    });
-    
-    if (result && onSuccess) {
-      onSuccess();
+    try {
+      const result = await submitAppointment({
+        title: finalTitle,
+        description,
+        date,
+        time,
+        duration,
+        contactId: finalContactId,
+        freelancerId,
+        folder,
+        // Si l'utilisateur est un freelancer, jamais d'auto-assignation car il est automatiquement assigné
+        // Sinon (pour les admin, account managers), respecter la valeur autoAssign
+        autoAssign: user?.role === UserRole.FREELANCER ? false : autoAssign
+      });
+      
+      if (result && onSuccess) {
+        onSuccess();
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Erreur dans handleSubmit:", error);
+      return null;
     }
-    
-    return result;
   };
 
   return {
