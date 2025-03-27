@@ -42,11 +42,12 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
     handleRemoveItem,
     handleSubmitEdit,
     loadData,
-    loadQuoteData // Make sure this is used here
+    loadQuoteData
   } = quoteForm;
 
   useEffect(() => {
     if (open) {
+      console.log("EditQuoteDialog opened, loading data");
       loadData();
       if (initialQuote) {
         console.log('Setting initial quote data:', initialQuote);

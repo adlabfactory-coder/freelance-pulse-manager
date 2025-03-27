@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { formatDateForAPI } from "@/utils/format";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-client";
 
 // Export the title options for reuse in other components
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -23,7 +23,7 @@ export const useAppointmentForm = (
   onSuccess?: () => void,
   initialContactId?: string,
   autoAssign = false,
-  initialFolder: string = "general" // Ajout du paramètre initialFolder avec une valeur par défaut
+  initialFolder: string = "general"
 ) => {
   const { user } = useAuth();
   // États du formulaire
@@ -33,19 +33,21 @@ export const useAppointmentForm = (
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
   const [time, setTime] = useState('10:00'); // Heure par défaut
   const [duration, setDuration] = useState(30); // Minutes
-  const [folder, setFolder] = useState(initialFolder); // Ajout de l'état folder
+  const [folder, setFolder] = useState(initialFolder);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultFreelancer, setDefaultFreelancer] = useState<string | null>(null);
   
-  // Récupérer un freelancer par défaut dès le chargement du formulaire pour éviter l'erreur au moment de la soumission
+  // Récupérer un freelancer par défaut dès le chargement du formulaire
   useEffect(() => {
     const fetchDefaultFreelancer = async () => {
       if (user?.role === 'freelancer') {
         // Si l'utilisateur est un freelancer, utiliser son ID
         setDefaultFreelancer(user.id);
+        console.log("Utilisateur freelancer trouvé, ID utilisé:", user.id);
       } else {
         // Sinon, récupérer un freelancer par défaut
         try {
+          console.log("Recherche d'un freelancer par défaut...");
           const { data, error } = await supabase
             .from('users')
             .select('id')
@@ -54,9 +56,10 @@ export const useAppointmentForm = (
             .single();
             
           if (!error && data) {
+            console.log("Freelancer par défaut trouvé:", data.id);
             setDefaultFreelancer(data.id);
           } else {
-            console.warn("Aucun freelancer trouvé pour l'assignation par défaut, des erreurs pourront survenir");
+            console.warn("Aucun freelancer trouvé pour l'assignation par défaut:", error);
           }
         } catch (error) {
           console.error("Erreur lors de la récupération d'un freelancer par défaut:", error);
@@ -82,6 +85,7 @@ export const useAppointmentForm = (
     
     try {
       setIsSubmitting(true);
+      console.log("Début de la soumission du rendez-vous...");
       
       // Utiliser la fonction formatDateForAPI pour obtenir une date ISO valide
       const appointmentDate = formatDateForAPI(date, time);
@@ -107,6 +111,14 @@ export const useAppointmentForm = (
       const isUserFreelancer = user?.role === 'freelancer';
       const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
       
+      console.log("Informations du rendez-vous:", {
+        title,
+        contactId,
+        freelancerId,
+        appointmentDate,
+        autoAssign
+      });
+      
       // Vérifier si un freelancer est disponible
       if (!freelancerId && !autoAssign) {
         toast.error("Aucun freelancer disponible pour l'assignation. Veuillez contacter l'administrateur.");
@@ -126,7 +138,7 @@ export const useAppointmentForm = (
         freelancerId: freelancerId || defaultFreelancer || '',
         location: null,
         notes: null,
-        folder: folder, // Ajout du champ folder
+        folder: folder,
         currentUserId: user?.id // Ajouter l'ID de l'utilisateur actuel comme fallback
       };
       
@@ -142,6 +154,7 @@ export const useAppointmentForm = (
       }
       
       if (result) {
+        console.log("Rendez-vous créé avec succès:", result);
         // Déclencher l'événement de création de rendez-vous pour rafraîchir les données
         window.dispatchEvent(new CustomEvent('appointment-created'));
         
@@ -171,8 +184,8 @@ export const useAppointmentForm = (
     setTime,
     duration,
     setDuration,
-    folder, // Ajout du folder aux valeurs retournées
-    setFolder, // Ajout du setter pour le folder
+    folder,
+    setFolder,
     isSubmitting,
     handleSubmit,
     defaultFreelancer
