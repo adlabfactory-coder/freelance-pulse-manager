@@ -81,7 +81,6 @@ export function useContactsData() {
   const toggleTrashContacts = useCallback(() => {
     setIncludeTrash(prevState => !prevState);
     console.log("Toggling trash contacts, new value will be:", !includeTrash);
-    // Ne pas appeler fetchContacts ici, pour éviter le double appel avec l'effet useEffect ci-dessous
   }, [includeTrash]);
   
   useEffect(() => {
