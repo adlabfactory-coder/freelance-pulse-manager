@@ -56,6 +56,7 @@ export const useQuoteSubmission = ({
         serviceId: item.serviceId
       }));
       
+      // Fix: Pass the properly formatted data to createQuote
       const result = await createQuote({
         quote: {
           contactId: quoteData.contactId,
@@ -135,7 +136,7 @@ export const useQuoteSubmission = ({
         serviceId: item.serviceId
       }));
       
-      // Utiliser la fonction updateQuote avec les données formatées
+      // Fix: Pass all required arguments to updateQuote
       const result = await updateQuote(quoteId, {
         quote: {
           contactId: quoteData.contactId,
