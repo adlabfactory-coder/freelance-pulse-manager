@@ -25,11 +25,13 @@ export interface Appointment {
   folder?: string;
   contactName?: string;
   freelancerName?: string;
+  managerId?: string | null;
+  managerName?: string | null;
   deleted_at?: string | null;
 }
 
 /**
- * Fonction utilitaire pour normaliser les IDs
+ * Fonction utilitaire pour normaliser les données de rendez-vous
  */
 export function normalizeAppointmentData(appointment: any): Appointment {
   // Si freelancerid existe (minuscules), le copier dans freelancerId (I majuscule)
@@ -44,3 +46,6 @@ export function normalizeAppointmentData(appointment: any): Appointment {
   
   return appointment as Appointment;
 }
+
+// Pour maintenir la compatibilité pendant la transition
+export const normalizeFreelancerId = normalizeAppointmentData;

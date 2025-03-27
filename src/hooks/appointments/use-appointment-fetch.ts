@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { Appointment, normalizeFreelancerId } from '@/types/appointment';
+import { Appointment, normalizeAppointmentData } from '@/types/appointment';
 import { appointmentsService } from '@/services/supabase/appointments';
 import { toast } from 'sonner';
 import { useAuth } from '../use-auth';
@@ -39,8 +39,8 @@ export function useAppointmentFetch(contactId?: string) {
         data = await appointmentsService.getAppointments();
       }
       
-      // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
-      let normalizedData = data.map(normalizeFreelancerId);
+      // Normaliser les données
+      let normalizedData = data.map(app => normalizeAppointmentData(app as any));
       
       // Récupérer les noms des contacts pour améliorer l'affichage
       const contactIds = [...new Set(normalizedData.map(app => app.contactId))];
@@ -69,7 +69,7 @@ export function useAppointmentFetch(contactId?: string) {
       const userIds = [
         ...new Set([
           ...normalizedData.map(app => app.freelancerId).filter(Boolean),
-          ...normalizedData.map(app => app.managerId).filter(Boolean)
+          ...normalizedData.map(app => app.managerId || "").filter(Boolean)
         ])
       ];
       

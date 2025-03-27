@@ -5,7 +5,7 @@ import AppointmentListHeader from "./list/AppointmentListHeader";
 import AppointmentTable from "./list/AppointmentTable";
 import AppointmentEmptyState from "./list/AppointmentEmptyState";
 import AppointmentLoadingSkeleton from "./list/AppointmentLoadingSkeleton";
-import { Appointment, normalizeFreelancerId } from "@/types/appointment";
+import { Appointment, normalizeAppointmentData } from "@/types/appointment";
 import { useAppointments } from "@/hooks/appointments/use-appointments";
 
 interface AppointmentListProps {
@@ -29,7 +29,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   const loading = externalLoading !== undefined ? externalLoading : hookResult.isLoading;
   
   const normalizedAppointments = React.useMemo(() => {
-    return appointments?.map(normalizeFreelancerId) || [];
+    return appointments?.map(app => normalizeAppointmentData(app)) || [];
   }, [appointments]);
   
   const filteredAppointments = React.useMemo(() => {

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase-client";
-import { Appointment, normalizeFreelancerId } from "@/types/appointment";
+import { Appointment, normalizeAppointmentData } from "@/types/appointment";
 
 // Fonction pour récupérer tous les rendez-vous
 export const fetchAppointments = async (): Promise<Appointment[]> => {
@@ -15,8 +15,8 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
       return [];
     }
 
-    // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
-    const normalizedData = (data || []).map(app => normalizeFreelancerId(app));
+    // Normaliser les données
+    const normalizedData = (data || []).map(app => normalizeAppointmentData(app));
 
     return normalizedData as Appointment[];
   } catch (error) {
@@ -41,8 +41,8 @@ export const fetchAppointmentById = async (id: string): Promise<Appointment | nu
 
     if (!data) return null;
     
-    // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
-    return normalizeFreelancerId(data as Appointment);
+    // Normaliser les données
+    return normalizeAppointmentData(data as Appointment);
   } catch (error) {
     console.error('Unexpected error fetching appointment by ID:', error);
     return null;
