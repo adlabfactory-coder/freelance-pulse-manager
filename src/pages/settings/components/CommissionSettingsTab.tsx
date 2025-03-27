@@ -7,7 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Info } from "lucide-react";
 
 const CommissionSettingsTab: React.FC = () => {
-  const { isAdminOrSuperAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin } = useAuth();
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
 
   if (!isAdminOrSuperAdmin) {
     return (

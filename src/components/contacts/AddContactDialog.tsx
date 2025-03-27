@@ -1,61 +1,41 @@
 
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import AddContactForm from "./AddContactForm";
-import { toast } from "sonner";
 
 interface AddContactDialogProps {
   onContactAdded?: () => void;
-  trigger?: React.ReactNode;
 }
 
-export function AddContactDialog({ onContactAdded, trigger }: AddContactDialogProps) {
-  const [open, setOpen] = React.useState(false);
-
+const AddContactDialog: React.FC<AddContactDialogProps> = ({ onContactAdded }) => {
+  const [open, setOpen] = useState(false);
+  
   const handleSuccess = () => {
-    console.log("Contact ajouté avec succès, fermeture de la boîte de dialogue");
-    
-    // Afficher une notification
-    toast.success("Contact ajouté avec succès");
-    
-    // Fermer la boîte de dialogue
-    setOpen(false);
-    
-    // Appeler le callback si fourni
     if (onContactAdded) {
       onContactAdded();
     }
+    // Ne pas fermer automatiquement le dialogue après l'ajout
+    // car nous voulons montrer la boîte de dialogue de rendez-vous
   };
-
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Ajouter un contact
-          </Button>
-        )}
+        <Button size="sm">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Nouveau contact
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Ajouter un nouveau contact</DialogTitle>
-          <DialogDescription>
-            Remplissez les informations pour créer un nouveau contact.
-          </DialogDescription>
-        </DialogHeader>
-        <AddContactForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
+        <div className="space-y-4">
+          <div className="text-xl font-semibold">Ajouter un contact</div>
+          <AddContactForm onSuccess={handleSuccess} onCancel={() => setOpen(false)} />
+        </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default AddContactDialog;

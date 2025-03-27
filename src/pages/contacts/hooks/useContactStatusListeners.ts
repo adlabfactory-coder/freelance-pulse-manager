@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Contact } from "@/services/contacts/types";
 import { ContactStatus } from "@/types/database/enums";
@@ -45,45 +46,49 @@ export function useContactStatusListeners(contacts: Contact[]) {
 
   // Écouteur d'événements pour les rendez-vous validés
   useEffect(() => {
+    console.log("Initialisation de l'écouteur de rendez-vous...");
+    
     const appointmentsChannel = supabase
-      .channel('public:appointments')
+      .channel('appointments-status-changes')
       .on('postgres_changes', 
         { 
           event: 'UPDATE', 
           schema: 'public', 
-          table: 'appointments'
+          table: 'appointments',
+          filter: 'status=eq.confirmed'
         }, 
         (payload) => {
-          // CORRECTION: Vérifier explicitement que le statut a changé de 'pending' à 'confirmed'
-          // plutôt que de simplement vérifier s'il est 'confirmed'
+          console.log("Événement de mise à jour de rendez-vous détecté:", payload);
+          
           if (payload.new && payload.old && 
               payload.old.status === 'pending' && 
               payload.new.status === 'confirmed') {
             
             const contactId = payload.new.contactId;
+            console.log("Contact ID détecté:", contactId);
+            
             const contact = contacts.find(c => c.id === contactId);
             
-            // Mettre à jour le statut seulement si le contact est un lead
-            if (contact && contact.status === 'lead') {
-              updateContactStatus(contactId, 'prospect');
-              
-              // Ajouter un log pour débogage
-              console.log(`Contact ${contactId} mis à jour de lead à prospect suite à la confirmation du rendez-vous`);
+            if (contact) {
+              console.log("Contact trouvé:", contact);
+              // Mettre à jour le statut seulement si le contact est un lead
+              if (contact.status === 'lead') {
+                console.log("Mise à jour du statut du contact de lead à prospect");
+                updateContactStatus(contactId, 'prospect');
+              }
+            } else {
+              console.log("Contact non trouvé dans la liste locale");
             }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Statut d'abonnement à l'écouteur de rendez-vous:", status);
+      });
       
-    return () => {
-      supabase.removeChannel(appointmentsChannel);
-    };
-  }, [contacts, updateContactStatus]);
-  
-  // Écouteur d'événements pour les devis créés
-  useEffect(() => {
+    // Écouteur d'événements pour les devis créés
     const quotesChannel = supabase
-      .channel('public:quotes')
+      .channel('quotes-created')
       .on('postgres_changes', 
         { 
           event: 'INSERT', 
@@ -91,49 +96,68 @@ export function useContactStatusListeners(contacts: Contact[]) {
           table: 'quotes'
         }, 
         (payload) => {
-          // Quand un devis est créé, mettre à jour le contact en négociation
+          console.log("Événement de création de devis détecté:", payload);
+          
           if (payload.new) {
             const contactId = payload.new.contactId;
             const contact = contacts.find(c => c.id === contactId);
             
-            if (contact && (contact.status === 'lead' || contact.status === 'prospect')) {
-              updateContactStatus(contactId, 'negotiation');
+            if (contact) {
+              console.log("Contact trouvé pour le devis:", contact);
+              if (contact.status === 'lead' || contact.status === 'prospect') {
+                console.log("Mise à jour du statut du contact vers négociation");
+                updateContactStatus(contactId, 'negotiation');
+              }
+            } else {
+              console.log("Contact non trouvé pour le devis créé");
             }
           }
         }
       )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(quotesChannel);
-    };
-  }, [contacts, updateContactStatus]);
-  
-  // Écouteur d'événements pour les devis validés/payés
-  useEffect(() => {
+      .subscribe((status) => {
+        console.log("Statut d'abonnement à l'écouteur de devis créés:", status);
+      });
+    
+    // Écouteur d'événements pour les devis validés/payés
     const quotesUpdateChannel = supabase
-      .channel('public:quotes:updates')
+      .channel('quotes-accepted')
       .on('postgres_changes', 
         { 
           event: 'UPDATE', 
           schema: 'public', 
-          table: 'quotes'
+          table: 'quotes',
+          filter: 'status=eq.accepted'
         }, 
         (payload) => {
-          // Quand un devis est marqué comme accepté/payé, mettre à jour le contact en signé
-          if (payload.new && payload.new.status === 'accepted') {
+          console.log("Événement de mise à jour de devis détecté:", payload);
+          
+          if (payload.new && payload.old && 
+              payload.old.status !== 'accepted' && 
+              payload.new.status === 'accepted') {
+            
             const contactId = payload.new.contactId;
             const contact = contacts.find(c => c.id === contactId);
             
-            if (contact && contact.status === 'negotiation') {
-              updateContactStatus(contactId, 'signed');
+            if (contact) {
+              console.log("Contact trouvé pour le devis accepté:", contact);
+              if (contact.status === 'negotiation') {
+                console.log("Mise à jour du statut du contact vers signé");
+                updateContactStatus(contactId, 'signed');
+              }
+            } else {
+              console.log("Contact non trouvé pour le devis accepté");
             }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Statut d'abonnement à l'écouteur de devis acceptés:", status);
+      });
       
     return () => {
+      console.log("Nettoyage des écouteurs...");
+      supabase.removeChannel(appointmentsChannel);
+      supabase.removeChannel(quotesChannel);
       supabase.removeChannel(quotesUpdateChannel);
     };
   }, [contacts, updateContactStatus]);

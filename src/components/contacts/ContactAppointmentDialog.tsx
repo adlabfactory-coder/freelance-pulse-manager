@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CalendarClock } from "lucide-react";
-import { useAppointmentForm, AppointmentTitleOption } from "@/components/appointments/hooks/useAppointmentForm";
+import { useAppointmentForm, AppointmentTitleOption } from "@/hooks/appointments/useAppointmentForm";
 import AppointmentTypeSelect from "@/components/appointments/components/AppointmentTypeSelect";
 import AppointmentDescription from "@/components/appointments/components/AppointmentDescription";
 import AppointmentDateTimePicker from "@/components/appointments/components/AppointmentDateTimePicker";
@@ -28,6 +28,20 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
 }) => {
   const [success, setSuccess] = useState(false);
   
+  const handleSuccess = () => {
+    console.log("Rendez-vous créé avec succès pour", contactName);
+    setSuccess(true);
+    
+    // Annoncer l'événement pour que les autres composants puissent réagir
+    window.dispatchEvent(new CustomEvent('appointment-created'));
+    
+    // Fermer automatiquement après un délai
+    setTimeout(() => {
+      onOpenChange(false);
+      setSuccess(false);
+    }, 2000);
+  };
+  
   const {
     titleOption,
     setTitleOption,
@@ -49,13 +63,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     isLoadingFreelancer
   } = useAppointmentForm(
     undefined, 
-    () => {
-      setSuccess(true);
-      setTimeout(() => {
-        onOpenChange(false);
-        setSuccess(false);
-      }, 2000);
-    }, 
+    handleSuccess, 
     contactId,
     autoAssign
   );
@@ -69,6 +77,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       setTime('10:00');
       setDuration(30);
       setCustomTitle('');
+      setSuccess(false);
     }
   }, [open, initialType, setTitleOption, setDescription, setDate, setTime, setDuration, setCustomTitle]);
 
@@ -81,6 +90,12 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     }
     
     console.log("ContactAppointmentDialog: Soumission du formulaire pour le contact:", contactId);
+    
+    // Vérifier que tous les champs requis sont remplis
+    if (!date || !time) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
     
     // Passer l'ID du contact lors de la soumission
     formSubmit(e, contactId);
