@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin/users" element={<UserManager />} />
                 <Route path="/admin/account-managers" element={<AccountManagersDistributionPage />} />
+                <Route path="/audit" element={<AuditPage />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
