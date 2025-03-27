@@ -1,11 +1,11 @@
-
 export enum QuoteStatus {
   DRAFT = "draft",
   PENDING = "pending",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
   EXPIRED = "expired",
-  CANCELLED = "cancelled"
+  CANCELLED = "cancelled",
+  SENT = "sent"
 }
 
 export interface Quote {
@@ -47,7 +47,27 @@ export const getQuoteStatusLabel = (status: QuoteStatus): string => {
       return "Expiré";
     case QuoteStatus.CANCELLED:
       return "Annulé";
+    case QuoteStatus.SENT:
+      return "Envoyé";
     default:
       return "Inconnu";
+  }
+};
+
+export const getQuoteStatusColor = (status: QuoteStatus): string => {
+  switch (status) {
+    case QuoteStatus.ACCEPTED:
+      return "green";
+    case QuoteStatus.REJECTED:
+    case QuoteStatus.CANCELLED:
+      return "red";
+    case QuoteStatus.SENT:
+    case QuoteStatus.PENDING:
+      return "blue";
+    case QuoteStatus.EXPIRED:
+      return "orange";
+    case QuoteStatus.DRAFT:
+    default:
+      return "gray";
   }
 };

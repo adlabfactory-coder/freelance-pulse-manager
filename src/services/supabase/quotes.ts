@@ -1,7 +1,9 @@
+
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { ServiceResponse } from './types';
 import { Quote, QuoteItem, QuoteStatus } from '@/types/quote';
+import { toast } from 'sonner';
 
 export const createQuotesService = (supabase: SupabaseClient<Database>) => {
   // Utility function to map database quote to Quote type
@@ -33,7 +35,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
   };
 
   const service = {
-    // Récupérer tous les devis
+    // Fetch all quotes
     fetchQuotes: async (): Promise<Quote[]> => {
       const { data, error } = await supabase
         .from('quotes')
@@ -46,7 +48,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         throw error;
       }
       
-      // Mapper les données de la base de données vers le type Quote
+      // Map database data to Quote type
       return data.map(quote => ({
         id: quote.id,
         contactId: quote.contactId,
@@ -55,6 +57,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         validUntil: new Date(quote.validUntil),
         status: quote.status as QuoteStatus,
         notes: quote.notes,
+        folder: quote.folder || 'general',
         createdAt: new Date(quote.createdAt),
         updatedAt: new Date(quote.updatedAt),
         items: quote.quote_items ? quote.quote_items.map((item: any) => ({
@@ -64,12 +67,13 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           tax: item.tax ? Number(item.tax) : 0,
-          discount: item.discount ? Number(item.discount) : 0
+          discount: item.discount ? Number(item.discount) : 0,
+          serviceId: item.serviceId
         })) : []
       }));
     },
     
-    // Récupérer un devis par son ID
+    // Fetch a quote by ID
     fetchQuoteById: async (id: string): Promise<Quote | null> => {
       const { data, error } = await supabase
         .from('quotes')
@@ -93,6 +97,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         validUntil: new Date(data.validUntil),
         status: data.status as QuoteStatus,
         notes: data.notes,
+        folder: data.folder || 'general',
         createdAt: new Date(data.createdAt),
         updatedAt: new Date(data.updatedAt),
         items: data.quote_items ? data.quote_items.map((item: any) => ({
@@ -102,28 +107,30 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           tax: item.tax ? Number(item.tax) : 0,
-          discount: item.discount ? Number(item.discount) : 0
+          discount: item.discount ? Number(item.discount) : 0,
+          serviceId: item.serviceId
         })) : []
       };
     },
     
-    // Créer un nouveau devis avec ses éléments
+    // Create a new quote with its items
     createQuote: async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, items: Omit<QuoteItem, 'id' | 'quoteId'>[]): Promise<Quote | null> => {
       try {
         console.log('Création du devis avec les données:', quoteData);
         console.log('Éléments du devis:', items);
         
-        // S'assurer que le statut est "draft" (brouillon)
+        // Ensure the status is "draft" and handle date conversion
         const finalQuoteData = {
           contactId: quoteData.contactId,
           freelancerId: quoteData.freelancerId,
           totalAmount: quoteData.totalAmount,
-          validUntil: quoteData.validUntil.toISOString(),
-          status: QuoteStatus.DRAFT, // Forcer le statut à "brouillon"
-          notes: quoteData.notes || ''
+          validUntil: typeof quoteData.validUntil === 'string' ? quoteData.validUntil : quoteData.validUntil.toISOString(),
+          status: QuoteStatus.DRAFT, // Force status to "draft"
+          notes: quoteData.notes || '',
+          folder: quoteData.folder || 'general'
         };
         
-        // 1. Insérer le devis principal en utilisant le service role pour contourner la RLS
+        // 1. Insert the main quote using the service role to bypass RLS
         const { data: quote, error: quoteError } = await supabase.rpc('create_quote', {
           quote_data: finalQuoteData
         });
@@ -140,7 +147,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           return null;
         }
         
-        // 2. Insérer les éléments du devis
+        // 2. Insert quote items
         if (items.length > 0 && quote) {
           const quoteItems = items.map(item => ({
             quoteId: quote.id,
@@ -148,7 +155,8 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             tax: item.tax || 0,
-            discount: item.discount || 0
+            discount: item.discount || 0,
+            serviceId: item.serviceId
           }));
           
           const { error: itemsError } = await supabase.rpc('add_quote_items', {
@@ -161,7 +169,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           }
         }
         
-        // 3. Récupérer le devis complet avec ses éléments
+        // 3. Fetch the complete quote with its items
         if (quote) {
           return await service.fetchQuoteById(quote.id);
         }
@@ -173,23 +181,23 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     },
     
-    // Mettre à jour un devis existant
+    // Update an existing quote
     updateQuote: async (id: string, quoteData: Partial<Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>>, 
       items?: { 
         add?: Omit<QuoteItem, 'id' | 'quoteId'>[], 
-        update?: (Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>)[],
+        update?: (Partial<QuoteItem> & { id: string })[], // Fixed type here
         delete?: string[]
       }): Promise<Quote | null> => {
       
       try {
-        // 1. Mettre à jour le devis principal
+        // 1. Update the main quote
         const updates: any = {
           ...quoteData,
           updatedAt: new Date().toISOString()
         };
         
         if (quoteData.validUntil) {
-          updates.validUntil = quoteData.validUntil.toISOString();
+          updates.validUntil = typeof quoteData.validUntil === 'string' ? quoteData.validUntil : quoteData.validUntil.toISOString();
         }
         
         const { error: quoteError } = await supabase.rpc('update_quote', {
@@ -203,9 +211,9 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           return null;
         }
         
-        // 2. Gérer les éléments du devis si nécessaire
+        // 2. Handle quote items if needed
         if (items) {
-          // 2.1 Ajouter de nouveaux éléments
+          // 2.1 Add new items
           if (items.add && items.add.length > 0) {
             const newItems = items.add.map(item => ({
               quoteId: id,
@@ -213,7 +221,8 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               tax: item.tax || 0,
-              discount: item.discount || 0
+              discount: item.discount || 0,
+              serviceId: item.serviceId
             }));
             
             const { error: addError } = await supabase.rpc('add_quote_items', {
@@ -226,7 +235,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
             }
           }
           
-          // 2.2 Mettre à jour des éléments existants
+          // 2.2 Update existing items
           if (items.update && items.update.length > 0) {
             for (const item of items.update) {
               if (item.id) {
@@ -245,7 +254,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
             }
           }
           
-          // 2.3 Supprimer des éléments
+          // 2.3 Delete items
           if (items.delete && items.delete.length > 0) {
             const { error: deleteError } = await supabase.rpc('delete_quote_items', {
               item_ids: items.delete
@@ -258,7 +267,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
           }
         }
         
-        // 3. Récupérer le devis mis à jour avec ses éléments
+        // 3. Fetch the updated quote with its items
         return await service.fetchQuoteById(id);
       } catch (error) {
         console.error(`Erreur inattendue lors de la mise à jour du devis ${id}:`, error);
@@ -267,7 +276,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     },
     
-    // Mettre à jour le statut d'un devis
+    // Update quote status
     updateQuoteStatus: async (quoteId: string, status: QuoteStatus): Promise<ServiceResponse> => {
       try {
         // Get the current quote data first
@@ -290,6 +299,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
             totalAmount: currentQuote.totalAmount,
             validUntil: currentQuote.validUntil,
             notes: currentQuote.notes,
+            folder: currentQuote.folder || 'general',
             updatedAt: new Date().toISOString()
           })
           .eq('id', quoteId);
@@ -303,7 +313,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     },
     
-    // Supprimer un devis (suppression logique)
+    // Delete a quote (logical deletion)
     deleteQuote: async (id: string): Promise<boolean> => {
       try {
         const { error } = await supabase.rpc('delete_quote', {

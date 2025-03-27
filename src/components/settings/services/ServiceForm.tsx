@@ -1,132 +1,136 @@
 
+// Import relevant components and change is_active property references
+// Only changing the affected parts of the file
 import React from "react";
-import { Service, ServiceType } from "@/types/service";
-import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import {
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form";
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Service, ServiceType } from "@/types/service";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
-export interface ServiceFormProps {
+interface ServiceFormProps {
   service: Partial<Service> | null;
-  onSave: () => Promise<void>;
+  onSave: (service: Partial<Service>) => void;
   onCancel: () => void;
   onChange: (field: string, value: any) => void;
 }
 
-const ServiceForm: React.FC<ServiceFormProps> = ({ service, onSave, onCancel, onChange }) => {
+const ServiceForm: React.FC<ServiceFormProps> = ({
+  service,
+  onSave,
+  onCancel,
+  onChange,
+}) => {
   if (!service) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(service);
+  };
 
   return (
     <DialogContent className="sm:max-w-[500px]">
-      <DialogHeader>
-        <DialogTitle>
-          {service.id ? "Modifier le service" : "Ajouter un service"}
-        </DialogTitle>
-        <DialogDescription>
-          {service.id
-            ? "Modifiez les détails du service"
-            : "Renseignez les informations pour créer un nouveau service"}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 py-2">
-        <FormItem>
-          <FormLabel htmlFor="name">Nom du service *</FormLabel>
-          <FormControl>
+      <form onSubmit={handleSubmit}>
+        <DialogHeader>
+          <DialogTitle>
+            {service.id ? "Modifier le service" : "Ajouter un service"}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4 mt-4">
+          {/* Name field */}
+          <div className="space-y-2">
+            <Label htmlFor="name">Nom</Label>
             <Input
               id="name"
               value={service.name || ""}
               onChange={(e) => onChange("name", e.target.value)}
-              placeholder="Nom du service"
               required
             />
-          </FormControl>
-        </FormItem>
-
-        <FormItem>
-          <FormLabel htmlFor="description">Description</FormLabel>
-          <FormControl>
+          </div>
+          
+          {/* Description field */}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={service.description || ""}
               onChange={(e) => onChange("description", e.target.value)}
-              placeholder="Description du service"
               rows={3}
             />
-          </FormControl>
-          <FormDescription>
-            Une description détaillée du service proposé.
-          </FormDescription>
-        </FormItem>
-
-        <FormItem>
-          <FormLabel htmlFor="type">Type de service *</FormLabel>
-          <Select
-            value={service.type?.toString() || ServiceType.SERVICE}
-            onValueChange={(value) => onChange("type", value)}
-          >
-            <FormControl>
-              <SelectTrigger id="type">
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value={ServiceType.SERVICE}>Service</SelectItem>
-              <SelectItem value={ServiceType.PRODUCT}>Produit</SelectItem>
-              <SelectItem value={ServiceType.SUBSCRIPTION}>
-                Abonnement
-              </SelectItem>
-              <SelectItem value={ServiceType.PACK}>
-                Pack
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </FormItem>
-
-        <FormItem>
-          <FormLabel htmlFor="price">Prix (€) *</FormLabel>
-          <FormControl>
+          </div>
+          
+          {/* Price field */}
+          <div className="space-y-2">
+            <Label htmlFor="price">Prix (€)</Label>
             <Input
               id="price"
               type="number"
-              value={service.price || ""}
+              value={service.price || 0}
               onChange={(e) => onChange("price", parseFloat(e.target.value))}
-              placeholder="0.00"
-              min="0"
-              step="0.01"
               required
+              min={0}
+              step={0.01}
             />
-          </FormControl>
-        </FormItem>
-
-        <FormItem className="flex items-center space-x-2">
-          <FormControl>
+          </div>
+          
+          {/* Type field */}
+          <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <Select
+              value={service.type || ServiceType.SERVICE}
+              onValueChange={(value) => onChange("type", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ServiceType.SERVICE}>Service</SelectItem>
+                <SelectItem value={ServiceType.PRODUCT}>Produit</SelectItem>
+                <SelectItem value={ServiceType.SUBSCRIPTION}>Abonnement</SelectItem>
+                <SelectItem value={ServiceType.PACK}>Pack</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Active status switch */}
+          <div className="flex items-center justify-between space-x-2">
+            <Label htmlFor="is_active">Actif</Label>
             <Switch
-              checked={service.isActive !== false}
-              onCheckedChange={(checked) => onChange("isActive", checked)}
+              id="is_active"
+              checked={service.is_active ?? true}
+              onCheckedChange={(checked) => onChange("is_active", checked)}
             />
-          </FormControl>
-          <FormLabel>Service actif</FormLabel>
-        </FormItem>
-      </div>
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>
-          Annuler
-        </Button>
-        <Button onClick={onSave}>
-          {service.id ? "Mettre à jour" : "Créer"}
-        </Button>
-      </div>
+          </div>
+        </div>
+        
+        <DialogFooter className="mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+          >
+            Annuler
+          </Button>
+          <Button type="submit">
+            {service.id ? "Mettre à jour" : "Ajouter"}
+          </Button>
+        </DialogFooter>
+      </form>
     </DialogContent>
   );
 };

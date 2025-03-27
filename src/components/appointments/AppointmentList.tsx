@@ -56,8 +56,8 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   const hasFilters = Boolean(searchQuery || statusFilter);
   
   const handleRefresh = () => {
-    if (hookResult.refetch) {
-      hookResult.refetch();
+    if (hookResult.refresh) {
+      hookResult.refresh();
     }
   };
 

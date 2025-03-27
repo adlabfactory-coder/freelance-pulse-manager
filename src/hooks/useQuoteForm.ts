@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { createQuotesService } from "@/services/supabase/quotes";
@@ -51,6 +52,7 @@ export const useQuoteForm = ({
   );
   const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
   const [notes, setNotes] = useState<string>("");
+  const [folder, setFolder] = useState<string>("general");
   const [items, setItems] = useState<(Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSaved, setIsQuoteSaved] = useState(false);
@@ -110,9 +112,10 @@ export const useQuoteForm = ({
       if (quote) {
         setContactId(quote.contactId);
         setFreelancerId(quote.freelancerId);
-        setValidUntil(quote.validUntil);
+        setValidUntil(new Date(quote.validUntil));
         setStatus(quote.status);
         setNotes(quote.notes || "");
+        setFolder(quote.folder || "general");
         setItems(quote.items.map(item => ({
           ...item,
           isNew: false,
@@ -212,6 +215,7 @@ export const useQuoteForm = ({
       validUntil,
       status,
       notes,
+      folder,
       totalAmount,
       items: items.filter(item => !item.toDelete) as QuoteItem[]
     };
@@ -273,6 +277,7 @@ export const useQuoteForm = ({
           validUntil,
           status,
           notes,
+          folder,
           totalAmount
         },
         {
@@ -304,6 +309,7 @@ export const useQuoteForm = ({
     validUntil,
     status,
     notes,
+    folder,
     totalAmount,
     items: items.filter(item => !item.toDelete) as QuoteItem[]
   };
@@ -311,9 +317,16 @@ export const useQuoteForm = ({
   const setQuoteData = (data: Partial<Quote>) => {
     if (data.contactId) setContactId(data.contactId);
     if (data.freelancerId) setFreelancerId(data.freelancerId);
-    if (data.validUntil) setValidUntil(data.validUntil);
+    if (data.validUntil) {
+      if (data.validUntil instanceof Date) {
+        setValidUntil(data.validUntil);
+      } else {
+        setValidUntil(new Date(data.validUntil));
+      }
+    }
     if (data.status) setStatus(data.status);
     if (data.notes !== undefined) setNotes(data.notes);
+    if (data.folder) setFolder(data.folder);
     if (data.items) setItems(data.items.map(item => ({ ...item, isNew: false, toDelete: false })));
   };
   
@@ -328,6 +341,8 @@ export const useQuoteForm = ({
     setStatus,
     notes,
     setNotes,
+    folder,
+    setFolder,
     items: items.filter(item => !item.toDelete),
     addItem: handleAddItem,
     updateItem: (index: number, updatedItem: Partial<QuoteItem>) => {
