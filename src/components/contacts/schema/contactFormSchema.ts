@@ -13,6 +13,7 @@ export const contactSchema = z.object({
   status: z.enum(["lead", "prospect", "negotiation", "signed", "lost"]),
   notes: z.string().optional(),
   assignedTo: z.string().optional(),
+  createdBy: z.string().optional(),
   folder: z.string().optional().default("general")
 });
 

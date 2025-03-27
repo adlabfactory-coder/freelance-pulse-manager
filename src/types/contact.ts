@@ -9,10 +9,11 @@ export interface Contact {
   address?: string;
   notes?: string;
   assignedTo?: string;
+  createdBy?: string;
   status: ContactStatus;
   createdAt?: Date;
   updatedAt?: Date;
-  folder?: string; // Ajout de la propriété folder
+  folder?: string;
   subscription_plan_id?: string;
   deleted_at?: Date; 
 }

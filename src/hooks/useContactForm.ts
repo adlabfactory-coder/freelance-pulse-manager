@@ -19,8 +19,8 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   
-  // Déterminer le freelancer assigné par défaut
-  const defaultAssignedTo = initialData?.assignedTo || (user?.role === 'freelancer' ? user?.id : '');
+  // Freelancer actuel (créateur du contact)
+  const currentUserId = user?.id || '';
   
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
@@ -33,7 +33,8 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
       address: initialData?.address || "",
       notes: initialData?.notes || "",
       status: initialData?.status || "lead" as ContactStatus,
-      assignedTo: defaultAssignedTo || "",
+      assignedTo: initialData?.assignedTo || "",
+      createdBy: initialData?.createdBy || currentUserId,
       folder: initialData?.folder || "general"
     },
   });
@@ -44,12 +45,15 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
     try {
       setLoading(true);
       
-      // Vérifier que l'utilisateur a bien assigné un freelancer
+      // Vérifier que l'utilisateur a bien assigné un chargé de compte
       if (!data.assignedTo) {
-        toast.error("Vous devez assigner ce contact à un freelancer");
+        toast.error("Vous devez assigner ce contact à un chargé de compte");
         setLoading(false);
         return;
       }
+      
+      // Si createdBy n'est pas défini, utiliser l'ID de l'utilisateur actuel
+      const createdById = data.createdBy || currentUserId;
       
       const contactInput: ContactFormInput = {
         name: data.name,
@@ -60,7 +64,8 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
         address: data.address,
         notes: data.notes,
         status: data.status as ContactStatus,
-        assignedTo: data.assignedTo, // Maintenant obligatoire
+        assignedTo: data.assignedTo,
+        createdBy: createdById,
         folder: data.folder
       };
       

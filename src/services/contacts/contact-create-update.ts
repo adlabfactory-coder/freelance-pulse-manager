@@ -13,6 +13,7 @@ export interface ContactFormInput {
   notes?: string;
   status: ContactStatus;
   assignedTo?: string;
+  createdBy?: string;
   folder?: string;
 }
 
@@ -30,7 +31,9 @@ export const contactCreateUpdateService = {
       
       const user = authData?.user;
       
-      const assignedTo = contactData.assignedTo || (user ? user.id : null);
+      // Utiliser l'ID du freelancer créateur si fourni, sinon l'utilisateur connecté
+      const createdBy = contactData.createdBy || (user ? user.id : null);
+      const assignedTo = contactData.assignedTo;
       const folder = contactData.folder || 'general';
       
       // Insérer directement dans la table contacts au lieu d'utiliser la fonction RPC
@@ -45,6 +48,7 @@ export const contactCreateUpdateService = {
           address: contactData.address || null,
           notes: contactData.notes || null,
           assignedTo: assignedTo,
+          createdBy: createdBy,
           status: contactData.status || 'lead',
           createdAt: now,
           updatedAt: now,
@@ -87,6 +91,7 @@ export const contactCreateUpdateService = {
       if (contactData.address !== undefined) updateData.address = contactData.address;
       if (contactData.notes !== undefined) updateData.notes = contactData.notes;
       if (contactData.assignedTo !== undefined) updateData.assignedTo = contactData.assignedTo;
+      if (contactData.createdBy !== undefined) updateData.createdBy = contactData.createdBy;
       if (contactData.status !== undefined) updateData.status = contactData.status;
       if (contactData.folder !== undefined) updateData.folder = contactData.folder;
       

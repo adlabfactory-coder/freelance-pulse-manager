@@ -48,3 +48,26 @@ export const fetchFreelancers = async (): Promise<User[]> => {
     );
   }
 };
+
+/**
+ * Récupère tous les chargés de compte
+ */
+export const fetchAccountManagers = async (): Promise<User[]> => {
+  try {
+    console.log("🔄 Tentative de récupération des chargés de compte");
+    
+    // En mode démonstration, retourner tous les utilisateurs avec le rôle ACCOUNT_MANAGER
+    const mockUsers = getMockUsers().filter(user => 
+      user.role === UserRole.ACCOUNT_MANAGER
+    );
+    
+    console.log(`✅ Récupération réussie: ${mockUsers.length} chargés de compte`);
+    return mockUsers;
+  } catch (error) {
+    console.error('❌ Erreur lors de la récupération des chargés de compte:', error);
+    // Retourner un tableau avec uniquement les chargés de compte en cas d'erreur
+    return getMockUsers().filter(user => 
+      user.role === UserRole.ACCOUNT_MANAGER
+    );
+  }
+};

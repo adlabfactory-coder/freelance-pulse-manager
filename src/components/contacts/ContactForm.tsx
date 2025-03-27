@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
+import { fetchAccountManagers } from "@/services/user/fetch-users";
 
 interface ContactFormProps {
   form: UseFormReturn<ContactFormValues>;
@@ -38,46 +39,40 @@ const ContactForm: React.FC<ContactFormProps> = ({
   submitLabel = "Soumettre"
 }) => {
   const { user } = useAuth();
-  const isFreelancer = user?.role === 'freelancer';
-  const [freelancers, setFreelancers] = useState<User[]>([]);
-  const [isLoadingFreelancers, setIsLoadingFreelancers] = useState(false);
+  const [accountManagers, setAccountManagers] = useState<User[]>([]);
+  const [isLoadingManagers, setIsLoadingManagers] = useState(false);
 
-  // Charger la liste des freelancers
+  // Charger la liste des chargés de compte
   useEffect(() => {
-    const loadFreelancers = async () => {
-      setIsLoadingFreelancers(true);
+    const loadAccountManagers = async () => {
+      setIsLoadingManagers(true);
       try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('role', 'freelancer');
+        const managers = await fetchAccountManagers();
         
-        if (error) {
-          console.error("Erreur lors du chargement des freelancers:", error);
-          return;
-        }
-        
-        if (data) {
-          setFreelancers(data as User[]);
+        if (managers && managers.length > 0) {
+          setAccountManagers(managers);
           
-          // Si c'est un nouveau contact et que l'utilisateur est freelancer, on pré-sélectionne son ID
-          if (!isEditing && isFreelancer && user) {
-            form.setValue('assignedTo', user.id);
+          // Si c'est un nouveau contact et qu'on n'a pas d'assignation, on prend le premier chargé de compte
+          if (!isEditing && !form.getValues('assignedTo') && managers.length > 0) {
+            form.setValue('assignedTo', managers[0].id);
           }
-          // Si c'est un nouveau contact et qu'on n'a pas d'assignation, on prend le premier freelancer
-          else if (!isEditing && !form.getValues('assignedTo') && data.length > 0) {
-            form.setValue('assignedTo', data[0].id);
-          }
+        } else {
+          console.warn("Aucun chargé de compte trouvé");
         }
       } catch (error) {
-        console.error("Erreur lors du chargement des freelancers:", error);
+        console.error("Erreur lors du chargement des chargés de compte:", error);
       } finally {
-        setIsLoadingFreelancers(false);
+        setIsLoadingManagers(false);
       }
     };
     
-    loadFreelancers();
-  }, [isFreelancer, user, isEditing, form]);
+    // Si l'utilisateur crée un nouveau contact, on l'assigne automatiquement comme propriétaire
+    if (!isEditing && user) {
+      form.setValue('createdBy', user.id);
+    }
+    
+    loadAccountManagers();
+  }, [user, isEditing, form]);
 
   return (
     <Form {...form}>
@@ -174,24 +169,29 @@ const ContactForm: React.FC<ContactFormProps> = ({
             name="assignedTo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Assigné à*</FormLabel>
+                <FormLabel>Chargé de compte*</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   value={field.value}
-                  disabled={isFreelancer} // Désactiver si l'utilisateur est un freelancer
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un freelancer" />
+                      <SelectValue placeholder="Sélectionner un chargé de compte" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {freelancers.map(freelancer => (
-                      <SelectItem key={freelancer.id} value={freelancer.id}>
-                        {freelancer.name}
+                    {accountManagers.length > 0 ? (
+                      accountManagers.map(manager => (
+                        <SelectItem key={manager.id} value={manager.id}>
+                          {manager.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-managers" disabled>
+                        Aucun chargé de compte disponible
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
