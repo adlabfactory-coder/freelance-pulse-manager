@@ -20,3 +20,4 @@ export enum AuditAction {
   SETTINGS_CHANGE = 'settings_change',
   OTHER = 'other'
 }
+

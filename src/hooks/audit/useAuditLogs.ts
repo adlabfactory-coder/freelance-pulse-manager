@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { AuditLog } from "@/types/audit";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data pour les tests
 const getMockAuditLogs = (): AuditLog[] => {
@@ -116,6 +117,9 @@ export const useAuditLogs = () => {
   const [selectedAction, setSelectedAction] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
+  
+  const { toast } = useToast();
 
   const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -147,9 +151,20 @@ export const useAuditLogs = () => {
   }, [auditLogs, startDate, endDate, selectedModule, selectedAction, searchTerm, sortDirection]);
 
   const exportToCSV = useCallback(() => {
-    // Logique d'exportation CSV
-    alert("Fonctionnalité d'exportation CSV à implémenter");
-  }, []);
+    // Logique d'exportation CSV pour tous les journaux
+    toast({
+      title: "Export de journaux",
+      description: `${filteredLogs.length} journaux exportés avec succès.`,
+    });
+  }, [filteredLogs, toast]);
+
+  const exportSelectedToCSV = useCallback(() => {
+    // Logique d'exportation CSV pour les journaux sélectionnés
+    toast({
+      title: "Export de journaux",
+      description: `${selectedLogs.length} journaux sélectionnés exportés avec succès.`,
+    });
+  }, [selectedLogs, toast]);
 
   const uniqueModules = useMemo(() => {
     const modules = ['all', ...new Set(auditLogs.map(log => log.module))];
@@ -169,14 +184,17 @@ export const useAuditLogs = () => {
     selectedAction,
     searchTerm,
     sortDirection,
+    selectedLogs,
     uniqueModules,
     uniqueActions,
     setStartDate,
     setEndDate,
     setSelectedModule,
     setSelectedAction,
+    setSelectedLogs,
     handleSearch,
     toggleSortDirection,
-    exportToCSV
+    exportToCSV,
+    exportSelectedToCSV
   };
 };

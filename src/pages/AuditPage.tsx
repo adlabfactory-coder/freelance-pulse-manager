@@ -14,15 +14,18 @@ const AuditPage: React.FC = () => {
     selectedAction,
     searchTerm,
     sortDirection,
+    selectedLogs,
     uniqueModules,
     uniqueActions,
     setStartDate,
     setEndDate,
     setSelectedModule,
     setSelectedAction,
+    setSelectedLogs,
     handleSearch,
     toggleSortDirection,
-    exportToCSV
+    exportToCSV,
+    exportSelectedToCSV
   } = useAuditLogs();
 
   return (
@@ -48,6 +51,9 @@ const AuditPage: React.FC = () => {
         logs={filteredLogs}
         sortDirection={sortDirection}
         toggleSortDirection={toggleSortDirection}
+        selectedLogs={selectedLogs}
+        setSelectedLogs={setSelectedLogs}
+        exportSelectedToCSV={exportSelectedToCSV}
       />
     </div>
   );

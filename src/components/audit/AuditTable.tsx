@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -6,17 +5,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowDownWideNarrow, ArrowUpWideNarrow, Clock, ClipboardList, MoreHorizontal, User } from "lucide-react";
 import { AuditLog } from "@/types/audit";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AuditTableProps {
   logs: AuditLog[];
   sortDirection: 'asc' | 'desc';
   toggleSortDirection: () => void;
+  selectedLogs: string[];
+  onSelectAll: () => void;
+  onToggleSelect: (id: string) => void;
 }
 
 const AuditTable: React.FC<AuditTableProps> = ({
   logs,
   sortDirection,
-  toggleSortDirection
+  toggleSortDirection,
+  selectedLogs,
+  onSelectAll,
+  onToggleSelect
 }) => {
   const getActionBadgeColor = (action: string) => {
     switch (action) {
@@ -62,11 +68,22 @@ const AuditTable: React.FC<AuditTableProps> = ({
     }).format(date);
   };
 
+  const allSelected = logs.length > 0 && selectedLogs.length === logs.length;
+  const someSelected = selectedLogs.length > 0 && selectedLogs.length < logs.length;
+
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]">
+              <Checkbox 
+                checked={allSelected} 
+                indeterminate={someSelected}
+                onCheckedChange={onSelectAll}
+                aria-label="Sélectionner tous les journaux"
+              />
+            </TableHead>
             <TableHead className="w-[180px]">
               <div className="flex items-center">
                 <span>Date & Heure</span>
@@ -88,13 +105,23 @@ const AuditTable: React.FC<AuditTableProps> = ({
         <TableBody>
           {logs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                 Aucun journal d'audit ne correspond à vos critères de filtrage
               </TableCell>
             </TableRow>
           ) : (
             logs.map((log) => (
-              <TableRow key={log.id}>
+              <TableRow 
+                key={log.id} 
+                className={selectedLogs.includes(log.id) ? "bg-muted/50" : ""}
+              >
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedLogs.includes(log.id)}
+                    onCheckedChange={() => onToggleSelect(log.id)}
+                    aria-label={`Sélectionner le journal ${log.id}`}
+                  />
+                </TableCell>
                 <TableCell className="whitespace-nowrap">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
