@@ -10,7 +10,7 @@ interface UsersTableProps {
   selectedUser: User | null;
   isSupabaseConnected: boolean;
   onUserSelect: (user: User) => void;
-  onDelete: (userId: string) => void;
+  onDelete: (userId: string) => Promise<void>;
   onUpdateSuccess: (updatedUser: User) => Promise<void>;
 }
 
@@ -55,7 +55,7 @@ const UsersTable: React.FC<UsersTableProps> = ({
           <UserProfile 
             user={selectedUser} 
             onUpdate={async (updatedUser) => await onUpdateSuccess(updatedUser)}
-            onDelete={() => onDelete(selectedUser.id)}
+            onDelete={async () => await onDelete(selectedUser.id)}
             canDelete={selectedUser.role !== UserRole.SUPER_ADMIN}
           />
         ) : (

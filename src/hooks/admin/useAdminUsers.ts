@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { User } from '@/types';
@@ -117,11 +118,11 @@ export const useAdminUsers = () => {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (!userId) return;
+  const handleDelete = async (userId: string): Promise<void> => {
+    if (!userId) return Promise.resolve();
     
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
-      return;
+      return Promise.resolve();
     }
     
     try {
@@ -138,9 +139,12 @@ export const useAdminUsers = () => {
       } else {
         toast("Impossible de supprimer l'utilisateur.");
       }
+      
+      return Promise.resolve();
     } catch (error) {
       console.error('Error deleting user:', error);
       toast("Une erreur est survenue lors de la suppression de l'utilisateur.");
+      return Promise.reject(error);
     }
   };
 
