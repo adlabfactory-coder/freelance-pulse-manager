@@ -1,6 +1,8 @@
+
 import { supabase } from '@/lib/supabase-client';
 import { Contact } from './types';
 import { toast } from 'sonner';
+import { UserRole } from '@/types';
 
 export const contactOperationsService = {
   async getContacts(userId?: string, userRole?: string): Promise<Contact[]> {
@@ -13,9 +15,17 @@ export const contactOperationsService = {
         .is('deleted_at', null)
         .order('createdAt', { ascending: false });
       
-      if (userRole === 'freelancer' && userId) {
-        console.log("Filtrage des contacts pour le freelancer:", userId);
-        query = query.eq('assignedTo', userId);
+      // Si l'utilisateur n'est ni admin ni super_admin, filtrer les contacts
+      if (userRole !== UserRole.ADMIN && userRole !== UserRole.SUPER_ADMIN) {
+        if (userRole === 'freelancer' && userId) {
+          console.log("Filtrage des contacts pour le freelancer:", userId);
+          query = query.eq('assignedTo', userId);
+        } else if (userId) {
+          // Pour d'autres rôles avec des restrictions
+          query = query.eq('assignedTo', userId);
+        }
+      } else {
+        console.log("Accès admin: récupération de tous les contacts");
       }
       
       const { data, error } = await query;

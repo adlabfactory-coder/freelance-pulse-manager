@@ -1,52 +1,32 @@
-
-import { contactCrudService } from './contact-crud';
-import { contactSubscriptionService } from './contact-subscriptions';
-import { contactExcelService } from './contact-excel';
 import { contactOperationsService } from './contact-operations';
-import { contactCreateUpdateService } from './contact-create-update';
-import { Contact, ContactFormInput, ContactUpdate, ContactInsert } from './types';
+import { Contact, ContactFormInput } from './types';
+import { UserRole } from '@/types';
 
-// Implémentation simplifiée des opérations de filtrage et recherche
-const filterContacts = async (criteria: any) => {
-  return await contactOperationsService.getContacts();
-};
-
-const searchContacts = async (query: string) => {
-  return await contactOperationsService.getContacts();
-};
-
-// Service principal pour la gestion des contacts
 export const contactService = {
-  // Opérations CRUD
-  getContacts: contactOperationsService.getContacts,
-  getContactById: contactOperationsService.getContactById,
-  getContactsByFreelancer: contactOperationsService.getContactsByFreelancer,
-  createContact: contactCreateUpdateService.createContact,
-  addContact: contactCreateUpdateService.addContact,
-  updateContact: contactCreateUpdateService.updateContact,
-  deleteContact: contactOperationsService.deleteContact,
-  
-  // Abonnements
-  linkSubscriptionPlan: contactCrudService.linkSubscriptionPlan,
-  getContactSubscriptions: async (contactId: string) => [],
-  
-  // Import/Export
-  importContactsFromExcel: contactExcelService.importContactsFromExcel,
-  exportContactsToExcel: contactExcelService.exportContactsToExcel,
-  
-  // Filtrage et recherche
-  filterContacts,
-  searchContacts
-};
+  // Récupérer tous les contacts avec gestion des rôles
+  async getContacts(userId?: string, userRole?: string): Promise<Contact[]> {
+    return contactOperationsService.getContacts(userId, userRole);
+  },
 
-// Export des types
-export type { Contact, ContactFormInput, ContactUpdate, ContactInsert };
+  // Récupérer un contact par son ID
+  async getContactById(contactId: string): Promise<Contact | null> {
+    return contactOperationsService.getContactById(contactId);
+  },
 
-// Export des services individuels
-export {
-  contactCrudService,
-  contactSubscriptionService,
-  contactExcelService,
-  contactOperationsService,
-  contactCreateUpdateService
+  // Récupérer les contacts d'un freelancer spécifique
+  async getContactsByFreelancer(freelancerId: string): Promise<Contact[]> {
+    return contactOperationsService.getContactsByFreelancer(freelancerId);
+  },
+
+  // Mise à jour d'un contact
+  async updateContact(contactId: string, contactData: Partial<Contact>): Promise<Contact | null> {
+    return contactOperationsService.updateContact(contactId, contactData);
+  },
+
+  // Suppression d'un contact
+  async deleteContact(contactId: string): Promise<boolean> {
+    return contactOperationsService.deleteContact(contactId);
+  },
+
+  // Méthodes supplémentaires pour la création et l'import de contacts omises pour concision
 };

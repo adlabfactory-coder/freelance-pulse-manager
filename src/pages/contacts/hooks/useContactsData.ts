@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
 
 export function useContactsData() {
-  const { user, role } = useAuth();
+  const { user, role, isAdminOrSuperAdmin } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ export function useContactsData() {
     
     setLoading(true);
     try {
-      console.log("Récupération des contacts avec:", { userId: user.id, role });
+      console.log("Récupération des contacts avec:", { userId: user.id, role, isAdmin: isAdminOrSuperAdmin });
       const data = await contactService.getContacts(user.id, role);
       console.log("Contacts récupérés:", data.length);
       setContacts(data);
@@ -32,7 +32,7 @@ export function useContactsData() {
     } finally {
       setLoading(false);
     }
-  }, [user, role]);
+  }, [user, role, isAdminOrSuperAdmin]);
   
   // Filtrage des contacts
   const filteredContacts = contacts.filter(contact => {
