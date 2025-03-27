@@ -5,6 +5,7 @@ import QuoteDialogContent from "./form/QuoteDialogContent";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
+import { useQuoteForm } from "../hooks/quotes/useQuoteForm";
 
 interface AddQuoteDialogProps {
   open: boolean;
@@ -22,29 +23,38 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [createdQuoteId, setCreatedQuoteId] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Utiliser le hook useQuoteForm pour gérer le formulaire
+  const quoteForm = useQuoteForm({
+    onSuccess: (id) => {
+      if (id) {
+        console.log("Devis créé avec succès:", id);
+        setCreatedQuoteId(id);
+        setShowSuccess(true);
+        
+        if (onQuoteCreated) {
+          onQuoteCreated();
+        }
+        
+        // Fermer automatiquement après 2 secondes
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 2000);
+      }
+    },
+    onCloseDialog: onOpenChange
+  });
 
   useEffect(() => {
     if (!open) {
       // Réinitialiser l'état lorsque le dialogue se ferme
       setShowSuccess(false);
       setCreatedQuoteId(null);
+    } else if (initialContactId) {
+      // Si un ID de contact est fourni, initialiser la valeur
+      quoteForm.setContactId(initialContactId);
     }
-  }, [open]);
-
-  const handleQuoteCreated = (quoteId: string) => {
-    console.log("Devis créé avec succès:", quoteId);
-    setCreatedQuoteId(quoteId);
-    setShowSuccess(true);
-    
-    if (onQuoteCreated) {
-      onQuoteCreated();
-    }
-    
-    // Fermer automatiquement après 2 secondes
-    setTimeout(() => {
-      onOpenChange(false);
-    }, 2000);
-  };
+  }, [open, initialContactId]);
 
   const handleViewQuote = () => {
     if (createdQuoteId) {
@@ -76,9 +86,21 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
             </div>
           </div>
         ) : (
+          // Utiliser les propriétés du hook pour le formulaire
           <QuoteDialogContent 
-            onQuoteCreated={handleQuoteCreated} 
-            initialContactId={initialContactId}
+            loading={quoteForm.loading}
+            isSubmitting={quoteForm.isSubmitting}
+            quoteData={quoteForm.quoteData}
+            currentItem={quoteForm.currentItem}
+            contacts={quoteForm.contacts}
+            freelancers={quoteForm.freelancers}
+            services={quoteForm.services}
+            onQuoteDataChange={quoteForm.setQuoteData}
+            onCurrentItemChange={quoteForm.setCurrentItem}
+            onAddItem={quoteForm.handleAddItem}
+            onRemoveItem={quoteForm.handleRemoveItem}
+            onSubmit={() => quoteForm.handleSubmit(quoteForm.quoteData)}
+            onCancel={() => onOpenChange(false)}
           />
         )}
       </DialogContent>

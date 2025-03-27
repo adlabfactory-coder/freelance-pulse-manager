@@ -7,12 +7,16 @@ import { fetchApiKeysByUserId } from "@/services/api-key-service";
 import { ApiKey } from "@/types/api-keys";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const ApiKeysTab: React.FC = () => {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { user, isAdmin, isSuperAdmin } = useAuth();
+  const { toast } = useToast();
   const hasApiKeyAccess = isAdmin || isSuperAdmin;
 
   const loadApiKeys = async () => {
@@ -37,6 +41,7 @@ const ApiKeysTab: React.FC = () => {
 
   const handleApiKeyCreated = () => {
     loadApiKeys();
+    setDialogOpen(false);
   };
 
   const handleApiKeyDeleted = () => {
@@ -64,15 +69,35 @@ const ApiKeysTab: React.FC = () => {
             Gérez vos clés API pour accéder aux services de l'application.
           </CardDescription>
         </div>
-        <CreateApiKeyDialog userId={user?.id || ""} onApiKeyCreated={handleApiKeyCreated} />
+        <Button variant="default" size="sm" onClick={() => setDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Créer une clé API
+        </Button>
       </CardHeader>
       <CardContent>
         <ApiKeysList 
           apiKeys={apiKeys} 
-          loading={loading} 
-          onApiKeyDeleted={handleApiKeyDeleted} 
+          onShowKey={(id) => console.log("Afficher la clé:", id)} 
+          onCopyKey={(key) => {
+            navigator.clipboard.writeText(key);
+            toast({
+              title: "Clé API copiée",
+              description: "La clé API a été copiée dans le presse-papier."
+            });
+          }}
+          onDeleteKey={handleApiKeyDeleted}
         />
       </CardContent>
+      
+      <CreateApiKeyDialog 
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={(name, expiresAt) => {
+          console.log("Création d'une clé API:", name, expiresAt);
+          // Ici vous devriez appeler votre API pour créer une clé
+          handleApiKeyCreated();
+        }}
+      />
     </Card>
   );
 };
