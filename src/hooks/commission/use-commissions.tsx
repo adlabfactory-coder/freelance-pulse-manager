@@ -13,7 +13,8 @@ export const useCommissions = () => {
   const { 
     loading: commissionsLoading, 
     error: commissionsError,
-  } = useFetchCommissions(user?.id || '', role);
+    refresh
+  } = useFetchCommissions(user?.id || '', role !== undefined);
   
   const { 
     commissionRules, 
@@ -36,7 +37,8 @@ export const useCommissions = () => {
   const refreshCommissions = useCallback(() => {
     // We'll implement this later if needed
     console.log("Refreshing commissions");
-  }, []);
+    refresh();
+  }, [refresh]);
 
   return {
     commissions,

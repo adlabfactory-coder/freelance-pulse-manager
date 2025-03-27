@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { Commission, CommissionStatus, CommissionTier } from "@/types/commissions";
@@ -31,7 +30,8 @@ export const useFetchCommissions = (userId?: string, isAdmin: boolean = false) =
             paidDate: new Date('2023-02-05'),
             payment_requested: true,
             contracts_count: 15,
-            createdAt: new Date('2023-01-31')
+            createdAt: new Date('2023-01-31'),
+            freelancerName: 'John Doe'
           },
           {
             id: "2",
@@ -43,7 +43,8 @@ export const useFetchCommissions = (userId?: string, isAdmin: boolean = false) =
             periodEnd: new Date('2023-02-28'),
             payment_requested: true,
             contracts_count: 16,
-            createdAt: new Date('2023-02-28')
+            createdAt: new Date('2023-02-28'),
+            freelancerName: 'John Doe'
           },
           {
             id: "3",
@@ -55,7 +56,8 @@ export const useFetchCommissions = (userId?: string, isAdmin: boolean = false) =
             periodEnd: new Date('2023-03-31'),
             payment_requested: false,
             contracts_count: 23,
-            createdAt: new Date('2023-03-31')
+            createdAt: new Date('2023-03-31'),
+            freelancerName: 'John Doe'
           },
         ];
 

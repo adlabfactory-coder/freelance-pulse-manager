@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSupabase } from './use-supabase';
@@ -55,7 +54,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
       setError(null);
 
       try {
-        // Fetch the commission details
         const { data, error } = await supabase.supabaseClient
           .from('commissions')
           .select(`
@@ -78,7 +76,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
           return;
         }
 
-        // Fetch contact details if the commission is linked to a quote
         if (data.quote && data.quote.contactId) {
           const { data: contactData, error: contactError } = await supabase.supabaseClient
             .from('contacts')
@@ -91,18 +88,17 @@ export function useCommissionDetail(commissionId: string | undefined) {
           }
         }
 
-        // Convert string tier to CommissionTier enum and status to CommissionStatus
         const processedData = {
           ...data,
-          tier: mapTierStringToEnum(data.tier), // Convert the tier string to enum
-          status: mapStatusStringToEnum(data.status), // Convert the status string to enum
+          tier: mapTierStringToEnum(data.tier),
+          status: mapStatusStringToEnum(data.status),
           periodStart: new Date(data.periodStart),
           periodEnd: new Date(data.periodEnd),
           createdAt: new Date(data.createdAt),
           paidDate: data.paidDate ? new Date(data.paidDate) : undefined,
           freelancerName: data.freelancer?.name || "Non assigné",
           paymentRequested: !!data.payment_requested,
-          payment_requested: !!data.payment_requested // Keep both for compatibility
+          payment_requested: !!data.payment_requested
         };
 
         setCommission(processedData);
@@ -117,7 +113,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
     fetchCommissionDetail();
   }, [commissionId, supabase.supabaseClient]);
 
-  // Function to map string tier values to CommissionTier enum
   const mapTierStringToEnum = (tierString: string): CommissionTier => {
     switch (tierString.toLowerCase()) {
       case 'bronze':
@@ -134,13 +129,12 @@ export function useCommissionDetail(commissionId: string | undefined) {
     }
   };
 
-  // Function to map string status values to CommissionStatus enum
   const mapStatusStringToEnum = (statusString: string): CommissionStatus => {
     switch (statusString.toLowerCase()) {
       case 'paid':
         return 'paid';
       case 'rejected':
-        return 'rejected' as CommissionStatus;
+        return 'rejected';
       case 'processing':
         return 'processing';
       case 'cancelled':
@@ -151,7 +145,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
     }
   };
 
-  // Function to mark commission as paid
   const markAsPaid = async () => {
     if (!commission) return false;
 
@@ -173,7 +166,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
         return false;
       }
 
-      // Update local state
       setCommission({
         ...commission,
         status: 'paid',
@@ -195,7 +187,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
     }
   };
 
-  // Function to request payment
   const requestPayment = async () => {
     if (!commission) return false;
     
@@ -216,7 +207,6 @@ export function useCommissionDetail(commissionId: string | undefined) {
         return false;
       }
 
-      // Update local state
       setCommission({
         ...commission,
         paymentRequested: true

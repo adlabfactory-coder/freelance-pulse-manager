@@ -67,11 +67,11 @@ const CommissionDetailPage: React.FC = () => {
           
           <CommissionActions 
             status={commission.status}
-            paymentRequested={commission.paymentRequested}
+            paymentRequested={commission.payment_requested || commission.paymentRequested}
             requestingPayment={requestingPayment}
             onRequestPayment={requestPayment}
             isAdmin={isAdmin}
-            commission={commission}
+            commission={commission as any} // Use type assertion to avoid Commission vs CommissionDetail issues
           />
         </div>
       )}

@@ -28,9 +28,12 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
   };
 };
 
-// Réexporter tous les modules pour usage avec importation destructurée
+// Export common utilities and types
 export * from './utils';
-export * from './fetch-commissions';
-export * from './fetch-rules';
-export * from './payment-operations';
-export * from './generate-commissions';
+export * from './types';
+
+// Export individual operation modules but avoid naming conflicts
+export { fetchCommissions } from './fetch-commissions';
+export { fetchCommissionRules as getFetchCommissionRules } from './fetch-rules';
+export { requestPayment, approvePayment } from './payment-operations';
+export { generateMonthlyCommissions } from './generate-commissions';
