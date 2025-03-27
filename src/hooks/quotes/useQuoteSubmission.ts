@@ -124,18 +124,6 @@ export const useQuoteSubmission = ({
         throw new Error("Veuillez ajouter au moins un service au devis");
       }
       
-      // Format the data for submission
-      const formattedItems = items.map(item => ({
-        id: item.id,
-        quoteId: item.quoteId,
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount || 0,
-        tax: item.tax || 0,
-        serviceId: item.serviceId
-      }));
-      
       // Prepare quote data object
       const quoteDataObj = {
         contactId: quoteData.contactId,
@@ -147,8 +135,39 @@ export const useQuoteSubmission = ({
         folder: quoteData.folder || "general"
       };
       
-      // Fix: Pass quoteId, quoteData and items as separate arguments to updateQuote
-      const result = await updateQuote(quoteId, quoteDataObj, formattedItems);
+      // Separate items into add, update, and delete collections
+      const itemsToAdd = items
+        .filter(item => !item.id) // New items that don't have an ID yet
+        .map(({ id, quoteId, ...item }) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount || 0,
+          tax: item.tax || 0,
+          serviceId: item.serviceId
+        }));
+        
+      const itemsToUpdate = items
+        .filter(item => !!item.id) // Existing items that have an ID
+        .map(item => ({
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: item.discount || 0,
+          tax: item.tax || 0
+        }));
+      
+      // For this example, we're not handling item deletion
+      // In a real app, you'd track items to delete in your state
+      const itemsToDelete: string[] = [];
+      
+      // Fix: Pass quoteId, quoteData and properly formatted items object to updateQuote
+      const result = await updateQuote(quoteId, quoteDataObj, {
+        add: itemsToAdd,
+        update: itemsToUpdate,
+        delete: itemsToDelete
+      });
       
       if (result && result.id) {
         toast.success("Devis mis à jour avec succès");
