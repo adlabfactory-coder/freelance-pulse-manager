@@ -1,12 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { CalendarClock } from "lucide-react";
 import { useAppointmentForm, AppointmentTitleOption } from "@/hooks/appointments/useAppointmentForm";
-import AppointmentTypeSelect from "@/components/appointments/components/AppointmentTypeSelect";
-import AppointmentDescription from "@/components/appointments/components/AppointmentDescription";
-import AppointmentDateTimePicker from "@/components/appointments/components/AppointmentDateTimePicker";
 import { toast } from "sonner";
+import ContactAppointmentSuccess from "./appointment/ContactAppointmentSuccess";
+import ContactAppointmentForm from "./appointment/ContactAppointmentForm";
 
 interface ContactAppointmentDialogProps {
   open: boolean;
@@ -135,17 +134,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     }}>
       <DialogContent className="sm:max-w-[500px]">
         {success ? (
-          <div className="py-8">
-            <div className="flex flex-col items-center justify-center text-center space-y-4">
-              <div className="bg-green-100 p-3 rounded-full">
-                <CalendarClock className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-lg font-medium">Rendez-vous planifié</h3>
-              <p className="text-sm text-muted-foreground">
-                Un rendez-vous a été planifié avec {contactName}.
-              </p>
-            </div>
-          </div>
+          <ContactAppointmentSuccess contactName={contactName} />
         ) : (
           <>
             <DialogHeader>
@@ -158,53 +147,24 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
               </DialogDescription>
             </DialogHeader>
             
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-3 mb-4">
-                {error}
-              </div>
-            )}
-            
-            <form onSubmit={handleFormSubmit}>
-              <div className="grid gap-4 py-4">
-                <AppointmentTypeSelect
-                  titleOption={titleOption}
-                  onTitleOptionChange={handleTitleOptionChange}
-                  customTitle={customTitle}
-                  onCustomTitleChange={(e) => setCustomTitle(e.target.value)}
-                />
-                
-                <AppointmentDescription
-                  description={description}
-                  onDescriptionChange={(e) => setDescription(e.target.value)}
-                />
-                
-                <AppointmentDateTimePicker
-                  date={date}
-                  onDateChange={setDate}
-                  time={time}
-                  onTimeChange={(e) => setTime(e.target.value)}
-                  duration={duration.toString()}
-                  onDurationChange={handleDurationChange}
-                />
-              </div>
-              
-              <div className="flex justify-end gap-2 mt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => onOpenChange(false)}
-                  disabled={isSubmitting}
-                >
-                  Annuler
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSubmitting || isLoadingFreelancer}
-                >
-                  {isSubmitting ? "Planification..." : "Planifier le rendez-vous"}
-                </Button>
-              </div>
-            </form>
+            <ContactAppointmentForm 
+              titleOption={titleOption}
+              onTitleOptionChange={handleTitleOptionChange}
+              customTitle={customTitle}
+              onCustomTitleChange={(e) => setCustomTitle(e.target.value)}
+              description={description}
+              onDescriptionChange={(e) => setDescription(e.target.value)}
+              date={date}
+              onDateChange={setDate}
+              time={time}
+              onTimeChange={(e) => setTime(e.target.value)}
+              duration={duration.toString()}
+              onDurationChange={handleDurationChange}
+              onSubmit={handleFormSubmit}
+              onCancel={() => onOpenChange(false)}
+              isSubmitting={isSubmitting}
+              error={error}
+            />
           </>
         )}
       </DialogContent>
