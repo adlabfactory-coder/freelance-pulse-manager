@@ -41,8 +41,8 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({
         <SubscriptionPlanCard
           key={plan.id}
           plan={plan}
-          onSelectPlan={onSelectPlan}
-          popular={index === 1} // Marque le deuxième plan comme populaire
+          onSelect={() => onSelectPlan(plan)}
+          isPopular={index === 1} // Marque le deuxième plan comme populaire
         />
       ))}
     </div>

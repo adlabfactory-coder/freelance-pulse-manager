@@ -1,227 +1,181 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { User, UserRole } from '@/types';
 import { Button } from "@/components/ui/button";
-import { User, UserRole } from "@/types";
-import { Edit, Save, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/components/ui/use-toast";
+import { Loader2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/hooks/use-auth";
-import { USER_ROLE_LABELS } from "@/types/roles";
-import { useToast } from "@/hooks/use-toast";
-import { updateUser } from "@/services/user/update-user";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface UserProfileProps {
+export interface UserProfileProps {
   user: User;
-  onUpdate?: (user: User) => void;
+  onUpdate: (user: User) => void;
+  onDelete?: () => Promise<void>; // Make onDelete optional
+  canDelete?: boolean;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate }) => {
-  const { isSuperAdmin, user: currentUser } = useAuth();
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
-  const [role, setRole] = useState<UserRole>(user.role as UserRole);
+const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onDelete, canDelete = false }) => {
+  const [name, setName] = useState(user.name || "");
+  const [email, setEmail] = useState(user.email || "");
+  const [role, setRole] = useState(user.role);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Déterminer si l'utilisateur courant peut modifier cet utilisateur
-  const canEdit = currentUser?.id === user.id || isSuperAdmin;
-  
-  // Obtenir les initiales pour l'avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-  
-  const handleCancel = () => {
-    setName(user.name);
-    setEmail(user.email);
-    setRole(user.role as UserRole);
-    setEditing(false);
-  };
-  
-  const handleSubmit = async () => {
-    if (!canEdit) return;
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
+    
     try {
-      const success = await updateUser(user.id, {
+      const updatedUser = {
+        ...user,
         name,
         email,
-        role
-      });
+        role,
+      };
       
-      if (success) {
-        const updatedUser = { ...user, name, email, role };
-        toast({
-          title: "Profil mis à jour",
-          description: "Les informations ont été enregistrées avec succès."
-        });
-        setEditing(false);
-        // Mettre à jour le parent si nécessaire
-        if (onUpdate) {
-          onUpdate(updatedUser);
-        }
-      } else {
-        throw new Error("Impossible de mettre à jour le profil");
-      }
+      onUpdate(updatedUser);
+      
+      toast({
+        title: "Utilisateur mis à jour",
+        description: "Les modifications ont été enregistrées avec succès."
+      });
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de la sauvegarde."
+        description: "Impossible de mettre à jour l'utilisateur."
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await onDelete();
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de supprimer l'utilisateur."
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Card>
-      <CardHeader className="pb-0">
-        <CardTitle className="flex justify-between items-center">
-          <span>Informations du profil</span>
-          {canEdit && !editing && (
-            <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Modifier
-            </Button>
-          )}
-          {editing && (
-            <div className="flex space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Annuler
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-              >
-                <Save className="h-4 w-4 mr-1" />
-                {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-              </Button>
-            </div>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Informations personnelles et paramètres de l'utilisateur
-        </CardDescription>
+      <CardHeader>
+        <CardTitle>Profil utilisateur</CardTitle>
       </CardHeader>
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex flex-col items-center space-y-3">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={user.avatar || undefined} />
-              <AvatarFallback className="text-lg">{getInitials(user.name)}</AvatarFallback>
-            </Avatar>
-            <div className="text-center">
-              <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-muted-foreground">{USER_ROLE_LABELS[user.role as UserRole] || user.role}</p>
-            </div>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nom complet</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nom complet"
+              required
+            />
           </div>
           
-          <div className="flex-1 space-y-4">
-            {editing ? (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nom</Label>
-                  <Input 
-                    id="name" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                  />
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="role">Rôle</Label>
+            <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Sélectionner un rôle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UserRole.ADMIN}>Administrateur</SelectItem>
+                <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
+                <SelectItem value={UserRole.FREELANCER}>Freelance</SelectItem>
+                <SelectItem value={UserRole.ACCOUNT_MANAGER}>Chargé d'affaires</SelectItem>
+                <SelectItem value={UserRole.CLIENT}>Client</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex justify-between pt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : "Enregistrer les modifications"}
+            </Button>
+            
+            {canDelete && onDelete && (
+              showDeleteConfirm ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Suppression...
+                      </>
+                    ) : "Confirmer la suppression"}
+                  </Button>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                  />
-                </div>
-                {isSuperAdmin && (
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Rôle</Label>
-                    <Select 
-                      value={role} 
-                      onValueChange={(value) => setRole(value as UserRole)}
-                    >
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Sélectionner un rôle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
-                        <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
-                        <SelectItem value={UserRole.ACCOUNT_MANAGER}>Chargé de compte</SelectItem>
-                        <SelectItem value={UserRole.FREELANCER}>Freelance</SelectItem>
-                        <SelectItem value={UserRole.CLIENT}>Client</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Nom</p>
-                    <p className="text-base">{user.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Email</p>
-                    <p className="text-base">{user.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Rôle</p>
-                    <p className="text-base">{USER_ROLE_LABELS[user.role as UserRole] || user.role}</p>
-                  </div>
-                  {user.supervisor_id && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Superviseur</p>
-                      <p className="text-base">ID: {user.supervisor_id}</p>
-                    </div>
-                  )}
-                </div>
-                {user.calendly_enabled && (
-                  <div className="mt-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Calendly</p>
-                      <p className="text-base">Activé</p>
-                    </div>
-                    {user.calendly_url && (
-                      <div className="mt-1">
-                        <a
-                          href={user.calendly_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          {user.calendly_url}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
+              ) : (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </Button>
+              )
             )}
           </div>
-        </div>
+        </form>
+        
+        {showDeleteConfirm && !canDelete && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertDescription>
+              La suppression de ce compte n'est pas autorisée.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );

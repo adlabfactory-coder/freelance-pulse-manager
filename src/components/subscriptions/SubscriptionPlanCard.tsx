@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { SubscriptionPlan } from '@/types/subscription';
 import { formatCurrency } from '@/utils/format';
-import { SubscriptionIntervalLabel } from './SubscriptionIntervalLabel';
+import SubscriptionIntervalLabel from './SubscriptionIntervalLabel';
 
 interface SubscriptionPlanCardProps {
   plan: SubscriptionPlan;

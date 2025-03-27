@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useSupabase } from "@/hooks/use-supabase";
 import { toast } from "@/components/ui/use-toast";
@@ -22,7 +23,7 @@ export function useDatabaseStatus() {
       const dbStatus = await supabase.checkDatabaseStatus();
       
       // Process missing tables from either property (missingTables or tables)
-      const missingTablesList = dbStatus.missingTables || dbStatus.tables || [];
+      const missingTablesList = dbStatus.tables || [];
       
       // Convert tables list to TableStatus format
       const tablesStatusData = missingTablesList.map(table => ({
@@ -53,10 +54,10 @@ export function useDatabaseStatus() {
     try {
       console.log("Vérification de la configuration de la base de données...");
       const dbSetupStatus = await supabase.checkDatabaseStatus();
-      setDbStatus(dbSetupStatus);
+      setStatus(dbSetupStatus.success ? "ok" : "partial");
       
-      if (!dbSetupStatus.success && dbSetupStatus.missingTables && dbSetupStatus.missingTables.length > 0) {
-        console.warn("Tables manquantes dans la base de données:", dbSetupStatus.missingTables);
+      if (!dbSetupStatus.success && dbSetupStatus.tables && dbSetupStatus.tables.length > 0) {
+        console.warn("Tables manquantes dans la base de données:", dbSetupStatus.tables);
       }
       
       return dbSetupStatus;

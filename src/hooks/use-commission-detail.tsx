@@ -3,11 +3,44 @@ import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSupabase } from './use-supabase';
 
-export function useCommissionDetail(commissionId: string) {
-  const { supabaseClient } = useSupabase();
-  const [commission, setCommission] = useState<any | null>(null);
+// Define the CommissionDetail interface
+export interface CommissionDetail {
+  id: string;
+  freelancerId: string;
+  freelancerName?: string;
+  amount: number;
+  tier: string;
+  periodStart: Date;
+  periodEnd: Date;
+  status: string;
+  paidDate?: Date;
+  paymentRequested: boolean;
+  contact?: {
+    id: string;
+    name: string;
+    email: string;
+    company?: string;
+  };
+  quote?: {
+    id: string;
+    totalAmount: number;
+    status: string;
+  };
+  subscription?: {
+    id: string;
+    name: string;
+    price: number;
+    interval: string;
+  };
+  createdAt: Date;
+}
+
+export function useCommissionDetail(commissionId: string | undefined) {
+  const supabase = useSupabase();
+  const [commission, setCommission] = useState<CommissionDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [requestingPayment, setRequestingPayment] = useState(false);
 
   useEffect(() => {
     async function fetchCommissionDetail() {
@@ -21,7 +54,7 @@ export function useCommissionDetail(commissionId: string) {
 
       try {
         // Fetch the commission details
-        const { data, error } = await supabaseClient
+        const { data, error } = await supabase.supabaseClient
           .from('commissions')
           .select(`
             *,
@@ -45,7 +78,7 @@ export function useCommissionDetail(commissionId: string) {
 
         // Fetch contact details if the commission is linked to a quote
         if (data.quote && data.quote.contactId) {
-          const { data: contactData, error: contactError } = await supabaseClient
+          const { data: contactData, error: contactError } = await supabase.supabaseClient
             .from('contacts')
             .select('id, name, email, company')
             .eq('id', data.quote.contactId)
@@ -66,14 +99,14 @@ export function useCommissionDetail(commissionId: string) {
     }
 
     fetchCommissionDetail();
-  }, [commissionId, supabaseClient]);
+  }, [commissionId, supabase.supabaseClient]);
 
   // Function to mark commission as paid
   const markAsPaid = async () => {
-    if (!commission) return;
+    if (!commission) return false;
 
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase.supabaseClient
         .from('commissions')
         .update({ 
           status: 'paid',
@@ -94,7 +127,7 @@ export function useCommissionDetail(commissionId: string) {
       setCommission({
         ...commission,
         status: 'paid',
-        paidDate: new Date().toISOString()
+        paidDate: new Date()
       });
 
       toast({
@@ -114,10 +147,12 @@ export function useCommissionDetail(commissionId: string) {
 
   // Function to request payment
   const requestPayment = async () => {
-    if (!commission) return;
+    if (!commission) return false;
+    
+    setRequestingPayment(true);
 
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase.supabaseClient
         .from('commissions')
         .update({ payment_requested: true })
         .eq('id', commissionId);
@@ -134,7 +169,7 @@ export function useCommissionDetail(commissionId: string) {
       // Update local state
       setCommission({
         ...commission,
-        payment_requested: true
+        paymentRequested: true
       });
 
       toast({
@@ -149,6 +184,8 @@ export function useCommissionDetail(commissionId: string) {
         description: "Une erreur est survenue lors de la demande de paiement"
       });
       return false;
+    } finally {
+      setRequestingPayment(false);
     }
   };
 
@@ -157,6 +194,7 @@ export function useCommissionDetail(commissionId: string) {
     isLoading,
     error,
     markAsPaid,
-    requestPayment
+    requestPayment,
+    requestingPayment
   };
 }

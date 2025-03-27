@@ -12,7 +12,7 @@ import { AlertCircle } from "lucide-react";
 
 const CommissionDetailPage: React.FC = () => {
   const { commissionId } = useParams<{ commissionId: string }>();
-  const { commission, loading, requestingPayment, requestPayment } = useCommissionDetail(commissionId);
+  const { commission, isLoading, requestingPayment, requestPayment } = useCommissionDetail(commissionId);
   const { isAdmin, isFreelancer, isAccountManager, user } = useAuth();
 
   // Si c'est un chargé d'affaires, il n'a pas accès aux commissions
@@ -31,7 +31,7 @@ const CommissionDetailPage: React.FC = () => {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[70vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -57,7 +57,7 @@ const CommissionDetailPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <CommissionDetailHeader commissionId={commissionId} loading={loading} />
+      <CommissionDetailHeader commissionId={commissionId} loading={isLoading} />
 
       {!commission ? (
         <CommissionNotFound />
