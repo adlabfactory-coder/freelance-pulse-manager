@@ -12,8 +12,8 @@ export const contactSchema = z.object({
   address: z.string().optional(),
   status: z.enum(["lead", "prospect", "negotiation", "signed", "lost"]),
   notes: z.string().optional(),
-  // Ajout de assignedTo au schéma
-  assignedTo: z.string().optional()
+  assignedTo: z.string().optional(),
+  folder: z.string().optional().default("general")
 });
 
 // Type pour les valeurs du formulaire

@@ -1,11 +1,9 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ContactForm from "./ContactForm";
 import { useAuth } from "@/hooks/use-auth";
-import { CalendarPlus } from "lucide-react";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
-// Fix the import to use the named export
 import { useContactForm } from "@/hooks/useContactForm";
 
 interface AddContactFormProps {
@@ -21,6 +19,7 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
   
   const handleContactCreated = (contactData?: {id: string, name: string}) => {
     if (contactData && contactData.id) {
+      console.log("Contact created successfully:", contactData);
       setCreatedContactId(contactData.id);
       setCreatedContactName(contactData.name);
       
