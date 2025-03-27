@@ -22,7 +22,7 @@ import { Toaster } from "./components/ui/toaster";
 import Layout from "./components/layout/Layout";
 import { AuthProvider } from "./hooks/use-auth";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
-import { SupabaseProvider } from "./hooks/supabase/supabase-provider";
+import { SupabaseProvider } from "./hooks/use-supabase";
 
 function App() {
   return (
