@@ -1,6 +1,4 @@
 
-import { DataSource } from "@/lib/supabase";
-
 export interface DashboardStats {
   pendingContracts: number;
   commissions: number;

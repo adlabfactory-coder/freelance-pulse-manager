@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { DashboardTask } from "./types";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 
 export function useDashboardTasks() {
   const { user, isFreelancer, isAdminOrSuperAdmin } = useAuth();
@@ -10,7 +11,17 @@ export function useDashboardTasks() {
 
   const fetchTasks = async () => {
     try {
-      // Récupérer les tâches selon le rôle de l'utilisateur
+      // Vérifier d'abord si la table existe pour éviter les erreurs en boucle
+      const { data: existsData, error: existsError } = await supabase.rpc('check_table_exists', { table_name: 'tasks' });
+      
+      if (existsError || !existsData) {
+        // La table n'existe pas, on utilise un tableau vide au lieu de continuer à essayer
+        console.log("La table 'tasks' n'existe pas encore dans la base de données");
+        setTasks([]);
+        return [];
+      }
+      
+      // Si la table existe, récupérer les tâches selon le rôle de l'utilisateur
       let tasksQuery = supabase
         .from('tasks')
         .select('id, title, due_date, status, priority')
@@ -33,13 +44,16 @@ export function useDashboardTasks() {
           priority: task.priority || 'medium'
         }));
         setTasks(formattedTasks);
+        return formattedTasks;
       } else {
         console.error("Erreur lors de la récupération des tâches:", tasksError);
         setTasks([]);
+        return [];
       }
     } catch (error) {
       console.error("Erreur lors du chargement des tâches:", error);
       setTasks([]);
+      return [];
     }
   };
 
