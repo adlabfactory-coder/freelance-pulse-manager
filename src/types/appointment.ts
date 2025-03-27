@@ -14,6 +14,7 @@ export interface Appointment {
   createdAt: string;
   updatedAt: string;
   deleted_at?: string | null;
+  folder?: string; // Nouveau champ pour classer les rendez-vous dans des dossiers
   // Propriétés dérivées pour l'affichage
   contactName?: string;
   freelancerName?: string;

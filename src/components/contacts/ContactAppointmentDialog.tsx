@@ -7,6 +7,7 @@ import { useAppointmentForm, AppointmentTitleOption } from "@/components/appoint
 import AppointmentTypeSelect from "@/components/appointments/components/AppointmentTypeSelect";
 import AppointmentDescription from "@/components/appointments/components/AppointmentDescription";
 import AppointmentDateTimePicker from "@/components/appointments/components/AppointmentDateTimePicker";
+import FolderSelect from "@/components/appointments/components/FolderSelect";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -17,6 +18,7 @@ interface ContactAppointmentDialogProps {
   contactName: string;
   initialType?: string;
   autoAssign?: boolean;
+  initialFolder?: string;
 }
 
 const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
@@ -25,7 +27,8 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   contactId,
   contactName,
   initialType = "consultation-initiale",
-  autoAssign = false
+  autoAssign = false,
+  initialFolder = "general"
 }) => {
   const { user } = useAuth();
   const isFreelancer = user?.role === 'freelancer';
@@ -45,6 +48,8 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     setTime,
     duration,
     setDuration,
+    folder,
+    setFolder,
     isSubmitting,
     handleSubmit,
     defaultFreelancer
@@ -57,7 +62,8 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       toast.success("Rendez-vous planifié avec succès");
     }, 
     contactId,
-    !isFreelancer || autoAssign // Si l'utilisateur n'est pas freelancer, auto-assignation automatique
+    !isFreelancer || autoAssign, // Si l'utilisateur n'est pas freelancer, auto-assignation automatique
+    initialFolder
   );
 
   // Utilisation pour le débogage
@@ -136,6 +142,13 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
               onTimeChange={(e) => setTime(e.target.value)}
               duration={duration.toString()}
               onDurationChange={handleDurationChange}
+            />
+
+            <FolderSelect
+              value={folder}
+              onChange={setFolder}
+              label="Dossier"
+              description="Classez ce rendez-vous dans un dossier spécifique"
             />
           </div>
           

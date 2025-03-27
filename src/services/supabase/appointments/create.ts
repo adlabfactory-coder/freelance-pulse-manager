@@ -21,7 +21,14 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
         // Supprimer freelancerId pour éviter les conflits
         delete dataToSend.freelancerId;
       }
+
+      // S'assurer que le dossier a une valeur par défaut
+      if (!dataToSend.folder) {
+        dataToSend.folder = 'general';
+      }
       
+      console.log("Données de rendez-vous envoyées à la DB:", dataToSend);
+
       const { data, error } = await supabase
         .rpc('create_appointment', {
           appointment_data: dataToSend
@@ -58,6 +65,13 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
       if (dataToSend.freelancerId !== undefined) {
         delete dataToSend.freelancerId;
       }
+
+      // S'assurer que le dossier a une valeur par défaut
+      if (!dataToSend.folder) {
+        dataToSend.folder = 'general';
+      }
+      
+      console.log("Données de rendez-vous auto-assigné envoyées à la DB:", dataToSend);
       
       const { data, error } = await supabase
         .rpc('create_auto_assign_appointment', {

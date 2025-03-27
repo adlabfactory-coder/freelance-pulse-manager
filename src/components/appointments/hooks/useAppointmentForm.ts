@@ -22,7 +22,8 @@ export const useAppointmentForm = (
   initialDate?: Date,
   onSuccess?: () => void,
   initialContactId?: string,
-  autoAssign = false
+  autoAssign = false,
+  initialFolder: string = "general" // Ajout du paramètre initialFolder avec une valeur par défaut
 ) => {
   const { user } = useAuth();
   // États du formulaire
@@ -32,6 +33,7 @@ export const useAppointmentForm = (
   const [date, setDate] = useState<Date | undefined>(initialDate || new Date());
   const [time, setTime] = useState('10:00'); // Heure par défaut
   const [duration, setDuration] = useState(30); // Minutes
+  const [folder, setFolder] = useState(initialFolder); // Ajout de l'état folder
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultFreelancer, setDefaultFreelancer] = useState<string | null>(null);
   
@@ -124,6 +126,7 @@ export const useAppointmentForm = (
         freelancerId: freelancerId || defaultFreelancer || '',
         location: null,
         notes: null,
+        folder: folder, // Ajout du champ folder
         currentUserId: user?.id // Ajouter l'ID de l'utilisateur actuel comme fallback
       };
       
@@ -168,6 +171,8 @@ export const useAppointmentForm = (
     setTime,
     duration,
     setDuration,
+    folder, // Ajout du folder aux valeurs retournées
+    setFolder, // Ajout du setter pour le folder
     isSubmitting,
     handleSubmit,
     defaultFreelancer
