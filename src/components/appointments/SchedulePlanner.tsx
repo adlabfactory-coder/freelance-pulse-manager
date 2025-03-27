@@ -7,28 +7,52 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useSupabase } from "@/hooks/use-supabase";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { AppointmentStatus } from "@/types/appointment";
+import { useAuth } from "@/hooks/use-auth";
+import { formatDateForAPI } from "@/utils/format";
+import { createAppointment } from "@/services/appointments/create";
 
 const APPOINTMENT_TITLE_OPTIONS = [
   { value: "consultation-initiale", label: "Consultation initiale" },
-  { value: "negociation-devis", label: "Négociation devis" },
-  { value: "relance-paiement", label: "Relance de paiement" },
+  { value: "session-suivi", label: "Session de suivi" },
+  { value: "demo-produit", label: "Démonstration de produit" },
+  { value: "revision-contrat", label: "Révision de contrat" },
   { value: "autre", label: "Autre (personnalisé)" }
 ];
 
 const SchedulePlanner: React.FC = () => {
   const supabase = useSupabase();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [titleOption, setTitleOption] = useState("consultation-initiale");
   const [customTitle, setCustomTitle] = useState("");
   const [appointmentDescription, setAppointmentDescription] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("09:00");
   const [appointmentDuration, setAppointmentDuration] = useState("60");
+  const [contactId, setContactId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contacts, setContacts] = useState<{id: string, name: string}[]>([]);
+
+  // Charger les contacts au chargement du composant
+  React.useEffect(() => {
+    const fetchContacts = async () => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('id, name')
+        .is('deleted_at', null);
+        
+      if (!error && data) {
+        setContacts(data);
+      }
+    };
+    
+    fetchContacts();
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +60,8 @@ const SchedulePlanner: React.FC = () => {
     const title = titleOption === "autre" ? customTitle : 
       APPOINTMENT_TITLE_OPTIONS.find(option => option.value === titleOption)?.label || "";
     
-    if (!selectedDate || !title) {
-      toast({
-        variant: "destructive",
-        title: "Informations manquantes",
-        description: "Veuillez remplir tous les champs obligatoires.",
-      });
+    if (!selectedDate || !title || !contactId) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
@@ -49,29 +69,42 @@ const SchedulePlanner: React.FC = () => {
     
     try {
       // Créer le format de date pour la base de données
-      const dateTimeString = format(selectedDate, "yyyy-MM-dd") + "T" + appointmentTime;
-      const appointmentDateTime = new Date(dateTimeString);
+      const appointmentDate = formatDateForAPI(selectedDate, appointmentTime);
       
-      // Simuler l'enregistrement pour la démo
-      // For demo, just show a success message
-      toast({
-        title: "Rendez-vous planifié",
-        description: `${title} planifié le ${format(appointmentDateTime, "dd/MM/yyyy à HH:mm", { locale: fr })}`,
+      if (!appointmentDate) {
+        toast.error("Format de date ou d'heure invalide");
+        return;
+      }
+      
+      // Utiliser le service de création de rendez-vous
+      const result = await createAppointment({
+        title,
+        description: appointmentDescription,
+        date: appointmentDate,
+        duration: parseInt(appointmentDuration, 10),
+        status: AppointmentStatus.SCHEDULED,
+        contact_id: contactId,
+        freelancer_id: user?.role === 'freelancer' ? user.id : undefined,
+        folder: 'general'
       });
       
-      // Réinitialiser le formulaire
-      setTitleOption("consultation-initiale");
-      setCustomTitle("");
-      setAppointmentDescription("");
-      setAppointmentTime("09:00");
-      setAppointmentDuration("60");
+      if (result) {
+        toast.success("Rendez-vous planifié avec succès");
+        
+        // Déclencher l'événement de création de rendez-vous
+        window.dispatchEvent(new CustomEvent('appointment-created'));
+        
+        // Réinitialiser le formulaire
+        setTitleOption("consultation-initiale");
+        setCustomTitle("");
+        setAppointmentDescription("");
+        setAppointmentTime("09:00");
+        setAppointmentDuration("60");
+        setContactId("");
+      }
     } catch (error) {
       console.error("Erreur lors de la planification du rendez-vous:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la planification du rendez-vous.",
-      });
+      toast.error("Une erreur est survenue lors de la planification du rendez-vous");
     } finally {
       setIsSubmitting(false);
     }
@@ -90,6 +123,25 @@ const SchedulePlanner: React.FC = () => {
           <div>
             <div className="flex flex-col space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contact">Contact*</Label>
+                  <Select 
+                    value={contactId} 
+                    onValueChange={setContactId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un contact" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contacts.map(contact => (
+                        <SelectItem key={contact.id} value={contact.id}>
+                          {contact.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="titleOption">Type de rendez-vous*</Label>
                   <Select

@@ -25,7 +25,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
     console.log("Envoi des données pour création de rendez-vous:", appointmentData);
     
     // Vérifier que les données requises sont présentes
-    if (!appointmentData.title || !appointmentData.date || !appointmentData.contact_id || !appointmentData.freelancer_id) {
+    if (!appointmentData.title || !appointmentData.date || !appointmentData.contact_id) {
       throw new Error("Données de rendez-vous incomplètes");
     }
     

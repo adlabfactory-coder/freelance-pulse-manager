@@ -24,7 +24,7 @@ const ScheduleSettings: React.FC = () => {
         <Alert className="bg-primary/10 border-primary/20">
           <InfoIcon className="h-4 w-4 text-primary" />
           <AlertDescription>
-            La planification des rendez-vous est maintenant gérée directement dans l'application. 
+            La planification des rendez-vous est entièrement gérée dans l'application. 
             Vous pouvez configurer vos disponibilités quotidiennes et hebdomadaires dans la section dédiée.
           </AlertDescription>
         </Alert>
@@ -33,7 +33,7 @@ const ScheduleSettings: React.FC = () => {
           <div>
             <h3 className="text-base font-medium">Fonctionnalités de planification</h3>
             <p className="text-sm text-muted-foreground">
-              Créez votre planning personnalisé, définissez vos heures de disponibilité et gérez vos rendez-vous dans un seul endroit.
+              Gérez votre planning personnalisé, définissez vos heures de disponibilité et organisez vos rendez-vous dans un seul endroit.
             </p>
           </div>
           
