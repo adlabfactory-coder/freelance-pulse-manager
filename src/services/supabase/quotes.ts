@@ -1,9 +1,37 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
+import { ServiceResponse } from './types';
 import { Quote, QuoteItem, QuoteStatus } from '@/types/quote';
-import { toast } from 'sonner';
 
 export const createQuotesService = (supabase: SupabaseClient<Database>) => {
+  // Utility function to map database quote to Quote type
+  const mapDatabaseQuoteToQuote = (dbQuote: any): Quote => {
+    return {
+      id: dbQuote.id,
+      contactId: dbQuote.contactId,
+      freelancerId: dbQuote.freelancerId,
+      totalAmount: dbQuote.totalAmount,
+      validUntil: dbQuote.validUntil ? new Date(dbQuote.validUntil) : new Date(),
+      status: dbQuote.status as QuoteStatus,
+      notes: dbQuote.notes,
+      createdAt: dbQuote.createdAt ? new Date(dbQuote.createdAt) : new Date(),
+      updatedAt: dbQuote.updatedAt ? new Date(dbQuote.updatedAt) : new Date(),
+      folder: dbQuote.folder || 'general',
+      items: dbQuote.quote_items 
+        ? dbQuote.quote_items.map((item: any) => ({
+            id: item.id,
+            quoteId: item.quoteId,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: Number(item.unitPrice),
+            tax: item.tax ? Number(item.tax) : 0,
+            discount: item.discount ? Number(item.discount) : 0,
+            serviceId: item.serviceId
+          })) 
+        : []
+    };
+  };
+
   const service = {
     // Récupérer tous les devis
     fetchQuotes: async (): Promise<Quote[]> => {
@@ -240,24 +268,38 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
     },
     
     // Mettre à jour le statut d'un devis
-    updateQuoteStatus: async (id: string, status: QuoteStatus): Promise<boolean> => {
+    updateQuoteStatus: async (quoteId: string, status: QuoteStatus): Promise<ServiceResponse> => {
       try {
-        const { error } = await supabase.rpc('update_quote_status', {
-          quote_id: id,
-          new_status: status
-        });
+        // Get the current quote data first
+        const { data: currentQuote, error: fetchError } = await supabase
+          .from('quotes')
+          .select('*')
+          .eq('id', quoteId)
+          .single();
+          
+        if (fetchError) throw fetchError;
+        if (!currentQuote) throw new Error('Quote not found');
         
-        if (error) {
-          console.error(`Erreur lors de la mise à jour du statut du devis ${id}:`, error);
-          toast.error("Erreur lors de la mise à jour du statut du devis: " + error.message);
-          return false;
-        }
+        // Now update with all required fields
+        const { error } = await supabase
+          .from('quotes')
+          .update({ 
+            status: status,
+            contactId: currentQuote.contactId,
+            freelancerId: currentQuote.freelancerId,
+            totalAmount: currentQuote.totalAmount,
+            validUntil: currentQuote.validUntil,
+            notes: currentQuote.notes,
+            updatedAt: new Date().toISOString()
+          })
+          .eq('id', quoteId);
+          
+        if (error) throw error;
         
-        return true;
+        return { success: true };
       } catch (error) {
-        console.error(`Erreur inattendue lors de la mise à jour du statut du devis ${id}:`, error);
-        toast.error("Une erreur inattendue s'est produite lors de la mise à jour du statut du devis");
-        return false;
+        console.error('Error updating quote status:', error);
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
       }
     },
     
@@ -280,7 +322,9 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         toast.error("Une erreur inattendue s'est produite lors de la suppression du devis");
         return false;
       }
-    }
+    },
+    
+    mapDatabaseQuoteToQuote
   };
   
   return service;

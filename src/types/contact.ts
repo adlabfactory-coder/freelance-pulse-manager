@@ -19,6 +19,7 @@ export interface Contact {
 export enum ContactStatus {
   LEAD = "lead",
   PROSPECT = "prospect",
-  CLIENT = "client",
-  INACTIVE = "inactive"
+  NEGOTIATION = "negotiation",
+  SIGNED = "signed",
+  LOST = "lost"
 }

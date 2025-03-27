@@ -7,3 +7,5 @@ export * from './service';
 export * from './navigation';
 export * from './quote';
 export * from './appointment';
+export * from './auth';
+export * from './models';

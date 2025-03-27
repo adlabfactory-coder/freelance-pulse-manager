@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Appointment, AppointmentStatus } from '@/types/appointment';
+import { Appointment, AppointmentStatus, normalizeFreelancerId } from '@/types/appointment';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
@@ -28,13 +28,13 @@ export const useAppointmentList = () => {
         // Convert status string to AppointmentStatus enum
         const status = appointment.status as AppointmentStatus;
         
-        return {
+        // Use normalizeFreelancerId utility to handle inconsistent field names
+        return normalizeFreelancerId({
           id: appointment.id,
           title: appointment.title,
           description: appointment.description,
           contactId: appointment.contactId,
-          freelancerId: appointment.freelancerid, // Note the lowercase 'id' in DB
-          managerId: null,
+          freelancerid: appointment.freelancerid, // This will be normalized
           date: appointment.date,
           duration: appointment.duration,
           status: status,
@@ -42,8 +42,9 @@ export const useAppointmentList = () => {
           notes: appointment.notes,
           folder: appointment.folder,
           createdAt: appointment.createdAt,
-          updatedAt: appointment.updatedAt
-        } as Appointment;
+          updatedAt: appointment.updatedAt,
+          managerId: null
+        });
       });
       
       setAppointments(formattedAppointments);

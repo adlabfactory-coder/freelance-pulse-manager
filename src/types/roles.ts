@@ -34,16 +34,21 @@ export enum PermissionCategory {
   SERVICES = "services",
   SUBSCRIPTIONS = "subscriptions",
   COMMISSIONS = "commissions",
-  SETTINGS = "settings"
+  SETTINGS = "settings",
+  SYSTEM = "system"
 }
 
 export interface RolePermission {
-  role: UserRole;
+  id?: string;
+  name?: string;
+  description?: string;
+  role?: UserRole;
   category: PermissionCategory;
-  create: boolean;
-  read: boolean;
-  update: boolean;
-  delete: boolean;
+  roles?: UserRole[];
+  create?: boolean;
+  read?: boolean;
+  update?: boolean;
+  delete?: boolean;
   approve?: boolean;
 }
 
