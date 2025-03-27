@@ -1,11 +1,15 @@
 
-import { Appointment } from "@/types/appointment";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 
 // Fonction pour filtrer les rendez-vous à venir
 export const filterUpcomingAppointments = (appointments: Appointment[]): Appointment[] => {
   const now = new Date();
   return appointments
-    .filter(appointment => new Date(appointment.date) > now && appointment.status !== 'cancelled')
+    .filter(appointment => 
+      new Date(appointment.date) > now && 
+      appointment.status !== AppointmentStatus.CANCELLED &&
+      appointment.status !== AppointmentStatus.COMPLETED
+    )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
@@ -13,14 +17,18 @@ export const filterUpcomingAppointments = (appointments: Appointment[]): Appoint
 export const filterPastAppointments = (appointments: Appointment[]): Appointment[] => {
   const now = new Date();
   return appointments
-    .filter(appointment => new Date(appointment.date) < now || appointment.status === 'completed')
+    .filter(appointment => 
+      new Date(appointment.date) < now || 
+      appointment.status === AppointmentStatus.COMPLETED ||
+      appointment.status === AppointmentStatus.CANCELLED
+    )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
 // Fonction pour filtrer les rendez-vous en attente d'attribution
 export const filterPendingAssignmentAppointments = (appointments: Appointment[]): Appointment[] => {
   return appointments
-    .filter(appointment => appointment.status === 'pending')
+    .filter(appointment => appointment.status === AppointmentStatus.PENDING)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
