@@ -2,13 +2,16 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MoonIcon, SunIcon } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
 
-interface ThemeToggleProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
-}
+const ThemeToggle: React.FC = () => {
+  const { theme, setTheme } = useTheme();
+  const isDarkMode = theme === 'dark';
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({ isDarkMode, toggleDarkMode }) => {
+  const toggleDarkMode = () => {
+    setTheme(isDarkMode ? 'light' : 'dark');
+  };
+
   return (
     <Button
       variant="ghost"

@@ -7,6 +7,7 @@ type Theme = "dark" | "light" | "system";
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
+  storageKey?: string; // Ajout de la propriété storageKey
 };
 
 type ThemeProviderState = {
@@ -26,9 +27,9 @@ const getSystemTheme = (): "dark" | "light" => {
 };
 
 // Fonction pour récupérer le thème initial
-const getInitialTheme = (): Theme => {
+const getInitialTheme = (storageKey: string): Theme => {
   if (typeof window !== "undefined") {
-    const storedTheme = window.localStorage.getItem("adlab-theme") as Theme | null;
+    const storedTheme = window.localStorage.getItem(storageKey) as Theme | null;
     if (storedTheme) {
       return storedTheme;
     }
@@ -40,9 +41,10 @@ const getInitialTheme = (): Theme => {
 export function ThemeProvider({
   children,
   defaultTheme = "system",
+  storageKey = "adlab-theme",
 }: ThemeProviderProps) {
   const [theme, setTheme] = React.useState<Theme>(
-    () => getInitialTheme() || defaultTheme
+    () => getInitialTheme(storageKey) || defaultTheme
   );
 
   useEffect(() => {
@@ -60,8 +62,8 @@ export function ThemeProvider({
     }
     
     // Stocker le thème dans localStorage
-    window.localStorage.setItem("adlab-theme", theme);
-  }, [theme]);
+    window.localStorage.setItem(storageKey, theme);
+  }, [theme, storageKey]);
 
   // Écoutez les changements de thème du système
   useEffect(() => {
