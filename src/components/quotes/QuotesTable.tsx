@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -113,7 +112,7 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading = false, onSt
       case QuoteStatus.SENT:
         return <Badge variant="default">Envoyé</Badge>;
       case QuoteStatus.ACCEPTED:
-        return <Badge variant="success">Accepté</Badge>;
+        return <Badge variant="secondary" className="bg-green-100 text-green-700">Accepté</Badge>;
       case QuoteStatus.REJECTED:
         return <Badge variant="destructive">Refusé</Badge>;
       case QuoteStatus.EXPIRED:
