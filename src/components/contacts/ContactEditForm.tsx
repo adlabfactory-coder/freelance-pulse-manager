@@ -3,7 +3,6 @@ import React from "react";
 import { Contact } from "@/services/contacts/types";
 import ContactForm from "./ContactForm";
 import { useAuth } from "@/hooks/use-auth";
-// Fix the import to use the named export
 import { useContactForm } from "@/hooks/useContactForm";
 
 interface ContactEditFormProps {

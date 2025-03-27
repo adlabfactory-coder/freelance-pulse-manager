@@ -3,7 +3,7 @@
 import { fetchAppointments, fetchAppointmentById } from './fetch';
 import { updateAppointmentStatus } from './update';
 import { deleteAppointment } from './update';
-import { createAppointment } from './create';
+import { createAppointment, createAutoAssignAppointment } from './create';
 
 // Export all functions with proper names to avoid ambiguity
 export {
@@ -11,5 +11,6 @@ export {
   fetchAppointmentById,
   updateAppointmentStatus,
   deleteAppointment,
-  createAppointment
+  createAppointment,
+  createAutoAssignAppointment
 };

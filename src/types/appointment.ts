@@ -9,6 +9,9 @@ export enum AppointmentStatus {
   NO_SHOW = "no_show"
 }
 
+// Type pour les options de titre de rendez-vous
+export type AppointmentTitleOption = "consultation-initiale" | "session-suivi" | "demo-produit" | "revision-contrat" | "autre" | "";
+
 export interface Appointment {
   id: string;
   title: string;

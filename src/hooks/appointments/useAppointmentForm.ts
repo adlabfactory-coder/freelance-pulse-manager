@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { AppointmentTitleOption } from "@/types/appointment";
 import { useAppointmentOperations } from "./useAppointmentOperations";
 import { useAppointmentContacts } from "./useAppointmentContacts";
 import { useAppointmentFreelancers } from "./useAppointmentFreelancers";
+import { AppointmentTitleOption } from "@/types/appointment";
 
 // Export les options de titre pour réutilisation dans d'autres composants
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -14,7 +14,7 @@ export const APPOINTMENT_TITLE_OPTIONS = [
   { value: "autre", label: "Titre personnalisé" }
 ];
 
-export type { AppointmentTitleOption };
+export { type AppointmentTitleOption };
 
 export const useAppointmentForm = (
   initialDate?: Date,
