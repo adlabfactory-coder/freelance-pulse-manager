@@ -15,7 +15,6 @@ export interface AppointmentCreateData {
   location?: string | null;
   notes?: string | null;
   folder?: string;
-  current_user_id?: string;
 }
 
 /**
@@ -30,7 +29,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
       throw new Error("Données de rendez-vous incomplètes");
     }
     
-    // Appeler la procédure stockée ou la fonction RPC pour créer le rendez-vous
+    // Appeler la procédure stockée pour créer le rendez-vous
     const { data, error } = await supabase.rpc('create_appointment', {
       appointment_data: {
         title: appointmentData.title,
@@ -74,19 +73,18 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
     // S'assurer que le statut est "pending" pour les rendez-vous auto-assignés
     appointmentData.status = AppointmentStatus.PENDING;
     
-    // Appeler la procédure stockée ou la fonction RPC pour créer le rendez-vous
+    // Appeler la procédure stockée pour créer le rendez-vous
     const { data, error } = await supabase.rpc('create_auto_assign_appointment', {
       appointment_data: {
         title: appointmentData.title,
         description: appointmentData.description || null,
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
-        status: 'pending',  // Toujours en attente
+        status: 'pending',
         contactId: appointmentData.contact_id,
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
-        folder: appointmentData.folder || 'general',
-        currentUserId: appointmentData.current_user_id || null
+        folder: appointmentData.folder || 'general'
       }
     });
     

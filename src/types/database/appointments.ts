@@ -8,9 +8,7 @@ export interface AppointmentsTable {
       title: string
       description: string | null
       contactId: string
-      freelancerId?: string // Support pour la compatibilité avec l'application 
-      freelancerid: string  // Champ actuel dans la base de données
-      managerId?: string    // Nouveau champ pour le chargé de compte
+      freelancerId: string  // Utilisée de manière cohérente à travers l'application
       date: string
       duration: number
       status: string
@@ -19,15 +17,14 @@ export interface AppointmentsTable {
       createdAt: string
       updatedAt: string
       deleted_at?: string | null
+      folder?: string
     }
     Insert: {
       id?: string
       title: string
       description?: string | null
       contactId: string
-      freelancerId?: string // Support à la compatibilité avec l'application
-      freelancerid: string  // Champ actuel dans la base de données
-      managerId?: string    // Nouveau champ pour le chargé de compte
+      freelancerId: string  // Utilisée de manière cohérente
       date: string
       duration: number
       status: string
@@ -36,15 +33,14 @@ export interface AppointmentsTable {
       createdAt?: string
       updatedAt?: string
       deleted_at?: string | null
+      folder?: string
     }
     Update: {
       id?: string
       title?: string
       description?: string | null
       contactId?: string
-      freelancerId?: string // Support à la compatibilité avec l'application
-      freelancerid?: string // Champ actuel dans la base de données
-      managerId?: string    // Nouveau champ pour le chargé de compte
+      freelancerId?: string  // Utilisée de manière cohérente
       date?: string
       duration?: number
       status?: string
@@ -53,6 +49,7 @@ export interface AppointmentsTable {
       createdAt?: string
       updatedAt?: string
       deleted_at?: string | null
+      folder?: string
     }
   }
 }

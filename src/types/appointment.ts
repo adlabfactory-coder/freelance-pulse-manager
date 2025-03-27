@@ -1,6 +1,5 @@
 
-// Assurez-vous que ce fichier contient la normalisation de l'ID du freelancer
-
+// Définition des statuts possibles pour un rendez-vous
 export enum AppointmentStatus {
   SCHEDULED = "scheduled",
   PENDING = "pending",
@@ -15,8 +14,7 @@ export interface Appointment {
   title: string;
   description?: string | null;
   contactId: string;
-  freelancerId?: string;
-  managerId?: string;
+  freelancerId: string;
   date: string;
   duration: number;
   status: AppointmentStatus;
@@ -27,18 +25,18 @@ export interface Appointment {
   folder?: string;
   contactName?: string;
   freelancerName?: string;
-  managerName?: string;
+  deleted_at?: string | null;
 }
 
 /**
- * Fonction utilitaire pour normaliser les IDs de freelancer
- * Résout les différences de casse entre freelancerId et freelancerid
+ * Fonction utilitaire pour normaliser les IDs
  */
-export function normalizeFreelancerId(appointment: any): Appointment {
+export function normalizeAppointmentData(appointment: any): Appointment {
   // Si freelancerid existe (minuscules), le copier dans freelancerId (I majuscule)
   if (appointment.freelancerid && !appointment.freelancerId) {
     appointment.freelancerId = appointment.freelancerid;
   }
+  
   // Si contactid existe (minuscules), le copier dans contactId (I majuscule)
   if (appointment.contactid && !appointment.contactId) {
     appointment.contactId = appointment.contactid;

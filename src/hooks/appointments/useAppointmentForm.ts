@@ -134,8 +134,7 @@ export const useAppointmentForm = (
         freelancer_id: freelancerId || undefined,
         location: null,
         notes: null,
-        folder: folder,
-        current_user_id: user?.id
+        folder: folder
       };
       
       console.log("useAppointmentForm: Soumission des données de rendez-vous:", appointmentData);
