@@ -3,17 +3,14 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Wifi, WifiOff, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import { DataSource } from "@/hooks/useDashboardData";
 
 interface DashboardStatusIndicatorProps {
   isConnected: boolean;
   lastUpdated?: Date;
   isRefreshing: boolean;
   onManualRefresh: () => void;
-  dataSources: Array<{
-    name: string;
-    status: 'connected' | 'disconnected' | 'error';
-    lastSynced?: Date;
-  }>;
+  dataSources: DataSource[];
 }
 
 const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
