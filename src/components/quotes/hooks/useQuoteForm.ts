@@ -1,38 +1,16 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useCallback, useEffect } from "react";
+import { Quote, QuoteStatus } from "@/types";
+import { useQuoteDataLoader } from "./useQuoteDataLoader";
+import { useQuoteItems } from "./useQuoteItems";
+import { useQuoteSubmission } from "./useQuoteSubmission";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
-import { toast } from "sonner";
-import { Quote, QuoteItem, QuoteStatus } from "@/types";
-import { Contact } from "@/services/contacts/types";
-import { Service } from "@/types/services";
-import { User } from "@/types";
-import { fetchServices } from "@/services/services-service";
 
-// Initialiser le service
+// Create a quotes service instance
 const quotesService = createQuotesService(supabase);
 
-// Function to calculate the total amount of a quote
-const calculateTotalAmount = (items: Partial<QuoteItem>[]) => {
-  return items.reduce((total, item) => {
-    if (!item.quantity || !item.unitPrice) return total;
-    
-    let itemTotal = item.quantity * item.unitPrice;
-    
-    // Apply tax if present
-    if (item.tax && item.tax > 0) {
-      itemTotal += (itemTotal * item.tax) / 100;
-    }
-    
-    // Apply discount if present
-    if (item.discount && item.discount > 0) {
-      itemTotal -= (itemTotal * item.discount) / 100;
-    }
-    
-    return total + itemTotal;
-  }, 0);
-};
-
-interface UseQuoteFormProps {
+export interface UseQuoteFormProps {
   onSuccess?: (id?: string) => void;
   onCloseDialog?: (open: boolean) => void;
   onQuoteCreated?: (id?: string) => void;
@@ -47,7 +25,7 @@ export const useQuoteForm = ({
   isEditing = false,
   quoteId = ''
 }: UseQuoteFormProps = {}) => {
-  // State for form fields
+  // Quote fields state
   const [contactId, setContactId] = useState<string>("");
   const [freelancerId, setFreelancerId] = useState<string>("");
   const [validUntil, setValidUntil] = useState<Date>(
@@ -55,67 +33,37 @@ export const useQuoteForm = ({
   );
   const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
   const [notes, setNotes] = useState<string>("");
-  const [items, setItems] = useState<(Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isQuoteSaved, setIsQuoteSaved] = useState(false);
+
+  // Use custom hooks
+  const { 
+    loading, 
+    contacts, 
+    freelancers, 
+    services, 
+    loadData 
+  } = useQuoteDataLoader();
   
-  // State for loading data
-  const [loading, setLoading] = useState(true);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [freelancers, setFreelancers] = useState<User[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
+  const { 
+    items, 
+    allItems,
+    currentItem, 
+    setCurrentItem, 
+    addItem, 
+    removeItem, 
+    updateItem, 
+    totalAmount,
+    resetItems
+  } = useQuoteItems();
   
-  // Current item being added
-  const [currentItem, setCurrentItem] = useState<Partial<QuoteItem>>({
-    description: "",
-    quantity: 1,
-    unitPrice: 0,
-    tax: 20, // Default tax rate
-    discount: 0,
-  });
-  
-  // Load data (contacts, freelancers, services)
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Fetch contacts
-      const { data: contactsData, error: contactsError } = await supabase
-        .from('contacts')
-        .select('*')
-        .is('deleted_at', null);
-      
-      if (contactsError) {
-        console.error('Error fetching contacts:', contactsError);
-      } else {
-        setContacts(contactsData || []);
-      }
-      
-      // Fetch freelancers
-      const { data: freelancersData, error: freelancersError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'freelancer');
-      
-      if (freelancersError) {
-        console.error('Error fetching freelancers:', freelancersError);
-      } else {
-        setFreelancers(freelancersData || []);
-      }
-      
-      // Fetch services
-      const servicesData = await fetchServices();
-      setServices(servicesData || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast.error("Une erreur est survenue lors du chargement des données");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-  
-  // Load quote data for editing
+  const { 
+    isSubmitting, 
+    isQuoteSaved, 
+    handleSubmit, 
+    handleSubmitEdit 
+  } = useQuoteSubmission({ onSuccess, onCloseDialog, onQuoteCreated });
+
+  // Load a specific quote for editing
   const loadQuoteData = useCallback(async (id: string) => {
-    setLoading(true);
     try {
       const quote = await quotesService.fetchQuoteById(id);
       if (quote) {
@@ -124,107 +72,14 @@ export const useQuoteForm = ({
         setValidUntil(quote.validUntil);
         setStatus(quote.status);
         setNotes(quote.notes || "");
-        setItems(quote.items.map(item => ({
-          ...item,
-          isNew: false,
-          toDelete: false
-        })));
+        resetItems(quote.items);
       }
     } catch (error) {
       console.error('Error loading quote data:', error);
-      toast.error("Une erreur est survenue lors du chargement du devis");
-    } finally {
-      setLoading(false);
     }
-  }, []);
-  
-  // Form validation
-  const isFormValid = useCallback(() => {
-    if (!contactId) {
-      toast.error("Veuillez sélectionner un client pour ce devis");
-      return false;
-    }
-    
-    if (!freelancerId) {
-      toast.error("Veuillez sélectionner un freelance pour ce devis");
-      return false;
-    }
-    
-    if (!validUntil) {
-      toast.error("Veuillez définir une date de validité pour ce devis");
-      return false;
-    }
-    
-    if (items.length === 0) {
-      toast.error("Veuillez ajouter au moins un élément au devis");
-      return false;
-    }
-    
-    for (const item of items) {
-      if (!item.description) {
-        toast.error("Tous les éléments du devis doivent avoir une description");
-        return false;
-      }
-      
-      if (!item.quantity || item.quantity <= 0) {
-        toast.error("Tous les éléments du devis doivent avoir une quantité valide");
-        return false;
-      }
-      
-      if (!item.unitPrice || item.unitPrice <= 0) {
-        toast.error("Tous les éléments du devis doivent avoir un prix unitaire valide");
-        return false;
-      }
-    }
-    
-    return true;
-  }, [contactId, freelancerId, validUntil, items]);
-  
-  // Add a new item to the quote
-  const handleAddItem = useCallback(() => {
-    if (!currentItem.description || !currentItem.quantity || !currentItem.unitPrice) {
-      toast.error("Veuillez remplir tous les champs de l'article");
-      return;
-    }
-    
-    setItems(prevItems => [
-      ...prevItems,
-      {
-        ...currentItem,
-        isNew: true
-      }
-    ]);
-    
-    // Reset current item
-    setCurrentItem({
-      description: "",
-      quantity: 1,
-      unitPrice: 0,
-      tax: 20, // Default tax rate
-      discount: 0,
-    });
-  }, [currentItem]);
-  
-  // Remove an item from the quote
-  const handleRemoveItem = useCallback((index: number) => {
-    setItems(prevItems => {
-      const newItems = [...prevItems];
-      
-      if (newItems[index].id) {
-        // Mark existing items for deletion instead of removing them from the array
-        newItems[index] = { ...newItems[index], toDelete: true };
-        return newItems;
-      } else {
-        // Remove new items directly
-        return newItems.filter((_, i) => i !== index);
-      }
-    });
-  }, []);
-  
-  // Calculate the total amount
-  const totalAmount = calculateTotalAmount(items.filter(item => !item.toDelete));
-  
-  // Get quote data for submit
+  }, [resetItems]);
+
+  // Get the complete quote data
   const getQuoteData = useCallback((): Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> => {
     return {
       contactId,
@@ -233,132 +88,30 @@ export const useQuoteForm = ({
       status,
       notes,
       totalAmount,
-      items: items.filter(item => !item.toDelete) as QuoteItem[]
+      items: items
     };
   }, [contactId, freelancerId, validUntil, status, notes, totalAmount, items]);
-  
-  // Submit the form to create a quote
-  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+
+  // Handle form submission
+  const submitForm = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    console.log("handleSubmit called");
-    
-    if (!isFormValid()) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Create new quote
-      console.log("Création d'un nouveau devis");
-      
-      const validItems = items
-        .filter(item => !item.toDelete)
-        .map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
-      
-      const quoteData = getQuoteData();
-      console.log("Données du devis:", quoteData);
-      console.log("Éléments du devis:", validItems);
-      
-      const newQuote = await quotesService.createQuote(
-        quoteData,
-        validItems
-      );
-      
-      if (newQuote) {
-        console.log("Devis créé avec succès:", newQuote);
-        toast.success("Devis créé avec succès");
-        setIsQuoteSaved(true);
-        
-        if (onCloseDialog) {
-          console.log("Fermeture du dialogue");
-          onCloseDialog(false);
-        }
-        
-        if (onQuoteCreated) {
-          console.log("Appel de onQuoteCreated");
-          onQuoteCreated(newQuote.id);
-        }
-        
-        if (onSuccess) {
-          console.log("Appel de onSuccess");
-          onSuccess(newQuote.id);
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde du devis:", error);
-      toast.error("Une erreur est survenue lors de la sauvegarde du devis");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [isFormValid, items, getQuoteData, onCloseDialog, onQuoteCreated, onSuccess]);
-  
-  // Handle editing a quote
-  const handleSubmitEdit = async (id: string) => {
-    if (!isFormValid()) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      console.log("Mise à jour du devis", id);
-      
-      const itemsToAdd = items.filter(item => item.isNew && !item.toDelete).map(({ isNew, toDelete, id, ...item }) => item as Omit<QuoteItem, 'id' | 'quoteId'>);
-      const itemsToUpdate = items.filter(item => item.id && !item.isNew && !item.toDelete).map(({ isNew, toDelete, ...item }) => item as Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>);
-      const itemsToDelete = items.filter(item => item.toDelete && item.id).map(item => item.id as string);
-      
-      const updatedQuote = await quotesService.updateQuote(
-        id,
-        {
-          contactId,
-          freelancerId,
-          validUntil,
-          status,
-          notes,
-          totalAmount
-        },
-        {
-          add: itemsToAdd,
-          update: itemsToUpdate,
-          delete: itemsToDelete
-        }
-      );
-      
-      if (updatedQuote) {
-        toast.success("Devis mis à jour avec succès");
-        setIsQuoteSaved(true);
-        
-        if (onCloseDialog) onCloseDialog(false);
-        if (onQuoteCreated) onQuoteCreated(updatedQuote.id);
-      }
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du devis:", error);
-      toast.error("Une erreur est survenue lors de la mise à jour du devis");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Prepare quote data for component
-  const quoteData: Partial<Quote> = {
-    contactId,
-    freelancerId,
-    validUntil,
-    status,
-    notes,
-    totalAmount,
-    items: items.filter(item => !item.toDelete) as QuoteItem[]
-  };
-  
-  // Set quote data from outside
-  const setQuoteData = (data: Partial<Quote>) => {
+    const quoteData = getQuoteData();
+    return handleSubmit(quoteData, allItems);
+  }, [getQuoteData, handleSubmit, allItems]);
+
+  // Set the entire quote data at once
+  const setQuoteData = useCallback((data: Partial<Quote>) => {
     if (data.contactId) setContactId(data.contactId);
     if (data.freelancerId) setFreelancerId(data.freelancerId);
     if (data.validUntil) setValidUntil(data.validUntil);
     if (data.status) setStatus(data.status);
     if (data.notes !== undefined) setNotes(data.notes);
-    if (data.items) setItems(data.items.map(item => ({ ...item, isNew: false, toDelete: false })));
-  };
-  
+    if (data.items) resetItems(data.items);
+  }, [resetItems]);
+
   return {
+    // Basic quote data
     contactId,
     setContactId,
     freelancerId,
@@ -369,31 +122,36 @@ export const useQuoteForm = ({
     setStatus,
     notes,
     setNotes,
-    items: items.filter(item => !item.toDelete),
-    addItem: handleAddItem,
-    updateItem: (index: number, updatedItem: Partial<QuoteItem>) => {
-      setItems(prevItems => {
-        const newItems = [...prevItems];
-        newItems[index] = { ...newItems[index], ...updatedItem };
-        return newItems;
-      });
-    },
-    removeItem: handleRemoveItem,
+    
+    // Items management
+    items,
+    currentItem,
+    setCurrentItem,
+    addItem,
+    removeItem: removeItem,
+    updateItem,
     totalAmount,
+    handleAddItem: addItem,
+    handleRemoveItem: removeItem,
+    
+    // Form state
     isSubmitting,
     isQuoteSaved,
-    handleSubmit,
-    loadData,
-    loadQuoteData,
+    
+    // Data loading
     loading,
     contacts,
     freelancers,
     services,
-    currentItem,
-    setCurrentItem,
-    quoteData,
-    setQuoteData,
-    handleAddItem,
-    handleRemoveItem,
+    loadData,
+    loadQuoteData,
+    
+    // Form actions
+    handleSubmit: submitForm,
+    handleSubmitEdit: (id: string) => handleSubmitEdit(id, getQuoteData(), allItems),
+    
+    // Helper functions
+    quoteData: getQuoteData(),
+    setQuoteData
   };
 };

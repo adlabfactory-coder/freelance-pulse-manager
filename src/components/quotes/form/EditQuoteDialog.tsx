@@ -1,7 +1,7 @@
 
 import React, { useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuoteForm } from "@/hooks/useQuoteForm";
+import { useQuoteForm } from "../hooks/useQuoteForm";
 import QuoteDialogContent from "./QuoteDialogContent";
 import { Quote } from "@/types";
 
