@@ -14,6 +14,7 @@ export interface Contact {
   updatedAt?: Date;
   folder?: string;
   subscription_plan_id?: string;
+  deleted_at?: Date; // Ajout du champ deleted_at
 }
 
 export enum ContactStatus {

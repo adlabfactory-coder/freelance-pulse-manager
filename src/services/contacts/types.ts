@@ -1,4 +1,3 @@
-
 import { ContactStatus } from '@/types/database/enums';
 
 export interface Contact {
@@ -15,6 +14,7 @@ export interface Contact {
   updatedAt: string;
   status: ContactStatus;
   subscriptionPlanId?: string;
+  deleted_at?: string; // Ajout du champ deleted_at
 }
 
 export interface ContactInsert {
