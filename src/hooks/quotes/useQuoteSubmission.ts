@@ -67,7 +67,7 @@ export const useQuoteSubmission = ({
         folder: quoteData.folder || "general"
       };
       
-      // Fix: Pass the quote data and items as separate arguments to createQuote
+      // Appel avec les bons arguments
       const result = await createQuote(quoteDataObj, formattedItems);
       
       if (result && result.id) {
@@ -162,7 +162,7 @@ export const useQuoteSubmission = ({
       // In a real app, you'd track items to delete in your state
       const itemsToDelete: string[] = [];
       
-      // Fix: Pass quoteId, quoteData and properly formatted items object to updateQuote
+      // Appel avec les bons arguments structurés
       const result = await updateQuote(quoteId, quoteDataObj, {
         add: itemsToAdd,
         update: itemsToUpdate,
