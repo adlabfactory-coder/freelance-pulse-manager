@@ -22,7 +22,14 @@ export const contactCreateUpdateService = {
       const now = new Date().toISOString();
       
       // Récupérer l'utilisateur actuellement connecté
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error("Erreur d'authentification:", authError);
+        throw new Error("Problème d'authentification");
+      }
+      
+      const user = authData?.user;
       
       // Si l'utilisateur n'est pas connecté, utiliser la fonction RPC qui contourne les RLS
       if (!user) {
@@ -31,6 +38,9 @@ export const contactCreateUpdateService = {
       }
       
       console.log("Création de contact avec utilisateur authentifié:", user.id);
+      
+      // Assurer que assignedTo est défini correctement
+      const assignedTo = contactData.assignedTo || user.id;
       
       // Utiliser une procédure stockée ou une fonction RPC pour insérer le contact
       const { data, error } = await supabase.rpc('create_contact', {
@@ -42,7 +52,7 @@ export const contactCreateUpdateService = {
           position: contactData.position || null,
           address: contactData.address || null,
           notes: contactData.notes || null,
-          assignedTo: contactData.assignedTo || user.id,
+          assignedTo: assignedTo,
           status: contactData.status,
           createdAt: now,
           updatedAt: now
@@ -72,7 +82,14 @@ export const contactCreateUpdateService = {
       const now = new Date().toISOString();
       
       // Récupérer l'utilisateur actuellement connecté
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error("Erreur d'authentification:", authError);
+        throw new Error("Problème d'authentification");
+      }
+      
+      const user = authData?.user;
       
       if (!user) {
         console.error("Utilisateur non authentifié lors de la mise à jour d'un contact");
