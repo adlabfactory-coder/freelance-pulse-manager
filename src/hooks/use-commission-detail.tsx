@@ -13,7 +13,7 @@ export interface CommissionDetail extends Omit<Commission, 'period'> {
 }
 
 export const useCommissionDetail = (commissionId: string | undefined) => {
-  const { supabaseClient } = useSupabase();
+  const { supabase } = useSupabase();
   const [loading, setLoading] = useState(true);
   const [commission, setCommission] = useState<CommissionDetail | null>(null);
   const [requestingPayment, setRequestingPayment] = useState(false);
@@ -24,14 +24,14 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
     } else {
       setLoading(false);
     }
-  }, [commissionId, supabaseClient]);
+  }, [commissionId, supabase]);
 
   const fetchCommissionDetail = async (id: string) => {
     try {
       setLoading(true);
 
       // Fetch the commission
-      const { data: commissionData, error: commissionError } = await supabaseClient
+      const { data: commissionData, error: commissionError } = await supabase
         .from("commissions")
         .select("*")
         .eq("id", id)
@@ -42,7 +42,7 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
       }
 
       // Fetch the freelancer
-      const { data: freelancer, error: freelancerError } = await supabaseClient
+      const { data: freelancer, error: freelancerError } = await supabase
         .from("users")
         .select("name")
         .eq("id", commissionData.freelancerId)
@@ -104,7 +104,7 @@ export const useCommissionDetail = (commissionId: string | undefined) => {
     
     setRequestingPayment(true);
     try {
-      const { error } = await supabaseClient
+      const { error } = await supabase
         .from("commissions")
         .update({ payment_requested: true })
         .eq("id", commissionId);

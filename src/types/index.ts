@@ -1,4 +1,8 @@
 
+// Re-export properly to avoid ambiguity
+import { ContactStatus } from './database/enums';
+export { ContactStatus };
+
 export * from './database';
 export * from './database/enums';
 export * from './user';
@@ -65,6 +69,7 @@ export interface Subscription {
   clientId: string;
   freelancerId: string;
   clientName?: string;
+  freelancerName?: string;
 }
 
 export interface SearchOptions {
@@ -95,6 +100,16 @@ export interface Quote {
   notes?: string;
   items?: QuoteItem[];
   folder?: string;
+}
+
+export enum QuoteStatus {
+  DRAFT = "draft",
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  EXPIRED = "expired",
+  PAID = "paid",
+  CANCELLED = "cancelled"
 }
 
 export interface QuoteItem {

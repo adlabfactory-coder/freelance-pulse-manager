@@ -1,8 +1,15 @@
 
-// Re-export all appointment functions from their respective files
-export * from './fetch';
-export * from './create';
-export * from './update';
-export * from './delete';
-export * from './validation';
-export * from './filter';
+// Re-export all appointment-related functions
+import { fetchAppointments, fetchAppointmentById } from './fetch';
+import { updateAppointmentStatus } from './update';
+import { deleteAppointment } from './update';
+import { createAppointment } from './create';
+
+// Export all functions with proper names to avoid ambiguity
+export {
+  fetchAppointments,
+  fetchAppointmentById,
+  updateAppointmentStatus,
+  deleteAppointment,
+  createAppointment
+};

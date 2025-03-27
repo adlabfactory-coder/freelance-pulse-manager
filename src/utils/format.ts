@@ -1,111 +1,118 @@
 
-import { format, parse } from 'date-fns';
-import { fr } from 'date-fns/locale';
+/**
+ * Utility functions for formatting dates, currency, and other data
+ */
 
 /**
- * Formate une date au format français lisible
+ * Format a date to a user-friendly string
+ * @param date Date to format
+ * @param options Intl.DateTimeFormatOptions
+ * @returns Formatted date string
  */
-export const formatDateToFrench = (date: Date | string): string => {
-  if (!date) return '-';
+export function formatDate(date: Date | string | undefined, options?: Intl.DateTimeFormatOptions): string {
+  if (!date) return 'N/A';
   
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   if (isNaN(dateObj.getTime())) {
-    console.warn("Date invalide fournie pour formatDateToFrench:", date);
-    return '-';
+    return 'Date invalide';
   }
   
-  return format(dateObj, 'dd MMMM yyyy', { locale: fr });
-};
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    ...options
+  };
+  
+  return new Intl.DateTimeFormat('fr-FR', defaultOptions).format(dateObj);
+}
 
 /**
- * Formate une date et une heure au format API ISO 8601
+ * Format a time from a date object
+ * @param date Date to extract time from
+ * @returns Formatted time string (HH:MM)
  */
-export const formatDateForAPI = (date: Date, timeString: string): string | null => {
-  try {
-    if (!date || !timeString) return null;
-    
-    // Vérifier le format du temps (HH:MM)
-    if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeString)) {
-      console.error("Format d'heure invalide:", timeString);
-      return null;
-    }
-    
-    // Extraire les heures et minutes
-    const [hours, minutes] = timeString.split(':').map(Number);
-    
-    // Créer une nouvelle date avec les heures et minutes spécifiées
-    const dateTime = new Date(date);
-    dateTime.setHours(hours, minutes, 0, 0);
-    
-    // Formater en ISO
-    return dateTime.toISOString();
-  } catch (error) {
-    console.error("Erreur lors du formatage de la date et de l'heure:", error);
-    return null;
-  }
-};
-
-/**
- * Formate une date pour l'affichage dans l'interface utilisateur
- */
-export const formatDateForDisplay = (date: Date | string): string => {
-  if (!date) return '-';
+export function formatTime(date: Date | string | undefined): string {
+  if (!date) return 'N/A';
   
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   if (isNaN(dateObj.getTime())) {
-    console.warn("Date invalide fournie pour formatDateForDisplay:", date);
-    return '-';
+    return 'Heure invalide';
   }
   
-  return format(dateObj, 'dd/MM/yyyy', { locale: fr });
-};
-
-// Alias pour compatibilité
-export const formatDate = formatDateForDisplay;
-
-/**
- * Formate une heure pour l'affichage dans l'interface utilisateur
- */
-export const formatTimeForDisplay = (date: Date | string): string => {
-  if (!date) return '-';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
-    console.warn("Date invalide fournie pour formatTimeForDisplay:", date);
-    return '-';
-  }
-  
-  return format(dateObj, 'HH:mm', { locale: fr });
-};
-
-// Alias pour compatibilité
-export const formatTime = formatTimeForDisplay;
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(dateObj);
+}
 
 /**
- * Parse une chaîne de date au format français
+ * Format a number as currency (€)
+ * @param amount Number to format
+ * @param options Intl.NumberFormatOptions
+ * @returns Formatted currency string
  */
-export const parseFrenchDate = (dateString: string): Date | null => {
-  try {
-    return parse(dateString, 'dd/MM/yyyy', new Date(), { locale: fr });
-  } catch (error) {
-    console.error("Erreur lors de l'analyse de la date française:", error);
-    return null;
-  }
-};
-
-/**
- * Formate un montant en devise
- */
-export const formatCurrency = (amount: number): string => {
-  if (amount === undefined || amount === null) return '0,00 MAD';
+export function formatCurrency(amount: number | undefined | null, options?: Intl.NumberFormatOptions): string {
+  if (amount === undefined || amount === null) return '0,00 €';
   
-  return new Intl.NumberFormat('fr-MA', {
+  const defaultOptions: Intl.NumberFormatOptions = {
     style: 'currency',
-    currency: 'MAD',
+    currency: 'EUR',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
-};
+    maximumFractionDigits: 2,
+    ...options
+  };
+  
+  return new Intl.NumberFormat('fr-FR', defaultOptions).format(amount);
+}
+
+/**
+ * Format a percentage
+ * @param value Number to format as percentage
+ * @returns Formatted percentage string
+ */
+export function formatPercent(value: number | undefined | null): string {
+  if (value === undefined || value === null) return '0%';
+  
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'percent',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  }).format(value / 100);
+}
+
+/**
+ * Format a duration in minutes to hours and minutes
+ * @param minutes Duration in minutes
+ * @returns Formatted duration string
+ */
+export function formatDuration(minutes: number | undefined): string {
+  if (minutes === undefined) return 'N/A';
+  
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  
+  if (hours === 0) {
+    return `${mins} min`;
+  } else if (mins === 0) {
+    return `${hours} h`;
+  } else {
+    return `${hours} h ${mins} min`;
+  }
+}
+
+/**
+ * Truncate text to a maximum length and add ellipsis if needed
+ * @param text Text to truncate
+ * @param maxLength Maximum length
+ * @returns Truncated text with ellipsis if needed
+ */
+export function truncateText(text: string | undefined, maxLength: number): string {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  
+  return `${text.substring(0, maxLength)}...`;
+}

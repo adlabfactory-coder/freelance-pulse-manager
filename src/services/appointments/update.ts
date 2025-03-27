@@ -29,7 +29,7 @@ export const updateAppointmentStatus = async (
 
     toast.success('Statut du rendez-vous mis à jour avec succès');
     
-    // Vérifier si le rendez-vous a été replanifié (ne pas utiliser RESCHEDULED qui n'existe pas)
+    // Vérifier si le rendez-vous a été replanifié
     if (newStatus === AppointmentStatus.SCHEDULED) {
       toast.info('Le rendez-vous a été replanifié');
     }
