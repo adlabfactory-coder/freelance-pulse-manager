@@ -36,16 +36,8 @@ export interface Appointment {
  * entre la base de données et le code TypeScript
  */
 export function normalizeAppointmentData(appointment: any): Appointment {
-  // Adapter le nom des champs freelancerid/contactid qui viennent de la DB
-  if (appointment.freelancerid && !appointment.freelancerId) {
-    appointment.freelancerId = appointment.freelancerid;
-  }
-  
-  if (appointment.contactid && !appointment.contactId) {
-    appointment.contactId = appointment.contactid;
-  }
-  
-  // Adapter les autres noms de champs si nécessaire
+  // Adaptation maintenue pour les cas spéciaux où des noms de champs différents peuvent exister
+  // Par exemple avec created_at et updated_at
   if (appointment.created_at && !appointment.createdAt) {
     appointment.createdAt = appointment.created_at;
   }

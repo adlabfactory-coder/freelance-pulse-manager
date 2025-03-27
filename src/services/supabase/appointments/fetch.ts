@@ -31,7 +31,7 @@ export const createAppointmentsFetchService = (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
-      .eq('freelancerid', freelancerId)  // Utiliser le nom exact de la colonne dans la DB
+      .eq('freelancerId', freelancerId)
       .is('deleted_at', null)
       .order('date', { ascending: true });
 

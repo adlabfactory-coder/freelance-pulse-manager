@@ -74,7 +74,7 @@ export type Database = {
           description: string | null
           duration: number
           folder: string | null
-          freelancerid: string
+          freelancerId: string
           id: string
           location: string | null
           notes: string | null
@@ -90,7 +90,7 @@ export type Database = {
           description?: string | null
           duration: number
           folder?: string | null
-          freelancerid: string
+          freelancerId: string
           id?: string
           location?: string | null
           notes?: string | null
@@ -106,7 +106,7 @@ export type Database = {
           description?: string | null
           duration?: number
           folder?: string | null
-          freelancerid?: string
+          freelancerId?: string
           id?: string
           location?: string | null
           notes?: string | null
@@ -124,7 +124,7 @@ export type Database = {
           },
           {
             foreignKeyName: "appointments_freelancerId_fkey"
-            columns: ["freelancerid"]
+            columns: ["freelancerId"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]

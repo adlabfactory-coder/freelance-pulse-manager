@@ -32,16 +32,9 @@ export const createAppointmentsUpdateService = (supabase: SupabaseClient) => {
    * Met à jour un rendez-vous
    */
   const updateAppointment = async (appointmentId: string, updateData: any) => {
-    // Si updateData contient freelancerId, le convertir en freelancerid pour la DB
-    const dataToUpdate = { ...updateData };
-    if (dataToUpdate.freelancerId !== undefined) {
-      dataToUpdate.freelancerid = dataToUpdate.freelancerId;
-      delete dataToUpdate.freelancerId;
-    }
-    
     const { error } = await supabase
       .from('appointments')
-      .update(dataToUpdate)
+      .update(updateData)
       .eq('id', appointmentId);
 
     if (error) {

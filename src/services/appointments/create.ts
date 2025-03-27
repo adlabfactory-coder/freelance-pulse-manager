@@ -31,8 +31,8 @@ export const createAppointment = async (appointmentData: any) => {
           date: dataToSend.date,
           duration: dataToSend.duration || 30,
           status: dataToSend.status || 'scheduled',
-          contactId: dataToSend.contactId, // Nom cohérent
-          freelancerid: dataToSend.freelancerId, // Adaptation pour DB (freelancerid)
+          contactId: dataToSend.contactId,
+          freelancerId: dataToSend.freelancerId,
           location: dataToSend.location || null,
           notes: dataToSend.notes || null,
           folder: dataToSend.folder || 'general'
@@ -103,8 +103,7 @@ export const createAutoAssignAppointment = async (appointmentData: any) => {
           date: dataToSend.date,
           duration: dataToSend.duration || 30,
           status: 'pending',
-          contactId: dataToSend.contactId, // Nom cohérent
-          freelancerid: dataToSend.freelancerId, // Adaptation pour DB si présent
+          contactId: dataToSend.contactId,
           location: dataToSend.location || null,
           notes: dataToSend.notes || null,
           folder: dataToSend.folder || 'general'
