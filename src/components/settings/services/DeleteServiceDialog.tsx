@@ -1,57 +1,51 @@
 
 import React from "react";
-import { AlertCircle, Trash2 } from "lucide-react";
-import { Service } from "@/types";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Service } from "@/types/service";
 
 interface DeleteServiceDialogProps {
-  service: Service | null;
+  isOpen: boolean;
+  onClose: () => void;
   onConfirm: () => void;
-  onCancel: () => void;
+  serviceName: string;
 }
 
 const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
-  service,
+  isOpen,
+  onClose,
   onConfirm,
-  onCancel,
+  serviceName,
 }) => {
-  if (!service) return null;
-  
   return (
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle className="text-red-500">Confirmer la suppression</DialogTitle>
-      </DialogHeader>
-      <div className="py-4">
-        <p>
-          Êtes-vous sûr de vouloir supprimer le service "{service.name}" ?
-          Cette action est irréversible.
-        </p>
-        
-        <Alert className="mt-4" variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Attention</AlertTitle>
-          <AlertDescription>
-            La suppression d'un service peut affecter les devis existants qui l'utilisent.
-          </AlertDescription>
-        </Alert>
-      </div>
-      <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>
-          Annuler
-        </Button>
-        <Button variant="destructive" onClick={onConfirm}>
-          <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-        </Button>
-      </DialogFooter>
-    </DialogContent>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Vous êtes sur le point de supprimer le service "{serviceName}".
+            Cette action ne peut pas être annulée.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

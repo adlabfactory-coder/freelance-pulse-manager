@@ -62,3 +62,74 @@ export const fetchServiceById = async (id: string): Promise<Service | null> => {
     return null;
   }
 };
+
+export const updateService = async (id: string, serviceData: Partial<Service>): Promise<boolean> => {
+  try {
+    // S'assurer que les champs avec des noms différents sont correctement mappés
+    const updateData = {
+      ...serviceData,
+      is_active: serviceData.is_active
+    };
+    
+    const { error } = await supabase
+      .from('services')
+      .update(updateData)
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Error updating service with ID ${id}:`, error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Unexpected error updating service with ID ${id}:`, error);
+    return false;
+  }
+};
+
+export const createService = async (serviceData: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, id?: string }> => {
+  try {
+    // S'assurer que les champs avec des noms différents sont correctement mappés
+    const insertData = {
+      ...serviceData,
+      is_active: serviceData.is_active ?? true
+    };
+    
+    const { data, error } = await supabase
+      .from('services')
+      .insert(insertData)
+      .select('id')
+      .single();
+    
+    if (error) {
+      console.error('Error creating service:', error);
+      return { success: false };
+    }
+    
+    return { success: true, id: data.id };
+  } catch (error) {
+    console.error('Unexpected error creating service:', error);
+    return { success: false };
+  }
+};
+
+export const deleteService = async (id: string): Promise<boolean> => {
+  try {
+    // Utiliser une suppression logique en mettant à jour is_active à false
+    const { error } = await supabase
+      .from('services')
+      .update({ is_active: false })
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Error deleting service with ID ${id}:`, error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Unexpected error deleting service with ID ${id}:`, error);
+    return false;
+  }
+};

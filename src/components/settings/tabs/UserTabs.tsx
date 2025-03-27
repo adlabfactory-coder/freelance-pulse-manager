@@ -22,7 +22,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
   // State for PersonalInfoTab
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
-  const [userRole, setUserRole] = useState<UserRole>(role || UserRole.FREELANCER);
+  const [userRole, setUserRole] = useState<UserRole>(role as UserRole || UserRole.FREELANCER);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
     if (user) {
       setName(user.name || "");
       setEmail(user.email || "");
-      setUserRole(role || UserRole.FREELANCER);
+      setUserRole(role as UserRole || UserRole.FREELANCER);
     }
   }, [user, role]);
 
@@ -74,7 +74,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
         description: "Seuls les administrateurs peuvent modifier les rôles utilisateurs.",
       });
       // Réinitialiser au rôle actuel
-      setUserRole(role || UserRole.FREELANCER);
+      setUserRole(role as UserRole || UserRole.FREELANCER);
       return;
     }
     
@@ -151,7 +151,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
           setRole={setUserRole}
           canEdit={true}
           isCurrentUser={true}
-          currentUserRole={role || UserRole.FREELANCER}
+          currentUserRole={role as UserRole || UserRole.FREELANCER}
           isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
           // Seuls les administrateurs peuvent modifier les rôles

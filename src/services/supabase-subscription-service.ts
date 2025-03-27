@@ -1,78 +1,72 @@
-import { SubscriptionPlan, SubscriptionInterval, SubscriptionStatus } from '@/types';
 
-// Fonction pour récupérer les plans d'abonnement
-export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
-  // Pour la démo, retourner des données fictives
-  return [
-    {
-      id: '1',
-      name: 'Plan Essentiel',
-      description: 'Pour les petites entreprises',
-      interval: SubscriptionInterval.MONTHLY,
-      features: {
-        website: true,
-        social_media: true,
-        features: ['Site Web', 'Gestion réseaux sociaux', 'Support 5/7']
-      },
-      created_at: new Date(),
-      updated_at: new Date(),
-      code: 'ESSENTIAL',
-      isActive: true,
-      price: 199
-    },
-    {
-      id: '2',
-      name: 'Plan Professionnel',
-      description: 'Pour les entreprises en croissance',
-      interval: SubscriptionInterval.MONTHLY,
-      features: {
-        website: true,
-        social_media: true,
-        features: ['Site Web Premium', 'Gestion réseaux sociaux avancée', 'Support 7/7', 'Référencement SEO', 'Campagnes publicitaires']
-      },
-      created_at: new Date(),
-      updated_at: new Date(),
-      code: 'PRO',
-      isActive: true,
-      price: 399
-    },
-    {
-      id: '3',
-      name: 'Plan Entreprise',
-      description: 'Solution complète pour grandes entreprises',
-      interval: SubscriptionInterval.MONTHLY,
-      features: {
-        website: true,
-        social_media: true,
-        features: ['Site Web Sur Mesure', 'Stratégie marketing complète', 'Support dédié 24/7', 'Référencement SEO avancé', 'Campagnes publicitaires optimisées', 'Analyse de données']
-      },
-      created_at: new Date(),
-      updated_at: new Date(),
-      code: 'ENTERPRISE',
-      isActive: true,
-      price: 899
-    },
-    {
-      id: '4',
-      name: 'Plan Annuel',
-      description: '2 mois offerts sur le plan Professionnel',
-      interval: SubscriptionInterval.ANNUAL,
-      features: {
-        website: true,
-        social_media: true,
-        features: ['Site Web Premium', 'Gestion réseaux sociaux avancée', 'Support 7/7', 'Référencement SEO', 'Campagnes publicitaires', 'Audit annuel']
-      },
-      created_at: new Date(),
-      updated_at: new Date(),
-      code: 'YEARLY',
-      isActive: true,
-      price: 3990
-    }
-  ] as SubscriptionPlan[];
-};
+import { supabase } from "@/lib/supabase-client";
+import { SubscriptionPlan, SubscriptionInterval, SubscriptionStatus } from "@/types";
 
-// Fonction pour récupérer un plan d'abonnement spécifique
-export const getSubscriptionPlanById = async (id: string): Promise<SubscriptionPlan | null> => {
-  const plans = await getSubscriptionPlans();
-  return plans.find(plan => plan.id === id) || null;
+export const createSubscriptionPlanService = () => {
+  return {
+    fetchAll: async (): Promise<SubscriptionPlan[]> => {
+      try {
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('is_active', true);
+        
+        if (error) {
+          console.error('Error fetching subscription plans:', error);
+          throw error;
+        }
+        
+        return data.map(plan => ({
+          id: plan.id,
+          name: plan.name,
+          code: plan.code,
+          description: plan.description,
+          price: Number(plan.price),
+          interval: plan.interval as SubscriptionInterval,
+          features: plan.features,
+          is_active: plan.is_active,
+          created_at: plan.created_at,
+          updated_at: plan.updated_at
+        }));
+      } catch (error) {
+        console.error('Unexpected error fetching subscription plans:', error);
+        return [];
+      }
+    },
+    
+    fetchById: async (id: string): Promise<SubscriptionPlan | null> => {
+      try {
+        const { data, error } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          console.error(`Error fetching subscription plan with ID ${id}:`, error);
+          return null;
+        }
+        
+        if (!data) return null;
+        
+        return {
+          id: data.id,
+          name: data.name,
+          code: data.code,
+          description: data.description,
+          price: Number(data.price),
+          interval: data.interval as SubscriptionInterval,
+          features: data.features,
+          is_active: data.is_active,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+      } catch (error) {
+        console.error(`Unexpected error fetching subscription plan with ID ${id}:`, error);
+        return null;
+      }
+    },
+    
+    // Autres méthodes selon les besoins...
+  };
 };

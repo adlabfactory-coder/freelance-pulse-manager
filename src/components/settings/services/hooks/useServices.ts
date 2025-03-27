@@ -1,152 +1,128 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
-import { Service, ServiceType } from '@/types/service'; 
+import { useState, useEffect, useCallback } from "react";
+import { Service, ServiceType } from "@/types/service";
+import { useToast } from "@/hooks/use-toast";
+import { fetchServices, createService, updateService, deleteService } from "@/services/services-service";
 
 export const useServices = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<Partial<Service> | null>(null);
+  const { toast } = useToast();
 
-  const fetchServices = useCallback(async () => {
+  const getServices = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    
     try {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .order('name');
-        
-      if (error) throw error;
-      
-      // Convert to the correct Service type with proper ServiceType enum values
-      const typedServices = data.map(service => ({
-        ...service,
-        type: service.type as ServiceType,
-        isActive: service.is_active
-      })) as Service[];
-      
-      setServices(typedServices);
-    } catch (err) {
-      console.error('Error fetching services:', err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      toast.error('Failed to load services');
+      const fetchedServices = await fetchServices();
+      setServices(fetchedServices);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Erreur lors du chargement des services");
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger les services"
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const handleAddClick = () => {
-    setSelectedService({
-      name: '',
-      description: '',
-      price: 0,
-      type: ServiceType.SERVICE,
-      is_active: true
-    });
-    setEditDialogOpen(true);
-  };
-
-  const handleEditClick = (service: Service) => {
-    setSelectedService(service);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteClick = (service: Service) => {
-    setSelectedService(service);
-    setConfirmDeleteDialogOpen(true);
-  };
-
-  const handleServiceChange = (field: string, value: any) => {
-    setSelectedService(prev => prev ? { ...prev, [field]: value } : null);
-  };
-
-  const handleSaveService = async (service: Partial<Service>) => {
-    try {
-      if (service.id) {
-        // Update existing service
-        const { error } = await supabase
-          .from('services')
-          .update({
-            name: service.name,
-            description: service.description,
-            price: service.price,
-            type: service.type,
-            is_active: service.is_active,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', service.id);
-
-        if (error) throw error;
-        toast.success('Service updated successfully');
-      } else {
-        // Create new service
-        const { error } = await supabase
-          .from('services')
-          .insert({
-            name: service.name,
-            description: service.description,
-            price: service.price,
-            type: service.type,
-            is_active: service.is_active
-          });
-
-        if (error) throw error;
-        toast.success('Service created successfully');
-      }
-      
-      setEditDialogOpen(false);
-      fetchServices();
-    } catch (err) {
-      console.error('Error saving service:', err);
-      toast.error('Failed to save service');
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedService || !selectedService.id) return;
-    
-    try {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', selectedService.id);
-        
-      if (error) throw error;
-      
-      toast.success('Service deleted successfully');
-      setConfirmDeleteDialogOpen(false);
-      fetchServices();
-    } catch (err) {
-      console.error('Error deleting service:', err);
-      toast.error('Failed to delete service');
-    }
-  };
+  }, [toast]);
 
   useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
+    getServices();
+  }, [getServices]);
+
+  const addService = useCallback(async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const result = await createService(service);
+      if (result.success) {
+        toast({
+          title: "Succès",
+          description: "Service ajouté avec succès"
+        });
+        await getServices();
+        return true;
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible d'ajouter le service"
+        });
+        return false;
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: err.message || "Une erreur est survenue"
+      });
+      return false;
+    }
+  }, [getServices, toast]);
+
+  const editService = useCallback(async (id: string, service: Partial<Service>) => {
+    try {
+      const success = await updateService(id, service);
+      if (success) {
+        toast({
+          title: "Succès",
+          description: "Service mis à jour avec succès"
+        });
+        await getServices();
+        return true;
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de mettre à jour le service"
+        });
+        return false;
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: err.message || "Une erreur est survenue"
+      });
+      return false;
+    }
+  }, [getServices, toast]);
+
+  const removeService = useCallback(async (id: string) => {
+    try {
+      const success = await deleteService(id);
+      if (success) {
+        toast({
+          title: "Succès",
+          description: "Service supprimé avec succès"
+        });
+        await getServices();
+        return true;
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de supprimer le service"
+        });
+        return false;
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: err.message || "Une erreur est survenue"
+      });
+      return false;
+    }
+  }, [getServices, toast]);
 
   return {
     services,
     loading,
     error,
-    refetch: fetchServices,
-    editDialogOpen,
-    confirmDeleteDialogOpen,
-    selectedService,
-    handleAddClick,
-    handleEditClick,
-    handleDeleteClick,
-    handleServiceChange,
-    handleSaveService,
-    handleConfirmDelete,
-    setEditDialogOpen,
-    setConfirmDeleteDialogOpen
+    getServices,
+    addService,
+    editService,
+    removeService
   };
 };

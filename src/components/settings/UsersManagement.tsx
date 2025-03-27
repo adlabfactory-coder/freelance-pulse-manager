@@ -189,10 +189,10 @@ const UsersManagement: React.FC<UsersManagementProps> = ({
                     >
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{USER_ROLE_LABELS[user.role]}</TableCell>
+                      <TableCell>{USER_ROLE_LABELS[user.role as UserRole]}</TableCell>
                       <TableCell>
                         {supervisor 
-                          ? `${supervisor.name} (${USER_ROLE_LABELS[supervisor.role]})` 
+                          ? `${supervisor.name} (${USER_ROLE_LABELS[supervisor.role as UserRole]})` 
                           : "Aucun"}
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>

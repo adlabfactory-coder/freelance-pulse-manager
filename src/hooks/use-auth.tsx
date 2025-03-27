@@ -4,22 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
 import { mockAuthentication } from "@/services/mock-auth-service";
+import { AuthContextType } from "@/types/auth";
 
 // Context pour l'authentification
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  role: UserRole | null;
-  isAdmin: boolean;
-  isFreelancer: boolean;
-  isSuperAdmin: boolean;
-  isAccountManager: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
-}
-
 const defaultContext: AuthContextType = {
   user: null,
   isAuthenticated: false,
@@ -29,6 +16,7 @@ const defaultContext: AuthContextType = {
   isFreelancer: false,
   isSuperAdmin: false,
   isAccountManager: false,
+  isAdminOrSuperAdmin: false,
   signIn: async () => ({ success: false }),
   signUp: async () => ({ success: false }),
   logout: async () => {},
@@ -113,8 +101,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Déterminer les rôles utilisateur
   const role = user?.role as UserRole | null;
-  const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+  const isAdmin = role === UserRole.ADMIN;
   const isSuperAdmin = role === UserRole.SUPER_ADMIN;
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
   const isFreelancer = role === UserRole.FREELANCER;
   const isAccountManager = role === UserRole.ACCOUNT_MANAGER;
   const isAuthenticated = !!user;
@@ -210,6 +199,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isFreelancer,
     isSuperAdmin,
     isAccountManager,
+    isAdminOrSuperAdmin,
     signIn,
     signUp,
     logout,
@@ -226,6 +216,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Import UserRole from types
-import { UserRole } from '@/types';

@@ -9,3 +9,11 @@ export interface Service {
   created_at?: string;
   updated_at?: string;
 }
+
+export enum ServiceType {
+  SUBSCRIPTION = 'subscription',
+  ONE_TIME = 'one_time',
+  RECURRING = 'recurring',
+  CONSULTING = 'consulting',
+  OTHER = 'other'
+}

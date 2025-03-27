@@ -1,109 +1,124 @@
 
-import { Service } from "@/types/service";
+import React from "react";
 import {
   Table,
   TableBody,
+  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
-
-// Add formatPrice to format service prices
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(price);
-};
-
-// Corrigeons la comparaison de type
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case "service":
-      return "Service";
-    case "product":
-      return "Produit";
-    case "subscription":
-      return "Abonnement";
-    case "pack":
-      return "Pack";
-    default:
-      return type;
-  }
-};
+import { Edit, Trash, Plus } from "lucide-react";
+import { Service } from "@/types/service";
+import { formatCurrency } from "@/utils/format";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import DeleteServiceDialog from "./DeleteServiceDialog";
 
 interface ServicesListProps {
   services: Service[];
   loading: boolean;
-  onEditService: (service: Service) => void;
-  onDeleteService: (service: Service) => void;
+  onEdit: (service: Service) => void;
+  onDelete: (serviceId: string) => void;
+  onAdd: () => void;
 }
 
-const ServicesList = ({ services, loading, onEditService, onDeleteService }: ServicesListProps) => {
+const ServicesList: React.FC<ServicesListProps> = ({
+  services,
+  loading,
+  onEdit,
+  onDelete,
+  onAdd,
+}) => {
+  const [serviceToDelete, setServiceToDelete] = React.useState<Service | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+
+  const handleDeleteClick = (service: Service) => {
+    setServiceToDelete(service);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (serviceToDelete) {
+      onDelete(serviceToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setServiceToDelete(null);
+    }
+  };
+
   if (loading) {
-    return <div className="text-center py-4">Chargement des services...</div>;
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-md border">
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">Liste des services</h2>
+        <Button onClick={onAdd} className="flex items-center">
+          <Plus className="mr-2 h-4 w-4" />
+          Ajouter un service
+        </Button>
+      </div>
+
       <Table>
+        <TableCaption>Liste des services disponibles</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead>Nom</TableHead>
-            <TableHead>Description</TableHead>
             <TableHead>Type</TableHead>
             <TableHead className="text-right">Prix</TableHead>
-            <TableHead className="text-right">Statut</TableHead>
+            <TableHead>Statut</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {services.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
-                Aucun service disponible
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                Aucun service trouvé
               </TableCell>
             </TableRow>
           ) : (
             services.map((service) => (
               <TableRow key={service.id}>
                 <TableCell className="font-medium">{service.name}</TableCell>
-                <TableCell>{service.description || "-"}</TableCell>
+                <TableCell>{service.type}</TableCell>
+                <TableCell className="text-right">{formatCurrency(service.price)}</TableCell>
                 <TableCell>
-                  {getTypeLabel(service.type)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatPrice(service.price)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      service.isActive || service.is_active
-                        ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
-                        : "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20"
-                    }`}
-                  >
-                    {service.isActive || service.is_active ? "Actif" : "Inactif"}
-                  </span>
+                  {service.is_active ? (
+                    <Badge variant="default" className="bg-green-500">
+                      Actif
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-gray-300">
+                      Inactif
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
                     <Button
-                      variant="outline"
+                      onClick={() => onEdit(service)}
                       size="sm"
-                      onClick={() => onEditService(service)}
+                      variant="outline"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant="outline"
+                      onClick={() => handleDeleteClick(service)}
                       size="sm"
-                      onClick={() => onDeleteService(service)}
+                      variant="outline"
+                      className="text-destructive hover:bg-destructive hover:text-white"
                     >
-                      <Trash className="h-4 w-4 text-red-500" />
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -112,6 +127,13 @@ const ServicesList = ({ services, loading, onEditService, onDeleteService }: Ser
           )}
         </TableBody>
       </Table>
+
+      <DeleteServiceDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        serviceName={serviceToDelete?.name || ""}
+      />
     </div>
   );
 };

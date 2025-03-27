@@ -1,5 +1,5 @@
 
-import { User } from './user';
+import { User, UserRole } from './index';
 
 export interface AuthState {
   user: User | null;
@@ -8,12 +8,16 @@ export interface AuthState {
 }
 
 export interface AuthContextType extends AuthState {
-  signIn: (email: string, password: string) => Promise<User | null>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateUser: (data: Partial<User>) => Promise<User | null>;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  role: UserRole | null;
   isAdmin: boolean;
-  isAccountManager: boolean;
   isFreelancer: boolean;
+  isSuperAdmin: boolean;
+  isAccountManager: boolean;
   isAdminOrSuperAdmin: boolean;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, name: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
 }

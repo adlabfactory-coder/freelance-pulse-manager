@@ -1,151 +1,256 @@
+import { supabase } from "@/lib/supabase-client";
+import { Subscription, SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from "@/types";
 
-import { supabase } from '@/integrations/supabase/client';
-import { SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from '@/types';
-
-export const getSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
+export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
   try {
     const { data, error } = await supabase
       .from('subscription_plans')
       .select('*')
       .eq('is_active', true);
-
+    
     if (error) {
-      console.error('Erreur lors de la récupération des plans d\'abonnement:', error);
-      return [];
+      console.error('Error fetching subscription plans:', error);
+      throw error;
     }
-
+    
     return data.map(plan => ({
       id: plan.id,
       name: plan.name,
-      description: plan.description,
-      interval: plan.interval as SubscriptionInterval,
-      price: plan.price,
-      isActive: plan.is_active,
       code: plan.code,
+      description: plan.description,
+      price: Number(plan.price),
+      interval: plan.interval as SubscriptionInterval,
       features: plan.features,
-      created_at: plan.created_at ? new Date(plan.created_at) : undefined,
-      updated_at: plan.updated_at ? new Date(plan.updated_at) : undefined
+      is_active: plan.is_active,
+      created_at: plan.created_at,
+      updated_at: plan.updated_at
     }));
   } catch (error) {
-    console.error('Erreur lors de la récupération des plans d\'abonnement:', error);
+    console.error('Unexpected error fetching subscription plans:', error);
     return [];
   }
 };
 
-export const getSubscriptionPlanById = async (id: string): Promise<SubscriptionPlan | null> => {
+export const fetchSubscriptions = async (userId?: string): Promise<Subscription[]> => {
+  try {
+    let query = supabase
+      .from('subscriptions')
+      .select(`
+        *,
+        clients:clientId(name),
+        freelancers:freelancerId(name)
+      `);
+    
+    if (userId) {
+      // Si un ID est fourni, filtrer soit par freelancerId soit par clientId
+      query = query.or(`freelancerId.eq.${userId},clientId.eq.${userId}`);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching subscriptions:', error);
+      throw error;
+    }
+    
+    return data.map(sub => ({
+      id: sub.id,
+      name: sub.name,
+      description: sub.description,
+      price: Number(sub.price),
+      interval: sub.interval as SubscriptionInterval,
+      clientId: sub.clientId,
+      clientName: sub.clients?.name,
+      freelancerId: sub.freelancerId,
+      freelancerName: sub.freelancers?.name,
+      status: sub.status as SubscriptionStatus,
+      startDate: new Date(sub.startDate),
+      endDate: sub.endDate ? new Date(sub.endDate) : null,
+      renewalDate: sub.renewalDate ? new Date(sub.renewalDate) : null,
+      createdAt: sub.createdAt ? new Date(sub.createdAt) : undefined,
+      updatedAt: sub.updatedAt ? new Date(sub.updatedAt) : undefined
+    }));
+  } catch (error) {
+    console.error('Unexpected error fetching subscriptions:', error);
+    return [];
+  }
+};
+
+export const fetchSubscriptionById = async (id: string): Promise<Subscription | null> => {
   try {
     const { data, error } = await supabase
-      .from('subscription_plans')
-      .select('*')
+      .from('subscriptions')
+      .select(`
+        *,
+        clients:clientId(name),
+        freelancers:freelancerId(name)
+      `)
       .eq('id', id)
       .single();
-
-    if (error) {
-      console.error(`Erreur lors de la récupération du plan d'abonnement ${id}:`, error);
-      return null;
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      interval: data.interval as SubscriptionInterval,
-      price: data.price,
-      isActive: data.is_active,
-      code: data.code,
-      features: data.features,
-      created_at: data.created_at ? new Date(data.created_at) : undefined,
-      updated_at: data.updated_at ? new Date(data.updated_at) : undefined
-    };
-  } catch (error) {
-    console.error(`Erreur lors de la récupération du plan d'abonnement ${id}:`, error);
-    return null;
-  }
-};
-
-export const createSubscriptionPlan = async (plan: Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>): Promise<SubscriptionPlan | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('subscription_plans')
-      .insert({
-        name: plan.name,
-        description: plan.description,
-        interval: plan.interval,
-        price: plan.price,
-        is_active: plan.isActive,
-        code: plan.code,
-        features: plan.features
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Erreur lors de la création du plan d\'abonnement:', error);
-      return null;
-    }
-
-    return {
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      interval: data.interval as SubscriptionInterval,
-      price: data.price,
-      isActive: data.is_active,
-      code: data.code,
-      features: data.features,
-      created_at: data.created_at ? new Date(data.created_at) : undefined,
-      updated_at: data.updated_at ? new Date(data.updated_at) : undefined
-    };
-  } catch (error) {
-    console.error('Erreur lors de la création du plan d\'abonnement:', error);
-    return null;
-  }
-};
-
-export const updateSubscriptionPlan = async (id: string, updates: Partial<Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>>): Promise<boolean> => {
-  try {
-    const updateData: any = {};
     
-    if (updates.name !== undefined) updateData.name = updates.name;
-    if (updates.description !== undefined) updateData.description = updates.description;
-    if (updates.interval !== undefined) updateData.interval = updates.interval;
-    if (updates.price !== undefined) updateData.price = updates.price;
-    if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
-    if (updates.code !== undefined) updateData.code = updates.code;
-    if (updates.features !== undefined) updateData.features = updates.features;
+    if (error) {
+      console.error(`Error fetching subscription with ID ${id}:`, error);
+      return null;
+    }
+    
+    if (!data) return null;
+    
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      price: Number(data.price),
+      interval: data.interval as SubscriptionInterval,
+      clientId: data.clientId,
+      clientName: data.clients?.name,
+      freelancerId: data.freelancerId,
+      freelancerName: data.freelancers?.name,
+      status: data.status as SubscriptionStatus,
+      startDate: new Date(data.startDate),
+      endDate: data.endDate ? new Date(data.endDate) : null,
+      renewalDate: data.renewalDate ? new Date(data.renewalDate) : null,
+      createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
+      updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined
+    };
+  } catch (error) {
+    console.error(`Unexpected error fetching subscription with ID ${id}:`, error);
+    return null;
+  }
+};
+
+export const createSubscription = async (subscriptionData: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean, id?: string }> => {
+  try {
+    // Préparer les données pour l'insertion
+    const insertData = {
+      name: subscriptionData.name,
+      description: subscriptionData.description,
+      price: subscriptionData.price,
+      interval: subscriptionData.interval,
+      clientId: subscriptionData.clientId,
+      freelancerId: subscriptionData.freelancerId,
+      status: subscriptionData.status,
+      startDate: subscriptionData.startDate.toISOString(),
+      endDate: subscriptionData.endDate ? subscriptionData.endDate.toISOString() : null,
+      renewalDate: subscriptionData.renewalDate ? subscriptionData.renewalDate.toISOString() : null
+    };
+    
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .insert(insertData)
+      .select('id')
+      .single();
+    
+    if (error) {
+      console.error('Error creating subscription:', error);
+      return { success: false };
+    }
+    
+    return { success: true, id: data.id };
+  } catch (error) {
+    console.error('Unexpected error creating subscription:', error);
+    return { success: false };
+  }
+};
+
+export const updateSubscription = async (id: string, subscriptionData: Partial<Subscription>): Promise<boolean> => {
+  try {
+    // Préparer les données pour la mise à jour
+    const updateData: any = { ...subscriptionData };
+    
+    // Convertir les dates en chaînes ISO
+    if (updateData.startDate instanceof Date) {
+      updateData.startDate = updateData.startDate.toISOString();
+    }
+    if (updateData.endDate instanceof Date) {
+      updateData.endDate = updateData.endDate.toISOString();
+    }
+    if (updateData.renewalDate instanceof Date) {
+      updateData.renewalDate = updateData.renewalDate.toISOString();
+    }
+    
+    // Supprimer les propriétés qui ne sont pas des colonnes de la table
+    delete updateData.clientName;
+    delete updateData.freelancerName;
+    delete updateData.createdAt;
+    delete updateData.updatedAt;
     
     const { error } = await supabase
-      .from('subscription_plans')
+      .from('subscriptions')
       .update(updateData)
       .eq('id', id);
-
+    
     if (error) {
-      console.error(`Erreur lors de la mise à jour du plan d'abonnement ${id}:`, error);
+      console.error(`Error updating subscription with ID ${id}:`, error);
       return false;
     }
-
+    
     return true;
   } catch (error) {
-    console.error(`Erreur lors de la mise à jour du plan d'abonnement ${id}:`, error);
+    console.error(`Unexpected error updating subscription with ID ${id}:`, error);
     return false;
   }
 };
 
-export const deleteSubscriptionPlan = async (id: string): Promise<boolean> => {
+export const cancelSubscription = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('subscription_plans')
-      .delete()
+      .from('subscriptions')
+      .update({
+        status: SubscriptionStatus.CANCELLED,
+        endDate: new Date().toISOString()
+      })
       .eq('id', id);
-
+    
     if (error) {
-      console.error(`Erreur lors de la suppression du plan d'abonnement ${id}:`, error);
+      console.error(`Error cancelling subscription with ID ${id}:`, error);
       return false;
     }
-
+    
     return true;
   } catch (error) {
-    console.error(`Erreur lors de la suppression du plan d'abonnement ${id}:`, error);
+    console.error(`Unexpected error cancelling subscription with ID ${id}:`, error);
+    return false;
+  }
+};
+
+export const renewSubscription = async (id: string, newEndDate: Date): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        status: SubscriptionStatus.ACTIVE,
+        endDate: newEndDate.toISOString(),
+        renewalDate: null
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Error renewing subscription with ID ${id}:`, error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Unexpected error renewing subscription with ID ${id}:`, error);
+    return false;
+  }
+};
+
+export const deleteSubscription = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Error deleting subscription with ID ${id}:`, error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error(`Unexpected error deleting subscription with ID ${id}:`, error);
     return false;
   }
 };
