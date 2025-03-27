@@ -89,68 +89,44 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       
       if (!data) return null;
       
-      return {
-        id: data.id,
-        contactId: data.contactId,
-        freelancerId: data.freelancerId,
-        totalAmount: Number(data.totalAmount),
-        validUntil: new Date(data.validUntil),
-        status: data.status as QuoteStatus,
-        notes: data.notes,
-        folder: data.folder || 'general',
-        createdAt: new Date(data.createdAt),
-        updatedAt: new Date(data.updatedAt),
-        items: data.quote_items ? data.quote_items.map((item: any) => ({
-          id: item.id,
-          quoteId: item.quoteId,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice),
-          tax: item.tax ? Number(item.tax) : 0,
-          discount: item.discount ? Number(item.discount) : 0,
-          serviceId: item.serviceId
-        })) : []
-      };
+      return mapDatabaseQuoteToQuote(data);
     },
     
-    // Create a new quote with its items
-    createQuote: async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, items: Omit<QuoteItem, 'id' | 'quoteId'>[]): Promise<Quote | null> => {
+    // Create a new quote
+    createQuote: async (
+      quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>,
+      items: Omit<QuoteItem, 'id' | 'quoteId'>[]
+    ): Promise<Quote | null> => {
       try {
-        console.log('Création du devis avec les données:', quoteData);
-        console.log('Éléments du devis:', items);
+        // Format date for database
+        const validUntil = typeof quoteData.validUntil === 'string' 
+          ? quoteData.validUntil 
+          : quoteData.validUntil.toISOString();
         
-        // Ensure the status is "draft" and handle date conversion
-        const finalQuoteData = {
-          contactId: quoteData.contactId,
-          freelancerId: quoteData.freelancerId,
-          totalAmount: quoteData.totalAmount,
-          validUntil: typeof quoteData.validUntil === 'string' ? quoteData.validUntil : quoteData.validUntil.toISOString(),
-          status: QuoteStatus.DRAFT, // Force status to "draft"
-          notes: quoteData.notes || '',
-          folder: quoteData.folder || 'general'
-        };
+        // Create quote
+        const { data: quoteResult, error: quoteError } = await supabase
+          .rpc('create_quote', {
+            quote_data: {
+              contactId: quoteData.contactId,
+              freelancerId: quoteData.freelancerId,
+              totalAmount: quoteData.totalAmount,
+              validUntil: validUntil,
+              status: quoteData.status,
+              notes: quoteData.notes,
+              folder: quoteData.folder
+            }
+          });
         
-        // 1. Insert the main quote using the service role to bypass RLS
-        const { data: quote, error: quoteError } = await supabase.rpc('create_quote', {
-          quote_data: finalQuoteData
-        });
-        
-        if (quoteError) {
+        if (quoteError || !quoteResult) {
           console.error('Erreur lors de la création du devis:', quoteError);
-          toast.error("Erreur lors de la création du devis: " + quoteError.message);
+          toast.error('Erreur lors de la création du devis');
           return null;
         }
         
-        if (!quote || !quote.id) {
-          console.error('Aucun ID de devis retourné après création');
-          toast.error("Erreur lors de la création du devis: aucun ID retourné");
-          return null;
-        }
-        
-        // 2. Insert quote items
-        if (items.length > 0 && quote) {
-          const quoteItems = items.map(item => ({
-            quoteId: quote.id,
+        // Add items if there are any
+        if (items.length > 0) {
+          const formattedItems = items.map(item => ({
+            quoteId: quoteResult.id,
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -159,182 +135,172 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
             serviceId: item.serviceId
           }));
           
-          const { error: itemsError } = await supabase.rpc('add_quote_items', {
-            items_data: quoteItems
-          });
+          const { error: itemsError } = await supabase
+            .rpc('add_quote_items', { items_data: formattedItems });
           
           if (itemsError) {
-            console.error('Erreur lors de l\'insertion des éléments du devis:', itemsError);
-            toast.error("Certains éléments du devis n'ont pas pu être ajoutés");
+            console.error('Erreur lors de l\'ajout des éléments au devis:', itemsError);
+            toast.error('Erreur lors de l\'ajout des éléments au devis');
+            // Continue anyway, we have the quote created
           }
         }
         
-        // 3. Fetch the complete quote with its items
-        if (quote) {
-          return await service.fetchQuoteById(quote.id);
-        }
-        return null;
+        // Return the created quote
+        return await service.fetchQuoteById(quoteResult.id);
       } catch (error) {
         console.error('Erreur inattendue lors de la création du devis:', error);
-        toast.error("Une erreur inattendue s'est produite lors de la création du devis");
+        toast.error('Erreur inattendue lors de la création du devis');
         return null;
       }
     },
     
     // Update an existing quote
-    updateQuote: async (id: string, quoteData: Partial<Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>>, 
-      items?: { 
-        add?: Omit<QuoteItem, 'id' | 'quoteId'>[], 
-        update?: (Partial<QuoteItem> & { id: string })[], // Fixed type here
-        delete?: string[]
-      }): Promise<Quote | null> => {
-      
+    updateQuote: async (
+      id: string,
+      quoteData: Partial<Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>>,
+      itemChanges: {
+        add: Omit<QuoteItem, 'id' | 'quoteId'>[];
+        update: Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>[];
+        delete: string[];
+      }
+    ): Promise<Quote | null> => {
       try {
-        // 1. Update the main quote
-        const updates: any = {
-          ...quoteData,
-          updatedAt: new Date().toISOString()
-        };
-        
-        if (quoteData.validUntil) {
-          updates.validUntil = typeof quoteData.validUntil === 'string' ? quoteData.validUntil : quoteData.validUntil.toISOString();
-        }
-        
-        const { error: quoteError } = await supabase.rpc('update_quote', {
-          quote_id: id,
-          quote_updates: updates
-        });
-        
-        if (quoteError) {
-          console.error(`Erreur lors de la mise à jour du devis ${id}:`, quoteError);
-          toast.error("Erreur lors de la mise à jour du devis: " + quoteError.message);
-          return null;
-        }
-        
-        // 2. Handle quote items if needed
-        if (items) {
-          // 2.1 Add new items
-          if (items.add && items.add.length > 0) {
-            const newItems = items.add.map(item => ({
-              quoteId: id,
-              description: item.description,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              tax: item.tax || 0,
-              discount: item.discount || 0,
-              serviceId: item.serviceId
-            }));
-            
-            const { error: addError } = await supabase.rpc('add_quote_items', {
-              items_data: newItems
-            });
-            
-            if (addError) {
-              console.error('Erreur lors de l\'ajout d\'éléments au devis:', addError);
-              toast.error("Certains éléments n'ont pas pu être ajoutés au devis");
-            }
+        // Process quote data updates
+        if (Object.keys(quoteData).length > 0) {
+          // Format date for database if present
+          const formattedData: any = { ...quoteData };
+          if (formattedData.validUntil) {
+            formattedData.validUntil = typeof formattedData.validUntil === 'string'
+              ? formattedData.validUntil
+              : formattedData.validUntil.toISOString();
           }
           
-          // 2.2 Update existing items
-          if (items.update && items.update.length > 0) {
-            for (const item of items.update) {
-              if (item.id) {
-                const { id: itemId, ...updates } = item;
-                
-                const { error: updateError } = await supabase.rpc('update_quote_item', {
-                  item_id: itemId,
-                  item_updates: updates
-                });
-                
-                if (updateError) {
-                  console.error(`Erreur lors de la mise à jour de l'élément ${itemId}:`, updateError);
-                  toast.error("Certains éléments n'ont pas pu être mis à jour");
+          // Update quote
+          const { error: updateError } = await supabase
+            .rpc('update_quote', {
+              quote_id: id,
+              quote_updates: formattedData
+            });
+          
+          if (updateError) {
+            console.error('Erreur lors de la mise à jour du devis:', updateError);
+            toast.error('Erreur lors de la mise à jour du devis');
+            return null;
+          }
+        }
+        
+        // Process item additions
+        if (itemChanges.add && itemChanges.add.length > 0) {
+          const formattedNewItems = itemChanges.add.map(item => ({
+            quoteId: id,
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            tax: item.tax || 0,
+            discount: item.discount || 0,
+            serviceId: item.serviceId
+          }));
+          
+          const { error: addItemsError } = await supabase
+            .rpc('add_quote_items', { items_data: formattedNewItems });
+          
+          if (addItemsError) {
+            console.error('Erreur lors de l\'ajout des nouveaux éléments:', addItemsError);
+            toast.error('Erreur lors de l\'ajout des nouveaux éléments');
+            // Continue anyway
+          }
+        }
+        
+        // Process item updates
+        if (itemChanges.update && itemChanges.update.length > 0) {
+          for (const item of itemChanges.update) {
+            if (!item.id) continue;
+            
+            const { error: updateItemError } = await supabase
+              .rpc('update_quote_item', {
+                item_id: item.id,
+                item_updates: {
+                  description: item.description,
+                  quantity: item.quantity,
+                  unitPrice: item.unitPrice,
+                  tax: item.tax,
+                  discount: item.discount
                 }
-              }
-            }
-          }
-          
-          // 2.3 Delete items
-          if (items.delete && items.delete.length > 0) {
-            const { error: deleteError } = await supabase.rpc('delete_quote_items', {
-              item_ids: items.delete
-            });
+              });
             
-            if (deleteError) {
-              console.error('Erreur lors de la suppression d\'éléments du devis:', deleteError);
-              toast.error("Certains éléments n'ont pas pu être supprimés du devis");
+            if (updateItemError) {
+              console.error(`Erreur lors de la mise à jour de l'élément ${item.id}:`, updateItemError);
+              toast.error(`Erreur lors de la mise à jour d'un élément du devis`);
+              // Continue with other items
             }
           }
         }
         
-        // 3. Fetch the updated quote with its items
+        // Process item deletions
+        if (itemChanges.delete && itemChanges.delete.length > 0) {
+          const { error: deleteItemsError } = await supabase
+            .rpc('delete_quote_items', { item_ids: itemChanges.delete });
+          
+          if (deleteItemsError) {
+            console.error('Erreur lors de la suppression des éléments:', deleteItemsError);
+            toast.error('Erreur lors de la suppression des éléments');
+            // Continue anyway
+          }
+        }
+        
+        // Return updated quote
         return await service.fetchQuoteById(id);
       } catch (error) {
-        console.error(`Erreur inattendue lors de la mise à jour du devis ${id}:`, error);
-        toast.error("Une erreur inattendue s'est produite lors de la mise à jour du devis");
+        console.error('Erreur inattendue lors de la mise à jour du devis:', error);
+        toast.error('Erreur inattendue lors de la mise à jour du devis');
         return null;
       }
     },
     
     // Update quote status
-    updateQuoteStatus: async (quoteId: string, status: QuoteStatus): Promise<ServiceResponse> => {
+    updateQuoteStatus: async (id: string, status: QuoteStatus): Promise<boolean> => {
       try {
-        // Get the current quote data first
-        const { data: currentQuote, error: fetchError } = await supabase
-          .from('quotes')
-          .select('*')
-          .eq('id', quoteId)
-          .single();
-          
-        if (fetchError) throw fetchError;
-        if (!currentQuote) throw new Error('Quote not found');
-        
-        // Now update with all required fields
         const { error } = await supabase
-          .from('quotes')
-          .update({ 
-            status: status,
-            contactId: currentQuote.contactId,
-            freelancerId: currentQuote.freelancerId,
-            totalAmount: currentQuote.totalAmount,
-            validUntil: currentQuote.validUntil,
-            notes: currentQuote.notes,
-            folder: currentQuote.folder || 'general',
-            updatedAt: new Date().toISOString()
-          })
-          .eq('id', quoteId);
-          
-        if (error) throw error;
-        
-        return { success: true };
-      } catch (error) {
-        console.error('Error updating quote status:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-      }
-    },
-    
-    // Delete a quote (logical deletion)
-    deleteQuote: async (id: string): Promise<boolean> => {
-      try {
-        const { error } = await supabase.rpc('delete_quote', {
-          quote_id: id
-        });
+          .rpc('update_quote_status', {
+            quote_id: id,
+            new_status: status
+          });
         
         if (error) {
-          console.error(`Erreur lors de la suppression du devis ${id}:`, error);
-          toast.error("Erreur lors de la suppression du devis: " + error.message);
+          console.error('Erreur lors de la mise à jour du statut:', error);
+          toast.error('Erreur lors de la mise à jour du statut');
           return false;
         }
         
+        toast.success('Statut du devis mis à jour');
         return true;
       } catch (error) {
-        console.error(`Erreur inattendue lors de la suppression du devis ${id}:`, error);
-        toast.error("Une erreur inattendue s'est produite lors de la suppression du devis");
+        console.error('Erreur inattendue lors de la mise à jour du statut:', error);
+        toast.error('Erreur inattendue lors de la mise à jour du statut');
         return false;
       }
     },
     
-    mapDatabaseQuoteToQuote
+    // Delete a quote (soft delete)
+    deleteQuote: async (id: string): Promise<boolean> => {
+      try {
+        const { error } = await supabase
+          .rpc('delete_quote', { quote_id: id });
+        
+        if (error) {
+          console.error('Erreur lors de la suppression du devis:', error);
+          toast.error('Erreur lors de la suppression du devis');
+          return false;
+        }
+        
+        toast.success('Devis supprimé avec succès');
+        return true;
+      } catch (error) {
+        console.error('Erreur inattendue lors de la suppression du devis:', error);
+        toast.error('Erreur inattendue lors de la suppression du devis');
+        return false;
+      }
+    }
   };
   
   return service;

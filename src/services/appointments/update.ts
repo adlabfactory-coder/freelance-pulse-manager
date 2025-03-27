@@ -1,92 +1,76 @@
 
+// Export all necessary update functions for appointments
+import { supabase } from "@/lib/supabase-client";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import { AppointmentStatus } from "@/types/appointment";
 
-// Fonction pour mettre à jour le statut d'un rendez-vous
-export const updateAppointmentStatus = async (id: string, status: AppointmentStatus) => {
+// Update appointment status
+export const updateAppointmentStatus = async (
+  appointmentId: string,
+  newStatus: AppointmentStatus
+): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('appointments')
-      .update({ status })
-      .eq('id', id);
+    const { data, error } = await supabase
+      .from("appointments")
+      .update({ status: newStatus, updatedAt: new Date().toISOString() })
+      .eq("id", appointmentId)
+      .select("*")
+      .single();
 
     if (error) {
-      console.error('Error updating appointment status:', error);
-      toast.error("Impossible de mettre à jour le statut du rendez-vous. " + error.message);
+      console.error("Error updating appointment status:", error);
+      toast.error("Impossible de mettre à jour le statut du rendez-vous");
       return false;
     }
 
-    const statusText = status === AppointmentStatus.SCHEDULED 
-      ? "replanifié" 
-      : status === AppointmentStatus.COMPLETED 
-        ? "terminé" 
-        : status === AppointmentStatus.CANCELLED 
-          ? "annulé" 
-          : status === AppointmentStatus.NO_SHOW 
-            ? "marqué comme absence client" 
-            : "mis à jour";
-            
-    toast.success(`Le rendez-vous a été ${statusText}`);
+    const statusLabels: Record<AppointmentStatus, string> = {
+      [AppointmentStatus.SCHEDULED]: "planifié",
+      [AppointmentStatus.COMPLETED]: "terminé",
+      [AppointmentStatus.CANCELLED]: "annulé",
+      [AppointmentStatus.PENDING]: "en attente",
+      [AppointmentStatus.RESCHEDULED]: "reporté",
+      [AppointmentStatus.NO_SHOW]: "absent"
+    };
+
+    toast.success(`Rendez-vous ${statusLabels[newStatus] || newStatus}`);
     return true;
-  } catch (err) {
-    console.error('Unexpected error when updating appointment status:', err);
-    toast.error("Une erreur inattendue s'est produite lors de la mise à jour du statut");
+  } catch (error) {
+    console.error("Unexpected error updating appointment status:", error);
+    toast.error("Une erreur est survenue");
     return false;
   }
 };
 
-// Fonction pour mettre à jour un rendez-vous
-export const updateAppointment = async (id: string, updates: any) => {
+// Update entire appointment
+export const updateAppointment = async (
+  appointmentId: string,
+  appointmentData: Partial<Omit<Appointment, "id" | "createdAt" | "updatedAt">>
+): Promise<Appointment | null> => {
   try {
-    const { error } = await supabase
-      .from('appointments')
-      .update(updates)
-      .eq('id', id);
+    // Always set updatedAt to now
+    const updateData = {
+      ...appointmentData,
+      updatedAt: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from("appointments")
+      .update(updateData)
+      .eq("id", appointmentId)
+      .select("*")
+      .single();
 
     if (error) {
-      console.error('Error updating appointment:', error);
-      toast.error("Impossible de mettre à jour le rendez-vous. " + error.message);
-      return false;
+      console.error("Error updating appointment:", error);
+      toast.error("Impossible de mettre à jour le rendez-vous");
+      return null;
     }
 
-    toast.success("Le rendez-vous a été mis à jour avec succès");
-    return true;
-  } catch (err) {
-    console.error('Unexpected error when updating appointment:', err);
-    toast.error("Une erreur inattendue s'est produite lors de la mise à jour du rendez-vous");
-    return false;
-  }
-};
-
-// Fonction pour replanifier un rendez-vous
-export const rescheduleAppointment = async (id: string, newDate: Date, newDuration?: number) => {
-  const updates: any = {
-    date: newDate.toISOString(),
-    status: AppointmentStatus.SCHEDULED
-  };
-  
-  if (newDuration) {
-    updates.duration = newDuration;
-  }
-  
-  try {
-    const { error } = await supabase
-      .from('appointments')
-      .update(updates)
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error rescheduling appointment:', error);
-      toast.error("Impossible de replanifier le rendez-vous. " + error.message);
-      return false;
-    }
-
-    toast.success("Le rendez-vous a été replanifié avec succès");
-    return true;
-  } catch (err) {
-    console.error('Unexpected error when rescheduling appointment:', err);
-    toast.error("Une erreur inattendue s'est produite lors de la replanification du rendez-vous");
-    return false;
+    toast.success("Rendez-vous mis à jour avec succès");
+    return data as Appointment;
+  } catch (error) {
+    console.error("Unexpected error updating appointment:", error);
+    toast.error("Une erreur est survenue");
+    return null;
   }
 };
