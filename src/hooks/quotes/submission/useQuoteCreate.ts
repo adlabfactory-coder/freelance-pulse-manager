@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
-import { Quote, QuoteItem } from "@/types/quote";
+import { Quote, QuoteItem, QuoteStatus } from "@/types/quote";
 import { useQuoteValidation } from "../validation/useQuoteValidation";
 
 const quotesService = createQuotesService(supabase);
@@ -65,12 +65,13 @@ export const useQuoteCreate = ({
         serviceId: item.serviceId
       }));
       
-      // Préparer les données du devis
+      // Préparer les données du devis et s'assurer que status est un QuoteStatus
       const quoteDataObj = {
         contactId: quoteData.contactId,
         freelancerId: quoteData.freelancerId,
         totalAmount: quoteData.totalAmount,
-        status: quoteData.status || "DRAFT",
+        // Conversion explicite du status en QuoteStatus pour garantir la compatibilité des types
+        status: (quoteData.status || QuoteStatus.DRAFT) as QuoteStatus,
         validUntil: quoteData.validUntil,
         notes: quoteData.notes || "",
         folder: quoteData.folder || "general"
