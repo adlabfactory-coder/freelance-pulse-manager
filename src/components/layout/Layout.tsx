@@ -4,13 +4,11 @@ import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTheme } from "@/hooks/use-theme";
 import { useAuth } from "@/hooks/use-auth";
 
 const Layout: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
-  const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const location = useLocation();
   const { isAdmin, user } = useAuth();
@@ -48,10 +46,6 @@ const Layout: React.FC = () => {
     setSidebarCollapsed((prev) => !prev);
   };
 
-  const toggleDarkMode = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Le wrapper de la sidebar avec une visibilité forcée */}
@@ -70,8 +64,6 @@ const Layout: React.FC = () => {
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header 
           toggleSidebar={toggleSidebar} 
-          isDarkMode={theme === 'dark'} 
-          toggleDarkMode={toggleDarkMode} 
           sidebarCollapsed={sidebarCollapsed}
           sidebarVisible={sidebarVisible}
         />

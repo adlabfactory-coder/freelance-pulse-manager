@@ -7,16 +7,12 @@ import SupportButton from './header/SupportButton';
 import UserProfileMenu from './header/UserProfileMenu';
 
 interface HeaderProps {
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
   toggleSidebar: () => void;
   sidebarCollapsed: boolean;
   sidebarVisible?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isDarkMode,
-  toggleDarkMode,
   toggleSidebar,
   sidebarCollapsed,
   sidebarVisible = true
@@ -33,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
       </div>
       
       <div className="flex items-center space-x-2">
-        <ThemeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+        <ThemeToggle />
         <SupportButton />
         <UserProfileMenu />
       </div>
