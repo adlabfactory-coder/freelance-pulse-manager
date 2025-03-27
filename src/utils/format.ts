@@ -68,19 +68,20 @@ export const formatDateForAPI = (date: Date, timeString?: string): string => {
 };
 
 /**
- * Formatte un montant en euros
+ * Formatte un montant en dirhams marocains (MAD)
+ * La seule devise autorisée dans l'application est le MAD
  */
 export const formatCurrency = (amount: number): string => {
   try {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat('fr-MA', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'MAD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount);
   } catch (error) {
     console.error('Erreur de formatage de devise:', error);
-    return `${amount} €`;
+    return `${amount} MAD`;
   }
 };
 

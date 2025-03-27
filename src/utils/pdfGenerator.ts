@@ -38,8 +38,8 @@ export const generateQuotePDF = async (quote: Quote, contactName = "", freelance
           <tr style="background-color: #f2f2f2;">
             <th style="text-align: left; padding: 10px; border: 1px solid #ddd;">Description</th>
             <th style="text-align: right; padding: 10px; border: 1px solid #ddd;">Quantité</th>
-            <th style="text-align: right; padding: 10px; border: 1px solid #ddd;">Prix unitaire</th>
-            <th style="text-align: right; padding: 10px; border: 1px solid #ddd;">Total</th>
+            <th style="text-align: right; padding: 10px; border: 1px solid #ddd;">Prix unitaire (MAD)</th>
+            <th style="text-align: right; padding: 10px; border: 1px solid #ddd;">Total (MAD)</th>
           </tr>
         </thead>
         <tbody>
@@ -61,7 +61,7 @@ export const generateQuotePDF = async (quote: Quote, contactName = "", freelance
         </tbody>
         <tfoot>
           <tr style="background-color: #f2f2f2;">
-            <th colspan="3" style="text-align: right; padding: 10px; border: 1px solid #ddd;">Total:</th>
+            <th colspan="3" style="text-align: right; padding: 10px; border: 1px solid #ddd;">Total (MAD):</th>
             <th style="text-align: right; padding: 10px; border: 1px solid #ddd;">${formatCurrency(quote.totalAmount)}</th>
           </tr>
         </tfoot>
