@@ -1,8 +1,7 @@
-
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardStatusIndicator from "./DashboardStatusIndicator";
-import { DataSource } from "@/hooks/useDashboardData";
+import { DataSource } from "@/hooks/dashboard";
 
 interface DashboardHeaderProps {
   isConnected: boolean;

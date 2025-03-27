@@ -1,9 +1,8 @@
-
 import React from "react";
 import { BarChart, Calendar, FileText, Users } from "lucide-react";
 import StatsCardWithTooltip from "./StatsCardWithTooltip";
 import { formatCurrency } from "@/utils/format";
-import { DataSource, DashboardStats } from "@/hooks/useDashboardData";
+import { DataSource, DashboardStats } from "@/hooks/dashboard";
 
 interface DashboardStatsProps {
   stats: DashboardStats;

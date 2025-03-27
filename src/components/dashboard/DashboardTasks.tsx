@@ -1,15 +1,7 @@
-
 import React from "react";
 import { CheckCircle, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface DashboardTask {
-  id: string;
-  title: string;
-  dueDate: string;
-  status: 'pending' | 'completed';
-  priority: 'low' | 'medium' | 'high';
-}
+import { DashboardTask } from "@/hooks/dashboard";
 
 interface DashboardTasksProps {
   loading: boolean;

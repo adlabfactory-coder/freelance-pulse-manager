@@ -6,7 +6,7 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardStatsSection from "@/components/dashboard/DashboardStats";
 import DashboardActivities from "@/components/dashboard/DashboardActivities";
 import DashboardTasks from "@/components/dashboard/DashboardTasks";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardData } from "@/hooks/dashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, LayoutDashboard, FileText, PieChart, Clock } from "lucide-react";

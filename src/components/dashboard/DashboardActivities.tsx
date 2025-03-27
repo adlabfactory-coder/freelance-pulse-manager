@@ -1,6 +1,6 @@
 
 import React from "react";
-import { DashboardActivity } from "@/hooks/useDashboardData";
+import { DashboardActivity } from "@/hooks/dashboard";
 import { Calendar, Clock, FileText, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 

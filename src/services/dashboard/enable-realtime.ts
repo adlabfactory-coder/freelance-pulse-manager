@@ -15,18 +15,6 @@ export const enableDashboardRealtime = async () => {
       'tasks'
     ];
     
-    // Vérifier si les tables existent avant d'activer Realtime
-    for (const table of dashboardTables) {
-      // Cette requête vérifie juste si la table existe
-      const { error: tableCheckError } = await supabase
-        .from(table)
-        .select('count', { count: 'exact', head: true });
-      
-      if (tableCheckError && tableCheckError.code !== '42P01') {
-        console.warn(`Table ${table} non accessible pour Realtime: ${tableCheckError.message}`);
-      }
-    }
-    
     // Créer des canaux pour chaque table et s'abonner
     const channels = dashboardTables.map(table => {
       return supabase.channel(`realtime-${table}`)
