@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { QuoteItem } from "@/types";
+import { QuoteItem, SubscriptionPlan } from "@/types";
 import { Service } from "@/types/services";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/format";
+import { useQuery } from "@tanstack/react-query";
+import { getSubscriptionPlans } from "@/services/supabase/subscriptions";
 
 interface QuoteItemFormProps {
   currentItem: Partial<QuoteItem>;
@@ -24,6 +26,12 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
   onAddItem
 }) => {
   const { toast } = useToast();
+  
+  // Récupérer les plans d'abonnement disponibles
+  const { data: subscriptionPlans = [], isLoading: plansLoading } = useQuery({
+    queryKey: ['subscriptionPlans'],
+    queryFn: getSubscriptionPlans
+  });
 
   const handleSelectService = (serviceId: string) => {
     if (serviceId === "custom") {
@@ -39,6 +47,26 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
       return;
     }
     
+    // Vérifier si c'est un abonnement
+    if (serviceId.startsWith('subscription-')) {
+      const planId = serviceId.replace('subscription-', '');
+      const selectedPlan = subscriptionPlans.find(plan => plan.id === planId);
+      
+      if (selectedPlan) {
+        onChange({
+          ...currentItem,
+          description: `Abonnement: ${selectedPlan.name}`,
+          quantity: 1,
+          unitPrice: selectedPlan.price,
+          discount: 0,
+          tax: 20,
+          serviceId: undefined
+        });
+      }
+      return;
+    }
+    
+    // C'est un service ou un pack
     const selectedService = services.find(service => service.id === serviceId);
     
     if (selectedService) {
@@ -95,13 +123,13 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
       
       <div className="space-y-3">
         <div>
-          <Label htmlFor="service">Service ou Pack</Label>
+          <Label htmlFor="service">Service, Pack ou Abonnement</Label>
           <Select
             onValueChange={handleSelectService}
             value={currentItem.serviceId}
           >
             <SelectTrigger id="service">
-              <SelectValue placeholder="Sélectionner un service ou pack" />
+              <SelectValue placeholder="Sélectionner un produit ou service" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="custom">Personnalisé</SelectItem>
@@ -119,6 +147,20 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
                   ))}
                 </React.Fragment>
               ))}
+              
+              {/* Afficher les abonnements */}
+              {subscriptionPlans && subscriptionPlans.length > 0 && (
+                <React.Fragment>
+                  <SelectItem value="header-subscriptions" disabled className="font-bold text-primary">
+                    Abonnements
+                  </SelectItem>
+                  {subscriptionPlans.map(plan => (
+                    <SelectItem key={plan.id} value={`subscription-${plan.id}`} className="pl-6">
+                      {plan.name} - {formatCurrency(plan.price)}
+                    </SelectItem>
+                  ))}
+                </React.Fragment>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -147,7 +189,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="unitPrice">Prix unitaire (€)</Label>
+            <Label htmlFor="unitPrice">Prix unitaire (MAD)</Label>
             <Input
               id="unitPrice"
               type="number"

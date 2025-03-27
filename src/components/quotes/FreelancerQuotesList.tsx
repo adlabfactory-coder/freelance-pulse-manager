@@ -90,13 +90,13 @@ const FreelancerQuotesList: React.FC = () => {
   return (
     <div className="space-y-6">
       {Object.entries(quotesByClient).map(([contactId, clientQuotes]) => {
-        // Obtenir le nom du client à partir des données de la base de données ou utiliser l'ID si non disponible
-        const clientName = clientQuotes[0]?.contactName || `Client ${contactId}`;
+        // Obtenir le nom du client à partir du premier devis
+        const contactName = clientQuotes[0]?.contactName || `Client ${contactId}`;
         
         return (
           <Card key={contactId} className="overflow-hidden">
             <CardHeader className="bg-muted/30">
-              <CardTitle className="text-lg">{clientName}</CardTitle>
+              <CardTitle className="text-lg">{contactName}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">

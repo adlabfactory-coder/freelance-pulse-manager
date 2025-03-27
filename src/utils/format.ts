@@ -53,11 +53,11 @@ export const formatDate = (date: string | Date): string => {
   return d.toLocaleDateString('fr-FR');
 };
 
-// Fonction pour formater un montant (en euros)
+// Fonction pour formater un montant (en MAD - Dirham marocain)
 export const formatAmount = (amount: number): string => {
-  return new Intl.NumberFormat('fr-FR', {
+  return new Intl.NumberFormat('fr-MA', {
     style: 'currency',
-    currency: 'EUR'
+    currency: 'MAD'
   }).format(amount);
 };
 
