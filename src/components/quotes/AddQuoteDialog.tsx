@@ -1,97 +1,132 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import QuoteForm from "./form/QuoteForm";
+
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
+import QuoteForm from "./form/QuoteForm";
+import { toast } from "sonner";
+import QuoteDialogContent from "./form/QuoteDialogContent";
 
 interface AddQuoteDialogProps {
-  onQuoteAdded?: () => void;
-  trigger?: React.ReactNode;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onQuoteCreated?: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onQuoteCreated?: (id?: string) => void;
   initialContactId?: string;
 }
 
-export function AddQuoteDialog({ 
-  onQuoteAdded, 
-  trigger, 
-  open: controlledOpen, 
-  onOpenChange: setControlledOpen,
+const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
+  open,
+  onOpenChange,
   onQuoteCreated,
   initialContactId
-}: AddQuoteDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false);
-  
-  // Use either controlled or internal state
-  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const setOpen = setControlledOpen || setInternalOpen;
+}) => {
+  // State local pour suivre si un formulaire a été soumis
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 
-  const handleDiscard = () => {
-    setOpen(false);
-  };
-
-  const handleSuccess = (id?: string) => {
-    console.log("Quote successfully created with ID:", id);
-    setOpen(false);
-    if (onQuoteAdded) {
-      onQuoteAdded();
-    }
-    if (onQuoteCreated) {
-      onQuoteCreated();
-    }
-  };
-
-  const quoteForm = useQuoteForm({
-    onSuccess: handleSuccess,
-    onCloseDialog: setOpen,
-    onQuoteCreated: handleSuccess
-  });
-
-  React.useEffect(() => {
-    if (open && initialContactId) {
-      quoteForm.setContactId(initialContactId);
-    }
-  }, [open, initialContactId]);
-
-  React.useEffect(() => {
-    if (open) {
-      quoteForm.loadData();
+  // Reset le formulaire quand la boîte de dialogue s'ouvre/se ferme
+  useEffect(() => {
+    if (!open) {
+      setIsFormSubmitted(false);
     }
   }, [open]);
 
+  const handleQuoteCreated = (id?: string) => {
+    console.log("Quote created with ID:", id);
+    
+    // Marquer le formulaire comme soumis
+    setIsFormSubmitted(true);
+    
+    // Fermer la boîte de dialogue
+    onOpenChange(false);
+    
+    // Appeler le callback si fourni
+    if (onQuoteCreated) {
+      onQuoteCreated(id);
+    }
+    
+    // Afficher une notification
+    toast.success("Le devis a été créé avec succès");
+  };
+
+  const quoteForm = useQuoteForm({
+    onSuccess: handleQuoteCreated,
+    onCloseDialog: onOpenChange,
+    onQuoteCreated: handleQuoteCreated
+  });
+
+  // Définir initialContactId si fourni
+  useEffect(() => {
+    if (initialContactId && open) {
+      console.log("Setting initial contact ID:", initialContactId);
+      quoteForm.setContactId(initialContactId);
+    }
+  }, [initialContactId, open, quoteForm.setContactId]);
+
+  useEffect(() => {
+    if (open) {
+      // Charger les données nécessaires au formulaire
+      console.log("Loading quote form data...");
+      quoteForm.loadData()
+        .catch(error => {
+          console.error("Error loading form data:", error);
+          toast.error("Erreur lors du chargement des données");
+        });
+    }
+  }, [open, quoteForm.loadData]);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Ajouter un devis
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau devis</DialogTitle>
+          <DialogTitle>Créer un nouveau devis</DialogTitle>
           <DialogDescription>
-            Remplissez les informations pour créer un nouveau devis.
+            Remplissez les informations pour créer un devis.
           </DialogDescription>
         </DialogHeader>
-        <QuoteForm
-          form={quoteForm}
-          onDiscard={handleDiscard}
-          onCloseDialog={setOpen}
-        />
+
+        {quoteForm.error ? (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
+            <h3 className="font-medium">Erreur lors du chargement des données</h3>
+            <p className="text-sm">{quoteForm.error}</p>
+            <button 
+              onClick={() => quoteForm.loadData()} 
+              className="mt-2 text-sm font-medium underline"
+            >
+              Réessayer
+            </button>
+          </div>
+        ) : (
+          <QuoteDialogContent
+            loading={quoteForm.loading}
+            isSubmitting={quoteForm.isSubmitting}
+            quoteData={{
+              contactId: quoteForm.contactId,
+              freelancerId: quoteForm.freelancerId,
+              validUntil: quoteForm.validUntil,
+              status: quoteForm.status,
+              notes: quoteForm.notes,
+              items: quoteForm.items
+            }}
+            currentItem={quoteForm.currentItem || {}}
+            contacts={quoteForm.contacts || []}
+            freelancers={quoteForm.freelancers || []}
+            services={quoteForm.services || []}
+            onQuoteDataChange={(data) => {
+              if (data.contactId !== undefined) quoteForm.setContactId(data.contactId);
+              if (data.freelancerId !== undefined) quoteForm.setFreelancerId(data.freelancerId);
+              if (data.validUntil !== undefined) quoteForm.setValidUntil(data.validUntil);
+              if (data.status !== undefined) quoteForm.setStatus(data.status);
+              if (data.notes !== undefined) quoteForm.setNotes(data.notes);
+            }}
+            onCurrentItemChange={quoteForm.setCurrentItem}
+            onAddItem={quoteForm.handleAddItem}
+            onRemoveItem={quoteForm.handleRemoveItem}
+            onSubmit={quoteForm.handleSubmit}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default AddQuoteDialog;

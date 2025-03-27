@@ -60,8 +60,10 @@ export const useQuoteForm = ({
   // Chargement d'un devis spécifique
   const loadQuoteById = useCallback(async (id: string) => {
     try {
+      console.log("loadQuoteById: Chargement du devis avec l'ID", id);
       const quote = await loadQuoteData(id);
       if (quote) {
+        console.log("loadQuoteById: Devis chargé avec succès:", quote);
         quoteData.setContactId(quote.contactId);
         quoteData.setFreelancerId(quote.freelancerId);
         quoteData.setValidUntil(quoteData.convertToDate(quote.validUntil));
@@ -69,6 +71,8 @@ export const useQuoteForm = ({
         quoteData.setNotes(quote.notes || "");
         quoteData.setFolder(quote.folder || "general");
         resetItems(quote.items);
+      } else {
+        console.error("loadQuoteById: Devis non trouvé pour l'ID", id);
       }
     } catch (error) {
       console.error('Error loading quote data:', error);
@@ -163,7 +167,7 @@ export const useQuoteForm = ({
     quoteData: quoteDataForDisplay,
     setQuoteData: quoteData.setQuoteData,
     
-    // Ajout de la propriété error manquante
+    // Ajout explicite de la propriété error pour corriger l'erreur TypeScript
     error
   };
 };

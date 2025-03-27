@@ -106,7 +106,7 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
           <DialogHeader>
             <DialogTitle>Erreur</DialogTitle>
             <DialogDescription>
-              {error}
+              Impossible de charger les données du devis
             </DialogDescription>
           </DialogHeader>
           <SettingsError 

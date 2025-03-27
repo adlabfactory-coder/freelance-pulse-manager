@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import AddContactForm from "./AddContactForm";
+import { toast } from "sonner";
 
 interface AddContactDialogProps {
   onContactAdded?: () => void;
@@ -21,7 +22,15 @@ export function AddContactDialog({ onContactAdded, trigger }: AddContactDialogPr
   const [open, setOpen] = React.useState(false);
 
   const handleSuccess = () => {
+    console.log("Contact ajouté avec succès, fermeture de la boîte de dialogue");
+    
+    // Afficher une notification
+    toast.success("Contact ajouté avec succès");
+    
+    // Fermer la boîte de dialogue
     setOpen(false);
+    
+    // Appeler le callback si fourni
     if (onContactAdded) {
       onContactAdded();
     }
