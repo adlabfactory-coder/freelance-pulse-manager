@@ -2,9 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSupabase } from "@/hooks/use-supabase";
-import { User, UserRole } from "@/types";
+import { User } from "@/types";
+import { UserRole, hasMinimumRole } from "@/types/roles";
 import { toast } from "@/components/ui/use-toast";
-import { hasMinimumRole } from "@/types/roles";
 
 const useSettingsData = () => {
   const { user: currentUser, isAdmin, isSuperAdmin, role } = useAuth();
@@ -16,7 +16,7 @@ const useSettingsData = () => {
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   // Vérifie si l'utilisateur a au moins le rôle d'account manager
-  const isAccountManager = role && hasMinimumRole(role, UserRole.ACCOUNT_MANAGER);
+  const isAccountManager = role && hasMinimumRole(role as UserRole, UserRole.ACCOUNT_MANAGER);
 
   const loadUsers = useCallback(async () => {
     if (!isAdmin && !isSuperAdmin) {

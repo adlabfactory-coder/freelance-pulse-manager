@@ -9,24 +9,17 @@ export * from './user';
 export * from './contact';
 export * from './quote';
 export * from './appointment';
+export * from './roles';
 
 // Export subscription types from subscription.ts
 export * from './subscription';
 
 // Création et exportation des types manquants
-export enum UserRole {
-  ADMIN = "admin",
-  SUPER_ADMIN = "super_admin",
-  FREELANCER = "freelancer",
-  ACCOUNT_MANAGER = "account_manager",
-  CLIENT = "client"
-}
-
 export interface NavItem {
   title: string;
   href: string;
   icon: React.ElementType; // Modifié pour accepter des éléments React (icônes)
-  roles?: UserRole[];
+  roles?: string[];
   isActive?: boolean;
   disabled?: boolean; // Ajout de la propriété manquante
 }
@@ -43,5 +36,5 @@ export interface SidebarItem {
   title: string;
   href: string;
   icon: React.ElementType; // Modifié pour accepter des éléments React (icônes)
-  roles?: UserRole[];
+  roles?: string[];
 }

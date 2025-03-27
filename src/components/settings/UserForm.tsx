@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { User, UserRole } from '@/types';
+import { User } from '@/types';
+import { UserRole } from '@/types/roles';
 import { useSupabase } from '@/hooks/use-supabase';
 
 interface UserFormProps {
@@ -290,10 +292,6 @@ export const UserForm: React.FC<UserFormProps> = ({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value={UserRole.ACCOUNT_MANAGER} id="role-account-manager" />
                 <Label htmlFor="role-account-manager">Gestionnaire de compte</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value={UserRole.CLIENT} id="role-client" />
-                <Label htmlFor="role-client">Client</Label>
               </div>
             </RadioGroup>
           </div>

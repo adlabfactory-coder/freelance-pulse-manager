@@ -1,5 +1,6 @@
 
-import { User, UserRole } from "@/types";
+import { User } from "@/types";
+import { UserRole } from "@/types/roles";
 
 // Données mocquées pour la démonstration
 const mockUsers = [

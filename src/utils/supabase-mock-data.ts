@@ -1,5 +1,6 @@
 
-import { User, UserRole } from "@/types";
+import { User } from "@/types";
+import { UserRole } from "@/types/roles";
 
 // Utilisateurs de démonstration pour le développement
 export const getMockUsers = (): User[] => {

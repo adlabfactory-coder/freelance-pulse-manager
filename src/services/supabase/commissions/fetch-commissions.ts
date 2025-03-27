@@ -2,9 +2,8 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { Commission } from '@/types/commissions';
-import { UserRole } from '@/types';
+import { UserRole, hasMinimumRole } from '@/types/roles';
 import { mapCommissionFromDb } from './utils';
-import { hasMinimumRole } from '@/types/roles';
 
 /**
  * Récupère les commissions selon le rôle de l'utilisateur

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { User, UserRole } from "@/types";
+import { User } from "@/types";
+import { UserRole } from "@/types/roles";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { fetchUserById, updateUser } from "@/services/user";

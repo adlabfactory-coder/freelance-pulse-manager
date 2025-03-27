@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
-import { User, UserRole } from '@/types';
+import { User } from '@/types';
+import { UserRole } from '@/types/roles';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
@@ -20,7 +21,7 @@ export interface UserProfileProps {
 const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onDelete, canDelete = false }) => {
   const [name, setName] = useState(user.name || "");
   const [email, setEmail] = useState(user.email || "");
-  const [role, setRole] = useState(user.role);
+  const [role, setRole] = useState<UserRole>(user.role as UserRole);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -106,7 +107,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onDelete, can
           
           <div className="space-y-2">
             <Label htmlFor="role">Rôle</Label>
-            <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+            <Select 
+              value={role} 
+              onValueChange={(value: UserRole) => setRole(value)}
+            >
               <SelectTrigger id="role">
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
@@ -115,7 +119,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onDelete, can
                 <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
                 <SelectItem value={UserRole.FREELANCER}>Freelance</SelectItem>
                 <SelectItem value={UserRole.ACCOUNT_MANAGER}>Chargé d'affaires</SelectItem>
-                <SelectItem value={UserRole.CLIENT}>Client</SelectItem>
               </SelectContent>
             </Select>
           </div>
