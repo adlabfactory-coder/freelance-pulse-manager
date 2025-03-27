@@ -51,8 +51,8 @@ export const useSchedulePlanner = () => {
         date: appointmentDate,
         duration: parseInt(appointmentDuration, 10),
         status: AppointmentStatus.SCHEDULED,
-        contact_id: contactId,
-        freelancer_id: user?.role === 'freelancer' ? user.id : undefined,
+        contactId: contactId, // Changed from contact_id to contactId
+        freelancerId: user?.role === 'freelancer' ? user.id : undefined, // Changed from freelancer_id to freelancerId
         folder: 'general'
       });
       

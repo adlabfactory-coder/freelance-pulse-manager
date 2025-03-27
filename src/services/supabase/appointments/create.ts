@@ -32,8 +32,8 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
             date: dataToSend.date,
             duration: dataToSend.duration || 30,
             status: dataToSend.status || 'scheduled',
-            contactId: dataToSend.contactId,
-            freelancerid: dataToSend.freelancerId,
+            contactId: dataToSend.contactId, // Consistent naming
+            freelancerid: dataToSend.freelancerId, // Note: DB field is freelancerid
             location: dataToSend.location || null,
             notes: dataToSend.notes || null,
             folder: dataToSend.folder || 'general'
@@ -104,7 +104,7 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
             date: dataToSend.date,
             duration: dataToSend.duration || 30,
             status: 'pending',
-            contactId: dataToSend.contactId,
+            contactId: dataToSend.contactId, // Consistent naming
             location: dataToSend.location || null,
             notes: dataToSend.notes || null,
             folder: dataToSend.folder || 'general'

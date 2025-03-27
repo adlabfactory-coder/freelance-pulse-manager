@@ -93,8 +93,8 @@ export const useAppointmentOperations = () => {
         date: appointmentDate,
         duration,
         status: useAutoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contactId: contactId, // Utilisation du même nom de propriété que dans AppointmentCreateData
-        freelancerId: useAutoAssign ? undefined : finalFreelancerId, // Utilisation du même nom de propriété
+        contactId: contactId, // Consistent naming
+        freelancerId: useAutoAssign ? undefined : finalFreelancerId, // Consistent naming
         location: null,
         notes: null,
         folder: folder,

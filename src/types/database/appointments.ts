@@ -8,7 +8,7 @@ export interface AppointmentsTable {
       title: string
       description: string | null
       contactId: string
-      freelancerId: string  // Utilisée de manière cohérente à travers l'application
+      freelancerId: string  // Consistent naming
       date: string
       duration: number
       status: string
@@ -24,7 +24,7 @@ export interface AppointmentsTable {
       title: string
       description?: string | null
       contactId: string
-      freelancerId: string  // Utilisée de manière cohérente
+      freelancerId: string  // Consistent naming
       date: string
       duration: number
       status: string
@@ -40,7 +40,7 @@ export interface AppointmentsTable {
       title?: string
       description?: string | null
       contactId?: string
-      freelancerId?: string  // Utilisée de manière cohérente
+      freelancerId?: string  // Consistent naming
       date?: string
       duration?: number
       status?: string

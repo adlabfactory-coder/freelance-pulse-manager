@@ -37,8 +37,8 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: appointmentData.status || 'scheduled',
-        contactId: appointmentData.contactId, // Garde le nom cohérent
-        freelancerid: appointmentData.freelancerId, // Garde le nom cohérent
+        contactId: appointmentData.contactId, // Consistent naming
+        freelancerid: appointmentData.freelancerId, // Keep as freelancerid for DB compatibility
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'
@@ -102,7 +102,7 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: 'pending',
-        contactId: appointmentData.contactId, // Garde le nom cohérent
+        contactId: appointmentData.contactId, // Consistent naming
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'
