@@ -1,5 +1,6 @@
+
 import { supabase } from '@/lib/supabase-client';
-import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus } from '@/types';
+import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus, Subscription } from '@/types';
 
 export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
   try {

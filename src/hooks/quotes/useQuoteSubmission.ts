@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuoteCreate } from "./submission/useQuoteCreate";
 import { useQuoteUpdate } from "./submission/useQuoteUpdate";
 
-interface UseQuoteSubmissionProps {
+export interface UseQuoteSubmissionProps {
   onSuccess?: (id?: string) => void;
   onCloseDialog?: (open: boolean) => void;
   onQuoteCreated?: (id?: string) => void;

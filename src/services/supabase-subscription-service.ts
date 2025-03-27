@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus } from '@/types';
 
@@ -96,7 +97,7 @@ export const createSubscriptionPlanService = () => {
           price: Number(plan.price),
           interval: plan.interval as SubscriptionInterval,
           features: plan.features,
-          is_active: plan.is_active,
+          isActive: plan.is_active,
           created_at: plan.created_at,
           updated_at: plan.updated_at
         }));

@@ -1,27 +1,7 @@
 
-// Types d'utilisateur
-export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
-  ADMIN = 'admin',
-  FREELANCER = 'freelancer',
-  ACCOUNT_MANAGER = 'account_manager',
-  CLIENT = 'client'
-}
-
-// Interface utilisateur
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole | string;
-  avatar?: string | null;
-  supervisor_id?: string | null;
-  calendly_url?: string;
-  calendly_enabled?: boolean;
-  calendly_sync_email?: string;
-}
-
 // Re-export des types depuis les fichiers spécialisés
+export { UserRole } from './roles';
+export type { User } from './user';
 export { 
   type Quote, 
   type QuoteItem, 
