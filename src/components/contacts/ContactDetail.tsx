@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, FileText, UserCog, Trash } from "lucide-react";
+import { CalendarClock, FileText, UserCog, Trash, Calendar, FileSpreadsheet, BookOpen } from "lucide-react";
 import ContactInfoDisplay from "./ContactInfoDisplay";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import { Contact } from "@/services/contacts/types";
@@ -13,6 +13,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { contactService } from "@/services/contact-service";
 import { useNavigate } from "react-router-dom";
+import { Quote, QuoteStatus, getQuoteStatusLabel } from "@/types/quote";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
+import { Subscription, SubscriptionStatus } from "@/types/subscription";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,9 +33,20 @@ import {
 interface ContactDetailProps {
   contact: Contact;
   onUpdate: (updatedContact: Contact) => void;
+  quotes: Quote[];
+  appointments: Appointment[];
+  subscriptions: Subscription[];
+  interactionsLoading: boolean;
 }
 
-const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
+const ContactDetail: React.FC<ContactDetailProps> = ({ 
+  contact, 
+  onUpdate, 
+  quotes,
+  appointments,
+  subscriptions,
+  interactionsLoading
+}) => {
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
@@ -68,6 +85,71 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
     }
   };
 
+  const getStatusBadgeColor = (status: QuoteStatus | AppointmentStatus | SubscriptionStatus) => {
+    const statusColors: Record<string, string> = {
+      // Devis
+      draft: "bg-gray-200 text-gray-800",
+      pending: "bg-yellow-200 text-yellow-800",
+      sent: "bg-blue-200 text-blue-800",
+      accepted: "bg-green-200 text-green-800",
+      rejected: "bg-red-200 text-red-800",
+      expired: "bg-gray-200 text-gray-800",
+      paid: "bg-green-200 text-green-800",
+      cancelled: "bg-red-200 text-red-800",
+      
+      // Rendez-vous
+      scheduled: "bg-blue-200 text-blue-800",
+      confirmed: "bg-green-200 text-green-800",
+      completed: "bg-green-200 text-green-800",
+      no_show: "bg-red-200 text-red-800",
+      
+      // Abonnements
+      active: "bg-green-200 text-green-800",
+      inactive: "bg-gray-200 text-gray-800",
+      trial: "bg-purple-200 text-purple-800",
+    };
+    
+    return statusColors[status] || "bg-gray-200 text-gray-800";
+  };
+
+  const getAppointmentStatusLabel = (status: AppointmentStatus): string => {
+    const statusLabels: Record<AppointmentStatus, string> = {
+      scheduled: "Planifié",
+      pending: "En attente",
+      confirmed: "Confirmé",
+      completed: "Terminé",
+      cancelled: "Annulé",
+      no_show: "Absence"
+    };
+    
+    return statusLabels[status] || "Inconnu";
+  };
+
+  const getSubscriptionStatusLabel = (status: SubscriptionStatus): string => {
+    const statusLabels: Record<SubscriptionStatus, string> = {
+      active: "Actif",
+      cancelled: "Annulé",
+      pending: "En attente",
+      expired: "Expiré",
+      inactive: "Inactif",
+      trial: "Essai"
+    };
+    
+    return statusLabels[status] || "Inconnu";
+  };
+
+  const handleQuoteClick = (quoteId: string) => {
+    navigate(`/quotes/${quoteId}`);
+  };
+
+  const handleAppointmentClick = (appointmentId: string) => {
+    navigate(`/appointments?highlight=${appointmentId}`);
+  };
+  
+  const handleSubscriptionClick = (subscriptionId: string) => {
+    navigate(`/subscriptions?highlight=${subscriptionId}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* En-tête avec les informations principales */}
@@ -97,6 +179,142 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
       <Card>
         <CardContent className="pt-6">
           <ContactInfoDisplay contact={contact} />
+        </CardContent>
+      </Card>
+
+      {/* Interactions */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Interactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="appointments" className="w-full">
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="appointments" className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                Rendez-vous ({appointments.length})
+              </TabsTrigger>
+              <TabsTrigger value="quotes" className="flex items-center">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Devis ({quotes.length})
+              </TabsTrigger>
+              <TabsTrigger value="subscriptions" className="flex items-center">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Abonnements ({subscriptions.length})
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Rendez-vous */}
+            <TabsContent value="appointments">
+              {interactionsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : appointments.length > 0 ? (
+                <div className="rounded-md border">
+                  <div className="divide-y">
+                    {appointments.map((appointment) => (
+                      <div 
+                        key={appointment.id} 
+                        className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer"
+                        onClick={() => handleAppointmentClick(appointment.id)}
+                      >
+                        <div className="flex flex-col">
+                          <div className="font-medium">{appointment.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDateToFrench(new Date(appointment.date))}
+                          </div>
+                        </div>
+                        <Badge className={getStatusBadgeColor(appointment.status as AppointmentStatus)}>
+                          {getAppointmentStatusLabel(appointment.status as AppointmentStatus)}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  Aucun rendez-vous trouvé
+                </div>
+              )}
+            </TabsContent>
+            
+            {/* Devis */}
+            <TabsContent value="quotes">
+              {interactionsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : quotes.length > 0 ? (
+                <div className="rounded-md border">
+                  <div className="divide-y">
+                    {quotes.map((quote) => (
+                      <div 
+                        key={quote.id} 
+                        className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer"
+                        onClick={() => handleQuoteClick(quote.id)}
+                      >
+                        <div className="flex flex-col">
+                          <div className="font-medium">Devis #{quote.id.substring(0, 8)}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {quote.createdAt ? formatDateToFrench(new Date(quote.createdAt)) : 'Date inconnue'} - {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(quote.totalAmount)}
+                          </div>
+                        </div>
+                        <Badge className={getStatusBadgeColor(quote.status as QuoteStatus)}>
+                          {getQuoteStatusLabel(quote.status as QuoteStatus)}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  Aucun devis trouvé
+                </div>
+              )}
+            </TabsContent>
+            
+            {/* Abonnements */}
+            <TabsContent value="subscriptions">
+              {interactionsLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : subscriptions.length > 0 ? (
+                <div className="rounded-md border">
+                  <div className="divide-y">
+                    {subscriptions.map((subscription) => (
+                      <div 
+                        key={subscription.id} 
+                        className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer"
+                        onClick={() => handleSubscriptionClick(subscription.id)}
+                      >
+                        <div className="flex flex-col">
+                          <div className="font-medium">{subscription.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDateToFrench(new Date(subscription.startDate))} - {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(subscription.price)}
+                          </div>
+                        </div>
+                        <Badge className={getStatusBadgeColor(subscription.status as SubscriptionStatus)}>
+                          {getSubscriptionStatusLabel(subscription.status as SubscriptionStatus)}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  Aucun abonnement trouvé
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 

@@ -7,6 +7,12 @@ import ContactDetail from "@/components/contacts/ContactDetail";
 import { useToast } from "@/hooks/use-toast";
 import { contactService } from "@/services/contact-service";
 import { Contact } from "@/services/contacts/types";
+import { fetchQuotes } from "@/services/quote-service";
+import { Quote } from "@/types/quote";
+import { appointmentsService } from "@/services/supabase/appointments";
+import { Appointment } from "@/types/appointment";
+import { Subscription } from "@/types/subscription";
+import { fetchSubscriptions } from "@/services/subscriptions";
 
 const ContactDetailPage: React.FC = () => {
   const { contactId } = useParams<{ contactId: string }>();
@@ -14,6 +20,10 @@ const ContactDetailPage: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [contact, setContact] = useState<Contact | null>(null);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [interactionsLoading, setInteractionsLoading] = useState(true);
 
   useEffect(() => {
     if (!contactId) {
@@ -55,6 +65,36 @@ const ContactDetailPage: React.FC = () => {
     loadContact();
   }, [contactId, navigate, toast]);
 
+  // Charger les interactions du contact (devis, rendez-vous, abonnements)
+  useEffect(() => {
+    if (!contactId) return;
+    
+    const loadInteractions = async () => {
+      setInteractionsLoading(true);
+      try {
+        // Charger les devis du contact
+        const allQuotes = await fetchQuotes();
+        const contactQuotes = allQuotes.filter(quote => quote.contactId === contactId);
+        setQuotes(contactQuotes);
+        
+        // Charger les rendez-vous du contact
+        const contactAppointments = await appointmentsService.getAppointmentsByContact(contactId);
+        setAppointments(contactAppointments);
+        
+        // Charger les abonnements du contact
+        const allSubscriptions = await fetchSubscriptions();
+        const contactSubscriptions = allSubscriptions.filter(sub => sub.clientId === contactId);
+        setSubscriptions(contactSubscriptions);
+      } catch (error) {
+        console.error("Erreur lors du chargement des interactions:", error);
+      } finally {
+        setInteractionsLoading(false);
+      }
+    };
+    
+    loadInteractions();
+  }, [contactId]);
+
   const handleBack = () => {
     navigate("/contacts");
   };
@@ -81,7 +121,14 @@ const ContactDetailPage: React.FC = () => {
       </div>
 
       {contact && (
-        <ContactDetail contact={contact} onUpdate={handleUpdate} />
+        <ContactDetail 
+          contact={contact} 
+          onUpdate={handleUpdate} 
+          quotes={quotes}
+          appointments={appointments}
+          subscriptions={subscriptions}
+          interactionsLoading={interactionsLoading}
+        />
       )}
     </div>
   );
