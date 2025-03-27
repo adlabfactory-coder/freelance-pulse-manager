@@ -1,8 +1,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { Quote, QuoteItem, QuoteStatus } from "@/types";
-import { format } from "date-fns";
-import { v4 as uuidv4 } from "uuid";
+import { mapDatabaseQuoteToQuote } from "./quote-service";
 import { createQuotesService } from "./supabase/quotes";
 
 // Créer une instance du service de devis avec RPCMODE activé pour contourner la RLS
@@ -24,11 +23,22 @@ export const mapDatabaseQuoteToQuote = (dbQuote: any): Quote => {
     freelancerId: dbQuote.freelancerId,
     totalAmount: dbQuote.totalAmount,
     validUntil: dbQuote.validUntil ? new Date(dbQuote.validUntil) : new Date(),
-    status: dbQuote.status,
+    status: dbQuote.status as QuoteStatus,
     notes: dbQuote.notes,
     createdAt: dbQuote.createdAt ? new Date(dbQuote.createdAt) : new Date(),
     updatedAt: dbQuote.updatedAt ? new Date(dbQuote.updatedAt) : new Date(),
     folder: dbQuote.folder || 'general',
-    items: [] // Items are fetched separately if needed
+    items: dbQuote.quote_items 
+      ? dbQuote.quote_items.map((item: any) => ({
+          id: item.id,
+          quoteId: item.quoteId,
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: Number(item.unitPrice),
+          tax: item.tax ? Number(item.tax) : 0,
+          discount: item.discount ? Number(item.discount) : 0,
+          serviceId: item.serviceId
+        })) 
+      : []
   };
 };
