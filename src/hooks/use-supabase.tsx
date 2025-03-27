@@ -1,101 +1,88 @@
-import { createSupabaseService } from '@/services/supabase';
-import { User, UserRole } from '@/types';
-import { auditCreate, auditDelete, auditUpdate } from '@/services/audit-service';
-import { validateSupabaseConfig } from '@/lib/supabase-client';
-import { fetchUsers, fetchUserById, updateUser, createUser, deleteUser } from '@/services/user';
 
-// Hook centralisé pour accéder aux services Supabase
-export const useSupabase = () => {
-  // Validation de la configuration Supabase au démarrage
-  const isConfigValid = validateSupabaseConfig();
-  if (!isConfigValid) {
-    console.warn("La configuration Supabase n'est pas valide. Certaines fonctionnalités peuvent ne pas fonctionner correctement.");
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase-client';
+import { useToast } from '@/components/ui/use-toast';
+
+// Créer une fonction pour valider la configuration Supabase si elle n'existe pas déjà
+const validateSupabaseConfig = () => {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  
+  if (!url || !key) {
+    return {
+      isValid: false,
+      message: 'Configuration Supabase manquante: URL ou clé anonyme non définie'
+    };
   }
   
-  // Créer un service Supabase centralisé
-  const supabaseService = createSupabaseService();
-  
   return {
-    // Client Supabase
-    supabaseClient: supabaseService.client,
-    
-    // Fonctions de vérification de la connexion
-    checkSupabaseStatus: supabaseService.checkConnection,
-    
-    // Fonctions de gestion de la base de données
-    checkDatabaseStatus: supabaseService.database.checkStatus,
-    initializeDatabase: supabaseService.database.initialize,
-    
-    // Services des utilisateurs - Utiliser les fonctions importées de notre nouveau module
-    fetchUsers,
-    fetchUserById,
-    
-    // Mise à jour d'un utilisateur avec audit
-    updateUser: async (userData: Partial<User> & { id: string }) => {
-      const success = await updateUser(userData.id, userData);
-      if (success) {
-        // Log de l'action dans l'audit
-        auditUpdate('system', UserRole.ADMIN, 'users', userData.id, {
-          fields: Object.keys(userData).filter(k => k !== 'id')
-        });
-      }
-      return { success };
-    },
-    
-    // Création d'un utilisateur avec audit
-    createUser: async (userData: Omit<User, 'id'>) => {
-      const result = await createUser(userData, UserRole.ADMIN);
-      if (result.success && result.userId) {
-        // Log de l'action dans l'audit
-        auditCreate('system', UserRole.ADMIN, 'users', result.userId, {
-          role: userData.role
-        });
-      }
-      return result;
-    },
-    
-    // Suppression d'un utilisateur avec audit
-    deleteUser: async (userId: string) => {
-      const result = await deleteUser(userId, UserRole.ADMIN);
-      if (result.success) {
-        // Log de l'action dans l'audit
-        auditDelete('system', UserRole.ADMIN, 'users', userId, {});
-      }
-      return result;
-    },
-    
-    // Fonctions de conversion de données - Avec UserRole explicite
-    getMockUsers: (): User[] => {
-      return [
-        {
-          id: '7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc',
-          name: 'Super Admin Démo',
-          email: 'superadmin@example.com',
-          role: UserRole.SUPER_ADMIN,
-          avatar: null
-        },
-        {
-          id: '6a94bd3d-7f5c-49ae-b09e-e570cb01a978',
-          name: 'Admin Démo',
-          email: 'admin@example.com',
-          role: UserRole.ADMIN,
-          avatar: null
-        },
-        {
-          id: '487fb1af-4396-49d1-ba36-8711facbb03c',
-          name: 'Freelancer Démo',
-          email: 'freelancer@example.com',
-          role: UserRole.FREELANCER,
-          avatar: null
-        },
-        {
-          id: '3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c',
-          name: 'Chargé de Compte Démo',
-          email: 'account@example.com',
-          role: UserRole.ACCOUNT_MANAGER,
-          avatar: null
-        }
-      ];
-    }
+    isValid: true,
+    message: 'Configuration Supabase valide'
   };
+};
+
+interface SupabaseContextType {
+  supabase: SupabaseClient;
+  isConnected: boolean;
+}
+
+const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
+
+export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
+  const [isConnected, setIsConnected] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        // Vérifier que la configuration est valide
+        const config = validateSupabaseConfig();
+        if (!config.isValid) {
+          console.error(config.message);
+          toast({
+            title: "Erreur de configuration",
+            description: config.message,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Tester la connexion à Supabase
+        const { error } = await supabase.from('users').select('id').limit(1);
+        
+        if (error) {
+          console.error('Erreur de connexion à Supabase:', error);
+          toast({
+            title: "Erreur de connexion",
+            description: "Impossible de se connecter à Supabase",
+            variant: "destructive"
+          });
+          setIsConnected(false);
+          return;
+        }
+        
+        setIsConnected(true);
+      } catch (error) {
+        console.error('Erreur lors de la vérification de la connexion:', error);
+        setIsConnected(false);
+      }
+    };
+
+    checkConnection();
+  }, [toast]);
+
+  return (
+    <SupabaseContext.Provider value={{ supabase, isConnected }}>
+      {children}
+    </SupabaseContext.Provider>
+  );
+};
+
+export const useSupabase = () => {
+  const context = useContext(SupabaseContext);
+  if (context === undefined) {
+    throw new Error('useSupabase doit être utilisé à l\'intérieur d\'un SupabaseProvider');
+  }
+  return context;
 };

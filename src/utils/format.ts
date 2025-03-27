@@ -62,6 +62,9 @@ export const formatDateForDisplay = (date: Date | string): string => {
   return format(dateObj, 'dd/MM/yyyy', { locale: fr });
 };
 
+// Alias pour compatibilité
+export const formatDate = formatDateForDisplay;
+
 /**
  * Formate une heure pour l'affichage dans l'interface utilisateur
  */
@@ -78,6 +81,9 @@ export const formatTimeForDisplay = (date: Date | string): string => {
   return format(dateObj, 'HH:mm', { locale: fr });
 };
 
+// Alias pour compatibilité
+export const formatTime = formatTimeForDisplay;
+
 /**
  * Parse une chaîne de date au format français
  */
@@ -88,4 +94,18 @@ export const parseFrenchDate = (dateString: string): Date | null => {
     console.error("Erreur lors de l'analyse de la date française:", error);
     return null;
   }
+};
+
+/**
+ * Formate un montant en devise
+ */
+export const formatCurrency = (amount: number): string => {
+  if (amount === undefined || amount === null) return '0,00 MAD';
+  
+  return new Intl.NumberFormat('fr-MA', {
+    style: 'currency',
+    currency: 'MAD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
 };

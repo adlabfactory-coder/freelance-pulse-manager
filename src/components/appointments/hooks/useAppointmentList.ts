@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase-client';
 import { Appointment, AppointmentStatus, normalizeFreelancerId } from '@/types/appointment';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
@@ -33,17 +33,17 @@ export const useAppointmentList = () => {
           id: appointment.id,
           title: appointment.title,
           description: appointment.description,
-          contactId: appointment.contactId,
-          freelancerid: appointment.freelancerid, // This will be normalized
+          contactId: appointment.contact_id || appointment.contactId,
+          freelancerid: appointment.freelancerid || appointment.freelancer_id,
           date: appointment.date,
           duration: appointment.duration,
           status: status,
           location: appointment.location,
           notes: appointment.notes,
           folder: appointment.folder,
-          createdAt: appointment.createdAt,
-          updatedAt: appointment.updatedAt,
-          managerId: null
+          createdAt: appointment.createdAt || appointment.created_at,
+          updatedAt: appointment.updatedAt || appointment.updated_at,
+          managerId: appointment.managerId || appointment.manager_id
         });
       });
       

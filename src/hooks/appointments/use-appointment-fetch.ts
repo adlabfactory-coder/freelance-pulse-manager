@@ -4,7 +4,7 @@ import { Appointment, normalizeFreelancerId } from '@/types/appointment';
 import { appointmentsService } from '@/services/supabase/appointments';
 import { toast } from 'sonner';
 import { useAuth } from '../use-auth';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase-client';
 
 /**
  * Hook responsable de la récupération des rendez-vous avec logique de filtrage par rôle
