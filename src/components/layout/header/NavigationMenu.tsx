@@ -29,7 +29,7 @@ interface NavItem {
 }
 
 const NavigationMenu: React.FC = () => {
-  const { user, role, isAdminOrSuperAdmin } = useAuth();
+  const { user, role, isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
@@ -54,10 +54,23 @@ const NavigationMenu: React.FC = () => {
       { title: "Paramètres", href: "/settings", icon: Icons.Settings },
     ];
     
-    // La navigation est désormais contrôlée par le rôle de l'utilisateur
-    if (isAdminOrSuperAdmin) {
-      // Accès complet pour admins et super admins
+    // Super Admin specific items
+    if (isSuperAdmin) {
+      allNavItems.push(
+        { title: "Administration", href: "/admin", icon: Icons.Shield },
+        { title: "Audit", href: "/audit", icon: Icons.Layers }
+      );
+    }
+    
+    // Super Admin has access to everything
+    if (isSuperAdmin) {
       return allNavItems;
+    } 
+    // Regular admin access
+    else if (role === UserRole.ADMIN) {
+      return allNavItems.filter(item => 
+        !["/admin", "/audit"].includes(item.href)
+      );
     } else if (role === UserRole.ACCOUNT_MANAGER) {
       // Accès pour les chargés de compte
       return allNavItems.filter(item => 

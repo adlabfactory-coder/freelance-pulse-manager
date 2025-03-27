@@ -45,12 +45,17 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
   }
   
   // La navigation est désormais contrôlée par le rôle de l'utilisateur
-  // Les administrateurs et super-administrateurs ont accès à tout
   let visibleItems: NavItemType[] = [];
   
-  if (isAdminOrSuperAdmin) {
-    // Accès complet pour admins et super admins
+  // Super Admin a accès à TOUT sans restrictions
+  if (isSuperAdmin) {
     visibleItems = allNavItems;
+  } 
+  // Accès complet pour admins ordinaires
+  else if (role === UserRole.ADMIN) {
+    visibleItems = allNavItems.filter(item => 
+      !["/admin", "/audit"].includes(item.href)
+    );
   } else if (role === UserRole.ACCOUNT_MANAGER) {
     // Accès pour les chargés de compte
     visibleItems = allNavItems.filter(item => 

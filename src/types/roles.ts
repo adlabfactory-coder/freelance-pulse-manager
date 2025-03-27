@@ -18,6 +18,7 @@ export const roleLabels: Record<UserRole, string> = {
 // Add missing exports for the role-related components
 export const USER_ROLE_LABELS = roleLabels;
 
+// Super admin is at index 0, giving them highest priority
 export const ROLE_HIERARCHY = [
   UserRole.SUPER_ADMIN,
   UserRole.ADMIN,
@@ -53,7 +54,7 @@ export interface RolePermission {
 }
 
 export const DEFAULT_PERMISSIONS: RolePermission[] = [
-  // Super Admin has all permissions
+  // Super Admin has all permissions across all categories
   {
     role: UserRole.SUPER_ADMIN,
     category: PermissionCategory.USERS,
