@@ -101,8 +101,7 @@ export const useAppointmentForm = (
         contactId: finalContactId,
         freelancerId,
         folder,
-        // Si l'utilisateur est un freelancer, jamais d'auto-assignation car il est automatiquement assigné
-        // Sinon (pour les admin, account managers), respecter la valeur autoAssign
+        // Si l'utilisateur est un freelancer, jamais d'auto-assignation
         autoAssign: user?.role === UserRole.FREELANCER ? false : autoAssign
       });
       

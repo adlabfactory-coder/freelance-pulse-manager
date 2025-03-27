@@ -1,19 +1,18 @@
 
-// Re-export the main Supabase client to ensure we use the same instance everywhere
-import { supabase, checkSupabaseConnection as checkConnection } from '@/lib/supabase-client';
+// Re-exporter le client Supabase principal pour garantir l'utilisation de la même instance partout
+import { supabase, checkSupabaseConnection } from '@/lib/supabase-client';
 
-// Re-export the client
+// Re-exporter le client
 export { supabase };
 
-// Wrapper function to maintain API compatibility
+// Fonction wrapper pour maintenir la compatibilité de l'API
 export const validateSupabaseConfig = (): boolean => {
-  // The main client is already initialized with fallbacks
   return true;
 };
 
-// Re-export the check connection function with the expected API
+// Re-exporter la fonction de vérification de connexion avec l'API attendue
 export const checkSupabaseConnection = async (): Promise<{success: boolean, message: string}> => {
-  const result = await checkConnection();
+  const result = await checkSupabaseConnection();
   return { 
     success: result, 
     message: result ? 'Connexion à Supabase réussie' : 'Erreur de connexion à Supabase'
