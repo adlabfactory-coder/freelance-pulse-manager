@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import ClientSelector from "./ClientSelector";
 import FreelancerSelector from "./FreelancerSelector";
@@ -8,7 +9,7 @@ import QuoteItemForm from "./QuoteItemForm";
 import QuoteItemsList from "./QuoteItemsList";
 import { Quote, QuoteItem, QuoteStatus, User } from "@/types";
 import { Contact } from "@/services/contacts/types";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import { contactService } from "@/services/contacts";
 import { fetchUserById } from "@/services/supabase-user-service";
 

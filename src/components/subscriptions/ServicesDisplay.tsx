@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import { formatCurrency } from "@/utils/format";
 
 interface ServicesDisplayProps {

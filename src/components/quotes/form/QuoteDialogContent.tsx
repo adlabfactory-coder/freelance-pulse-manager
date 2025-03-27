@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Quote, QuoteItem } from "@/types";
 import { Contact } from "@/services/contacts/types";
 import { User } from "@/types";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import QuoteClientSection from "./sections/QuoteClientSection";
 import QuoteFreelancerSection from "./sections/QuoteFreelancerSection";
 import QuoteDetailsSection from "./sections/QuoteDetailsSection";

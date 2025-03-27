@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { QuoteItem, SubscriptionPlan } from "@/types";
-import { Service } from "@/types/services";
+import { Service } from "@/types/service";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/utils/format";
 import { useQuery } from "@tanstack/react-query";
