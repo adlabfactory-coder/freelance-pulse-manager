@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { User } from '@/types/user';
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
+import { getMockUsers as getMockUsersFromUtils } from "@/utils/supabase-mock-data";
 
 export const useUserOperations = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +17,103 @@ export const useUserOperations = () => {
     toast.error(message);
   }, []);
 
+  // Méthode pour récupérer la liste des utilisateurs
+  const fetchUsers = async (): Promise<User[]> => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
+
+      if (error) {
+        console.error('Erreur lors de la récupération des utilisateurs:', error);
+        showErrorToast('Impossible de récupérer la liste des utilisateurs');
+        return [];
+      }
+
+      return data as User[];
+    } catch (error) {
+      console.error('Erreur inattendue lors de la récupération des utilisateurs:', error);
+      showErrorToast('Impossible de récupérer la liste des utilisateurs');
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Méthode pour récupérer un utilisateur par son ID
+  const fetchUserById = async (id: string): Promise<User | null> => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error(`Erreur lors de la récupération de l'utilisateur (${id}):`, error);
+        showErrorToast(`Impossible de récupérer l'utilisateur`);
+        return null;
+      }
+
+      return data as User;
+    } catch (error) {
+      console.error(`Erreur inattendue lors de la récupération de l'utilisateur (${id}):`, error);
+      showErrorToast(`Impossible de récupérer l'utilisateur`);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Méthode pour mettre à jour un utilisateur (alias vers updateUserProfile pour compatibilité)
+  const updateUser = async (userData: Partial<User>): Promise<boolean> => {
+    const result = await updateUserProfile(userData);
+    return result !== null;
+  };
+
+  // Méthode pour créer un utilisateur
+  const createUser = async (userData: Omit<User, 'id'>): Promise<{ success: boolean; id?: string }> => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('users')
+        .insert({
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          avatar: userData.avatar,
+          supervisor_id: userData.supervisor_id,
+          schedule_enabled: userData.schedule_enabled,
+          daily_availability: userData.daily_availability,
+          weekly_availability: userData.weekly_availability,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error(`Erreur lors de la création de l'utilisateur:`, error);
+        showErrorToast(`La création de l'utilisateur a échoué`);
+        return { success: false };
+      }
+
+      showSuccessToast('Utilisateur créé avec succès');
+      return { success: true, id: data.id };
+    } catch (error) {
+      console.error(`Erreur inattendue lors de la création de l'utilisateur:`, error);
+      showErrorToast(`La création de l'utilisateur a échoué`);
+      return { success: false };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Méthode pour récupérer des utilisateurs simulés
+  const getMockUsers = (): User[] => {
+    return getMockUsersFromUtils();
+  };
+
   const updateUserProfile = async (userData: Partial<User>): Promise<User | null> => {
     try {
       setIsLoading(true);
@@ -27,7 +125,7 @@ export const useUserOperations = () => {
           role: userData.role,
           avatar: userData.avatar,
           supervisor_id: userData.supervisor_id,
-          schedule_enabled: userData.schedule_enabled, // Remplacé calendly_enabled par schedule_enabled
+          schedule_enabled: userData.schedule_enabled,
           daily_availability: userData.daily_availability,
           weekly_availability: userData.weekly_availability,
         })
@@ -79,6 +177,11 @@ export const useUserOperations = () => {
 
   return {
     isLoading,
+    fetchUsers,
+    fetchUserById,
+    updateUser,
+    createUser,
+    getMockUsers,
     updateUserProfile,
     deleteUser
   };
