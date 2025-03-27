@@ -24,7 +24,18 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
 
       const { data, error } = await supabase
         .rpc('create_appointment', {
-          appointment_data: dataToSend
+          appointment_data: {
+            title: dataToSend.title,
+            description: dataToSend.description || null,
+            date: dataToSend.date,
+            duration: dataToSend.duration || 30,
+            status: dataToSend.status || 'scheduled',
+            contactId: dataToSend.contact_id, // Correction ici
+            freelancerid: dataToSend.freelancer_id, // Correction ici
+            location: dataToSend.location || null,
+            notes: dataToSend.notes || null,
+            folder: dataToSend.folder || 'general'
+          }
         });
 
       if (error) {
@@ -58,7 +69,17 @@ export const createAppointmentsCreateService = (supabase: SupabaseClient) => {
       
       const { data, error } = await supabase
         .rpc('create_auto_assign_appointment', {
-          appointment_data: dataToSend
+          appointment_data: {
+            title: dataToSend.title,
+            description: dataToSend.description || null,
+            date: dataToSend.date,
+            duration: dataToSend.duration || 30,
+            status: 'pending',
+            contactId: dataToSend.contact_id, // Correction ici
+            location: dataToSend.location || null,
+            notes: dataToSend.notes || null,
+            folder: dataToSend.folder || 'general'
+          }
         });
 
       if (error) {

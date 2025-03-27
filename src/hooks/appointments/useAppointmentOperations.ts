@@ -4,9 +4,11 @@ import { createAppointment, createAutoAssignAppointment } from "@/services/appoi
 import { formatDateForAPI } from "@/utils/format";
 import { AppointmentStatus } from "@/types/appointment";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export const useAppointmentOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const submitAppointment = async ({
     title,
@@ -50,17 +52,24 @@ export const useAppointmentOperations = () => {
         return null;
       }
       
+      // Utiliser l'ID de l'utilisateur connecté comme freelancer si aucun n'est spécifié et qu'il est freelancer
+      const finalFreelancerId = freelancerId || (user?.role === 'freelancer' ? user.id : undefined);
+      
       console.log("useAppointmentOperations: Informations du rendez-vous:", {
         title,
         contactId,
-        freelancerId,
+        freelancerId: finalFreelancerId,
         appointmentDate,
-        autoAssign
+        autoAssign,
+        userRole: user?.role
       });
       
-      if (!freelancerId && !autoAssign) {
-        console.log("useAppointmentOperations: Aucun freelancer disponible, passage en mode auto-assignation");
-        toast.info("Aucun freelancer disponible, le rendez-vous sera auto-assigné");
+      // Décider si on utilise l'auto-assignation
+      const useAutoAssign = autoAssign || (!finalFreelancerId && user?.role !== 'freelancer');
+      
+      if (useAutoAssign) {
+        console.log("useAppointmentOperations: Mode auto-assignation activé");
+        toast.info("Le rendez-vous sera auto-assigné à un freelancer disponible");
       }
       
       const appointmentData = {
@@ -68,9 +77,9 @@ export const useAppointmentOperations = () => {
         description,
         date: appointmentDate,
         duration,
-        status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId, // Changé pour correspondre à l'interface AppointmentCreateData
-        freelancer_id: freelancerId || undefined, // Changé pour correspondre à l'interface AppointmentCreateData
+        status: useAutoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
+        contact_id: contactId,
+        freelancer_id: useAutoAssign ? undefined : finalFreelancerId,
         location: null,
         notes: null,
         folder: folder
@@ -79,7 +88,7 @@ export const useAppointmentOperations = () => {
       console.log("useAppointmentOperations: Soumission des données de rendez-vous:", appointmentData);
       
       let result;
-      if (!freelancerId || autoAssign) {
+      if (useAutoAssign) {
         result = await createAutoAssignAppointment(appointmentData);
       } else {
         result = await createAppointment(appointmentData);

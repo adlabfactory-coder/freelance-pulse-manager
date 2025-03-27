@@ -4,6 +4,7 @@ import { useAppointmentOperations } from "@/hooks/appointments/useAppointmentOpe
 import { useAppointmentContacts } from "@/hooks/appointments/useAppointmentContacts";
 import { useAppointmentFreelancers } from "@/hooks/appointments/useAppointmentFreelancers";
 import { AppointmentTitleOption } from "@/types/appointment";
+import { useAuth } from "@/hooks/use-auth";
 
 // Export les options de titre pour réutilisation dans d'autres composants
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -23,6 +24,7 @@ export const useAppointmentForm = (
   autoAssign = false,
   initialFolder: string = "general"
 ) => {
+  const { user } = useAuth();
   // États du formulaire pour les données de base
   const [titleOption, setTitleOption] = useState<AppointmentTitleOption>('consultation-initiale');
   const [customTitle, setCustomTitle] = useState('');
@@ -63,6 +65,19 @@ export const useAppointmentForm = (
     const finalContactId = overrideContactId || contactId;
     const finalTitle = getFinalTitle();
     
+    // Déterminer l'ID du freelancer à utiliser
+    // Pour les utilisateurs freelancers, utilisez leur propre ID
+    // Sinon, utilisez le freelancer par défaut ou auto-assignez
+    const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
+    
+    console.log("useAppointmentForm: Soumission du formulaire", {
+      title: finalTitle, 
+      contactId: finalContactId,
+      freelancerId,
+      autoAssign,
+      userRole: user?.role
+    });
+    
     const result = await submitAppointment({
       title: finalTitle,
       description,
@@ -70,9 +85,9 @@ export const useAppointmentForm = (
       time,
       duration,
       contactId: finalContactId,
-      freelancerId: defaultFreelancer,
+      freelancerId: freelancerId,
       folder,
-      autoAssign
+      autoAssign: autoAssign || user?.role !== 'freelancer'
     });
     
     if (result && onSuccess) {
