@@ -57,6 +57,30 @@ export const contactOperationsService = {
   },
 
   /**
+   * Récupère les contacts assignés à un freelancer spécifique
+   */
+  async getContactsByFreelancer(freelancerId: string): Promise<Contact[]> {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('assignedTo', freelancerId)
+        .is('deleted_at', null)
+        .order('createdAt', { ascending: false });
+      
+      if (error) {
+        console.error(`Erreur lors de la récupération des contacts du freelancer ${freelancerId}:`, error);
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des contacts du freelancer ${freelancerId}:`, error);
+      return [];
+    }
+  },
+
+  /**
    * Supprime un contact par son ID
    */
   async deleteContact(contactId: string): Promise<boolean> {

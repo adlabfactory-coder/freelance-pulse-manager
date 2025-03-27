@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { createAppointment, createAutoAssignAppointment } from "@/services/appointments/create";
 import { toast } from "sonner";
-import { Appointment } from "@/types/appointment";
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 
 // Export the title options for reuse in other components
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -63,7 +63,7 @@ export const useAppointmentForm = (
         description,
         date: appointmentDate.toISOString(),
         duration,
-        status: "scheduled",
+        status: AppointmentStatus.SCHEDULED,
         contactId,
         freelancerId: "", // Corrected from freelancerid to freelancerId
         location: null,

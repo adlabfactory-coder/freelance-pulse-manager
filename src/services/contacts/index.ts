@@ -24,6 +24,7 @@ export const contactService = {
   // Basic CRUD operations
   getContacts: contactOperationsService.getContacts,
   getContactById: contactOperationsService.getContactById,
+  getContactsByFreelancer: contactOperationsService.getContactsByFreelancer,
   createContact: contactCreateUpdateService.createContact,
   addContact: contactCreateUpdateService.addContact,
   updateContact: contactCreateUpdateService.updateContact,
