@@ -21,6 +21,9 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
         ? quoteData.validUntil 
         : quoteData.validUntil.toISOString();
       
+      // Ensure status is a valid QuoteStatus enum value
+      const status = quoteData.status as QuoteStatus;
+      
       // Create quote
       const { data: quoteResult, error: quoteError } = await supabase
         .rpc('create_quote', {
@@ -29,7 +32,7 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
             freelancerId: quoteData.freelancerId,
             totalAmount: quoteData.totalAmount,
             validUntil: validUntil,
-            status: quoteData.status,
+            status: status,
             notes: quoteData.notes,
             folder: quoteData.folder
           }

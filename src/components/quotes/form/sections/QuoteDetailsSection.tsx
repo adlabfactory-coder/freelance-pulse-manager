@@ -40,11 +40,14 @@ const QuoteDetailsSection: React.FC<QuoteDetailsSectionProps> = ({
             <SelectValue placeholder="Sélectionner un statut" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="draft">Brouillon</SelectItem>
-            <SelectItem value="pending">En attente</SelectItem>
-            <SelectItem value="accepted">Accepté</SelectItem>
-            <SelectItem value="rejected">Rejeté</SelectItem>
-            <SelectItem value="expired">Expiré</SelectItem>
+            <SelectItem value={QuoteStatus.DRAFT}>Brouillon</SelectItem>
+            <SelectItem value={QuoteStatus.PENDING}>En attente</SelectItem>
+            <SelectItem value={QuoteStatus.SENT}>Envoyé</SelectItem>
+            <SelectItem value={QuoteStatus.ACCEPTED}>Accepté</SelectItem>
+            <SelectItem value={QuoteStatus.REJECTED}>Rejeté</SelectItem>
+            <SelectItem value={QuoteStatus.EXPIRED}>Expiré</SelectItem>
+            <SelectItem value={QuoteStatus.PAID}>Payé</SelectItem>
+            <SelectItem value={QuoteStatus.CANCELLED}>Annulé</SelectItem>
           </SelectContent>
         </Select>
       </div>
