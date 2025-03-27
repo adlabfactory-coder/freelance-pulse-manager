@@ -59,13 +59,20 @@ export const useAppointmentForm = (
         "session-suivi": "Session de suivi",
         "demo-produit": "Démonstration de produit",
         "revision-contrat": "Révision de contrat",
-        "autre": "Titre personnalisé"
+        "autre": customTitle || "Titre personnalisé"
       };
       
       const title = titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
       
-      // Utiliser l'ID de l'utilisateur connecté pour le freelancerId s'il n'y a pas d'auto-attribution
-      const freelancerId = autoAssign ? null : user?.id || null;
+      // Déterminer le freelancer - Utiliser l'ID utilisateur connecté s'il est freelancer
+      const isUserFreelancer = user?.role === 'freelancer';
+      const freelancerId = isUserFreelancer ? user?.id : null;
+      
+      if (!freelancerId && !autoAssign) {
+        toast.error("Identifiant du freelancer manquant");
+        setIsSubmitting(false);
+        return;
+      }
       
       // Créer l'objet de rendez-vous à envoyer
       const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -77,7 +84,8 @@ export const useAppointmentForm = (
         contactId,
         freelancerId: freelancerId as string, // Utiliser freelancerId pour la cohérence de l'application
         location: null,
-        notes: null
+        notes: null,
+        currentUserId: user?.id // Ajouter l'ID de l'utilisateur actuel comme fallback
       };
       
       console.log("Soumission des données de rendez-vous:", appointmentData);

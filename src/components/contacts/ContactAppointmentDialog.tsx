@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppointmentForm, AppointmentTitleOption } from "@/components/appointments/hooks/useAppointmentForm";
@@ -8,6 +8,7 @@ import AppointmentTypeSelect from "@/components/appointments/components/Appointm
 import AppointmentDescription from "@/components/appointments/components/AppointmentDescription";
 import AppointmentDateTimePicker from "@/components/appointments/components/AppointmentDateTimePicker";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ContactAppointmentDialogProps {
   open: boolean;
@@ -26,6 +27,9 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   initialType = "consultation-initiale",
   autoAssign = false
 }) => {
+  const { user } = useAuth();
+  const isFreelancer = user?.role === 'freelancer';
+
   // Utiliser le hook de formulaire pour les rendez-vous avec données explicites
   const {
     titleOption,
@@ -51,7 +55,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       toast.success("Rendez-vous planifié avec succès");
     }, 
     contactId,
-    autoAssign
+    !isFreelancer || autoAssign // Si l'utilisateur n'est pas freelancer, auto-assignation automatique
   );
 
   // Définir le type initial lors de l'ouverture du dialogue
@@ -93,6 +97,11 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
             <CalendarClock className="h-5 w-5" />
             Planifier un rendez-vous avec {contactName}
           </DialogTitle>
+          <DialogDescription>
+            {isFreelancer 
+              ? "Ce rendez-vous vous sera attribué directement" 
+              : "Ce rendez-vous sera assigné à un chargé de compte"}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleFormSubmit}>

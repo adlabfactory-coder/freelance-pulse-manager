@@ -9,6 +9,7 @@ import AppointmentDescription from "./AppointmentDescription";
 import AppointmentDateTimePicker from "./AppointmentDateTimePicker";
 import ContactSelector from "./ContactSelector";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AppointmentDialogContentProps {
   onOpenChange: (open: boolean) => void;
@@ -21,7 +22,10 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
   selectedDate,
   initialContactId
 }) => {
+  const { user } = useAuth();
+  const isFreelancer = user?.role === 'freelancer';
   const [contactId, setContactId] = useState(initialContactId || "");
+  
   const {
     titleOption,
     setTitleOption,
@@ -37,7 +41,7 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
     setDuration,
     isSubmitting,
     handleSubmit: formSubmit
-  } = useAppointmentForm(selectedDate, () => onOpenChange(false));
+  } = useAppointmentForm(selectedDate, () => onOpenChange(false), initialContactId, !isFreelancer);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +71,9 @@ const AppointmentDialogContent: React.FC<AppointmentDialogContentProps> = ({
           Planifier un nouveau rendez-vous
         </DialogTitle>
         <DialogDescription>
-          Remplissez les informations ci-dessous pour créer un nouveau rendez-vous
+          {isFreelancer 
+            ? "Ce rendez-vous vous sera attribué directement" 
+            : "Ce rendez-vous sera assigné à un chargé de compte"}
         </DialogDescription>
       </DialogHeader>
       
