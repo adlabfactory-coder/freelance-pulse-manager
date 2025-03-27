@@ -17,6 +17,14 @@ export interface DashboardActivity {
   type: string;
 }
 
+export interface DashboardTask {
+  id: string;
+  title: string;
+  dueDate: string;
+  status: 'pending' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+}
+
 export interface DataSource {
   name: string;
   status: 'connected' | 'disconnected' | 'error';
@@ -32,6 +40,7 @@ export function useDashboardData() {
     clients: 0
   });
   const [activities, setActivities] = useState<DashboardActivity[]>([]);
+  const [tasks, setTasks] = useState<DashboardTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | undefined>(undefined);
@@ -108,6 +117,30 @@ export function useDashboardData() {
         clientsCount = contactsCount || 0;
         newDataSources[3].status = contactsError ? 'error' : 'connected';
         newDataSources[3].lastSynced = new Date();
+
+        // Récupérer les tâches à faire pour le freelancer
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('tasks')  // Ou appointments, selon votre modèle de données
+          .select('id, title, due_date, status, priority')
+          .eq('assignedTo', user.id)
+          .eq('status', 'pending')
+          .order('due_date', { ascending: true })
+          .limit(5);
+
+        if (!tasksError && tasksData) {
+          const formattedTasks = tasksData.map(task => ({
+            id: task.id,
+            title: task.title,
+            dueDate: new Date(task.due_date).toLocaleDateString('fr-FR'),
+            status: task.status,
+            priority: task.priority || 'medium'
+          }));
+          setTasks(formattedTasks);
+        } else {
+          console.error("Erreur lors de la récupération des tâches:", tasksError);
+          // Générer des données de démonstration si erreur
+          setTasks([]);
+        }
       } else {
         // Pour les admins et chargés de compte, montrer toutes les commissions et clients
         const { data: commissionsData, error: commissionsError } = await supabase
@@ -130,6 +163,29 @@ export function useDashboardData() {
         clientsCount = contactsCount || 0;
         newDataSources[3].status = contactsError ? 'error' : 'connected';
         newDataSources[3].lastSynced = new Date();
+
+        // Récupérer les tâches en attente pour les administrateurs
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('tasks')  // Ou une autre table selon votre modèle
+          .select('id, title, due_date, status, priority')
+          .eq('status', 'pending')
+          .order('due_date', { ascending: true })
+          .limit(5);
+
+        if (!tasksError && tasksData) {
+          const formattedTasks = tasksData.map(task => ({
+            id: task.id,
+            title: task.title,
+            dueDate: new Date(task.due_date).toLocaleDateString('fr-FR'),
+            status: task.status,
+            priority: task.priority || 'medium'
+          }));
+          setTasks(formattedTasks);
+        } else {
+          console.error("Erreur lors de la récupération des tâches:", tasksError);
+          // Générer des données de démonstration si erreur
+          setTasks([]);
+        }
       }
 
       setDataSources(newDataSources);
@@ -176,98 +232,83 @@ export function useDashboardData() {
     }
   }, [isFreelancer, isAccountManager, isAdminOrSuperAdmin, user?.id, dataSources]);
   
-  // Configurer l'écouteur pour les mises à jour en temps réel
+  // Configurer les écouteurs pour les mises à jour en temps réel
   useEffect(() => {
-    // Créer un canal pour les mises à jour des rendez-vous
-    const appointmentsChannel = supabase
-      .channel('public:appointments')
+    // Créer des canaux pour les mises à jour en temps réel
+    const appointmentsChannel = supabase.channel('realtime-appointments')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'appointments' }, 
-        () => {
+        (payload) => {
+          console.log("Changement détecté dans les rendez-vous:", payload);
           toast.info("Nouvelles données de rendez-vous disponibles");
           fetchDashboardData();
         }
       )
-      .subscribe((status) => {
-        console.log('Status du canal appointments:', status);
-        if (status === 'SUBSCRIBED') {
-          const newDataSources = [...dataSources];
-          newDataSources[2].status = 'connected';
-          setDataSources(newDataSources);
-        } else if (status === 'CHANNEL_ERROR') {
-          const newDataSources = [...dataSources];
-          newDataSources[2].status = 'error';
-          setDataSources(newDataSources);
-        }
-      });
+      .subscribe();
       
-    // Créer un canal pour les mises à jour des devis
-    const quotesChannel = supabase
-      .channel('public:quotes')
+    const quotesChannel = supabase.channel('realtime-quotes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'quotes' }, 
-        () => {
+        (payload) => {
+          console.log("Changement détecté dans les devis:", payload);
           toast.info("Nouvelles données de devis disponibles");
           fetchDashboardData();
         }
       )
-      .subscribe((status) => {
-        console.log('Status du canal quotes:', status);
-        if (status === 'SUBSCRIBED') {
-          const newDataSources = [...dataSources];
-          newDataSources[0].status = 'connected';
-          setDataSources(newDataSources);
-        } else if (status === 'CHANNEL_ERROR') {
-          const newDataSources = [...dataSources];
-          newDataSources[0].status = 'error';
-          setDataSources(newDataSources);
-        }
-      });
+      .subscribe();
       
-    // Créer un canal pour les mises à jour des commissions
-    const commissionsChannel = supabase
-      .channel('public:commissions')
+    const commissionsChannel = supabase.channel('realtime-commissions')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'commissions' }, 
-        () => {
+        (payload) => {
+          console.log("Changement détecté dans les commissions:", payload);
           toast.info("Nouvelles données de commissions disponibles");
           fetchDashboardData();
         }
       )
-      .subscribe((status) => {
-        console.log('Status du canal commissions:', status);
-        if (status === 'SUBSCRIBED') {
-          const newDataSources = [...dataSources];
-          newDataSources[1].status = 'connected';
-          setDataSources(newDataSources);
-        } else if (status === 'CHANNEL_ERROR') {
-          const newDataSources = [...dataSources];
-          newDataSources[1].status = 'error';
-          setDataSources(newDataSources);
+      .subscribe();
+
+    const contactsChannel = supabase.channel('realtime-contacts')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'contacts' }, 
+        (payload) => {
+          console.log("Changement détecté dans les contacts:", payload);
+          toast.info("Mise à jour des données clients");
+          fetchDashboardData();
         }
-      });
+      )
+      .subscribe();
+
+    const tasksChannel = supabase.channel('realtime-tasks')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'tasks' }, 
+        (payload) => {
+          console.log("Changement détecté dans les tâches:", payload);
+          toast.info("Mise à jour des tâches");
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
       
+    // Nettoyer les canaux à la suppression du composant
     return () => {
       supabase.removeChannel(appointmentsChannel);
       supabase.removeChannel(quotesChannel);
       supabase.removeChannel(commissionsChannel);
+      supabase.removeChannel(contactsChannel);
+      supabase.removeChannel(tasksChannel);
     };
-  }, [fetchDashboardData, dataSources]);
+  }, [fetchDashboardData]);
 
   // Charger les données au montage du composant
   useEffect(() => {
     fetchDashboardData();
-    
-    // Configurer un intervalle pour actualiser les données
-    const intervalId = setInterval(fetchDashboardData, 60000); // Rafraîchir toutes les minutes
-    
-    // Nettoyer l'intervalle à la suppression du composant
-    return () => clearInterval(intervalId);
   }, [fetchDashboardData]);
 
   return {
     stats,
     activities,
+    tasks,
     loading,
     refreshing,
     lastUpdated,

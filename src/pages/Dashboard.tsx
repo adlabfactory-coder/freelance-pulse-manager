@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardStatsSection from "@/components/dashboard/DashboardStats";
@@ -11,9 +12,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, LayoutDashboard, FileText, PieChart, Clock } from "lucide-react";
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const {
     stats,
     activities,
+    tasks,
     loading,
     refreshing,
     lastUpdated,
@@ -28,16 +31,16 @@ const Dashboard: React.FC = () => {
   const handleStatsCardClick = (cardType: string) => {
     switch (cardType) {
       case 'contracts':
-        toast.info("Redirection vers la page des contrats");
+        navigate('/quotes');
         break;
       case 'commissions':
-        toast.info("Redirection vers la page des commissions");
+        navigate('/commissions');
         break;
       case 'appointments':
-        toast.info("Redirection vers la page des rendez-vous");
+        navigate('/appointments');
         break;
       case 'clients':
-        toast.info("Redirection vers la page des clients");
+        navigate('/contacts');
         break;
     }
   };
@@ -106,14 +109,15 @@ const Dashboard: React.FC = () => {
                 <ChevronDown className={`h-5 w-5 transition-transform ${isTasksOpen ? "transform rotate-180" : ""}`} />
               </CollapsibleTrigger>
               <CollapsibleContent className="p-0">
-                <DashboardTasks loading={loading} />
+                <DashboardTasks loading={loading} tasks={tasks} />
               </CollapsibleContent>
             </Collapsible>
           </div>
         </TabsContent>
         
         <TabsContent value="contracts" className="mt-6">
-          <div className="bg-muted/50 p-8 rounded-lg flex items-center justify-center h-64">
+          <div className="bg-muted/50 p-8 rounded-lg flex items-center justify-center h-64 cursor-pointer"
+               onClick={() => navigate('/quotes')}>
             <div className="text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Section des contrats</h3>
@@ -125,7 +129,8 @@ const Dashboard: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="performance" className="mt-6">
-          <div className="bg-muted/50 p-8 rounded-lg flex items-center justify-center h-64">
+          <div className="bg-muted/50 p-8 rounded-lg flex items-center justify-center h-64 cursor-pointer"
+               onClick={() => navigate('/reports')}>
             <div className="text-center">
               <PieChart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Analyse de performance</h3>
