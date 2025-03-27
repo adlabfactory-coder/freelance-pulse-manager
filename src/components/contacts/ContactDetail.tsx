@@ -8,7 +8,6 @@ import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import { Contact } from "@/types";
 import ContactEditForm from "./ContactEditForm";
 import { formatDateToFrench } from "@/utils/format";
-import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 
 interface ContactDetailProps {
@@ -19,7 +18,6 @@ interface ContactDetailProps {
 const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
 
   return (
@@ -59,14 +57,6 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
         
         <Button 
           variant="outline" 
-          onClick={() => setInitialConsultationDialogOpen(true)}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          Devis consultation initiale
-        </Button>
-        
-        <Button 
-          variant="outline" 
           onClick={() => setQuoteDialogOpen(true)}
         >
           <FileText className="h-4 w-4 mr-2" />
@@ -92,12 +82,6 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact, onUpdate }) => {
           onCancel={() => setEditDialogOpen(false)}
         />
       )}
-      
-      <InitialConsultationTemplate
-        open={initialConsultationDialogOpen}
-        onOpenChange={setInitialConsultationDialogOpen}
-        initialContactId={contact.id}
-      />
       
       <AddQuoteDialog
         open={quoteDialogOpen}

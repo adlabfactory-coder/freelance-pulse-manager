@@ -1,419 +1,133 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { NotificationSettings as NotificationSettingsType, EmailConfig, SmsConfig, NotificationType, NotificationRule } from "@/types/notification-settings";
-import { getNotificationSettings, saveNotificationSettings } from "@/services/notification-service";
-import { AlertCircle, Check, Info, Mail, MessageSquare, Save } from "lucide-react";
 
-const DEFAULT_EMAIL_TEMPLATES: Record<NotificationType, string> = {
-  [NotificationType.APPOINTMENT_CREATED]: `Nouveau rendez-vous planifié
-<h2>Un nouveau rendez-vous a été créé</h2>
-<p>{{freelancerName}} a planifié un rendez-vous: {{appointmentTitle}}</p>
-<p><strong>Date:</strong> {{appointmentDate}} à {{appointmentTime}}</p>
-<p><strong>Description:</strong> {{appointmentDescription}}</p>`,
-  
-  [NotificationType.APPOINTMENT_UPDATED]: `Modification d'un rendez-vous
-<h2>Un rendez-vous a été modifié</h2>
-<p>Le rendez-vous "{{appointmentTitle}}" prévu le {{appointmentDate}} à {{appointmentTime}} a été modifié.</p>`,
-  
-  [NotificationType.APPOINTMENT_REMINDER]: `Rappel de rendez-vous
-<h2>Rappel: vous avez un rendez-vous demain</h2>
-<p>Nous vous rappelons que vous avez un rendez-vous "{{appointmentTitle}}" prévu demain {{appointmentDate}} à {{appointmentTime}}.</p>`,
-  
-  [NotificationType.QUOTE_CREATED]: `Nouveau devis créé
-<h2>Un nouveau devis a été créé</h2>
-<p>Un devis d'un montant de {{quoteAmount}}€ a été créé pour {{clientName}}.</p>`,
-  
-  [NotificationType.QUOTE_ACCEPTED]: `Devis accepté
-<h2>Bonne nouvelle! Un devis a été accepté</h2>
-<p>Le devis #{{quoteId}} d'un montant de {{quoteAmount}}€ a été accepté par {{clientName}}.</p>`,
-  
-  [NotificationType.QUOTE_REJECTED]: `Devis refusé
-<h2>Un devis a été refusé</h2>
-<p>Le devis #{{quoteId}} d'un montant de {{quoteAmount}}€ a été refusé par {{clientName}}.</p>`,
-  
-  [NotificationType.COMMISSION_PAID]: `Commission payée
-<h2>Une commission a été payée</h2>
-<p>Une commission de {{commissionAmount}}€ a été payée à {{freelancerName}} pour la période du {{periodStart}} au {{periodEnd}}.</p>`,
-  
-  [NotificationType.SUBSCRIPTION_CREATED]: `Nouvel abonnement
-<h2>Un nouvel abonnement a été créé</h2>
-<p>{{clientName}} a souscrit à l'abonnement {{subscriptionName}} ({{subscriptionAmount}}€/{{subscriptionInterval}}).</p>`,
-  
-  [NotificationType.SUBSCRIPTION_RENEWED]: `Abonnement renouvelé
-<h2>Un abonnement a été renouvelé</h2>
-<p>L'abonnement {{subscriptionName}} de {{clientName}} a été renouvelé pour un montant de {{subscriptionAmount}}€.</p>`,
-  
-  [NotificationType.SUBSCRIPTION_CANCELLED]: `Abonnement annulé
-<h2>Un abonnement a été annulé</h2>
-<p>L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.</p>`,
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { NotificationType, NotificationSettings as NotificationSettingsType } from '@/types/notification-settings';
+import { Loader2 } from 'lucide-react';
 
-  [NotificationType.LEAD_CREATED]: `Nouveau lead créé
-<h2>Un nouveau lead a été créé</h2>
-<p>Un nouveau lead nommé {{clientName}} a été ajouté à la base de données.</p>`,
-
-  [NotificationType.LEAD_CONVERTED]: `Lead converti
-<h2>Un lead a été converti</h2>
-<p>Le lead {{clientName}} a été converti en prospect.</p>`,
-
-  [NotificationType.APPOINTMENT_PENDING_ASSIGNMENT]: `Rendez-vous en attente d'attribution
-<h2>Un rendez-vous attend d'être attribué</h2>
-<p>Un rendez-vous "{{appointmentTitle}}" prévu le {{appointmentDate}} à {{appointmentTime}} est en attente d'attribution à un chargé de compte.</p>`,
-
-  [NotificationType.PAYMENT_RECEIVED]: `Paiement reçu
-<h2>Un paiement a été reçu</h2>
-<p>Un paiement de {{paymentAmount}}€ a été reçu de {{clientName}}.</p>`,
-
-  [NotificationType.CONTRACT_SIGNED]: `Contrat signé
-<h2>Un contrat a été signé</h2>
-<p>Le contrat #{{contractId}} a été signé par {{clientName}}.</p>`
+// Définition de l'objet de messagerie par défaut pour chaque type de notification
+const defaultTemplates: Record<NotificationType, string> = {
+  lead_created: "Un nouveau lead {{name}} a été créé.",
+  lead_converted: "Le lead {{name}} a été converti en prospect.",
+  quote_created: "Un nouveau devis a été créé pour {{client_name}}.",
+  quote_accepted: "Le devis #{{quote_id}} a été accepté par {{client_name}}.",
+  quote_rejected: "Le devis #{{quote_id}} a été refusé par {{client_name}}.",
+  appointment_created: "Un nouveau rendez-vous a été programmé avec {{client_name}} le {{date}} à {{time}}.",
+  appointment_updated: "Le rendez-vous avec {{client_name}} a été mis à jour pour le {{date}} à {{time}}.",
+  appointment_reminder: "Rappel: Vous avez un rendez-vous avec {{client_name}} demain à {{time}}.",
+  appointment_pending_assignment: "Un nouveau rendez-vous est en attente d'attribution.",
+  appointment_completed: "Le rendez-vous avec {{client_name}} a été marqué comme terminé.",
+  appointment_cancelled: "Le rendez-vous avec {{client_name}} a été annulé.",
+  appointment_no_show: "Le client {{client_name}} ne s'est pas présenté au rendez-vous prévu le {{date}} à {{time}}.",
+  subscription_renewed: "L'abonnement de {{client_name}} a été renouvelé pour la période {{period}}.",
+  subscription_created: "Un nouvel abonnement a été créé pour {{client_name}}.",
+  subscription_cancelled: "L'abonnement de {{client_name}} a été annulé.",
+  payment_received: "Un paiement de {{amount}} a été reçu de {{client_name}}.",
+  commission_paid: "Une commission de {{amount}} a été payée à {{freelancer_name}}.",
+  contract_signed: "Un contrat a été signé par {{client_name}}."
 };
 
-const DEFAULT_SMS_TEMPLATES: Record<NotificationType, string> = {
-  [NotificationType.APPOINTMENT_CREATED]: `AdLab Hub: Nouveau RDV créé par {{freelancerName}}: {{appointmentTitle}} le {{appointmentDate}} à {{appointmentTime}}.`,
-  [NotificationType.APPOINTMENT_UPDATED]: `AdLab Hub: Le RDV "{{appointmentTitle}}" du {{appointmentDate}} à {{appointmentTime}} a été modifié.`,
-  [NotificationType.APPOINTMENT_REMINDER]: `AdLab Hub: Rappel RDV "{{appointmentTitle}}" demain {{appointmentDate}} à {{appointmentTime}}.`,
-  [NotificationType.QUOTE_CREATED]: `AdLab Hub: Nouveau devis de {{quoteAmount}}€ créé pour {{clientName}}.`,
-  [NotificationType.QUOTE_ACCEPTED]: `AdLab Hub: Le devis #{{quoteId}} ({{quoteAmount}}€) a été accepté par {{clientName}}.`,
-  [NotificationType.QUOTE_REJECTED]: `AdLab Hub: Le devis #{{quoteId}} ({{quoteAmount}}€) a été refusé par {{clientName}}.`,
-  [NotificationType.COMMISSION_PAID]: `AdLab Hub: Commission de {{commissionAmount}}€ payée pour la période du {{periodStart}} au {{periodEnd}}.`,
-  [NotificationType.SUBSCRIPTION_CREATED]: `AdLab Hub: {{clientName}} a souscrit à {{subscriptionName}} ({{subscriptionAmount}}€/{{subscriptionInterval}}).`,
-  [NotificationType.SUBSCRIPTION_RENEWED]: `AdLab Hub: L'abonnement {{subscriptionName}} de {{clientName}} a été renouvelé ({{subscriptionAmount}}€).`,
-  [NotificationType.SUBSCRIPTION_CANCELLED]: `AdLab Hub: L'abonnement {{subscriptionName}} de {{clientName}} a été annulé.`,
-  [NotificationType.LEAD_CREATED]: `AdLab Hub: Nouveau lead créé: {{clientName}}.`,
-  [NotificationType.LEAD_CONVERTED]: `AdLab Hub: Le lead {{clientName}} a été converti en prospect.`,
-  [NotificationType.APPOINTMENT_PENDING_ASSIGNMENT]: `AdLab Hub: RDV "{{appointmentTitle}}" du {{appointmentDate}} à {{appointmentTime}} en attente d'attribution.`,
-  [NotificationType.PAYMENT_RECEIVED]: `AdLab Hub: Paiement de {{paymentAmount}}€ reçu de {{clientName}}.`,
-  [NotificationType.CONTRACT_SIGNED]: `AdLab Hub: Contrat #{{contractId}} signé par {{clientName}}.`
+// Définition de l'objet de messagerie par défaut pour chaque type de notification (SMS version)
+const defaultSmsTemplates: Record<NotificationType, string> = {
+  lead_created: "Nouveau lead créé: {{name}}",
+  lead_converted: "Lead converti: {{name}}",
+  quote_created: "Nouveau devis pour {{client_name}}",
+  quote_accepted: "Devis #{{quote_id}} accepté par {{client_name}}",
+  quote_rejected: "Devis #{{quote_id}} refusé par {{client_name}}",
+  appointment_created: "RDV créé: {{client_name}} le {{date}} à {{time}}",
+  appointment_updated: "RDV modifié: {{client_name}} le {{date}} à {{time}}",
+  appointment_reminder: "Rappel RDV: {{client_name}} demain à {{time}}",
+  appointment_pending_assignment: "Nouveau RDV en attente d'attribution",
+  appointment_completed: "RDV avec {{client_name}} terminé",
+  appointment_cancelled: "RDV avec {{client_name}} annulé",
+  appointment_no_show: "Client {{client_name}} absent au RDV du {{date}}",
+  subscription_renewed: "Abonnement renouvelé: {{client_name}} pour {{period}}",
+  subscription_created: "Nouvel abonnement: {{client_name}}",
+  subscription_cancelled: "Abonnement annulé: {{client_name}}",
+  payment_received: "Paiement reçu: {{amount}} de {{client_name}}",
+  commission_paid: "Commission payée: {{amount}} à {{freelancer_name}}",
+  contract_signed: "Contrat signé par {{client_name}}"
 };
 
-const RECIPIENT_OPTIONS = [
-  { value: "admin", label: "Administrateurs" },
-  { value: "superadmin", label: "Super Administrateurs" },
-  { value: "account_manager", label: "Chargés d'affaires" },
-  { value: "freelancer", label: "Freelances" },
-  { value: "client", label: "Clients" }
-];
+interface NotificationSettingsProps {
+  settings?: NotificationSettingsType;
+  onSave: (settings: NotificationSettingsType) => Promise<void>;
+  isLoading?: boolean;
+}
 
-const createDefaultRules = (): NotificationRule[] => {
-  return Object.values(NotificationType).map(type => ({
-    id: crypto.randomUUID(),
-    type,
-    emailEnabled: true,
-    smsEnabled: false,
-    recipients: ["admin", "superadmin", "account_manager"],
-    emailTemplate: DEFAULT_EMAIL_TEMPLATES[type],
-    smsTemplate: DEFAULT_SMS_TEMPLATES[type]
-  }));
-};
+const NotificationSettings: React.FC<NotificationSettingsProps> = ({ 
+  settings,
+  onSave,
+  isLoading = false 
+}) => {
+  const [activeTab, setActiveTab] = useState<string>("email");
+  const [emailEnabled, setEmailEnabled] = useState<boolean>(settings?.email.enabled || false);
+  const [smsEnabled, setSmsEnabled] = useState<boolean>(settings?.sms.enabled || false);
+  const [emailSettings, setEmailSettings] = useState({
+    fromEmail: settings?.email.fromEmail || "",
+    fromName: settings?.email.fromName || "",
+    signature: settings?.email.signature || "",
+  });
+  const [smsSettings, setSmsSettings] = useState({
+    fromNumber: settings?.sms.fromNumber || "",
+    signature: settings?.sms.signature || ""
+  });
+  const [rules, setRules] = useState(settings?.rules || []);
+  const [isSaving, setIsSaving] = useState(false);
 
-const createDefaultSettings = (): NotificationSettingsType => {
-  return {
-    id: crypto.randomUUID(),
-    email: {
-      enabled: true,
-      fromEmail: "notifications@adlabhub.com",
-      fromName: "AdLab Hub",
-      signature: "L'équipe AdLab Hub",
-      logoUrl: ""
-    },
-    sms: {
-      enabled: false,
-      fromNumber: "",
-      signature: "AdLab Hub"
-    },
-    rules: createDefaultRules()
-  };
-};
-
-const formatNotificationType = (type: NotificationType): string => {
-  const mapping: Record<NotificationType, string> = {
-    [NotificationType.APPOINTMENT_CREATED]: "Création d'un rendez-vous",
-    [NotificationType.APPOINTMENT_UPDATED]: "Modification d'un rendez-vous",
-    [NotificationType.APPOINTMENT_REMINDER]: "Rappel de rendez-vous",
-    [NotificationType.QUOTE_CREATED]: "Création d'un devis",
-    [NotificationType.QUOTE_ACCEPTED]: "Acceptation d'un devis",
-    [NotificationType.QUOTE_REJECTED]: "Refus d'un devis",
-    [NotificationType.COMMISSION_PAID]: "Paiement d'une commission",
-    [NotificationType.SUBSCRIPTION_CREATED]: "Création d'un abonnement",
-    [NotificationType.SUBSCRIPTION_RENEWED]: "Renouvellement d'un abonnement",
-    [NotificationType.SUBSCRIPTION_CANCELLED]: "Annulation d'un abonnement",
-    [NotificationType.LEAD_CREATED]: "Création d'un lead",
-    [NotificationType.LEAD_CONVERTED]: "Conversion d'un lead",
-    [NotificationType.APPOINTMENT_PENDING_ASSIGNMENT]: "Rendez-vous en attente d'attribution",
-    [NotificationType.PAYMENT_RECEIVED]: "Paiement reçu",
-    [NotificationType.CONTRACT_SIGNED]: "Contrat signé"
-  };
-  
-  return mapping[type] || type;
-};
-
-const NotificationSettings: React.FC = () => {
-  const [settings, setSettings] = useState<NotificationSettingsType | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("email");
-  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
-  const [testTo, setTestTo] = useState("");
-  const [testTemplateType, setTestTemplateType] = useState<NotificationType>(NotificationType.APPOINTMENT_CREATED);
-  const [testTemplateTab, setTestTemplateTab] = useState("email");
-  
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        setLoading(true);
-        const data = await getNotificationSettings();
-        
-        if (!data) {
-          setSettings(createDefaultSettings());
-        } else {
-          setSettings(data);
-          if (data.rules && data.rules.length > 0) {
-            setSelectedRuleId(data.rules[0].id);
-          }
-        }
-      } catch (error) {
-        console.error("Erreur lors du chargement des paramètres de notification:", error);
-        toast.error("Impossible de charger les paramètres de notification.");
-      } finally {
-        setLoading(false);
-      }
+  const handleSave = async () => {
+    setIsSaving(true);
+    
+    const updatedSettings: NotificationSettingsType = {
+      id: settings?.id || "new-settings",
+      email: {
+        enabled: emailEnabled,
+        ...emailSettings
+      },
+      sms: {
+        enabled: smsEnabled,
+        ...smsSettings
+      },
+      rules: rules
     };
     
-    loadSettings();
-  }, []);
-  
-  const handleSave = async () => {
-    if (!settings) return;
-    
     try {
-      setSaving(true);
-      
-      const success = await saveNotificationSettings(settings);
-      
-      if (success) {
-        toast.success("Paramètres sauvegardés avec succès.");
-      } else {
-        throw new Error("Échec de la sauvegarde");
-      }
+      await onSave(updatedSettings);
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde des paramètres de notification:", error);
-      toast.error("Impossible de sauvegarder les paramètres de notification.");
+      console.error("Error saving notification settings:", error);
     } finally {
-      setSaving(false);
+      setIsSaving(false);
     }
   };
-  
-  const updateEmailSettings = (update: Partial<EmailConfig>) => {
-    if (!settings) return;
-    
-    setSettings({
-      ...settings,
-      email: {
-        ...settings.email,
-        ...update
-      }
-    });
-  };
-  
-  const updateSmsSettings = (update: Partial<SmsConfig>) => {
-    if (!settings) return;
-    
-    setSettings({
-      ...settings,
-      sms: {
-        ...settings.sms,
-        ...update
-      }
-    });
-  };
-  
-  const updateRule = (ruleId: string, update: Partial<NotificationRule>) => {
-    if (!settings) return;
-    
-    setSettings({
-      ...settings,
-      rules: settings.rules.map(rule => 
-        rule.id === ruleId ? { ...rule, ...update } : rule
-      )
-    });
-  };
-  
-  const selectedRule = settings?.rules.find(rule => rule.id === selectedRuleId);
-  
-  const handleRecipientsChange = (ruleId: string, value: string[]) => {
-    updateRule(ruleId, { recipients: value });
-  };
-  
-  const sendTestEmail = async () => {
-    if (!testTo || !settings || !selectedRule) return;
-    
-    try {
-      const testData = {
-        freelancerName: "John Doe",
-        appointmentTitle: "Consultation initiale",
-        appointmentDate: "01/01/2023",
-        appointmentTime: "14:00",
-        appointmentDescription: "Première consultation pour discuter du projet",
-        quoteId: "Q-12345",
-        quoteAmount: "1000",
-        clientName: "Acme Inc.",
-        commissionAmount: "200",
-        periodStart: "01/01/2023",
-        periodEnd: "31/01/2023",
-        subscriptionName: "Plan Entreprise",
-        subscriptionAmount: "99",
-        subscriptionInterval: "mois",
-        paymentAmount: "500",
-        contractId: "C-12345"
-      };
-      
-      const rule = settings.rules.find(r => r.type === testTemplateType);
-      
-      if (!rule) {
-        toast.error("Type de notification non trouvé.");
-        return;
-      }
-      
-      let subject = "Test de notification";
-      let content = "";
-      
-      if (testTemplateTab === "email") {
-        const emailLines = rule.emailTemplate.split('\n');
-        subject = emailLines[0].trim();
-        content = emailLines.slice(1).join('\n');
-        
-        Object.entries(testData).forEach(([key, value]) => {
-          const regex = new RegExp(`{{${key}}}`, 'g');
-          content = content.replace(regex, value);
-        });
-        
-        if (settings.email.signature) {
-          content += `<br><br>${settings.email.signature}`;
-        }
-        
-        const response = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            to: testTo, 
-            subject, 
-            html: content,
-            from: settings.email.fromEmail,
-            fromName: settings.email.fromName
-          }),
-        });
-        
-        if (!response.ok) throw new Error('Erreur lors de l\'envoi de l\'email');
-        
-        toast.success(`Un email de test a été envoyé à ${testTo}`);
-      } else {
-        content = rule.smsTemplate;
-        
-        Object.entries(testData).forEach(([key, value]) => {
-          const regex = new RegExp(`{{${key}}}`, 'g');
-          content = content.replace(regex, value);
-        });
-        
-        const response = await fetch('/api/send-sms', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            to: testTo, 
-            body: content,
-            from: settings.sms.fromNumber || undefined
-          }),
-        });
-        
-        if (!response.ok) throw new Error('Erreur lors de l\'envoi du SMS');
-        
-        toast.success(`Un SMS de test a été envoyé à ${testTo}`);
-      }
-    } catch (error: any) {
-      console.error("Erreur lors de l'envoi du message de test:", error);
-      toast.error(error.message || "Impossible d'envoyer le message de test.");
-    }
-  };
-  
-  if (loading) {
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <div className="mt-4 text-lg">Chargement des paramètres de notification...</div>
-        </div>
+      <div className="flex justify-center items-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Chargement des paramètres de notification...</span>
       </div>
     );
   }
-  
-  if (!settings) {
-    return (
-      <Alert variant="destructive" className="my-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erreur</AlertTitle>
-        <AlertDescription>
-          Impossible de charger les paramètres de notification. Veuillez réessayer plus tard.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-  
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Paramètres de notification</h1>
-          <p className="text-muted-foreground">
-            Configurez comment et quand les notifications sont envoyées aux utilisateurs.
-          </p>
-        </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? (
-            <span className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Sauvegarde...
-            </span>
-          ) : (
-            <span className="flex items-center">
-              <Save className="mr-2 h-4 w-4" />
-              Sauvegarder
-            </span>
-          )}
+      <div className="flex justify-between">
+        <h2 className="text-2xl font-bold">Paramètres de notifications</h2>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Enregistrer les paramètres
         </Button>
       </div>
       
       <Tabs defaultValue="email" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="email" className="flex items-center">
-            <Mail className="mr-2 h-4 w-4" />
-            Configuration Email
-          </TabsTrigger>
-          <TabsTrigger value="sms" className="flex items-center">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Configuration SMS
-          </TabsTrigger>
-          <TabsTrigger value="rules" className="flex items-center">
-            <Info className="mr-2 h-4 w-4" />
-            Règles de notification
-          </TabsTrigger>
-          <TabsTrigger value="test" className="flex items-center">
-            <Check className="mr-2 h-4 w-4" />
-            Tester
-          </TabsTrigger>
+          <TabsTrigger value="email">Email</TabsTrigger>
+          <TabsTrigger value="sms">SMS</TabsTrigger>
+          <TabsTrigger value="rules">Règles</TabsTrigger>
         </TabsList>
         
         <TabsContent value="email">
@@ -421,72 +135,58 @@ const NotificationSettings: React.FC = () => {
             <CardHeader>
               <CardTitle>Configuration des emails</CardTitle>
               <CardDescription>
-                Paramétrez les emails de notification envoyés par l'application.
+                Configurez les paramètres d'envoi des emails de notification
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="email-enabled"
-                  checked={settings.email.enabled}
-                  onCheckedChange={(checked) => updateEmailSettings({ enabled: checked })}
+                <Switch 
+                  id="email-enabled" 
+                  checked={emailEnabled} 
+                  onCheckedChange={setEmailEnabled} 
                 />
                 <Label htmlFor="email-enabled">Activer les notifications par email</Label>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fromEmail">Email d'expédition</Label>
-                  <Input
-                    id="fromEmail"
-                    placeholder="notifications@votredomaine.com"
-                    value={settings.email.fromEmail}
-                    onChange={(e) => updateEmailSettings({ fromEmail: e.target.value })}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Adresse email utilisée comme expéditeur des notifications.
-                  </p>
+              {emailEnabled && (
+                <div className="space-y-4 mt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="from-email">Email d'expédition</Label>
+                      <input
+                        id="from-email"
+                        type="email"
+                        className="w-full p-2 border rounded-md"
+                        value={emailSettings.fromEmail}
+                        onChange={(e) => setEmailSettings({...emailSettings, fromEmail: e.target.value})}
+                        placeholder="contact@votreentreprise.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="from-name">Nom d'expéditeur</Label>
+                      <input
+                        id="from-name"
+                        type="text"
+                        className="w-full p-2 border rounded-md"
+                        value={emailSettings.fromName}
+                        onChange={(e) => setEmailSettings({...emailSettings, fromName: e.target.value})}
+                        placeholder="Votre Entreprise"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email-signature">Signature d'email (optionnel)</Label>
+                    <Textarea
+                      id="email-signature"
+                      value={emailSettings.signature}
+                      onChange={(e) => setEmailSettings({...emailSettings, signature: e.target.value})}
+                      placeholder="L'équipe de Votre Entreprise"
+                      className="min-h-[100px]"
+                    />
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="fromName">Nom d'expédition</Label>
-                  <Input
-                    id="fromName"
-                    placeholder="AdLab Hub"
-                    value={settings.email.fromName}
-                    onChange={(e) => updateEmailSettings({ fromName: e.target.value })}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Nom affiché comme expéditeur des emails.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signature">Signature des emails</Label>
-                <Textarea
-                  id="signature"
-                  placeholder="L'équipe AdLab Hub"
-                  value={settings.email.signature}
-                  onChange={(e) => updateEmailSettings({ signature: e.target.value })}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Signature ajoutée en bas de tous les emails.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="logoUrl">URL du logo</Label>
-                <Input
-                  id="logoUrl"
-                  placeholder="https://votredomaine.com/logo.png"
-                  value={settings.email.logoUrl}
-                  onChange={(e) => updateEmailSettings({ logoUrl: e.target.value })}
-                />
-                <p className="text-sm text-muted-foreground">
-                  URL vers le logo à inclure dans les emails (optionnel).
-                </p>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -496,254 +196,74 @@ const NotificationSettings: React.FC = () => {
             <CardHeader>
               <CardTitle>Configuration des SMS</CardTitle>
               <CardDescription>
-                Paramétrez les SMS de notification envoyés par l'application.
+                Configurez les paramètres d'envoi des notifications par SMS
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="sms-enabled"
-                  checked={settings.sms.enabled}
-                  onCheckedChange={(checked) => updateSmsSettings({ enabled: checked })}
+                <Switch 
+                  id="sms-enabled" 
+                  checked={smsEnabled} 
+                  onCheckedChange={setSmsEnabled} 
                 />
                 <Label htmlFor="sms-enabled">Activer les notifications par SMS</Label>
               </div>
               
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertTitle>Configuration requise</AlertTitle>
-                <AlertDescription>
-                  Pour envoyer des SMS, vous devez configurer un compte Twilio et ajouter les variables d'environnement TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_PHONE_NUMBER dans les réglages de votre projet Supabase.
-                </AlertDescription>
-              </Alert>
-              
-              <div className="space-y-2">
-                <Label htmlFor="fromNumber">Numéro d'expéditeur</Label>
-                <Input
-                  id="fromNumber"
-                  placeholder="+33600000000"
-                  value={settings.sms.fromNumber}
-                  onChange={(e) => updateSmsSettings({ fromNumber: e.target.value })}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Numéro de téléphone utilisé comme expéditeur des SMS. Doit être au format international.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="smsSignature">Signature des SMS</Label>
-                <Input
-                  id="smsSignature"
-                  placeholder="AdLab Hub"
-                  value={settings.sms.signature}
-                  onChange={(e) => updateSmsSettings({ signature: e.target.value })}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Signature ajoutée à la fin de tous les SMS.
-                </p>
-              </div>
+              {smsEnabled && (
+                <div className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="from-number">Numéro d'expédition</Label>
+                    <input
+                      id="from-number"
+                      type="text"
+                      className="w-full p-2 border rounded-md"
+                      value={smsSettings.fromNumber}
+                      onChange={(e) => setSmsSettings({...smsSettings, fromNumber: e.target.value})}
+                      placeholder="+33612345678"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sms-signature">Signature SMS (optionnel)</Label>
+                    <Textarea
+                      id="sms-signature"
+                      value={smsSettings.signature}
+                      onChange={(e) => setSmsSettings({...smsSettings, signature: e.target.value})}
+                      placeholder="Votre Entreprise"
+                      className="min-h-[60px]"
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="rules">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="col-span-1 border rounded-lg p-4">
-              <h3 className="text-lg font-medium mb-4">Types de notification</h3>
-              <div className="space-y-2">
-                {settings.rules.map((rule) => (
-                  <div
-                    key={rule.id}
-                    className={`flex justify-between items-center p-2 rounded cursor-pointer ${
-                      selectedRuleId === rule.id ? "bg-primary/10" : "hover:bg-muted"
-                    }`}
-                    onClick={() => setSelectedRuleId(rule.id)}
-                  >
-                    <span>{formatNotificationType(rule.type)}</span>
-                    <div className="flex space-x-2">
-                      <Badge variant={rule.emailEnabled ? "default" : "outline"}>
-                        Email
-                      </Badge>
-                      <Badge variant={rule.smsEnabled ? "default" : "outline"}>
-                        SMS
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="col-span-1 md:col-span-2">
-              {selectedRule ? (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{formatNotificationType(selectedRule.type)}</CardTitle>
-                    <CardDescription>
-                      Configurez les paramètres de cette notification.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id={`email-enabled-${selectedRule.id}`}
-                          checked={selectedRule.emailEnabled}
-                          onCheckedChange={(checked) => updateRule(selectedRule.id, { emailEnabled: checked })}
-                        />
-                        <Label htmlFor={`email-enabled-${selectedRule.id}`}>Email</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id={`sms-enabled-${selectedRule.id}`}
-                          checked={selectedRule.smsEnabled}
-                          onCheckedChange={(checked) => updateRule(selectedRule.id, { smsEnabled: checked })}
-                        />
-                        <Label htmlFor={`sms-enabled-${selectedRule.id}`}>SMS</Label>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Destinataires</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {RECIPIENT_OPTIONS.map(option => (
-                          <Badge
-                            key={option.value}
-                            variant={selectedRule.recipients.includes(option.value) ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              const currentRecipients = new Set(selectedRule.recipients);
-                              if (currentRecipients.has(option.value)) {
-                                currentRecipients.delete(option.value);
-                              } else {
-                                currentRecipients.add(option.value);
-                              }
-                              handleRecipientsChange(selectedRule.id, Array.from(currentRecipients));
-                            }}
-                          >
-                            {option.label}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <Accordion type="single" collapsible defaultValue="email-template">
-                      <AccordionItem value="email-template">
-                        <AccordionTrigger>Template d'email</AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-2">
-                            <Textarea
-                              value={selectedRule.emailTemplate}
-                              onChange={(e) => updateRule(selectedRule.id, { emailTemplate: e.target.value })}
-                              rows={10}
-                              className="font-mono"
-                            />
-                            <p className="text-sm text-muted-foreground">
-                              La première ligne est utilisée comme sujet de l'email. Utilisez les variables comme {"{contact}"} pour le nom du contact et {"{date}"} pour la date du rendez-vous.
-                            </p>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                      <AccordionItem value="sms-template">
-                        <AccordionTrigger>Template SMS</AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-2">
-                            <Textarea
-                              value={selectedRule.smsTemplate}
-                              onChange={(e) => updateRule(selectedRule.id, { smsTemplate: e.target.value })}
-                              rows={4}
-                              className="font-mono"
-                            />
-                            <p className="text-sm text-muted-foreground">
-                              Utilisez les variables comme {"{contact}"} pour le nom du contact et {"{date}"} pour la date du rendez-vous.
-                            </p>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-muted-foreground">
-                    Sélectionnez un type de notification pour voir ses paramètres.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="test">
           <Card>
             <CardHeader>
-              <CardTitle>Tester les notifications</CardTitle>
+              <CardTitle>Règles de notification</CardTitle>
               <CardDescription>
-                Envoyez un email ou un SMS de test pour vérifier votre configuration.
+                Configurez quels types de notifications sont envoyés et à qui
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="testTo">Destinataire</Label>
-                  <Input
-                    id="testTo"
-                    placeholder={testTemplateTab === "email" ? "email@exemple.com" : "+33600000000"}
-                    value={testTo}
-                    onChange={(e) => setTestTo(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="testTemplateType">Type de notification</Label>
-                  <Select
-                    value={testTemplateType}
-                    onValueChange={(value) => setTestTemplateType(value as NotificationType)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(NotificationType).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {formatNotificationType(type)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Cette fonctionnalité sera disponible prochainement. Vous pourrez configurer des règles 
+                pour chaque type d'événement, définir les destinataires et personnaliser les modèles de messages.
+              </p>
               
-              <div className="flex space-x-4">
-                <Button
-                  type="button"
-                  variant={testTemplateTab === "email" ? "default" : "outline"}
-                  onClick={() => setTestTemplateTab("email")}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Email
-                </Button>
-                <Button
-                  type="button"
-                  variant={testTemplateTab === "sms" ? "default" : "outline"}
-                  onClick={() => setTestTemplateTab("sms")}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  SMS
-                </Button>
+              <div className="border rounded-lg p-4 bg-muted/20">
+                <h3 className="font-medium mb-2">Évènements configurables</h3>
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  {Object.keys(defaultTemplates).map(key => (
+                    <li key={key} className="flex items-center">
+                      <span className="w-3 h-3 rounded-full bg-primary/40 mr-2" />
+                      {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              
-              <div className="space-y-2">
-                <Label>Aperçu du template</Label>
-                <div className="border rounded p-4 bg-muted/50 whitespace-pre-wrap font-mono text-sm">
-                  {testTemplateTab === "email"
-                    ? settings.rules.find(r => r.type === testTemplateType)?.emailTemplate || "Template non trouvé"
-                    : settings.rules.find(r => r.type === testTemplateType)?.smsTemplate || "Template non trouvé"}
-                </div>
-              </div>
-              
-              <Button onClick={sendTestEmail} disabled={!testTo}>
-                Envoyer un message de test
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>

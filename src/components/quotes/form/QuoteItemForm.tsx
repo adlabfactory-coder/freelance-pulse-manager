@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,28 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
     onAddItem();
   };
 
+  // Grouper les services par type
+  const servicesByType = services.reduce((acc, service) => {
+    const type = service.type || 'autre';
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(service);
+    return acc;
+  }, {} as Record<string, Service[]>);
+
+  // Traduire les types de services en français
+  const translateType = (type: string): string => {
+    const translations: Record<string, string> = {
+      'service': 'Services',
+      'product': 'Produits',
+      'subscription': 'Abonnements',
+      'pack': 'Packs',
+      'autre': 'Autres'
+    };
+    return translations[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
   return (
     <div className="border rounded-md p-4">
       <h3 className="font-semibold mb-4">Ajouter un article</h3>
@@ -75,16 +98,26 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
           <Label htmlFor="service">Service ou Pack</Label>
           <Select
             onValueChange={handleSelectService}
+            value={currentItem.serviceId}
           >
             <SelectTrigger id="service">
               <SelectValue placeholder="Sélectionner un service ou pack" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="custom">Personnalisé</SelectItem>
-              {services.map(service => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name} - {formatCurrency(service.price)}
-                </SelectItem>
+              
+              {/* Afficher les services groupés par type */}
+              {Object.entries(servicesByType).map(([type, services]) => (
+                <React.Fragment key={type}>
+                  <SelectItem value={`header-${type}`} disabled className="font-bold text-primary">
+                    {translateType(type)}
+                  </SelectItem>
+                  {services.map(service => (
+                    <SelectItem key={service.id} value={service.id} className="pl-6">
+                      {service.name} - {formatCurrency(service.price)}
+                    </SelectItem>
+                  ))}
+                </React.Fragment>
               ))}
             </SelectContent>
           </Select>
@@ -114,7 +147,7 @@ const QuoteItemForm: React.FC<QuoteItemFormProps> = ({
           </div>
           
           <div>
-            <Label htmlFor="unitPrice">Prix unitaire (MAD)</Label>
+            <Label htmlFor="unitPrice">Prix unitaire (€)</Label>
             <Input
               id="unitPrice"
               type="number"
