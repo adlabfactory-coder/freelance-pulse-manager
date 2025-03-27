@@ -1,4 +1,7 @@
+
 import { contactOperationsService } from './contact-operations';
+import { contactCreateUpdateService } from './contact-create-update';
+import { contactExcelService } from './contact-excel';
 import { Contact, ContactFormInput } from './types';
 import { UserRole } from '@/types';
 
@@ -28,5 +31,18 @@ export const contactService = {
     return contactOperationsService.deleteContact(contactId);
   },
 
-  // Méthodes supplémentaires pour la création et l'import de contacts omises pour concision
+  // Création d'un contact
+  async createContact(contactData: ContactFormInput): Promise<string | null> {
+    return contactCreateUpdateService.createContact(contactData);
+  },
+
+  // Export des contacts en Excel
+  async exportContactsToExcel(): Promise<Blob | null> {
+    return contactExcelService.exportContactsToExcel();
+  },
+
+  // Import des contacts depuis Excel
+  async importContactsFromExcel(file: File): Promise<{success: boolean, message?: string}> {
+    return contactExcelService.importContactsFromExcel(file);
+  }
 };

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase-client';
 import { Contact } from './types';
 import { toast } from 'sonner';
@@ -36,10 +35,27 @@ export const contactOperationsService = {
       }
       
       console.log(`✅ ${data?.length || 0} contacts récupérés`);
+      
+      // Si aucun contact n'est récupéré, afficher un message de débogage
+      if (!data || data.length === 0) {
+        console.log("Aucun contact trouvé dans la table 'contacts'");
+        
+        // Vérifier si la table existe et a des données
+        const { count, error: countError } = await supabase
+          .from('contacts')
+          .select('*', { count: 'exact', head: true });
+          
+        if (countError) {
+          console.error("Erreur lors de la vérification de la table 'contacts':", countError);
+        } else {
+          console.log(`La table 'contacts' contient ${count} enregistrements au total (y compris les supprimés)`);
+        }
+      }
+      
       return data || [];
     } catch (error) {
       console.error('❌ Erreur lors de la récupération des contacts:', error);
-      return [];
+      throw error;
     }
   },
 

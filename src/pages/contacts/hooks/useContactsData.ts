@@ -12,6 +12,7 @@ export function useContactsData() {
   const [searchTerm, setSearchTerm] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<ContactStatus | null>(null);
   
   const fetchContacts = useCallback(async () => {
@@ -21,14 +22,22 @@ export function useContactsData() {
     }
     
     setLoading(true);
+    setError(null);
     try {
       console.log("Récupération des contacts avec:", { userId: user.id, role, isAdmin: isAdminOrSuperAdmin });
       const data = await contactService.getContacts(user.id, role);
       console.log("Contacts récupérés:", data.length);
       setContacts(data);
-    } catch (error) {
+      
+      if (data.length === 0) {
+        console.log("Aucun contact n'a été trouvé dans la base de données");
+      }
+    } catch (error: any) {
       console.error("Erreur lors de la récupération des contacts:", error);
-      toast.error("Impossible de charger les contacts");
+      setError(error.message || "Impossible de charger les contacts");
+      toast.error("Erreur", {
+        description: "Impossible de charger les contacts. Veuillez réessayer plus tard."
+      });
     } finally {
       setLoading(false);
     }
@@ -89,6 +98,7 @@ export function useContactsData() {
     contacts,
     filteredContacts,
     loading,
+    error,
     searchTerm,
     statusFilter,
     fetchContacts,
