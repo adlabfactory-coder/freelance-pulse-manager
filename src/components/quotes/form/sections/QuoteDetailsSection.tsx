@@ -7,7 +7,7 @@ import { QuoteStatus } from "@/types";
 
 interface QuoteDetailsSectionProps {
   validUntil: Date;
-  status: string;
+  status: QuoteStatus;
   onValidUntilChange: (date: Date) => void;
   onStatusChange: (status: QuoteStatus) => void;
   isEditing?: boolean;

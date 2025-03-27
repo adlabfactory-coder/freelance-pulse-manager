@@ -6,6 +6,7 @@ import { User, UserRole } from "@/types";
 import { getMockUsers } from "@/utils/supabase-mock-data";
 import { AuthContextType } from "@/types/auth";
 import { toast } from "sonner";
+import { Session } from "@supabase/supabase-js";
 
 // Context pour l'authentification
 const defaultContext: AuthContextType = {
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType>(defaultContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -67,21 +69,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Si le mode démo est désactivé, vérifier la session Supabase
         // IMPORTANT: D'abord configurer l'écouteur d'événements auth state, puis vérifier la session
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            console.log("Auth state changed:", event, session?.user?.email);
-            setUser(session?.user ? mapSupabaseUser(session.user) : null);
+          (event, newSession) => {
+            console.log("Auth state changed:", event, newSession?.user?.email);
+            setSession(newSession);
+            setUser(newSession?.user ? mapSupabaseUser(newSession.user) : null);
             setIsLoading(false);
+            
+            // Ne pas appeler d'autres fonctions Supabase directement ici pour éviter les boucles
+            if (newSession?.user && event === 'SIGNED_IN') {
+              setTimeout(() => {
+                // Mettre à jour les données utilisateur si nécessaire
+                console.log("Session utilisateur mise à jour");
+              }, 0);
+            }
           }
         );
 
         // Ensuite vérifier la session existante
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          console.log("Session existante trouvée:", session.user.email);
-          setUser(mapSupabaseUser(session.user));
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (existingSession) {
+          console.log("Session existante trouvée:", existingSession.user.email);
+          setSession(existingSession);
+          setUser(mapSupabaseUser(existingSession.user));
         } else {
           console.log("Aucune session existante trouvée");
           setUser(null);
+          setSession(null);
         }
         setIsLoading(false);
         
@@ -158,9 +171,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       console.log("Connexion Supabase réussie:", data.user?.email);
-      const mappedUser = mapSupabaseUser(data.user);
-      setUser(mappedUser);
-      toast.success(`Connecté en tant que ${mappedUser.name}`);
+      // La session sera automatiquement mise à jour par l'écouteur onAuthStateChange
+      toast.success(`Connecté en tant que ${data.user?.email}`);
       
       return { success: true };
     } catch (err: any) {
@@ -240,7 +252,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      setUser(null);
+      // La session sera automatiquement mise à jour par l'écouteur onAuthStateChange
       navigate('/auth/login');
       toast.success("Déconnexion réussie");
     } catch (err: any) {
