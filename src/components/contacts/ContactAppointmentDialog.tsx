@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -66,12 +65,14 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     setTime,
     duration,
     setDuration,
-    folder,
-    setFolder,
+    contacts,
+    contactId: formContactId,
+    setContactId: setFormContactId,
     isSubmitting,
     handleSubmit: formSubmit,
     defaultFreelancer,
-    isLoadingFreelancer
+    isLoadingFreelancer,
+    APPOINTMENT_TITLE_OPTIONS
   } = useAppointmentForm(
     undefined, 
     handleSuccess, 
@@ -97,12 +98,12 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     e.preventDefault();
     setError(null);
     
-    if (!contactId) {
+    if (!formContactId) {
       handleError("ID de contact manquant");
       return;
     }
     
-    console.log("ContactAppointmentDialog: Soumission du formulaire pour le contact:", contactId);
+    console.log("ContactAppointmentDialog: Soumission du formulaire pour le contact:", formContactId);
     
     // Vérifier que tous les champs requis sont remplis
     if (!date || !time) {
@@ -112,7 +113,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     
     try {
       // Passer l'ID du contact lors de la soumission
-      await formSubmit(e, contactId);
+      await formSubmit(e, formContactId);
     } catch (error) {
       handleError(error instanceof Error ? error.message : "Erreur inconnue");
     }

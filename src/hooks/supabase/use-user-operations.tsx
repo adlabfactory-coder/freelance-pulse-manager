@@ -1,224 +1,99 @@
-
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase-client';
-import { User, UserRole } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { useState, useCallback } from 'react';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { User } from '@/types/user';
+import { useToast } from '@/components/ui/use-toast';
+import { useUser } from './supabase-provider';
 
 export const useUserOperations = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const supabase = useSupabaseClient();
+  const { toast } = useToast();
+  const { user, setUser } = useUser();
 
-  const fetchUsers = async (): Promise<User[]> => {
-    setIsLoading(true);
-    try {
-      // Modifié pour ne pas utiliser created_at qui n'existe pas dans la table users
-      const { data, error } = await supabase
-        .from('users')
-        .select('*');
+  const showSuccessToast = useCallback((message: string) => {
+    toast({
+      title: 'Succès',
+      description: message,
+    });
+  }, [toast]);
 
-      if (error) {
-        console.error('Error fetching users:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger la liste des utilisateurs.",
-          variant: "destructive"
-        });
-        return [];
-      }
+  const showErrorToast = useCallback((message: string) => {
+    toast({
+      title: 'Erreur',
+      description: message,
+      variant: 'destructive',
+    });
+  }, [toast]);
 
-      return data as User[];
-    } catch (error) {
-      console.error("Erreur inattendue lors de la récupération des utilisateurs:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la récupération des utilisateurs.",
-        variant: "destructive"
-      });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUserById = async (id: string): Promise<User | null> => {
-    setIsLoading(true);
+  const updateUserProfile = async (userData: Partial<User>): Promise<User | null> => {
     try {
       const { data, error } = await supabase
         .from('users')
+        .update({
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          avatar: userData.avatar,
+          supervisor_id: userData.supervisor_id,
+          schedule_enabled: userData.schedule_enabled,
+          daily_availability: userData.daily_availability,
+          weekly_availability: userData.weekly_availability,
+        })
+        .eq('id', user?.id || '')
         .select('*')
-        .eq('id', id)
         .single();
 
       if (error) {
-        console.error('Error fetching user:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les informations de l'utilisateur.",
-          variant: "destructive"
-        });
+        console.error('Erreur lors de la mise à jour du profil:', error);
+        showErrorToast('La mise à jour du profil a échoué');
         return null;
       }
 
+      // Mise à jour du contexte utilisateur
+      setUser({
+        ...user!,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatar: data.avatar,
+        supervisor_id: data.supervisor_id,
+        schedule_enabled: data.schedule_enabled,
+        daily_availability: data.daily_availability,
+        weekly_availability: data.weekly_availability,
+      });
+
+      showSuccessToast('Profil mis à jour avec succès');
       return data as User;
     } catch (error) {
-      console.error("Erreur inattendue lors de la récupération de l'utilisateur:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la récupération de l'utilisateur.",
-        variant: "destructive"
-      });
+      console.error('Erreur inattendue lors de la mise à jour du profil:', error);
+      showErrorToast('La mise à jour du profil a échoué');
       return null;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const updateUser = async (userData: Partial<User>): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      if (!userData.id) {
-        console.error('No user ID provided for update');
-        toast({
-          title: "Erreur",
-          description: "ID utilisateur manquant pour la mise à jour.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      const { error } = await supabase
-        .from('users')
-        .update(userData)
-        .eq('id', userData.id);
-
-      if (error) {
-        console.error('Error updating user:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour les informations de l'utilisateur.",
-          variant: "destructive"
-        });
-        return false;
-      }
-
-      toast({
-        title: "Utilisateur mis à jour",
-        description: "Les informations de l'utilisateur ont été mises à jour avec succès.",
-      });
-      return true;
-    } catch (error) {
-      console.error("Erreur inattendue lors de la mise à jour de l'utilisateur:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour de l'utilisateur.",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createUser = async (userData: Omit<User, 'id'>): Promise<{ success: boolean; id?: string }> => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .insert(userData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating user:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de créer l'utilisateur.",
-          variant: "destructive"
-        });
-        return { success: false };
-      }
-
-      toast({
-        title: "Utilisateur créé",
-        description: "L'utilisateur a été créé avec succès.",
-      });
-      return { success: true, id: data.id };
-    } catch (error) {
-      console.error("Erreur inattendue lors de la création de l'utilisateur:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la création de l'utilisateur.",
-        variant: "destructive"
-      });
-      return { success: false };
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteUser = async (id: string): Promise<boolean> => {
-    setIsLoading(true);
+  const deleteUser = async (userId: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('users')
         .delete()
-        .eq('id', id);
+        .eq('id', userId);
 
       if (error) {
-        console.error('Error deleting user:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de supprimer l'utilisateur.",
-          variant: "destructive"
-        });
+        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
+        showErrorToast('La suppression de l\'utilisateur a échoué');
         return false;
       }
 
-      toast({
-        title: "Utilisateur supprimé",
-        description: "L'utilisateur a été supprimé avec succès.",
-      });
+      showSuccessToast('Utilisateur supprimé avec succès');
       return true;
     } catch (error) {
-      console.error("Erreur inattendue lors de la suppression de l'utilisateur:", error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la suppression de l'utilisateur.",
-        variant: "destructive"
-      });
+      console.error('Erreur inattendue lors de la suppression de l\'utilisateur:', error);
+      showErrorToast('La suppression de l\'utilisateur a échoué');
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const getMockUsers = (): User[] => {
-    return [
-      {
-        id: "1",
-        name: "Admin User",
-        email: "admin@example.com",
-        role: UserRole.ADMIN,
-        avatar: null,
-        calendly_enabled: false
-      },
-      {
-        id: "2",
-        name: "Freelancer User",
-        email: "freelancer@example.com",
-        role: UserRole.FREELANCER,
-        avatar: null,
-        calendly_enabled: false
-      }
-    ];
-  };
-
   return {
-    isLoading,
-    fetchUsers,
-    fetchUserById,
-    updateUser,
-    createUser,
+    updateUserProfile,
     deleteUser,
-    getMockUsers
   };
 };

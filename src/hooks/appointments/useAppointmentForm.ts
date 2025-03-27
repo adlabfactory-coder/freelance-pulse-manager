@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { createAppointment, createAutoAssignAppointment, AppointmentCreateData } from "@/services/appointments/create";
-import { toast } from "sonner";
-import { Appointment, AppointmentStatus } from "@/types/appointment";
-import { formatDateForAPI } from "@/utils/format";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/lib/supabase-client";
+import { AppointmentTitleOption } from "@/types/appointment";
+import { useAppointmentOperations } from "./useAppointmentOperations";
+import { useAppointmentContacts } from "./useAppointmentContacts";
+import { useAppointmentFreelancers } from "./useAppointmentFreelancers";
 
+// Export les options de titre pour réutilisation dans d'autres composants
 export const APPOINTMENT_TITLE_OPTIONS = [
   { value: "consultation-initiale", label: "Consultation initiale" },
   { value: "session-suivi", label: "Session de suivi" },
@@ -15,7 +14,7 @@ export const APPOINTMENT_TITLE_OPTIONS = [
   { value: "autre", label: "Titre personnalisé" }
 ];
 
-export type AppointmentTitleOption = "consultation-initiale" | "session-suivi" | "demo-produit" | "revision-contrat" | "autre" | "";
+export type { AppointmentTitleOption };
 
 export const useAppointmentForm = (
   initialDate?: Date,
@@ -24,8 +23,7 @@ export const useAppointmentForm = (
   autoAssign = false,
   initialFolder: string = "general"
 ) => {
-  const { user } = useAuth();
-  
+  // États du formulaire pour les données de base
   const [titleOption, setTitleOption] = useState<AppointmentTitleOption>('consultation-initiale');
   const [customTitle, setCustomTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -33,134 +31,57 @@ export const useAppointmentForm = (
   const [time, setTime] = useState('10:00');
   const [duration, setDuration] = useState(30);
   const [folder, setFolder] = useState(initialFolder);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [defaultFreelancer, setDefaultFreelancer] = useState<string | null>(null);
-  const [isLoadingFreelancer, setIsLoadingFreelancer] = useState(true);
   
+  // Utiliser les hooks spécialisés
+  const { contacts, contactId, setContactId, isLoadingContacts } = useAppointmentContacts(initialContactId);
+  const { defaultFreelancer, isLoadingFreelancer, isUserFreelancer } = useAppointmentFreelancers();
+  const { isSubmitting, submitAppointment } = useAppointmentOperations();
+  
+  // Réinitialiser le formulaire lorsque la date initiale change
   useEffect(() => {
-    const fetchDefaultFreelancer = async () => {
-      console.log("useAppointmentForm: Recherche d'un freelancer par défaut");
-      setIsLoadingFreelancer(true);
-      
-      try {
-        if (user?.role === 'freelancer') {
-          setDefaultFreelancer(user.id);
-          console.log("useAppointmentForm: Utilisateur freelancer trouvé, ID utilisé:", user.id);
-        } else {
-          console.log("useAppointmentForm: Recherche d'un freelancer par défaut dans la base de données");
-          const { data, error } = await supabase
-            .from('users')
-            .select('id')
-            .eq('role', 'freelancer')
-            .limit(1);
-            
-          if (!error && data && data.length > 0) {
-            console.log("useAppointmentForm: Freelancer par défaut trouvé:", data[0].id);
-            setDefaultFreelancer(data[0].id);
-          } else {
-            console.warn("useAppointmentForm: Aucun freelancer trouvé pour l'assignation par défaut:", error);
-            toast.warning("Aucun freelancer disponible. Mode auto-assignation activé.");
-          }
-        }
-      } catch (error) {
-        console.error("useAppointmentForm: Erreur lors de la récupération d'un freelancer par défaut:", error);
-        toast.error("Erreur lors de la recherche d'un freelancer disponible.");
-      } finally {
-        setIsLoadingFreelancer(false);
-      }
+    if (initialDate) {
+      setDate(initialDate);
+    }
+  }, [initialDate]);
+  
+  // Détermine le titre final à partir de l'option sélectionnée
+  const getFinalTitle = (): string => {
+    const titleOptions = {
+      "consultation-initiale": "Consultation initiale",
+      "session-suivi": "Session de suivi",
+      "demo-produit": "Démonstration de produit",
+      "revision-contrat": "Révision de contrat",
+      "autre": customTitle || "Titre personnalisé"
     };
     
-    fetchDefaultFreelancer();
-  }, [user]);
+    return titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
+  };
   
-  const handleSubmit = async (e: React.FormEvent, contactId: string) => {
+  const handleSubmit = async (e: React.FormEvent, overrideContactId?: string) => {
     e.preventDefault();
     
-    if (!date) {
-      toast.error("Veuillez sélectionner une date valide");
-      return;
-    }
+    const finalContactId = overrideContactId || contactId;
+    const finalTitle = getFinalTitle();
     
-    if (!contactId) {
-      toast.error("Veuillez sélectionner un contact pour ce rendez-vous");
-      return;
-    }
+    const result = await submitAppointment({
+      title: finalTitle,
+      description,
+      date,
+      time,
+      duration,
+      contactId: finalContactId,
+      freelancerId: defaultFreelancer,
+      folder,
+      autoAssign
+    });
     
-    try {
-      setIsSubmitting(true);
-      console.log("useAppointmentForm: Début de la soumission du rendez-vous...");
-      
-      const appointmentDate = formatDateForAPI(date, time);
-      
-      if (!appointmentDate) {
-        toast.error("Format de date ou d'heure invalide");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      const titleOptions = {
-        "consultation-initiale": "Consultation initiale",
-        "session-suivi": "Session de suivi",
-        "demo-produit": "Démonstration de produit",
-        "revision-contrat": "Révision de contrat",
-        "autre": customTitle || "Titre personnalisé"
-      };
-      
-      const title = titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
-      
-      const isUserFreelancer = user?.role === 'freelancer';
-      const freelancerId = isUserFreelancer ? user?.id : defaultFreelancer;
-      
-      console.log("useAppointmentForm: Informations du rendez-vous:", {
-        title,
-        contactId,
-        freelancerId,
-        appointmentDate,
-        autoAssign
-      });
-      
-      if (!freelancerId && !autoAssign) {
-        console.log("useAppointmentForm: Aucun freelancer disponible, passage en mode auto-assignation");
-        toast.info("Aucun freelancer disponible, le rendez-vous sera auto-assigné");
-      }
-      
-      const appointmentData: AppointmentCreateData = {
-        title,
-        description,
-        date: appointmentDate,
-        duration,
-        status: (!freelancerId || autoAssign) ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
-        contact_id: contactId,
-        freelancer_id: freelancerId || undefined,
-        location: null,
-        notes: null,
-        folder: folder
-      };
-      
-      console.log("useAppointmentForm: Soumission des données de rendez-vous:", appointmentData);
-      
-      let result;
-      if (!freelancerId || autoAssign) {
-        result = await createAutoAssignAppointment(appointmentData);
-      } else {
-        result = await createAppointment(appointmentData);
-      }
-      
-      if (result) {
-        console.log("useAppointmentForm: Rendez-vous créé avec succès:", result);
-        window.dispatchEvent(new CustomEvent('appointment-created'));
-        if (onSuccess) onSuccess();
-        toast.success("Rendez-vous créé avec succès");
-      }
-    } catch (error) {
-      console.error("useAppointmentForm: Erreur lors de la création du rendez-vous:", error);
-      toast.error("Impossible de créer le rendez-vous. Veuillez réessayer.");
-    } finally {
-      setIsSubmitting(false);
+    if (result && onSuccess) {
+      onSuccess();
     }
   };
 
   return {
+    // Données du formulaire
     titleOption,
     setTitleOption,
     customTitle,
@@ -175,9 +96,19 @@ export const useAppointmentForm = (
     setDuration,
     folder,
     setFolder,
+    
+    // États et données
+    contacts,
+    contactId,
+    setContactId,
     isSubmitting,
-    handleSubmit,
     defaultFreelancer,
-    isLoadingFreelancer
+    isLoadingFreelancer,
+    
+    // Actions
+    handleSubmit,
+    
+    // Constantes
+    APPOINTMENT_TITLE_OPTIONS
   };
 };
