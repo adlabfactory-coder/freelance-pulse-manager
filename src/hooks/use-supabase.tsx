@@ -1,8 +1,6 @@
 
 // Re-export everything from the refactored hooks
 export { 
-  useSupabase, 
-  SupabaseProvider,
   useSupabaseContext,
   SupabaseContextProvider,
   useAuthOperations,

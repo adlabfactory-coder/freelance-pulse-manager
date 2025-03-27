@@ -22,36 +22,39 @@ import { Toaster } from "./components/ui/toaster";
 import Layout from "./components/layout/Layout";
 import { AuthProvider } from "./hooks/use-auth";
 import { Toaster as SonnerToaster } from "./components/ui/sonner";
+import { SupabaseProvider } from "./hooks/supabase/supabase-provider";
 
 function App() {
   return (
     <div className="app">
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
-              <Route path="/appointments" element={<Appointments />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
-              <Route path="/subscriptions" element={<Subscriptions />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/commissions" element={<Commissions />} />
-              <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
-              <Route path="/settings/*" element={<SettingsRoutes />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/audit" element={<AuditPage />} />
+        <SupabaseProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/contacts" element={<Contacts />} />
+                <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
+                <Route path="/appointments" element={<Appointments />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
+                <Route path="/subscriptions" element={<Subscriptions />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/commissions" element={<Commissions />} />
+                <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
+                <Route path="/settings/*" element={<SettingsRoutes />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/audit" element={<AuditPage />} />
+              </Route>
             </Route>
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-        <SonnerToaster />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+          <SonnerToaster />
+        </SupabaseProvider>
       </AuthProvider>
     </div>
   );
