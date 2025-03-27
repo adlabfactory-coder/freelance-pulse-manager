@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
+import { QuoteItem } from "@/types/quote";
 
 interface AddQuoteDialogProps {
   open: boolean;
@@ -63,6 +64,20 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     }
   };
 
+  // Convert partial items to valid quote items for the dialog
+  const safeItems: QuoteItem[] = quoteForm.items 
+    ? quoteForm.items.filter((item): item is QuoteItem => {
+        return Boolean(
+          item && 
+          typeof item.id !== 'undefined' && 
+          typeof item.quoteId !== 'undefined' &&
+          typeof item.description !== 'undefined' && 
+          typeof item.quantity !== 'undefined' && 
+          typeof item.unitPrice !== 'undefined'
+        );
+      })
+    : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -90,16 +105,25 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
           <QuoteDialogContent 
             loading={quoteForm.loading}
             isSubmitting={quoteForm.isSubmitting}
-            quoteData={quoteForm.quoteData}
+            quoteData={{
+              contactId: quoteForm.contactId,
+              freelancerId: quoteForm.freelancerId,
+              validUntil: quoteForm.validUntil,
+              status: quoteForm.status,
+              notes: quoteForm.notes,
+              folder: quoteForm.folder,
+              totalAmount: quoteForm.totalAmount || 0,
+              items: safeItems
+            }}
             currentItem={quoteForm.currentItem}
-            contacts={quoteForm.contacts}
-            freelancers={quoteForm.freelancers}
-            services={quoteForm.services}
+            contacts={quoteForm.contacts || []}
+            freelancers={quoteForm.freelancers || []}
+            services={quoteForm.services || []}
             onQuoteDataChange={quoteForm.setQuoteData}
             onCurrentItemChange={quoteForm.setCurrentItem}
             onAddItem={quoteForm.handleAddItem}
             onRemoveItem={quoteForm.handleRemoveItem}
-            onSubmit={() => quoteForm.handleSubmit(quoteForm.quoteData)}
+            onSubmit={() => quoteForm.handleSubmit(quoteForm.quoteData, safeItems)}
             onCancel={() => onOpenChange(false)}
           />
         )}
