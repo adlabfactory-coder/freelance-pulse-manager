@@ -65,10 +65,12 @@ export const useAppointmentForm = (
         duration,
         status: AppointmentStatus.SCHEDULED,
         contactId,
-        freelancerId: "", // Corrected from freelancerid to freelancerId
+        freelancerId: "", // Sera utilisé pour le RPC avec la structure correcte
         location: null,
         notes: null
       };
+      
+      console.log("Soumission des données de rendez-vous:", appointmentData);
       
       let result;
       if (autoAssign) {
@@ -85,9 +87,12 @@ export const useAppointmentForm = (
         
         // Appeler le callback de succès si fourni
         if (onSuccess) onSuccess();
+        
+        toast.success("Rendez-vous créé avec succès");
       }
     } catch (error) {
       console.error("Erreur lors de la création du rendez-vous:", error);
+      toast.error("Impossible de créer le rendez-vous. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
