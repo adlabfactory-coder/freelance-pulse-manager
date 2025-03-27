@@ -6,6 +6,7 @@ import { useAppointmentFreelancers } from "./useAppointmentFreelancers";
 import { AppointmentTitleOption } from "@/types/appointment";
 import { useAuth } from "@/hooks/use-auth";
 import { UserRole } from "@/types";
+import { toast } from "sonner";
 
 // Export les options de titre pour réutilisation dans d'autres composants
 export const APPOINTMENT_TITLE_OPTIONS = [
@@ -142,9 +143,4 @@ export const useAppointmentForm = (
     // Constantes
     APPOINTMENT_TITLE_OPTIONS
   };
-};
-
-// Pour éviter les erreurs circulaires
-const toast = {
-  error: (message: string) => console.error(message)
 };

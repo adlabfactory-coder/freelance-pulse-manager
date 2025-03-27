@@ -1,77 +1,83 @@
 
-import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase-client';
+import { useState, useCallback } from "react";
+import { supabase } from "@/lib/supabase-client";
+import { toast } from "sonner";
+import { formatDateForAPI } from "@/utils/format";
+import { useAuth } from "@/hooks/use-auth";
 
-interface AppointmentInput {
-  title: string;
-  description?: string;
-  date?: Date;
-  time: string;
-  duration: number;
-  contactId: string;
-  freelancerId?: string;
-  folder?: string;
-  autoAssign?: boolean;
-}
-
+/**
+ * Hook pour gérer les opérations liées aux rendez-vous
+ */
 export const useAppointmentOperations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
-  const submitAppointment = useCallback(async (appointmentData: AppointmentInput) => {
+  /**
+   * Soumet un nouveau rendez-vous
+   */
+  const submitAppointment = useCallback(async (data: any) => {
+    console.log("Soumission du rendez-vous:", data);
     setIsSubmitting(true);
+
     try {
-      console.log("Soumission du rendez-vous:", appointmentData);
+      const date = formatDateForAPI(data.date, data.time);
       
-      if (!appointmentData.date) {
-        throw new Error("La date est requise");
+      if (!date) {
+        throw new Error("Format de date invalide");
       }
-      
-      // Convertir la date et l'heure en objet Date
-      const [hours, minutes] = appointmentData.time.split(':').map(Number);
-      const appointmentDate = new Date(appointmentData.date);
-      appointmentDate.setHours(hours, minutes, 0, 0);
-      
-      // Construire l'objet à insérer
-      const appointmentToInsert = {
-        title: appointmentData.title,
-        description: appointmentData.description || null,
-        date: appointmentDate.toISOString(),
-        duration: appointmentData.duration,
-        contactId: appointmentData.contactId,
-        freelancerId: appointmentData.freelancerId || null,
-        status: 'pending',
-        folder: appointmentData.folder || 'general',
-        location: null,
-        notes: null
+
+      if (!data.contactId) {
+        throw new Error("ID de contact manquant");
+      }
+
+      // Déterminer le freelancerId à utiliser
+      let freelancerId = data.freelancerId || user?.id;
+      if (!freelancerId) {
+        throw new Error("ID de freelancer manquant");
+      }
+
+      // Préparation des données pour l'insertion
+      const appointmentData = {
+        title: data.title,
+        description: data.description || null,
+        date,
+        duration: data.duration,
+        contactId: data.contactId,
+        freelancerId,
+        status: data.autoAssign ? "pending" : "scheduled",
+        folder: data.folder || "general",
+        location: data.location || null,
+        notes: data.notes || null
       };
-      
-      console.log("Insertion du rendez-vous dans Supabase:", appointmentToInsert);
-      
-      // Insertion directe dans la table rendez-vous au lieu d'utiliser RPC
-      const { data, error } = await supabase
-        .from('appointments')
-        .insert(appointmentToInsert)
-        .select('id')
-        .single();
-      
+
+      console.log("Insertion du rendez-vous dans Supabase:", appointmentData);
+
+      // Utiliser la fonction RPC create_appointment au lieu d'une insertion directe
+      const { data: result, error } = await supabase
+        .rpc('create_appointment', {
+          appointment_data: appointmentData
+        });
+
       if (error) {
         console.error("Erreur lors de la création du rendez-vous:", error);
         throw error;
       }
+
+      console.log("Rendez-vous créé avec succès:", result);
+      toast.success("Rendez-vous planifié avec succès");
       
-      console.log("Rendez-vous créé avec succès:", data);
-      toast.success("Rendez-vous créé avec succès");
+      // Lancer un événement personnalisé pour les autres composants
+      window.dispatchEvent(new CustomEvent('appointment-created'));
       
-      return data;
+      return result;
     } catch (error: any) {
       console.error("Erreur lors de la création du rendez-vous:", error);
-      toast.error("Erreur: " + (error.message || "Une erreur est survenue"));
-      return null;
+      toast.error(`Erreur lors de la création du rendez-vous: ${error.message || 'Erreur inconnue'}`);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
-  }, []);
+  }, [user]);
 
   return {
     isSubmitting,
