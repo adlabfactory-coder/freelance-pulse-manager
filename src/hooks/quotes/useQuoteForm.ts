@@ -50,12 +50,17 @@ export const useQuoteForm = ({
     resetItems
   } = useQuoteItems();
   
+  // Pass proper props to useQuoteSubmission, ensuring onCloseDialog is not passed
   const { 
     isSubmitting, 
     isQuoteSaved, 
     handleSubmit, 
-    handleSubmitEdit 
-  } = useQuoteSubmission({ onSuccess, onCloseDialog, onQuoteCreated });
+    handleSubmitEdit,
+    submitQuote
+  } = useQuoteSubmission({ 
+    onSuccess, 
+    onError: (error) => console.error("Error in quote submission:", error)
+  });
 
   // Chargement d'un devis spécifique
   const loadQuoteById = useCallback(async (id: string) => {

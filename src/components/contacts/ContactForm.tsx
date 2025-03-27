@@ -208,7 +208,9 @@ const ContactForm: React.FC<ContactFormProps> = ({
                   <FormLabel>Statut</FormLabel>
                   <ContactStatusSelector
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onChange={field.onChange}
+                    currentStatus={field.value}
+                    onStatusChange={field.onChange}
                   />
                   <FormMessage />
                 </FormItem>
