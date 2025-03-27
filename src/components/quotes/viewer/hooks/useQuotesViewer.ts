@@ -36,6 +36,7 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
   const [contactsMap, setContactsMap] = useState<Record<string, Contact>>({});
   const [freelancersMap, setFreelancersMap] = useState<Record<string, User>>({});
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [previewQuoteId, setPreviewQuoteId] = useState<string | null>(null);
 
   // Charger les devis
   const loadQuotes = async () => {
@@ -208,8 +209,20 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
     name: freelancer.name
   }));
 
+  // Fonctions pour la prévisualisation
+  const getQuoteById = (id: string | null): Quote | null => {
+    if (!id) return null;
+    return quotes.find(quote => quote.id === id) || null;
+  };
+
+  const getQuoteItems = (quoteId: string | null) => {
+    if (!quoteId) return [];
+    const quote = quotes.find(q => q.id === quoteId);
+    return quote?.items || [];
+  };
+
   return {
-    quotes: filteredQuotes,
+    quotes: sortedQuotes,
     loading,
     error,
     filters,
@@ -220,6 +233,7 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
     contactsMap,
     freelancersMap,
     editingQuoteId,
+    previewQuoteId,
     contactOptions,
     freelancerOptions,
     loadQuotes,
@@ -230,6 +244,9 @@ export const useQuotesViewer = (initialFilters?: Partial<QuoteFilters>) => {
     getContactName,
     getFreelancerFullName,
     formatReference,
-    setEditingQuoteId
+    setEditingQuoteId,
+    setPreviewQuoteId,
+    getQuoteById,
+    getQuoteItems
   };
 };

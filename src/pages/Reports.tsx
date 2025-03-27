@@ -11,9 +11,17 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Download, PieChart } from "lucide-react";
+import { useCommissions } from "@/hooks/commission";
+import { useSubscriptions } from "@/hooks/use-subscriptions";
+import CommissionsBarChart from "@/components/reports/CommissionsBarChart";
+import RevenueChart from "@/components/reports/RevenueChart";
+import SubscriptionsChart from "@/components/reports/SubscriptionsChart";
+import RenewalRateChart from "@/components/reports/RenewalRateChart";
 
 const Reports: React.FC = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
+  const { commissions, loading: commissionsLoading } = useCommissions();
+  const { subscriptions, loading: subscriptionsLoading } = useSubscriptions();
   
   // Limite à un seul chargement
   useEffect(() => {
@@ -23,6 +31,8 @@ const Reports: React.FC = () => {
       setDataLoaded(true);
     }
   }, [dataLoaded]);
+
+  const loading = commissionsLoading || subscriptionsLoading;
 
   return (
     <div className="space-y-6">
@@ -110,13 +120,14 @@ const Reports: React.FC = () => {
                   Evolution des revenus sur les 12 derniers mois
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center p-6">
-                <div className="flex justify-center mb-4">
-                  <BarChart className="h-16 w-16 text-muted-foreground" />
-                </div>
-                <div className="text-muted-foreground">
-                  Les graphiques seront disponibles dans une prochaine version
-                </div>
+              <CardContent className="h-[300px] p-6">
+                {loading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Chargement des données...</p>
+                  </div>
+                ) : (
+                  <RevenueChart />
+                )}
               </CardContent>
             </Card>
 
@@ -147,13 +158,14 @@ const Reports: React.FC = () => {
                 Montant des commissions versées par commercial
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-center p-6">
-              <div className="flex justify-center mb-4">
-                <BarChart className="h-16 w-16 text-muted-foreground" />
-              </div>
-              <div className="text-muted-foreground">
-                Les graphiques seront disponibles dans une prochaine version
-              </div>
+            <CardContent className="h-[400px] p-6">
+              {loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-muted-foreground">Chargement des données...</p>
+                </div>
+              ) : (
+                <CommissionsBarChart commissions={commissions} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -167,13 +179,14 @@ const Reports: React.FC = () => {
                   Répartition par type d'abonnement
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center p-6">
-                <div className="flex justify-center mb-4">
-                  <PieChart className="h-16 w-16 text-muted-foreground" />
-                </div>
-                <div className="text-muted-foreground">
-                  Les graphiques seront disponibles dans une prochaine version
-                </div>
+              <CardContent className="h-[300px] p-6">
+                {loading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Chargement des données...</p>
+                  </div>
+                ) : (
+                  <SubscriptionsChart subscriptions={subscriptions} />
+                )}
               </CardContent>
             </Card>
 
@@ -184,13 +197,14 @@ const Reports: React.FC = () => {
                   Pourcentage de renouvellement des abonnements
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center p-6">
-                <div className="flex justify-center mb-4">
-                  <BarChart className="h-16 w-16 text-muted-foreground" />
-                </div>
-                <div className="text-muted-foreground">
-                  Les graphiques seront disponibles dans une prochaine version
-                </div>
+              <CardContent className="h-[300px] p-6">
+                {loading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">Chargement des données...</p>
+                  </div>
+                ) : (
+                  <RenewalRateChart subscriptions={subscriptions} />
+                )}
               </CardContent>
             </Card>
           </div>
