@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +25,6 @@ import { Appointment, AppointmentStatus } from "@/types/appointment";
 import { deleteAppointment, updateAppointmentStatus } from "@/services/appointments";
 import { useAuth } from "@/hooks/use-auth";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
-import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
 
 interface AppointmentRowProps {
   appointment: Appointment;
@@ -44,9 +42,7 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
-  const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
-
-  // Propriété pour vérifier si l'utilisateur actuel est affecté au rendez-vous
+  
   const currentUserId = user?.id;
 
   const getStatusBadgeVariant = (status: AppointmentStatus) => {
@@ -54,11 +50,11 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
       case AppointmentStatus.SCHEDULED:
         return "default";
       case AppointmentStatus.COMPLETED:
-        return "secondary";  // Changé de "success" à "secondary" pour compatibilité
+        return "secondary";
       case AppointmentStatus.CANCELLED:
         return "destructive";
       case AppointmentStatus.PENDING:
-        return "outline";  // Changé de "warning" à "outline"
+        return "outline";
       case AppointmentStatus.NO_SHOW:
         return "outline";
       default:
@@ -97,10 +93,6 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
 
   const handleCreateQuote = () => {
     setQuoteDialogOpen(true);
-  };
-
-  const handleCreateInitialConsultation = () => {
-    setInitialConsultationDialogOpen(true);
   };
 
   const isActionable = isAdmin || (isFreelancer && appointment.freelancerId === currentUserId);
@@ -179,12 +171,6 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
                         <FileText className="mr-2 h-4 w-4" />
                         Créer un devis
                       </DropdownMenuItem>
-                      {appointment.title.toLowerCase().includes("consultation") && (
-                        <DropdownMenuItem onClick={handleCreateInitialConsultation}>
-                          <FileText className="mr-2 h-4 w-4" />
-                          Devis consultation initiale
-                        </DropdownMenuItem>
-                      )}
                     </>
                   )}
 
@@ -202,7 +188,6 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
           </DropdownMenu>
         </div>
 
-        {/* Modal de détails */}
         <Dialog open={infoDialogOpen} onOpenChange={setInfoDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -249,7 +234,6 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
           </DialogContent>
         </Dialog>
 
-        {/* Modal de suppression */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -277,17 +261,9 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
           </DialogContent>
         </Dialog>
         
-        {/* Dialog de création de devis */}
         <AddQuoteDialog 
           open={quoteDialogOpen} 
           onOpenChange={setQuoteDialogOpen} 
-          initialContactId={appointment.contactId}
-        />
-        
-        {/* Dialog de création de devis de consultation initiale */}
-        <InitialConsultationTemplate
-          open={initialConsultationDialogOpen}
-          onOpenChange={setInitialConsultationDialogOpen}
           initialContactId={appointment.contactId}
         />
       </TableCell>

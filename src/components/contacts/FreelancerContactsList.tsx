@@ -9,7 +9,6 @@ import { Contact, ContactStatus } from "@/types";
 import ContactStatusBadge from "./ContactStatusBadge";
 import { formatDateToFrench } from "@/utils/format";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
-import InitialConsultationTemplate from "@/components/quotes/templates/InitialConsultationTemplate";
 import AddQuoteDialog from "@/components/quotes/AddQuoteDialog";
 import { contactService } from "@/services/contact-service";
 
@@ -28,7 +27,6 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
   const [loading, setLoading] = useState<boolean>(initialLoading || true);
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [appointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
-  const [initialConsultationDialogOpen, setInitialConsultationDialogOpen] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [selectedContactName, setSelectedContactName] = useState<string>("");
 
@@ -62,11 +60,6 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
     setSelectedContactId(contactId);
     setSelectedContactName(contactName);
     setAppointmentDialogOpen(true);
-  };
-
-  const handleCreateInitialConsultation = (contactId: string) => {
-    setSelectedContactId(contactId);
-    setInitialConsultationDialogOpen(true);
   };
 
   const handleCreateQuote = (contactId: string) => {
@@ -162,14 +155,6 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleCreateInitialConsultation(contact.id)}
-                    >
-                      <FileText className="h-3 w-3 mr-1" />
-                      Consultation initiale
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
                       onClick={() => handleCreateQuote(contact.id)}
                     >
                       <FileText className="h-3 w-3 mr-1" />
@@ -190,12 +175,6 @@ const FreelancerContactsList: React.FC<FreelancerContactsListProps> = ({
         contactId={selectedContactId}
         contactName={selectedContactName}
         initialType="consultation-initiale"
-      />
-      
-      <InitialConsultationTemplate
-        open={initialConsultationDialogOpen}
-        onOpenChange={setInitialConsultationDialogOpen}
-        initialContactId={selectedContactId}
       />
       
       <AddQuoteDialog
