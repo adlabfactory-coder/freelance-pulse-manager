@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 const Quotes: React.FC = () => {
   const { toast } = useToast();
-  const { isAdmin, isFreelancer } = useAuth();
+  const { isAdminOrSuperAdmin, isFreelancer } = useAuth();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,8 +21,6 @@ const Quotes: React.FC = () => {
   const [loadAttempt, setLoadAttempt] = useState(0);
   
   const loadQuotes = async () => {
-    if (!isAdmin && !isFreelancer) return; // Ne charger que pour les admins et les freelancers
-    
     setLoading(true);
     try {
       const data = await fetchQuotes();
@@ -40,12 +38,12 @@ const Quotes: React.FC = () => {
   };
   
   useEffect(() => {
-    if ((isAdmin || isFreelancer) && loadAttempt === 0) {
+    if (loadAttempt === 0) {
       console.log("Chargement initial des devis");
       loadQuotes();
       setLoadAttempt(1);
     }
-  }, [isAdmin, isFreelancer, loadAttempt]);
+  }, [loadAttempt]);
   
   const filteredQuotes = quotes.filter(quote => {
     if (!searchTerm) return true;
@@ -60,8 +58,8 @@ const Quotes: React.FC = () => {
 
   const handleAddClick = () => setAddDialogOpen(true);
 
-  // Si c'est un freelancer, afficher la vue freelancer
-  if (isFreelancer) {
+  // Si c'est un freelancer qui n'est pas admin, afficher la vue freelancer
+  if (isFreelancer && !isAdminOrSuperAdmin) {
     return (
       <TooltipProvider>
         <div className="space-y-6">
@@ -77,7 +75,7 @@ const Quotes: React.FC = () => {
     );
   }
 
-  // Sinon, afficher la vue admin
+  // Sinon, afficher la vue admin/standard
   return (
     <TooltipProvider>
       <div className="space-y-6">

@@ -4,7 +4,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatDateToFrench, formatTime } from "@/utils/format";
 import { Button } from "@/components/ui/button";
-import { Check, FileText, Info, MoreHorizontal, Trash, X, Edit } from "lucide-react";
+import { Check, FileText, Info, MoreHorizontal, Trash, X, Edit, Calendar } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -161,24 +161,38 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
                 
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
-                  >
-                    <Check className="mr-2 h-4 w-4" />
-                    Marquer comme terminé
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleStatusChange(AppointmentStatus.CANCELLED)}
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Annuler
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleStatusChange(AppointmentStatus.NO_SHOW)}
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Client absent
-                  </DropdownMenuItem>
+                  {appointment.status !== AppointmentStatus.COMPLETED && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(AppointmentStatus.COMPLETED)}
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      Marquer comme terminé
+                    </DropdownMenuItem>
+                  )}
+                  {appointment.status !== AppointmentStatus.CANCELLED && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(AppointmentStatus.CANCELLED)}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Annuler
+                    </DropdownMenuItem>
+                  )}
+                  {appointment.status !== AppointmentStatus.NO_SHOW && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(AppointmentStatus.NO_SHOW)}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Client absent
+                    </DropdownMenuItem>
+                  )}
+                  {appointment.status !== AppointmentStatus.SCHEDULED && (
+                    <DropdownMenuItem
+                      onClick={() => handleStatusChange(AppointmentStatus.SCHEDULED)}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Replanifier
+                    </DropdownMenuItem>
+                  )}
                   
                   {appointment.status === AppointmentStatus.COMPLETED && (
                     <>

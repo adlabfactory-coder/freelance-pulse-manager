@@ -6,7 +6,7 @@ import { Quote, QuoteStatus } from "@/types";
 import { formatCurrency, formatDateToFrench } from "@/utils/format";
 import { updateQuoteStatus, deleteQuote } from "@/services/quote-service";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash, FileEdit, MoreHorizontal, Check, X } from "lucide-react";
+import { Eye, Trash, FileEdit, MoreHorizontal, Check, X, Send, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -43,7 +43,7 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading = false, onSt
   const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { isAdminOrSuperAdmin } = useAuth();
+  const { isAdminOrSuperAdmin, user } = useAuth();
 
   const handleStatusChange = async (id: string | undefined, status: QuoteStatus) => {
     if (!id) return;
@@ -58,6 +58,10 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading = false, onSt
               ? "accepté"
               : status === QuoteStatus.REJECTED
               ? "refusé"
+              : status === QuoteStatus.SENT
+              ? "envoyé"
+              : status === QuoteStatus.DRAFT
+              ? "brouillon"
               : status
           }`,
         });
@@ -167,70 +171,95 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading = false, onSt
           </TableRow>
         </TableHeader>
         <TableBody>
-          {quotes.map((quote) => (
-            <TableRow key={quote.id}>
-              <TableCell className="font-medium">{quote.contactId}</TableCell>
-              <TableCell>{quote.freelancerId}</TableCell>
-              <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
-              <TableCell>
-                {formatDateToFrench(new Date(quote.validUntil))}
-              </TableCell>
-              <TableCell>{getStatusBadge(quote.status)}</TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => viewQuoteDetails(quote.id)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Voir les détails
-                    </DropdownMenuItem>
-                    
-                    {isAdminOrSuperAdmin && (
-                      <>
-                        <DropdownMenuItem onClick={() => editQuote(quote.id)}>
-                          <FileEdit className="mr-2 h-4 w-4" />
-                          Modifier
-                        </DropdownMenuItem>
-                        
-                        {quote.status === QuoteStatus.SENT && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
+          {quotes.map((quote) => {
+            const canManageQuote = isAdminOrSuperAdmin || 
+              (user?.id === quote.freelancerId);
+              
+            return (
+              <TableRow key={quote.id}>
+                <TableCell className="font-medium">{quote.contactId}</TableCell>
+                <TableCell>{quote.freelancerId}</TableCell>
+                <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
+                <TableCell>
+                  {formatDateToFrench(new Date(quote.validUntil))}
+                </TableCell>
+                <TableCell>{getStatusBadge(quote.status)}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => viewQuoteDetails(quote.id)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Voir les détails
+                      </DropdownMenuItem>
+                      
+                      {canManageQuote && (
+                        <>
+                          <DropdownMenuItem onClick={() => editQuote(quote.id)}>
+                            <FileEdit className="mr-2 h-4 w-4" />
+                            Modifier
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
+                          
+                          {quote.status !== QuoteStatus.SENT && (
+                            <DropdownMenuItem
+                              onClick={() => handleStatusChange(quote.id, QuoteStatus.SENT)}
+                            >
+                              <Send className="mr-2 h-4 w-4" />
+                              Marquer comme envoyé
+                            </DropdownMenuItem>
+                          )}
+                          
+                          {quote.status !== QuoteStatus.ACCEPTED && (
                             <DropdownMenuItem
                               onClick={() => handleStatusChange(quote.id, QuoteStatus.ACCEPTED)}
                             >
                               <Check className="mr-2 h-4 w-4" />
                               Marquer comme accepté
                             </DropdownMenuItem>
+                          )}
+                          
+                          {quote.status !== QuoteStatus.REJECTED && (
                             <DropdownMenuItem
                               onClick={() => handleStatusChange(quote.id, QuoteStatus.REJECTED)}
                             >
                               <X className="mr-2 h-4 w-4" />
                               Marquer comme refusé
                             </DropdownMenuItem>
-                          </>
-                        )}
-                        
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => setIsDeleteDialogOpen(quote.id || null)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Supprimer
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
+                          )}
+                          
+                          {quote.status !== QuoteStatus.DRAFT && (
+                            <DropdownMenuItem
+                              onClick={() => handleStatusChange(quote.id, QuoteStatus.DRAFT)}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              Remettre en brouillon
+                            </DropdownMenuItem>
+                          )}
+                          
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => setIsDeleteDialogOpen(quote.id || null)}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
       

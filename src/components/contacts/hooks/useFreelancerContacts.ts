@@ -18,7 +18,7 @@ export function useFreelancerContacts(
     
     setLoading(true);
     try {
-      const fetchedContacts = await contactService.getContactsByAssignedFreelancer(user.id);
+      const fetchedContacts = await contactService.getContactsByFreelancer(user.id);
       setContacts(fetchedContacts);
     } catch (error) {
       console.error('Error fetching freelancer contacts:', error);

@@ -10,7 +10,7 @@ export function useAppointments(contactId?: string) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isAdminOrSuperAdmin } = useAuth();
 
   const fetchAppointments = useCallback(async () => {
     setIsLoading(true);
@@ -22,6 +22,9 @@ export function useAppointments(contactId?: string) {
       if (contactId) {
         // Fetch appointments for a specific contact
         data = await appointmentsService.getAppointmentsByContact(contactId);
+      } else if (isAdminOrSuperAdmin) {
+        // Admin and super admin see all appointments
+        data = await appointmentsService.getAppointments();
       } else if (user?.role === 'freelancer' && user?.id) {
         // Fetch appointments for the current freelancer
         data = await appointmentsService.getAppointmentsByFreelancer(user.id);
@@ -41,7 +44,7 @@ export function useAppointments(contactId?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [contactId, user]);
+  }, [contactId, user, isAdminOrSuperAdmin]);
 
   useEffect(() => {
     fetchAppointments();
