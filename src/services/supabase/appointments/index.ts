@@ -35,10 +35,10 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
   };
 };
 
-// Import necessary Supabase client
-import { supabase } from '@/lib/supabase';
+// Import du client Supabase correct
+import { supabase } from '@/lib/supabase-client';
 
-// Export a simpler interface for usage in components
+// Export d'une interface simplifiée pour l'utilisation dans les composants
 export const appointmentsService = {
   getAppointments: () => createAppointmentsService(supabase).getAppointments(),
   getAppointmentsByFreelancer: (freelancerId: string) => 

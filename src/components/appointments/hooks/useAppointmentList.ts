@@ -33,7 +33,7 @@ export const useAppointmentList = () => {
           id: appointment.id,
           title: appointment.title,
           description: appointment.description,
-          contactId: appointment.contact_id || appointment.contactId,
+          contactId: appointment.contactId || appointment.contact_id,
           freelancerId: appointment.freelancerid || appointment.freelancerId,
           date: appointment.date,
           duration: appointment.duration,

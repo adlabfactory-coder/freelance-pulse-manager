@@ -31,13 +31,27 @@ export interface Appointment {
   deleted_at?: string | null;
 }
 
+/**
+ * Normalise les données d'un rendez-vous pour gérer les différences de casse et de nommage
+ * entre la base de données et le code TypeScript
+ */
 export function normalizeAppointmentData(appointment: any): Appointment {
+  // Adapter le nom des champs freelancerid/contactid qui viennent de la DB
   if (appointment.freelancerid && !appointment.freelancerId) {
     appointment.freelancerId = appointment.freelancerid;
   }
   
   if (appointment.contactid && !appointment.contactId) {
     appointment.contactId = appointment.contactid;
+  }
+  
+  // Adapter les autres noms de champs si nécessaire
+  if (appointment.created_at && !appointment.createdAt) {
+    appointment.createdAt = appointment.created_at;
+  }
+  
+  if (appointment.updated_at && !appointment.updatedAt) {
+    appointment.updatedAt = appointment.updated_at;
   }
   
   return appointment as Appointment;
