@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { User, UserRole } from '@/types';
-import { getMockUsers, getMockUserById } from '@/utils/supabase-mock-data';
+import { getMockUsers } from '@/utils/supabase-mock-data';
 
 /**
  * Récupère un utilisateur par son ID

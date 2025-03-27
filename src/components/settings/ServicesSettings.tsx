@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle } from 'lucide-react';
-import { Service } from '@/types/service';
+import { Service, ServiceType } from '@/types/service';
 import ServicesList from './services/ServicesList';
 import ServiceForm from './services/ServiceForm';
 import { useServices } from './services/hooks/useServices';
@@ -63,7 +64,7 @@ const ServicesSettings: React.FC = () => {
   const emptyService: Service = {
     id: '',
     name: '',
-    type: '',
+    type: 'service' as ServiceType,
     price: 0,
     description: '',
     is_active: true
