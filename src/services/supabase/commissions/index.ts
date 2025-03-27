@@ -28,9 +28,11 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
   };
 };
 
-// Export common utilities and types
+// Export types without conflicts
+export { CommissionServiceOptions } from './types';
+
+// Export utils but not the types to avoid duplication
 export * from './utils';
-export * from './types';
 
 // Export individual operation modules but avoid naming conflicts
 export { fetchCommissions } from './fetch-commissions';
