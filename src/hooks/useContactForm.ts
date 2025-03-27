@@ -8,14 +8,21 @@ import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase-client';
+import { accountManagerService } from '@/services/account-manager/account-manager-service';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
   initialData?: Partial<ContactFormValues & { id?: string }>;
   isEditing?: boolean;
+  useAutoAssign?: boolean;
 }
 
-export const useContactForm = ({ onSuccess, initialData, isEditing = false }: UseContactFormProps = {}) => {
+export const useContactForm = ({ 
+  onSuccess, 
+  initialData, 
+  isEditing = false,
+  useAutoAssign = false
+}: UseContactFormProps = {}) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   
@@ -44,6 +51,16 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
   const onSubmit = async (data: ContactFormValues) => {
     try {
       setLoading(true);
+      
+      // Si le mode d'attribution automatique est activé et qu'aucun chargé n'est assigné
+      if (useAutoAssign && !data.assignedTo && !isEditing) {
+        const nextManager = await accountManagerService.getNextAccountManager();
+        if (nextManager) {
+          data.assignedTo = nextManager.id;
+        } else {
+          toast.error("Aucun chargé de compte disponible pour l'attribution automatique");
+        }
+      }
       
       // Vérifier que l'utilisateur a bien assigné un chargé de compte
       if (!data.assignedTo) {

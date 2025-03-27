@@ -20,6 +20,8 @@ import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchAccountManagers } from "@/services/user/fetch-users";
+import { Switch } from "@/components/ui/switch";
+import { accountManagerService } from "@/services/account-manager/account-manager-service";
 
 interface ContactFormProps {
   form: UseFormReturn<ContactFormValues>;
@@ -41,6 +43,8 @@ const ContactForm: React.FC<ContactFormProps> = ({
   const { user } = useAuth();
   const [accountManagers, setAccountManagers] = useState<User[]>([]);
   const [isLoadingManagers, setIsLoadingManagers] = useState(false);
+  const [useAutoAssign, setUseAutoAssign] = useState(false);
+  const [isAutoAssigning, setIsAutoAssigning] = useState(false);
 
   // Charger la liste des chargés de compte
   useEffect(() => {
@@ -73,6 +77,30 @@ const ContactForm: React.FC<ContactFormProps> = ({
     
     loadAccountManagers();
   }, [user, isEditing, form]);
+
+  // Gérer l'attribution automatique du chargé de compte
+  const handleAutoAssignToggle = async (checked: boolean) => {
+    setUseAutoAssign(checked);
+    
+    if (checked && !isEditing) {
+      setIsAutoAssigning(true);
+      try {
+        const nextManager = await accountManagerService.getNextAccountManager();
+        
+        if (nextManager) {
+          form.setValue('assignedTo', nextManager.id);
+        } else {
+          // Si aucun manager n'est trouvé, revenir au mode manuel
+          setUseAutoAssign(false);
+        }
+      } catch (error) {
+        console.error("Erreur lors de l'attribution automatique:", error);
+        setUseAutoAssign(false);
+      } finally {
+        setIsAutoAssigning(false);
+      }
+    }
+  };
 
   return (
     <Form {...form}>
@@ -164,6 +192,24 @@ const ContactForm: React.FC<ContactFormProps> = ({
             )}
           />
 
+          {!isEditing && (
+            <div className="flex items-center space-x-2 py-2">
+              <Switch 
+                id="auto-assign"
+                checked={useAutoAssign}
+                onCheckedChange={handleAutoAssignToggle}
+                disabled={isAutoAssigning || isEditing}
+              />
+              <label 
+                htmlFor="auto-assign" 
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Attribution automatique du chargé de compte
+              </label>
+              {isAutoAssigning && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
+            </div>
+          )}
+
           <FormField
             control={form.control}
             name="assignedTo"
@@ -174,6 +220,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   value={field.value}
+                  disabled={useAutoAssign && !isEditing}
                 >
                   <FormControl>
                     <SelectTrigger>

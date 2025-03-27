@@ -10,9 +10,14 @@ import { toast } from "sonner";
 interface AddContactFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
+  useAutoAssign?: boolean;
 }
 
-const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) => {
+const AddContactForm: React.FC<AddContactFormProps> = ({ 
+  onSuccess, 
+  onCancel,
+  useAutoAssign = false
+}) => {
   const { user } = useAuth();
   const [createdContactId, setCreatedContactId] = useState<string | null>(null);
   const [createdContactName, setCreatedContactName] = useState<string>("");
@@ -47,6 +52,7 @@ const AddContactForm: React.FC<AddContactFormProps> = ({ onSuccess, onCancel }) 
   const { form, isSubmitting, onSubmit } = useContactForm({
     onSuccess: handleContactCreated,
     isEditing: false,
+    useAutoAssign,
     initialData: {
       assignedTo: user?.id || ""
     }
