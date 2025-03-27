@@ -10,7 +10,7 @@ interface UserProfileProps {
   onClick?: () => void;
 }
 
-const getRoleLabel = (role?: UserRole) => {
+const getRoleLabel = (role?: UserRole | string) => {
   switch (role) {
     case UserRole.ADMIN:
       return "Administrateur";

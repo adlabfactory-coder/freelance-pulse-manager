@@ -1,140 +1,181 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Service, ServiceType } from "@/types/service";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, Plus } from "lucide-react";
-import { Service } from "@/types/service";
+import { Edit, Trash2, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import DeleteServiceDialog from "./DeleteServiceDialog";
 
-interface ServicesListProps {
+export interface ServicesListProps {
   services: Service[];
   loading: boolean;
-  onEdit: (service: Service) => void;
-  onDelete: (serviceId: string) => void;
-  onAdd: () => void;
+  onEditService: (service: Service) => void;
+  onDeleteService: (service: Service) => void;
 }
 
 const ServicesList: React.FC<ServicesListProps> = ({
   services,
   loading,
-  onEdit,
-  onDelete,
-  onAdd,
+  onEditService,
+  onDeleteService,
 }) => {
-  const [serviceToDelete, setServiceToDelete] = React.useState<Service | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   const handleDeleteClick = (service: Service) => {
     setServiceToDelete(service);
-    setIsDeleteDialogOpen(true);
+    setConfirmationOpen(true);
   };
 
-  const confirmDelete = () => {
+  const handleConfirmDelete = () => {
     if (serviceToDelete) {
-      onDelete(serviceToDelete.id);
-      setIsDeleteDialogOpen(false);
+      onDeleteService(serviceToDelete);
+      setConfirmationOpen(false);
       setServiceToDelete(null);
     }
   };
 
+  const getServiceTypeBadge = (type: ServiceType) => {
+    let variant: "default" | "secondary" | "outline" | "destructive" = "default";
+    
+    switch (type) {
+      case ServiceType.SUBSCRIPTION:
+        variant = "default";
+        break;
+      case ServiceType.ONE_TIME:
+        variant = "secondary";
+        break;
+      case ServiceType.RECURRING:
+        variant = "outline";
+        break;
+      case ServiceType.CONSULTING:
+        variant = "default";
+        break;
+      default:
+        variant = "outline";
+    }
+    
+    return (
+      <Badge variant={variant}>
+        {type === ServiceType.ONE_TIME
+          ? "Ponctuel"
+          : type === ServiceType.SUBSCRIPTION
+          ? "Abonnement"
+          : type === ServiceType.RECURRING
+          ? "Récurrent"
+          : type === ServiceType.CONSULTING
+          ? "Consulting"
+          : "Autre"}
+      </Badge>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="space-y-3">
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Prix</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+                <TableCell className="text-right"><Skeleton className="h-8 w-[80px] ml-auto" /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="rounded-md border p-8 text-center">
+        <AlertTriangle className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h3 className="mt-2 text-lg font-semibold">Aucun service</h3>
+        <p className="text-muted-foreground mt-1">
+          Vous n'avez pas encore ajouté de services.
+        </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Liste des services</h2>
-        <Button onClick={onAdd} className="flex items-center">
-          <Plus className="mr-2 h-4 w-4" />
-          Ajouter un service
-        </Button>
-      </div>
-
-      <Table>
-        <TableCaption>Liste des services disponibles</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nom</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead className="text-right">Prix</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {services.length === 0 ? (
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                Aucun service trouvé
-              </TableCell>
+              <TableHead>Nom</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Prix</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ) : (
-            services.map((service) => (
+          </TableHeader>
+          <TableBody>
+            {services.map((service) => (
               <TableRow key={service.id}>
                 <TableCell className="font-medium">{service.name}</TableCell>
-                <TableCell>{service.type}</TableCell>
-                <TableCell className="text-right">{formatCurrency(service.price)}</TableCell>
+                <TableCell>{service.description || "-"}</TableCell>
                 <TableCell>
-                  {service.is_active ? (
-                    <Badge variant="default" className="bg-green-500">
-                      Actif
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="bg-gray-300">
-                      Inactif
-                    </Badge>
-                  )}
+                  {getServiceTypeBadge(service.type)}
                 </TableCell>
+                <TableCell>{formatCurrency(service.price)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
                     <Button
-                      onClick={() => onEdit(service)}
+                      variant="ghost"
                       size="sm"
-                      variant="outline"
+                      onClick={() => onEditService(service)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
-                      onClick={() => handleDeleteClick(service)}
+                      variant="ghost"
                       size="sm"
-                      variant="outline"
-                      className="text-destructive hover:bg-destructive hover:text-white"
+                      onClick={() => handleDeleteClick(service)}
                     >
-                      <Trash className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
-      <DeleteServiceDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDelete}
-        serviceName={serviceToDelete?.name || ""}
-      />
-    </div>
+      {serviceToDelete && (
+        <DeleteServiceDialog
+          service={serviceToDelete}
+          isOpen={confirmationOpen}
+          onClose={() => setConfirmationOpen(false)}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
+    </>
   );
 };
 

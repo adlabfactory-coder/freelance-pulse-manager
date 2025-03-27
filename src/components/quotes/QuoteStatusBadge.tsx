@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { QuoteStatus, getQuoteStatusLabel, getQuoteStatusColor } from '@/types/quote';
+import { QuoteStatus, getQuoteStatusLabel } from '@/types/quote';
 
 interface QuoteStatusBadgeProps {
-  status: QuoteStatus;
+  status: QuoteStatus | string;
 }
 
 const QuoteStatusBadge: React.FC<QuoteStatusBadgeProps> = ({ status }) => {
@@ -31,7 +31,7 @@ const QuoteStatusBadge: React.FC<QuoteStatusBadgeProps> = ({ status }) => {
 
   return (
     <Badge variant={getVariant()} className="capitalize">
-      {getQuoteStatusLabel(status)}
+      {getQuoteStatusLabel(status as QuoteStatus)}
     </Badge>
   );
 };

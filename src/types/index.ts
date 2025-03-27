@@ -30,7 +30,7 @@ export interface Quote {
   status: string;
   validUntil: Date | string;
   notes?: string | null;
-  items: QuoteItem[];
+  items?: QuoteItem[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
   folder?: string;
@@ -55,6 +55,7 @@ export interface NavItem {
   icon?: React.ElementType;
   submenu?: NavItem[];
   permission?: string[];
+  disabled?: boolean;
 }
 
 // Types pour les abonnements
@@ -110,3 +111,4 @@ export interface SubscriptionPlan {
 export { QuoteStatus } from './quote';
 
 // Exporter d'autres types selon les besoins
+export type { Contact } from './contact';

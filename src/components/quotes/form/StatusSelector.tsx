@@ -5,10 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { QuoteStatus } from "@/types";
 
 interface StatusSelectorProps {
-  status?: QuoteStatus;
+  status?: QuoteStatus | string;
   onSelect: (status: QuoteStatus) => void;
-  value?: QuoteStatus;
-  onChange?: React.Dispatch<React.SetStateAction<QuoteStatus>>;
+  value?: QuoteStatus | string;
+  onChange?: React.Dispatch<React.SetStateAction<QuoteStatus | string>>;
   disabled?: boolean;
 }
 

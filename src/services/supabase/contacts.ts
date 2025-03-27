@@ -1,7 +1,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
-import { Contact } from '@/types';
+import { Contact } from '@/types/contact';
 import { ServiceResponse } from './types';
 import { ContactStatus } from '@/types/database/enums';
 

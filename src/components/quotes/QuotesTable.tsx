@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -131,7 +130,6 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
     }
   };
 
-  // Si chargement, afficher un skeleton
   if (loading) {
     return (
       <div className="w-full overflow-auto">
@@ -167,7 +165,6 @@ const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChan
     );
   }
 
-  // Si pas de données, afficher un message
   if (sortedQuotes.length === 0) {
     return (
       <div className="bg-muted/20 p-8 text-center rounded-lg">

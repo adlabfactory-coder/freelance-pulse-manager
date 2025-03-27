@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useQuoteForm } from '../hooks/useQuoteForm';
@@ -56,7 +55,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         contactId: form.contactId,
         freelancerId: form.freelancerId,
         validUntil: form.validUntil,
-        status: form.status,
+        status: form.status as QuoteStatus,
         notes: form.notes,
         folder: form.folder || 'general',
         totalAmount: form.totalAmount || 0,
@@ -92,7 +91,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
           if (data.contactId !== undefined) form.setContactId(data.contactId);
           if (data.freelancerId !== undefined) form.setFreelancerId(data.freelancerId);
           if (data.validUntil !== undefined) form.setValidUntil(data.validUntil);
-          if (data.status !== undefined) form.setStatus(data.status);
+          if (data.status !== undefined) form.setStatus(data.status as QuoteStatus);
           if (data.notes !== undefined) form.setNotes(data.notes);
         }}
         onCurrentItemChange={form.setCurrentItem}
