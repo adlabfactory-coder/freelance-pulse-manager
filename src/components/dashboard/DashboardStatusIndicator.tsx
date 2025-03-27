@@ -62,6 +62,12 @@ const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
   const totalCount = dataSources.length;
   const healthPercentage = totalCount > 0 ? (healthyCount / totalCount) * 100 : 0;
   
+  const handleRefreshClick = () => {
+    if (!isRefreshing) {
+      onManualRefresh();
+    }
+  };
+  
   return (
     <div className="flex items-center space-x-2">
       <Popover>
@@ -88,7 +94,7 @@ const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={onManualRefresh}
+                onClick={handleRefreshClick}
                 disabled={isRefreshing}
                 className="text-xs flex items-center space-x-1"
               >

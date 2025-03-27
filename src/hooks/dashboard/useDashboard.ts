@@ -23,6 +23,7 @@ export function useDashboard(): UseDashboardDataReturn {
     // Si nous sommes déjà en train de rafraîchir, ne pas lancer une autre requête
     if (refreshing) return;
     
+    console.log("Début de la récupération des données du tableau de bord");
     setRefreshing(true);
     try {
       // Récupérer toutes les données du tableau de bord
@@ -35,6 +36,7 @@ export function useDashboard(): UseDashboardDataReturn {
       // Vérifier si au moins les statistiques ont été récupérées avec succès
       const statsResult = results[0];
       if (statsResult.status === 'fulfilled') {
+        console.log("Statistiques récupérées avec succès");
         setIsConnected(true);
         setLastUpdated(new Date());
         setRetryCount(0);
@@ -57,6 +59,7 @@ export function useDashboard(): UseDashboardDataReturn {
       toast.error("Impossible de charger les données du tableau de bord.");
       setIsConnected(false);
     } finally {
+      console.log("Fin de la récupération des données du tableau de bord");
       setLoading(false);
       setRefreshing(false);
     }
@@ -84,4 +87,4 @@ export function useDashboard(): UseDashboardDataReturn {
 }
 
 // Pour assurer la compatibilité avec le code existant
-export { useDashboard as useDashboardData } from './useDashboard';
+export { useDashboard as useDashboardData };

@@ -1,7 +1,8 @@
+
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardStatusIndicator from "./DashboardStatusIndicator";
-import { DataSource } from "@/hooks/dashboard";
+import { DataSource } from "@/hooks/dashboard/types";
 
 interface DashboardHeaderProps {
   isConnected: boolean;
@@ -20,6 +21,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const { user } = useAuth();
 
+  const handleRefresh = () => {
+    console.log("Demande d'actualisation manuelle depuis l'en-tête");
+    onManualRefresh();
+  };
+
   return (
     <div className="flex flex-row justify-between items-center">
       <div>
@@ -33,7 +39,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         isConnected={isConnected}
         lastUpdated={lastUpdated}
         isRefreshing={isRefreshing}
-        onManualRefresh={onManualRefresh}
+        onManualRefresh={handleRefresh}
         dataSources={dataSources}
       />
     </div>
