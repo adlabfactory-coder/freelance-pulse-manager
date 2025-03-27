@@ -56,19 +56,19 @@ export const useQuoteSubmission = ({
         serviceId: item.serviceId
       }));
       
-      // Fix: Pass the properly formatted data to createQuote
-      const result = await createQuote({
-        quote: {
-          contactId: quoteData.contactId,
-          freelancerId: quoteData.freelancerId,
-          totalAmount: quoteData.totalAmount,
-          status: quoteData.status || QuoteStatus.DRAFT,
-          validUntil: quoteData.validUntil,
-          notes: quoteData.notes || "",
-          folder: quoteData.folder || "general"
-        },
-        items: formattedItems
-      });
+      // Prepare quote data object
+      const quoteDataObj = {
+        contactId: quoteData.contactId,
+        freelancerId: quoteData.freelancerId,
+        totalAmount: quoteData.totalAmount,
+        status: quoteData.status || QuoteStatus.DRAFT,
+        validUntil: quoteData.validUntil,
+        notes: quoteData.notes || "",
+        folder: quoteData.folder || "general"
+      };
+      
+      // Fix: Pass the quote data and items as separate arguments to createQuote
+      const result = await createQuote(quoteDataObj, formattedItems);
       
       if (result && result.id) {
         toast.success("Devis créé avec succès");
@@ -136,19 +136,19 @@ export const useQuoteSubmission = ({
         serviceId: item.serviceId
       }));
       
-      // Fix: Pass all required arguments to updateQuote
-      const result = await updateQuote(quoteId, {
-        quote: {
-          contactId: quoteData.contactId,
-          freelancerId: quoteData.freelancerId,
-          totalAmount: quoteData.totalAmount,
-          status: quoteData.status || QuoteStatus.DRAFT,
-          validUntil: quoteData.validUntil,
-          notes: quoteData.notes || "",
-          folder: quoteData.folder || "general"
-        },
-        items: formattedItems
-      });
+      // Prepare quote data object
+      const quoteDataObj = {
+        contactId: quoteData.contactId,
+        freelancerId: quoteData.freelancerId,
+        totalAmount: quoteData.totalAmount,
+        status: quoteData.status || QuoteStatus.DRAFT,
+        validUntil: quoteData.validUntil,
+        notes: quoteData.notes || "",
+        folder: quoteData.folder || "general"
+      };
+      
+      // Fix: Pass quoteId, quoteData and items as separate arguments to updateQuote
+      const result = await updateQuote(quoteId, quoteDataObj, formattedItems);
       
       if (result && result.id) {
         toast.success("Devis mis à jour avec succès");
