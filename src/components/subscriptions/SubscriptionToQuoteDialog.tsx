@@ -6,22 +6,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Subscription } from '@/types/subscription';
-import { Quote, QuoteStatus } from '@/types/quote';
+import { SubscriptionPlan } from '@/types/subscription';
+import { QuoteStatus } from '@/types/quote';
 import { createQuotesService } from '@/services/supabase/quotes';
 import { supabase } from '@/lib/supabase-client';
 
 interface SubscriptionToQuoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  subscription: Subscription;
+  plan: SubscriptionPlan;
   onQuoteCreated?: (quoteId: string) => void;
 }
 
 const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({ 
   open, 
   onOpenChange,
-  subscription,
+  plan,
   onQuoteCreated
 }) => {
   const { toast } = useToast();
@@ -31,30 +31,31 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
   );
 
   const handleCreateQuote = async () => {
-    if (!subscription) return;
+    if (!plan) return;
     
     setIsSubmitting(true);
     
     try {
       const quotesService = createQuotesService(supabase);
       
-      // Create quote data
+      // Create quote data - using mock data since we don't have real client/freelancer IDs
+      // In a real implementation, you would select a client and freelancer
       const quoteData = {
-        contactId: subscription.clientId,
-        freelancerId: subscription.freelancerId,
-        totalAmount: subscription.price,
+        contactId: "00000000-0000-0000-0000-000000000000", // This would be a real contact ID
+        freelancerId: "00000000-0000-0000-0000-000000000001", // This would be the current user ID
+        totalAmount: plan.price,
         validUntil: new Date(validUntil),
         status: QuoteStatus.DRAFT,
-        notes: `Devis généré à partir de l'abonnement: ${subscription.name}`,
+        notes: `Devis généré à partir du plan d'abonnement: ${plan.name}`,
         folder: 'subscriptions'
       };
       
       // Create quote items
       const quoteItems = [
         {
-          description: `${subscription.name} - Abonnement ${subscription.interval}`,
+          description: `${plan.name} - Abonnement ${plan.interval}`,
           quantity: 1,
-          unitPrice: subscription.price,
+          unitPrice: plan.price,
           tax: 0,
           discount: 0
         }
@@ -65,7 +66,7 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
       if (newQuote) {
         toast({
           title: "Devis créé avec succès",
-          description: "Le devis a été créé à partir de l'abonnement",
+          description: "Le devis a été créé à partir du plan d'abonnement",
         });
         
         if (onQuoteCreated) {
@@ -92,20 +93,20 @@ const SubscriptionToQuoteDialog: React.FC<SubscriptionToQuoteDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Créer un devis</DialogTitle>
           <DialogDescription>
-            Créer un devis à partir de l'abonnement {subscription?.name}
+            Créer un devis à partir du plan d'abonnement {plan?.name}
           </DialogDescription>
         </DialogHeader>
         
         <Card>
           <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="subscription-name">Abonnement</Label>
-              <Input id="subscription-name" value={subscription?.name} disabled />
+              <Label htmlFor="subscription-name">Plan d'abonnement</Label>
+              <Input id="subscription-name" value={plan?.name} disabled />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="subscription-price">Prix</Label>
-              <Input id="subscription-price" value={`${subscription?.price} €`} disabled />
+              <Input id="subscription-price" value={`${plan?.price} €`} disabled />
             </div>
             
             <div className="space-y-2">

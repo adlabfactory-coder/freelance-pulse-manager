@@ -2,6 +2,9 @@
 import { supabase } from '@/lib/supabase-client';
 import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus, Subscription } from '@/types';
 
+/**
+ * Fetch all subscription plans
+ */
 export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
   try {
     const { data, error } = await supabase
@@ -14,7 +17,7 @@ export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
       return [];
     }
 
-    // Convertir les données pour correspondre à l'interface SubscriptionPlan
+    // Convert data to match the SubscriptionPlan interface
     return data.map(plan => ({
       id: plan.id,
       name: plan.name,
@@ -23,7 +26,7 @@ export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
       price: Number(plan.price),
       interval: plan.interval as SubscriptionInterval,
       features: plan.features,
-      isActive: plan.is_active, // Convertir is_active en isActive
+      isActive: plan.is_active, // Convert is_active to isActive
       created_at: plan.created_at,
       updated_at: plan.updated_at
     }));
@@ -33,6 +36,9 @@ export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
   }
 }
 
+/**
+ * Fetch all subscriptions or subscriptions for a specific user
+ */
 export const fetchSubscriptions = async (userId?: string): Promise<Subscription[]> => {
   try {
     let query = supabase
@@ -44,7 +50,7 @@ export const fetchSubscriptions = async (userId?: string): Promise<Subscription[
       `);
     
     if (userId) {
-      // Si un ID est fourni, filtrer soit par freelancerId soit par clientId
+      // If a user ID is provided, filter by freelancerId or clientId
       query = query.or(`freelancerId.eq.${userId},clientId.eq.${userId}`);
     }
     
@@ -78,6 +84,9 @@ export const fetchSubscriptions = async (userId?: string): Promise<Subscription[
   }
 };
 
+/**
+ * Fetch a subscription by ID
+ */
 export const fetchSubscriptionById = async (id: string): Promise<Subscription | null> => {
   try {
     const { data, error } = await supabase
@@ -120,9 +129,12 @@ export const fetchSubscriptionById = async (id: string): Promise<Subscription | 
   }
 };
 
+/**
+ * Create a new subscription
+ */
 export const createSubscription = async (subscriptionData: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean, id?: string }> => {
   try {
-    // Préparer les données pour l'insertion
+    // Prepare data for insertion
     const insertData = {
       name: subscriptionData.name,
       description: subscriptionData.description,
@@ -154,12 +166,15 @@ export const createSubscription = async (subscriptionData: Omit<Subscription, 'i
   }
 };
 
+/**
+ * Update an existing subscription
+ */
 export const updateSubscription = async (id: string, subscriptionData: Partial<Subscription>): Promise<boolean> => {
   try {
-    // Préparer les données pour la mise à jour
+    // Prepare data for update
     const updateData: any = { ...subscriptionData };
     
-    // Convertir les dates en chaînes ISO
+    // Convert dates to ISO strings
     if (updateData.startDate instanceof Date) {
       updateData.startDate = updateData.startDate.toISOString();
     }
@@ -170,7 +185,7 @@ export const updateSubscription = async (id: string, subscriptionData: Partial<S
       updateData.renewalDate = updateData.renewalDate.toISOString();
     }
     
-    // Supprimer les propriétés qui ne sont pas des colonnes de la table
+    // Remove properties that aren't table columns
     delete updateData.clientName;
     delete updateData.freelancerName;
     delete updateData.createdAt;
@@ -193,6 +208,9 @@ export const updateSubscription = async (id: string, subscriptionData: Partial<S
   }
 };
 
+/**
+ * Cancel a subscription
+ */
 export const cancelSubscription = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -215,6 +233,9 @@ export const cancelSubscription = async (id: string): Promise<boolean> => {
   }
 };
 
+/**
+ * Renew a subscription
+ */
 export const renewSubscription = async (id: string, newEndDate: Date): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -238,6 +259,9 @@ export const renewSubscription = async (id: string, newEndDate: Date): Promise<b
   }
 };
 
+/**
+ * Delete a subscription
+ */
 export const deleteSubscription = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase

@@ -1,82 +1,15 @@
 
 import { supabase } from '@/lib/supabase';
-import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus } from '@/types';
+import { SubscriptionInterval, SubscriptionPlan } from '@/types';
 
-export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-  try {
-    const { data, error } = await supabase
-      .from('subscription_plans')
-      .select('*');
-
-    if (error) {
-      console.error('Error fetching subscription plans:', error);
-      return [];
-    }
-
-    // Convertir les données pour correspondre au type SubscriptionPlan
-    return data.map(plan => ({
-      id: plan.id,
-      name: plan.name,
-      code: plan.code,
-      description: plan.description,
-      price: Number(plan.price),
-      interval: plan.interval as SubscriptionInterval,
-      features: plan.features,
-      isActive: plan.is_active, // Convertir is_active en isActive
-      created_at: plan.created_at,
-      updated_at: plan.updated_at
-    }));
-  } catch (error) {
-    console.error('Unexpected error fetching subscription plans:', error);
-    return [];
-  }
-}
-
-export async function createSubscriptionPlan(plan: Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>): Promise<SubscriptionPlan | null> {
-  try {
-    // Convertir isActive en is_active pour la base de données
-    const planData = {
-      name: plan.name,
-      code: plan.code,
-      description: plan.description,
-      price: plan.price,
-      interval: plan.interval,
-      features: plan.features,
-      is_active: plan.isActive // Convertir isActive en is_active
-    };
-
-    const { data, error } = await supabase
-      .from('subscription_plans')
-      .insert([planData])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating subscription plan:', error);
-      return null;
-    }
-
-    // Convertir le résultat pour correspondre au type SubscriptionPlan
-    return {
-      id: data.id,
-      name: data.name,
-      code: data.code,
-      description: data.description,
-      price: Number(data.price),
-      interval: data.interval as SubscriptionInterval,
-      features: data.features,
-      isActive: data.is_active, // Convertir is_active en isActive
-      created_at: data.created_at,
-      updated_at: data.updated_at
-    };
-  } catch (error) {
-    console.error('Unexpected error creating subscription plan:', error);
-    return null;
-  }
-}
-
+/**
+ * Factory for creating subscription plan service
+ */
 export const createSubscriptionPlanService = () => {
   return {
+    /**
+     * Fetch all active subscription plans
+     */
     fetchAll: async (): Promise<SubscriptionPlan[]> => {
       try {
         const { data, error } = await supabase
@@ -107,6 +40,9 @@ export const createSubscriptionPlanService = () => {
       }
     },
     
+    /**
+     * Fetch a subscription plan by ID
+     */
     fetchById: async (id: string): Promise<SubscriptionPlan | null> => {
       try {
         const { data, error } = await supabase
@@ -130,7 +66,7 @@ export const createSubscriptionPlanService = () => {
           price: Number(data.price),
           interval: data.interval as SubscriptionInterval,
           features: data.features,
-          is_active: data.is_active,
+          isActive: data.is_active,
           created_at: data.created_at,
           updated_at: data.updated_at
         };
@@ -140,11 +76,25 @@ export const createSubscriptionPlanService = () => {
       }
     },
     
+    /**
+     * Create a new subscription plan
+     */
     create: async (planData: Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, id?: string }> => {
       try {
+        // Convert isActive to is_active for database
+        const dbPlanData = {
+          name: planData.name,
+          code: planData.code,
+          description: planData.description,
+          price: planData.price,
+          interval: planData.interval,
+          features: planData.features,
+          is_active: planData.isActive
+        };
+        
         const { data, error } = await supabase
           .from('subscription_plans')
-          .insert(planData)
+          .insert(dbPlanData)
           .select('id')
           .single();
         
@@ -160,11 +110,22 @@ export const createSubscriptionPlanService = () => {
       }
     },
     
+    /**
+     * Update an existing subscription plan
+     */
     update: async (id: string, planData: Partial<SubscriptionPlan>): Promise<boolean> => {
       try {
+        // Convert isActive to is_active for database if it exists
+        const dbPlanData: any = {...planData};
+        
+        if ('isActive' in planData) {
+          dbPlanData.is_active = planData.isActive;
+          delete dbPlanData.isActive;
+        }
+        
         const { error } = await supabase
           .from('subscription_plans')
-          .update(planData)
+          .update(dbPlanData)
           .eq('id', id);
         
         if (error) {
@@ -179,9 +140,12 @@ export const createSubscriptionPlanService = () => {
       }
     },
     
+    /**
+     * Soft delete a subscription plan by setting is_active to false
+     */
     delete: async (id: string): Promise<boolean> => {
       try {
-        // Suppression logique
+        // Logical deletion
         const { error } = await supabase
           .from('subscription_plans')
           .update({ is_active: false })

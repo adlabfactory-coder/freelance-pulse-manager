@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { useServices } from './services/hooks/useServices';
 import { toast } from 'sonner';
 
 const ServicesSettings: React.FC = () => {
-  const { services, loading, addService, updateService, deleteService } = useServices();
+  const { services, loading, error, getServices, addService, editService, removeService } = useServices();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -20,7 +19,7 @@ const ServicesSettings: React.FC = () => {
     setIsSaving(true);
     try {
       if (service.id) {
-        await updateService(service);
+        await editService(service);
         toast.success("Service mis à jour avec succès");
       } else {
         await addService(service);
@@ -38,7 +37,7 @@ const ServicesSettings: React.FC = () => {
 
   const handleDeleteService = async (service: Service) => {
     try {
-      await deleteService(service.id);
+      await removeService(service.id);
       toast.success("Service supprimé avec succès");
     } catch (error) {
       toast.error("Une erreur est survenue lors de la suppression du service");
