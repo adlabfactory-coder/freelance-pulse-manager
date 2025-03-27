@@ -39,8 +39,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     if (onSubmit) {
       onSubmit();
     } else {
-      // Passer l'événement à la fonction handleSubmit du formulaire
-      await form.handleSubmit(e);
+      // Passer les données correctes à la fonction handleSubmit du formulaire
+      const quoteData = form.quoteData;
+      await form.handleSubmit(quoteData, form.items);
     }
   };
 

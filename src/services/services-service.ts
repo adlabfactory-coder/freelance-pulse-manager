@@ -1,100 +1,151 @@
 
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-client";
 import { Service, ServiceType } from "@/types/service";
+import { toast } from "sonner";
 
-export const fetchServices = async (): Promise<Service[]> => {
+// Normaliser les données de service reçues de la base de données
+const normalizeService = (serviceData: any): Service => {
+  return {
+    id: serviceData.id,
+    name: serviceData.name,
+    description: serviceData.description || "",
+    price: Number(serviceData.price),
+    type: serviceData.type || ServiceType.SERVICE,
+    isActive: serviceData.is_active !== undefined ? serviceData.is_active : true,
+    is_active: serviceData.is_active !== undefined ? serviceData.is_active : true, // Garder les deux formats pour compatibilité
+    created_at: serviceData.created_at,
+    updated_at: serviceData.updated_at
+  };
+};
+
+// Récupérer tous les services
+export const fetchServices = async (onlyActive = true): Promise<Service[]> => {
   try {
-    const { data, error } = await supabase
-      .from('services')
-      .select('*')
-      .eq('is_active', true);
-
+    let query = supabase.from('services').select('*');
+    
+    if (onlyActive) {
+      query = query.eq('is_active', true);
+    }
+    
+    const { data, error } = await query;
+    
     if (error) {
       console.error('Erreur lors de la récupération des services:', error);
-      return [];
+      throw error;
     }
-
-    return data.map(service => ({
-      id: service.id,
-      name: service.name,
-      description: service.description || '',
-      type: service.type as ServiceType,
-      price: service.price,
-      is_active: service.is_active,
-      isActive: service.is_active // Add isActive property for components expecting it
-    }));
+    
+    return (data || []).map(normalizeService);
   } catch (error) {
     console.error('Erreur lors de la récupération des services:', error);
+    toast.error("Erreur lors de la récupération des services");
     return [];
   }
 };
 
-export const createService = async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<{ success: boolean, serviceId?: string }> => {
+// Récupérer un service par son ID
+export const fetchServiceById = async (id: string): Promise<Service | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error(`Erreur lors de la récupération du service ${id}:`, error);
+      return null;
+    }
+    
+    return normalizeService(data);
+  } catch (error) {
+    console.error(`Erreur lors de la récupération du service ${id}:`, error);
+    toast.error("Erreur lors de la récupération du service");
+    return null;
+  }
+};
+
+// Créer un nouveau service
+export const createService = async (serviceData: Omit<Service, 'id'>): Promise<Service | null> => {
   try {
     const { data, error } = await supabase
       .from('services')
       .insert({
-        name: service.name,
-        description: service.description,
-        type: service.type,
-        price: service.price,
-        is_active: service.is_active !== undefined ? service.is_active : service.isActive
+        name: serviceData.name,
+        description: serviceData.description,
+        price: serviceData.price,
+        type: serviceData.type,
+        is_active: serviceData.isActive !== undefined ? serviceData.isActive : true
       })
       .select()
       .single();
     
     if (error) {
       console.error('Erreur lors de la création du service:', error);
-      return { success: false };
+      toast.error("Erreur lors de la création du service");
+      return null;
     }
     
-    return { success: true, serviceId: data.id };
+    toast.success('Service créé avec succès');
+    return normalizeService(data);
   } catch (error) {
     console.error('Erreur lors de la création du service:', error);
-    return { success: false };
+    toast.error("Erreur lors de la création du service");
+    return null;
   }
 };
 
-export const updateService = async (id: string, service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<boolean> => {
+// Mettre à jour un service existant
+export const updateService = async (id: string, serviceData: Partial<Service>): Promise<Service | null> => {
   try {
-    const { error } = await supabase
+    // Préparer les données pour la mise à jour en s'assurant d'utiliser is_active
+    const updateData: any = {};
+    if (serviceData.name !== undefined) updateData.name = serviceData.name;
+    if (serviceData.description !== undefined) updateData.description = serviceData.description;
+    if (serviceData.price !== undefined) updateData.price = serviceData.price;
+    if (serviceData.type !== undefined) updateData.type = serviceData.type;
+    if (serviceData.isActive !== undefined) updateData.is_active = serviceData.isActive;
+    
+    const { data, error } = await supabase
       .from('services')
-      .update({
-        name: service.name,
-        description: service.description,
-        type: service.type,
-        price: service.price,
-        is_active: service.is_active !== undefined ? service.is_active : service.isActive
-      })
-      .eq('id', id);
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
     
     if (error) {
-      console.error('Erreur lors de la mise à jour du service:', error);
-      return false;
+      console.error(`Erreur lors de la mise à jour du service ${id}:`, error);
+      toast.error("Erreur lors de la mise à jour du service");
+      return null;
     }
     
-    return true;
+    toast.success('Service mis à jour avec succès');
+    return normalizeService(data);
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du service:', error);
-    return false;
+    console.error(`Erreur lors de la mise à jour du service ${id}:`, error);
+    toast.error("Erreur lors de la mise à jour du service");
+    return null;
   }
 };
 
+// Supprimer un service
 export const deleteService = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('services')
-      .update({ is_active: false })
+      .delete()
       .eq('id', id);
     
     if (error) {
-      console.error('Erreur lors de la suppression du service:', error);
+      console.error(`Erreur lors de la suppression du service ${id}:`, error);
+      toast.error("Erreur lors de la suppression du service");
       return false;
     }
     
+    toast.success('Service supprimé avec succès');
     return true;
   } catch (error) {
-    console.error('Erreur lors de la suppression du service:', error);
+    console.error(`Erreur lors de la suppression du service ${id}:`, error);
+    toast.error("Erreur lors de la suppression du service");
     return false;
   }
 };
