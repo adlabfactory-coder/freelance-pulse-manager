@@ -47,7 +47,7 @@ const QuoteTableRow: React.FC<QuoteTableRowProps> = ({
           status={quote.status}
           canEdit={canEdit(quote)}
           onStatusChange={onStatusChange}
-          onEditClick={onEditClick}
+          onEditClick={() => onEditClick(quote.id)}
         />
       </TableCell>
     </TableRow>
