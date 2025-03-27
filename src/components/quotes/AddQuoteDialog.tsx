@@ -5,7 +5,7 @@ import QuoteDialogContent from "./form/QuoteDialogContent";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
-import { useQuoteForm } from "../hooks/quotes/useQuoteForm";
+import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
 
 interface AddQuoteDialogProps {
   open: boolean;
