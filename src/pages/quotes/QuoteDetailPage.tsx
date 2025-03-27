@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ interface Quote {
   items: QuoteItem[];
   totalAmount: number;
   notes?: string;
+  folder?: string;
 }
 
 // Mock quote data
@@ -64,7 +64,8 @@ const mockQuote: Quote = {
     }
   ],
   totalAmount: 3870,
-  notes: "Ce devis inclut l'accès à tous les services premium pendant 12 mois ainsi que 10 heures de support technique."
+  notes: "Ce devis inclut l'accès à tous les services premium pendant 12 mois ainsi que 10 heures de support technique.",
+  folder: "important"
 };
 
 // Helper functions for quote status
@@ -109,6 +110,16 @@ const StatusIcon = ({ status }: { status: QuoteStatus }) => {
     default:
       return <Clock className="h-4 w-4" />;
   }
+};
+
+const displayFolder = (folder: string) => {
+  const folderLabels: Record<string, string> = {
+    'general': 'Général',
+    'important': 'Important',
+    'archive': 'Archive'
+  };
+  
+  return folderLabels[folder] || folder;
 };
 
 const QuoteDetailPage: React.FC = () => {
@@ -239,6 +250,14 @@ const QuoteDetailPage: React.FC = () => {
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4 mr-2" />
                     Valable jusqu'au {quote.validUntil.toLocaleDateString()}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2">Dossier</h3>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <FolderIcon className="h-4 w-4 mr-2" />
+                    {displayFolder(quote.folder || 'general')}
                   </div>
                 </div>
 

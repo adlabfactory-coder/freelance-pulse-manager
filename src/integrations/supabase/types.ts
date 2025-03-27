@@ -384,6 +384,7 @@ export type Database = {
           contactId: string
           createdAt: string | null
           deleted_at: string | null
+          folder: string | null
           freelancerId: string
           id: string
           notes: string | null
@@ -396,6 +397,7 @@ export type Database = {
           contactId: string
           createdAt?: string | null
           deleted_at?: string | null
+          folder?: string | null
           freelancerId: string
           id?: string
           notes?: string | null
@@ -408,6 +410,7 @@ export type Database = {
           contactId?: string
           createdAt?: string | null
           deleted_at?: string | null
+          folder?: string | null
           freelancerId?: string
           id?: string
           notes?: string | null

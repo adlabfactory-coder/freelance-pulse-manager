@@ -28,6 +28,7 @@ export const mapDatabaseQuoteToQuote = (dbQuote: any): Quote => {
     notes: dbQuote.notes,
     createdAt: dbQuote.createdAt ? new Date(dbQuote.createdAt) : new Date(),
     updatedAt: dbQuote.updatedAt ? new Date(dbQuote.updatedAt) : new Date(),
+    folder: dbQuote.folder || 'general',
     items: [] // Items are fetched separately if needed
   };
 };

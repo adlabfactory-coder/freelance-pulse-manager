@@ -33,6 +33,7 @@ export const useQuoteForm = ({
   );
   const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
   const [notes, setNotes] = useState<string>("");
+  const [folder, setFolder] = useState<string>("general");
 
   // Use custom hooks
   const { 
@@ -72,6 +73,7 @@ export const useQuoteForm = ({
         setValidUntil(quote.validUntil);
         setStatus(quote.status);
         setNotes(quote.notes || "");
+        setFolder(quote.folder || "general");
         resetItems(quote.items);
       }
     } catch (error) {
@@ -106,10 +108,11 @@ export const useQuoteForm = ({
       validUntil,
       status,
       notes,
+      folder,
       totalAmount,
       items: validItems
     };
-  }, [contactId, freelancerId, validUntil, status, notes, totalAmount, items]);
+  }, [contactId, freelancerId, validUntil, status, notes, folder, totalAmount, items]);
 
   // Handle form submission
   const submitForm = useCallback(async (e?: React.FormEvent) => {
@@ -127,6 +130,7 @@ export const useQuoteForm = ({
     if (data.validUntil) setValidUntil(data.validUntil);
     if (data.status) setStatus(data.status);
     if (data.notes !== undefined) setNotes(data.notes);
+    if (data.folder) setFolder(data.folder);
     if (data.items) resetItems(data.items);
   }, [resetItems]);
 
@@ -137,6 +141,7 @@ export const useQuoteForm = ({
     validUntil,
     status,
     notes,
+    folder,
     totalAmount,
     items: items
   };
@@ -160,6 +165,8 @@ export const useQuoteForm = ({
     setStatus,
     notes,
     setNotes,
+    folder,
+    setFolder,
     
     // Items management
     items,

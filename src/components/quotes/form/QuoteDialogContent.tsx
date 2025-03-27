@@ -1,19 +1,20 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Quote, QuoteItem } from "@/types";
 import { Contact } from "@/services/contacts/types";
-import { QuoteItem, QuoteStatus, Quote } from "@/types";
-import { Service } from "@/types/services";
 import { User } from "@/types";
-import ClientSelector from "./ClientSelector";
-import FreelancerSelector from "./FreelancerSelector";
-import QuoteItemForm from "./QuoteItemForm";
-import QuoteItemsList from "./QuoteItemsList";
-import QuoteNotesField from "./QuoteNotesField";
-import StatusSelector from "./StatusSelector";
-import QuoteValidityDatePicker from "./QuoteValidityDatePicker";
-import { formatCurrency } from "@/utils/format";
+import { Service } from "@/types/services";
+import QuoteClientSection from "./sections/QuoteClientSection";
+import QuoteFreelancerSection from "./sections/QuoteFreelancerSection";
+import QuoteDetailsSection from "./sections/QuoteDetailsSection";
+import QuoteItemsSection from "./sections/QuoteItemsSection";
+import QuoteNewItemSection from "./sections/QuoteNewItemSection";
+import FolderSelect from "../FolderSelect";
+import { Label } from "@/components/ui/label";
 
 interface QuoteDialogContentProps {
   loading: boolean;
@@ -50,97 +51,110 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Chargement des données...</span>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-40 w-full" />
       </div>
     );
   }
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit();
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ClientSelector
+    <form onSubmit={handleFormSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <QuoteClientSection
+          selectedContactId={quoteData.contactId || ""}
           contacts={contacts}
-          contactId={quoteData.contactId}
-          onSelect={(contactId) => onQuoteDataChange({ ...quoteData, contactId })}
+          onContactChange={(contactId) =>
+            onQuoteDataChange({ ...quoteData, contactId })
+          }
         />
-        
-        <FreelancerSelector
+
+        <QuoteFreelancerSection
+          selectedFreelancerId={quoteData.freelancerId || ""}
           freelancers={freelancers}
-          freelancerId={quoteData.freelancerId}
-          onSelect={(freelancerId) => onQuoteDataChange({ ...quoteData, freelancerId })}
+          onFreelancerChange={(freelancerId) =>
+            onQuoteDataChange({ ...quoteData, freelancerId })
+          }
         />
       </div>
-      
-      {/* N'afficher le sélecteur de statut et la date de validité que lors de l'édition */}
-      {isEditing && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <StatusSelector
-            status={quoteData.status as QuoteStatus}
-            onSelect={(status) => onQuoteDataChange({ ...quoteData, status })}
-          />
-          
-          <QuoteValidityDatePicker
-            date={quoteData.validUntil}
-            onSelect={(validUntil) => onQuoteDataChange({ ...quoteData, validUntil })}
-          />
-        </div>
-      )}
-      
-      <div className="border rounded-md p-4">
-        <h3 className="text-lg font-medium mb-4">Articles</h3>
-        
-        <QuoteItemsList 
-          items={quoteData.items || []} 
-          totalAmount={quoteData.totalAmount}
-          onRemoveItem={onRemoveItem}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <QuoteDetailsSection
+          validUntil={quoteData.validUntil || new Date()}
+          status={quoteData.status || "draft"}
+          onValidUntilChange={(validUntil) =>
+            onQuoteDataChange({ ...quoteData, validUntil })
+          }
+          onStatusChange={(status) =>
+            onQuoteDataChange({ ...quoteData, status })
+          }
+          isEditing={isEditing}
         />
         
-        <div className="mt-4 border-t pt-4">
-          <h4 className="font-medium mb-2">Ajouter un article</h4>
-          <QuoteItemForm
+        <div className="space-y-2">
+          <Label htmlFor="folder">Dossier</Label>
+          <FolderSelect
+            value={quoteData.folder || "general"}
+            onChange={(folder) => onQuoteDataChange({ ...quoteData, folder })}
+            folders={['general', 'important', 'archive']}
+            placeholder="Choisir un dossier"
+          />
+        </div>
+      </div>
+
+      <Separator className="my-6" />
+
+      <Card>
+        <CardContent className="pt-6">
+          <QuoteItemsSection
+            items={quoteData.items || []}
+            onRemoveItem={onRemoveItem}
+            totalAmount={quoteData.totalAmount || 0}
+          />
+
+          <Separator className="my-4" />
+
+          <QuoteNewItemSection
             currentItem={currentItem}
             services={services}
-            onChange={onCurrentItemChange}
+            onCurrentItemChange={onCurrentItemChange}
             onAddItem={onAddItem}
           />
-        </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Notes</label>
+        <textarea
+          value={quoteData.notes || ""}
+          onChange={(e) =>
+            onQuoteDataChange({ ...quoteData, notes: e.target.value })
+          }
+          className="w-full h-24 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+          placeholder="Notes ou informations complémentaires..."
+        />
       </div>
-      
-      <QuoteNotesField
-        notes={quoteData.notes}
-        onChange={(notes) => onQuoteDataChange({ ...quoteData, notes })}
-      />
-      
-      <div className="flex justify-between border-t pt-4">
-        <div>
-          {quoteData.totalAmount !== undefined && (
-            <div className="font-bold text-lg">
-              Total: {formatCurrency(quoteData.totalAmount)}
-            </div>
-          )}
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={onCancel}>
-            Annuler
-          </Button>
-          <Button 
-            onClick={onSubmit}
-            disabled={isSubmitting || !quoteData.contactId || !quoteData.freelancerId || !(quoteData.items && quoteData.items.length > 0)}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Traitement en cours...
-              </>
-            ) : (
-              isEditing ? "Mettre à jour" : "Créer le devis"
-            )}
-          </Button>
-        </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annuler
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting
+            ? "Enregistrement..."
+            : isEditing
+            ? "Mettre à jour"
+            : "Créer le devis"}
+        </Button>
       </div>
-    </div>
+    </form>
   );
 };
 

@@ -1,145 +1,167 @@
 
-import React, { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { fetchQuotes } from "@/services/quote-service";
-import { Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { Quote } from "@/types";
-import { formatCurrency, formatDateToFrench } from "@/utils/format";
-import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Eye, FileText, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@/utils/format";
 
-const FreelancerQuotesList: React.FC = () => {
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [loading, setLoading] = useState(true);
+interface FreelancerQuotesListProps {
+  folderFilter?: string;
+}
+
+const FreelancerQuotesList: React.FC<FreelancerQuotesListProps> = ({ folderFilter = 'all' }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const loadQuotes = async () => {
+      if (!user?.id) return;
+      
       setLoading(true);
       try {
-        const fetchedQuotes = await fetchQuotes();
-        const freelancerQuotes = fetchedQuotes.filter(
-          quote => quote.freelancerId === user?.id
-        );
+        let query = supabase
+          .from('quotes')
+          .select('*')
+          .eq('freelancerId', user.id)
+          .is('deleted_at', null);
         
-        // Trier par client
-        const sortedQuotes = freelancerQuotes.sort((a, b) => {
-          // D'abord trier par contactId
-          if (a.contactId < b.contactId) return -1;
-          if (a.contactId > b.contactId) return 1;
-          
-          // Ensuite par date de création (la plus récente d'abord)
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
+        // Appliquer le filtre par dossier si ce n'est pas 'all'
+        if (folderFilter && folderFilter !== 'all') {
+          query = query.eq('folder', folderFilter);
+        }
         
-        setQuotes(sortedQuotes);
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Erreur lors du chargement des devis:', error);
+          return;
+        }
+        
+        setQuotes(data as Quote[]);
       } catch (error) {
-        console.error("Error loading quotes:", error);
+        console.error('Erreur lors du chargement des devis:', error);
       } finally {
         setLoading(false);
       }
     };
     
-    if (user) {
-      loadQuotes();
-    }
-  }, [user]);
-  
-  // Grouper les devis par client
-  const quotesByClient: Record<string, Quote[]> = {};
-  quotes.forEach(quote => {
-    if (!quotesByClient[quote.contactId]) {
-      quotesByClient[quote.contactId] = [];
-    }
-    quotesByClient[quote.contactId].push(quote);
-  });
-  
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Chargement de vos devis...</span>
-      </div>
-    );
-  }
-  
-  if (quotes.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="text-4xl mb-4">📃</div>
-        <h3 className="text-xl font-semibold mb-2">Aucun devis trouvé</h3>
-        <p className="text-muted-foreground">
-          Vous n'avez pas encore créé de devis pour vos clients.
-        </p>
-      </div>
-    );
-  }
-  
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'draft': return "bg-gray-200 text-gray-700";
-      case 'sent': return "bg-blue-100 text-blue-700";
-      case 'accepted': return "bg-green-100 text-green-700";
-      case 'rejected': return "bg-red-100 text-red-700";
-      default: return "bg-gray-100 text-gray-700";
+    loadQuotes();
+  }, [user, folderFilter]);
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return <Badge variant="outline">Brouillon</Badge>;
+      case 'pending':
+        return <Badge variant="secondary">En attente</Badge>;
+      case 'accepted':
+        return <Badge variant="success">Accepté</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive">Rejeté</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
     }
   };
-  
+
+  const handleViewQuote = (quoteId: string) => {
+    navigate(`/quotes/${quoteId}`);
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Mes devis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (quotes.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Mes devis</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold">Aucun devis trouvé</h3>
+            <p className="text-muted-foreground mt-1">
+              {folderFilter !== 'all' 
+                ? `Vous n'avez pas de devis dans le dossier "${folderFilter}".` 
+                : "Vous n'avez pas encore créé de devis."}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {Object.entries(quotesByClient).map(([contactId, clientQuotes]) => {
-        // Obtenir le nom du client à partir du premier devis
-        const contactName = `Client ${contactId}`;
-        
-        return (
-          <Card key={contactId} className="overflow-hidden">
-            <CardHeader className="bg-muted/30">
-              <CardTitle className="text-lg">{contactName}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/20">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-sm font-medium">Date</th>
-                      <th className="px-4 py-2 text-left text-sm font-medium">Montant</th>
-                      <th className="px-4 py-2 text-left text-sm font-medium">Statut</th>
-                      <th className="px-4 py-2 text-left text-sm font-medium">Validité</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clientQuotes.map(quote => (
-                      <tr 
-                        key={quote.id} 
-                        className="border-t cursor-pointer hover:bg-muted/30 transition-colors"
-                        onClick={() => navigate(`/quotes/${quote.id}`)}
-                      >
-                        <td className="px-4 py-2 text-sm">
-                          {formatDateToFrench(new Date(quote.createdAt))}
-                        </td>
-                        <td className="px-4 py-2 text-sm font-medium">
-                          {formatCurrency(quote.totalAmount)}
-                        </td>
-                        <td className="px-4 py-2 text-sm">
-                          <Badge variant="outline" className={getStatusColor(quote.status)}>
-                            {quote.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-2 text-sm">
-                          {formatDateToFrench(new Date(quote.validUntil))}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+    <Card>
+      <CardHeader>
+        <CardTitle>Mes devis</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {quotes.map((quote) => (
+            <div
+              key={quote.id}
+              className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    <span className="font-medium">Devis #{quote.id.substring(0, 8)}</span>
+                    {getStatusBadge(quote.status)}
+                    {quote.folder && quote.folder !== 'general' && (
+                      <Badge variant="outline" className="ml-2">
+                        {quote.folder}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Montant: {formatCurrency(quote.totalAmount)}
+                  </p>
+                  {new Date(quote.validUntil) < new Date() && (
+                    <div className="flex items-center text-xs text-amber-600 mt-1">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Expiré le {new Date(quote.validUntil).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleViewQuote(quote.id)}
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>Voir</span>
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

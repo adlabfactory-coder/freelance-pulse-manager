@@ -63,8 +63,14 @@ export const useQuoteSubmission = ({
       console.log("Données du devis:", quoteData);
       console.log("Éléments du devis préparés:", itemsToCreate);
       
+      // S'assurer que folder est inclus dans les données
+      const quoteDataWithFolder = {
+        ...quoteData,
+        folder: quoteData.folder || 'general'
+      };
+      
       const newQuote = await quotesService.createQuote(
-        quoteData,
+        quoteDataWithFolder,
         itemsToCreate
       );
       
@@ -149,16 +155,15 @@ export const useQuoteSubmission = ({
         .filter(item => item.toDelete && item.id)
         .map(item => item.id as string);
       
+      // S'assurer que folder est inclus dans les données de mise à jour
+      const quoteDataWithFolder = {
+        ...quoteData,
+        folder: quoteData.folder || 'general'
+      };
+      
       const updatedQuote = await quotesService.updateQuote(
         id,
-        {
-          contactId: quoteData.contactId,
-          freelancerId: quoteData.freelancerId,
-          validUntil: quoteData.validUntil,
-          status: quoteData.status,
-          notes: quoteData.notes,
-          totalAmount: quoteData.totalAmount
-        },
+        quoteDataWithFolder,
         {
           add: itemsToAdd,
           update: itemsToUpdate,

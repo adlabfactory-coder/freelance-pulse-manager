@@ -11,6 +11,8 @@ import QuotesTable from "@/components/quotes/QuotesTable";
 import FreelancerQuotesList from "@/components/quotes/FreelancerQuotesList";
 import { useAuth } from "@/hooks/use-auth";
 import AppointmentsListSection from "@/components/quotes/AppointmentsListSection";
+import QuoteFolderFilter from "@/components/quotes/QuoteFolderFilter";
+import useFolderFilter from "@/components/quotes/hooks/useFolderFilter";
 
 const Quotes: React.FC = () => {
   const { toast } = useToast();
@@ -20,6 +22,7 @@ const Quotes: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const { selectedFolder, setSelectedFolder } = useFolderFilter();
   
   const loadQuotes = async () => {
     setLoading(true);
@@ -49,14 +52,16 @@ const Quotes: React.FC = () => {
   }, [loadAttempt]);
   
   const filteredQuotes = quotes.filter(quote => {
-    if (!searchTerm) return true;
+    // Filtrer par terme de recherche
+    const matchesSearch = !searchTerm || 
+      (quote.contactId?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (quote.freelancerId?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (quote.status.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const searchTermLower = searchTerm.toLowerCase();
-    return (
-      (quote.contactId?.toLowerCase().includes(searchTermLower)) ||
-      (quote.freelancerId?.toLowerCase().includes(searchTermLower)) ||
-      (quote.status.toLowerCase().includes(searchTermLower))
-    );
+    // Filtrer par dossier
+    const matchesFolder = selectedFolder === 'all' || quote.folder === selectedFolder;
+    
+    return matchesSearch && matchesFolder;
   });
 
   const handleAddClick = () => {
@@ -79,7 +84,16 @@ const Quotes: React.FC = () => {
       <TooltipProvider>
         <div className="space-y-6">
           <QuotesHeader onAddClick={handleAddClick} />
-          <FreelancerQuotesList />
+          
+          <div className="bg-white rounded-md shadow p-4">
+            <h3 className="text-lg font-medium mb-3">Filtrer par dossier</h3>
+            <QuoteFolderFilter 
+              selectedFolder={selectedFolder}
+              onFolderChange={setSelectedFolder}
+            />
+          </div>
+          
+          <FreelancerQuotesList folderFilter={selectedFolder} />
           <AppointmentsListSection />
           <AddQuoteDialog 
             open={addDialogOpen} 
@@ -96,6 +110,14 @@ const Quotes: React.FC = () => {
     <TooltipProvider>
       <div className="space-y-6">
         <QuotesHeader onAddClick={handleAddClick} />
+        
+        <div className="bg-white rounded-md shadow p-4">
+          <h3 className="text-lg font-medium mb-3">Filtrer par dossier</h3>
+          <QuoteFolderFilter 
+            selectedFolder={selectedFolder}
+            onFolderChange={setSelectedFolder}
+          />
+        </div>
         
         <QuotesToolbar 
           searchTerm={searchTerm}

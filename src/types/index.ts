@@ -1,51 +1,9 @@
-import { ContactStatus as ContactStatusEnum } from "@/types/database/enums";
-import { Commission, CommissionStatus, CommissionTier } from "./commissions";
-import { Service } from "./services";
-
 export enum UserRole {
-  ADMIN = "admin",
   SUPER_ADMIN = "super_admin",
+  ADMIN = "admin",
   FREELANCER = "freelancer",
-  ACCOUNT_MANAGER = "account_manager"
-}
-
-export enum QuoteStatus {
-  DRAFT = "draft",
-  SENT = "sent",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  EXPIRED = "expired"
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  PENDING = "pending",
-  CANCELLED = "cancelled",
-  EXPIRED = "expired",
-  TRIAL = "trial"
-}
-
-export enum SubscriptionInterval {
-  MONTHLY = "monthly",
-  QUARTERLY = "quarterly",
-  BIANNUAL = "biannual",
-  ANNUAL = "annual",
-  YEARLY = "yearly" // Alias pour ANNUAL
-}
-
-export enum AppointmentStatus {
-  SCHEDULED = "scheduled",
-  COMPLETED = "completed",
-  CANCELLED = "cancelled",
-  PENDING = "pending",
-  NO_SHOW = "no_show"
-}
-
-export enum ServiceType {
-  SERVICE = "service",
-  PRODUCT = "product",
-  SUBSCRIPTION = "subscription"
+  ACCOUNT_MANAGER = "account_manager",
+  CLIENT = "client"
 }
 
 export interface User {
@@ -54,39 +12,62 @@ export interface User {
   email: string;
   role: UserRole;
   avatar: string | null;
-  supervisor_id?: string;
-  supervisor_name?: string;
+  calendly_url?: string;
+  calendly_enabled?: boolean;
+  calendly_sync_email?: string;
 }
 
-export interface Subscription {
+export interface Appointment {
   id: string;
-  name: string;
-  description: string;
-  price: number;
-  interval: SubscriptionInterval;
-  clientId: string;
-  clientName?: string;
-  freelancerId: string;
-  freelancerName?: string;
-  status: SubscriptionStatus;
-  startDate: Date;
-  endDate?: Date;
-  renewalDate?: Date;
-}
-
-export type { Service };
-
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
+  title: string;
   description: string | null;
-  interval: SubscriptionInterval;
-  price: number;
-  isActive: boolean;
-  code: string; 
-  features: any; // Structure JSON pour les fonctionnalités
-  created_at?: Date;
-  updated_at?: Date;
+  contactId: string;
+  contactName?: string;
+  freelancerId: string;
+  date: string;
+  duration: number;
+  status: AppointmentStatus;
+  location: string | null;
+  notes: string | null;
+  folder?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export enum AppointmentStatus {
+  PENDING = "pending",
+  SCHEDULED = "scheduled",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled"
+}
+
+export const normalizeFreelancerId = (appointment: Appointment) => {
+  return {
+    ...appointment,
+    freelancerId: appointment.freelancerId || 'system'
+  };
+};
+
+export enum QuoteStatus {
+  DRAFT = "draft",
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  EXPIRED = "expired"
+}
+
+export interface Quote {
+  id: string;
+  contactId: string;
+  freelancerId: string;
+  totalAmount: number;
+  validUntil: Date;
+  status: QuoteStatus;
+  notes: string;
+  createdAt: Date;
+  updatedAt: Date;
+  items: QuoteItem[];
+  folder?: string;
 }
 
 export interface QuoteItem {
@@ -100,62 +81,46 @@ export interface QuoteItem {
   serviceId?: string;
 }
 
-export interface Quote {
-  id?: string;
-  contactId: string;
+export interface Subscription {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  interval: string;
+  clientId: string;
   freelancerId: string;
-  totalAmount: number;
-  validUntil: Date;
-  status: QuoteStatus;
-  notes?: string;
-  items: QuoteItem[];
+  status: string;
+  startDate: Date;
+  endDate?: Date;
+  renewalDate?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface NavItem {
-  title: string;
-  href: string;
-  icon?: React.ComponentType<any>;
-  children?: NavItem[];
-  role?: UserRole;
-  disabled?: boolean;  // Added disabled property
+export interface Commission {
+  id: string;
+  freelancerId: string;
+  amount: number;
+  tier: string;
+  subscriptionId?: string;
+  quoteId?: string;
+  periodStart: Date;
+  periodEnd: Date;
+  status: string;
+  paidDate?: Date;
+  createdAt: Date;
 }
 
-export function hasMinimumRole(userRole: UserRole, requiredRole: UserRole): boolean {
-  // Ordre des rôles du plus élevé au plus bas
-  const roles = [
-    UserRole.SUPER_ADMIN,
-    UserRole.ADMIN,
-    UserRole.ACCOUNT_MANAGER,
-    UserRole.FREELANCER
-  ];
-  
-  const userRoleIndex = roles.indexOf(userRole);
-  const requiredRoleIndex = roles.indexOf(requiredRole);
-  
-  // Plus l'index est bas, plus le rôle est élevé
-  return userRoleIndex <= requiredRoleIndex && userRoleIndex !== -1 && requiredRoleIndex !== -1;
+export interface CommissionRule {
+  id: string;
+  tier: string;
+  minContracts: number;
+  percentage: number;
 }
 
-export interface Contact {
+export interface Service {
   id: string;
   name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  address?: string;
-  notes?: string;
-  status: ContactStatusEnum;
-  createdAt: string;
-  updatedAt: string;
-  assignedTo?: string;
-  subscriptionPlanId?: string;
+  description: string;
+  price: number;
 }
-
-export type { ContactStatusEnum as ContactStatus };
-export type { Commission, CommissionStatus, CommissionTier };
-
-// Export API Keys types
-export * from './api-keys';
