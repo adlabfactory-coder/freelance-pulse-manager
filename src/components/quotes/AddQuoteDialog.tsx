@@ -5,6 +5,7 @@ import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
 import QuoteForm from "./form/QuoteForm";
 import { toast } from "sonner";
 import QuoteDialogContent from "./form/QuoteDialogContent";
+import { QuoteItem } from "@/types";
 
 interface AddQuoteDialogProps {
   open: boolean;
@@ -73,6 +74,43 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     }
   }, [open, quoteForm.loadData]);
 
+  // Convertir les items de type Partial<QuoteItem> en QuoteItem complet pour satisfaire TypeScript
+  const safeItems: QuoteItem[] = quoteForm.items 
+    ? quoteForm.items
+        .filter(item => 
+          item.description !== undefined && 
+          item.quantity !== undefined && 
+          item.unitPrice !== undefined
+        )
+        .map(item => ({
+          id: item.id || "",
+          quoteId: item.quoteId || "",
+          description: item.description || "",
+          quantity: item.quantity || 0,
+          unitPrice: item.unitPrice || 0,
+          tax: item.tax || 0,
+          discount: item.discount || 0,
+          serviceId: item.serviceId
+        }))
+    : [];
+
+  // Créer une fonction wrapper qui gère l'appel à handleSubmit correctement
+  const handleSubmitWrapper = () => {
+    // Récupérer les données du formulaire
+    const quoteData = {
+      contactId: quoteForm.contactId,
+      freelancerId: quoteForm.freelancerId,
+      validUntil: quoteForm.validUntil,
+      status: quoteForm.status,
+      notes: quoteForm.notes || "",
+      folder: quoteForm.folder || 'general',
+      totalAmount: quoteForm.totalAmount || 0
+    };
+    
+    // Appeler handleSubmit avec les données du formulaire
+    quoteForm.handleSubmit(quoteData, safeItems);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -104,7 +142,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
               validUntil: quoteForm.validUntil,
               status: quoteForm.status,
               notes: quoteForm.notes,
-              items: quoteForm.items
+              items: safeItems  // Utiliser la version sécurisée des items
             }}
             currentItem={quoteForm.currentItem || {}}
             contacts={quoteForm.contacts || []}
@@ -120,7 +158,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
             onCurrentItemChange={quoteForm.setCurrentItem}
             onAddItem={quoteForm.handleAddItem}
             onRemoveItem={quoteForm.handleRemoveItem}
-            onSubmit={quoteForm.handleSubmit}
+            onSubmit={handleSubmitWrapper}  // Utiliser le wrapper au lieu de la méthode directe
             onCancel={() => onOpenChange(false)}
           />
         )}
