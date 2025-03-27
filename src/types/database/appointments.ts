@@ -8,7 +8,7 @@ export interface AppointmentsTable {
       title: string
       description: string | null
       contactId: string
-      freelancerId?: string // Support à l'ancien champ
+      freelancerId?: string // Support pour la compatibilité avec l'application
       freelancerid: string  // Champ actuel dans la base de données
       date: string
       duration: number
@@ -24,8 +24,8 @@ export interface AppointmentsTable {
       title: string
       description?: string | null
       contactId: string
-      freelancerId?: string // Support à l'ancien champ
-      freelancerid: string  // Champ actuel dans la base de données
+      freelancerId?: string // Support à la compatibilité avec l'application
+      freelancerid?: string  // Champ actuel dans la base de données
       date: string
       duration: number
       status: string
@@ -40,7 +40,7 @@ export interface AppointmentsTable {
       title?: string
       description?: string | null
       contactId?: string
-      freelancerId?: string // Support à l'ancien champ
+      freelancerId?: string // Support à la compatibilité avec l'application
       freelancerid?: string // Champ actuel dans la base de données
       date?: string
       duration?: number

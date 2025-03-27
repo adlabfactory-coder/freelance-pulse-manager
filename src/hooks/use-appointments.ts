@@ -62,6 +62,29 @@ export function useAppointments(contactId?: string) {
         }
       }
       
+      // Récupérer les noms des freelancers aussi
+      const freelancerIds = [...new Set(normalizedData.map(app => app.freelancerId).filter(Boolean))];
+      if (freelancerIds.length > 0) {
+        const { data: freelancersData } = await supabase
+          .from('users')
+          .select('id, name')
+          .in('id', freelancerIds);
+          
+        if (freelancersData) {
+          // Créer un map des IDs de freelancers vers leurs noms
+          const freelancersMap = freelancersData.reduce((map, freelancer) => {
+            map[freelancer.id] = freelancer.name;
+            return map;
+          }, {} as Record<string, string>);
+          
+          // Ajouter le nom du freelancer à chaque rendez-vous
+          normalizedData = normalizedData.map(appointment => ({
+            ...appointment,
+            freelancerName: appointment.freelancerId ? (freelancersMap[appointment.freelancerId] || 'Freelancer inconnu') : 'Non assigné'
+          }));
+        }
+      }
+      
       setAppointments(normalizedData);
     } catch (err: any) {
       const errorMsg = err?.message || 'Erreur lors du chargement des rendez-vous';

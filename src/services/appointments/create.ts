@@ -8,10 +8,10 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
   try {
     console.log("Création d'un rendez-vous avec les données:", appointmentData);
 
-    // S'assurer que freelancerid est utilisé correctement (et non freelancerId)
+    // S'assurer que freelancerid est utilisé correctement pour la base de données
     const dataToSend = {
       ...appointmentData,
-      // Si freelancerId est présent, le copier vers freelancerid
+      // Si freelancerId est présent, le copier vers freelancerid pour la DB
       freelancerid: appointmentData.freelancerId
     };
 
@@ -32,15 +32,17 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
 
     console.log("Rendez-vous créé avec succès:", data);
     
-    // Normaliser la réponse en convertissant freelancerid en freelancerId
-    if (data && data.freelancerid) {
-      (data as any).freelancerId = data.freelancerid;
-    }
+    // Normaliser la réponse pour l'application
+    const normalizedData = {
+      ...data,
+      // Assurer que freelancerId est présent pour la cohérence interne
+      freelancerId: data.freelancerid
+    };
     
     // Déclencher l'événement de création de rendez-vous
     window.dispatchEvent(new CustomEvent('appointment-created'));
     
-    return data;
+    return normalizedData;
   } catch (err) {
     console.error('Erreur inattendue lors de la création du rendez-vous:', err);
     toast.error("Une erreur s'est produite lors de la création du rendez-vous");
@@ -54,10 +56,10 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
     console.log("Création d'un rendez-vous auto-assigné avec les données:", appointmentData);
     
     // S'assurer que freelancerId est null pour l'auto-assignation
+    // mais utiliser freelancerid pour la base de données
     const cleanedData = {
       ...appointmentData,
       status: AppointmentStatus.PENDING,
-      // Utiliser freelancerid au lieu de freelancerId
       freelancerid: null
     };
     
@@ -78,10 +80,17 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
 
     console.log("Rendez-vous auto-assigné créé avec succès:", data);
     
+    // Normaliser la réponse pour l'application
+    const normalizedData = {
+      ...data,
+      // Pour garder la cohérence dans l'application
+      freelancerId: null
+    };
+    
     // Déclencher l'événement de création de rendez-vous
     window.dispatchEvent(new CustomEvent('appointment-created'));
     
-    return data;
+    return normalizedData;
   } catch (err) {
     console.error('Erreur inattendue lors de la création du rendez-vous auto-assigné:', err);
     toast.error("Une erreur s'est produite lors de la création du rendez-vous");

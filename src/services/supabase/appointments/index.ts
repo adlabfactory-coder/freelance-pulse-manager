@@ -22,7 +22,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
-      .eq('freelancerid', freelancerId)  // Utiliser le nom exact de la colonne
+      .eq('freelancerid', freelancerId)  // Utiliser le nom exact de la colonne dans la DB
       .is('deleted_at', null)
       .order('date', { ascending: true });
 
@@ -68,12 +68,12 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
 
   const createAppointment = async (appointmentData) => {
     try {
-      // S'assurer que nous utilisons freelancerid et non freelancerId
+      // S'assurer que nous utilisons freelancerid pour la base de données
       const dataToSend = { 
         ...appointmentData 
       };
       
-      // Si freelancerId est fourni, le copier vers freelancerid
+      // Si freelancerId est fourni, le copier vers freelancerid pour la DB
       if (appointmentData.freelancerId !== undefined) {
         dataToSend.freelancerid = appointmentData.freelancerId;
         // Supprimer freelancerId pour éviter les conflits
@@ -90,6 +90,11 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
         throw error;
       }
 
+      // Normaliser la réponse pour l'application
+      if (data && data.freelancerid) {
+        data.freelancerId = data.freelancerid;
+      }
+
       return data;
     } catch (err) {
       console.error('Error in createAppointment:', err);
@@ -99,12 +104,12 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
 
   const createAutoAssignAppointment = async (appointmentData) => {
     try {
-      // S'assurer que nous utilisons freelancerid et non freelancerId
+      // S'assurer que nous utilisons freelancerid pour la base de données
       const dataToSend = { 
-        ...appointmentData 
+        ...appointmentData
       };
       
-      // Supprimer freelancerId pour éviter les conflits
+      // Supprimer freelancerId pour la base de données
       if (dataToSend.freelancerId !== undefined) {
         delete dataToSend.freelancerId;
       }
@@ -147,7 +152,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
   };
 
   const updateAppointment = async (appointmentId: string, updateData) => {
-    // Si updateData contient freelancerId, le convertir en freelancerid
+    // Si updateData contient freelancerId, le convertir en freelancerid pour la DB
     const dataToUpdate = { ...updateData };
     if (dataToUpdate.freelancerId !== undefined) {
       dataToUpdate.freelancerid = dataToUpdate.freelancerId;

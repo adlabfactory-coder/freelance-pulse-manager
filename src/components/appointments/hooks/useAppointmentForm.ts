@@ -65,7 +65,7 @@ export const useAppointmentForm = (
       const title = titleOption === 'autre' ? customTitle : titleOptions[titleOption as keyof typeof titleOptions];
       
       // Utiliser l'ID de l'utilisateur connecté pour le freelancerId s'il n'y a pas d'auto-attribution
-      const freelancerId = autoAssign ? null : user?.id || "00000000-0000-0000-0000-000000000000";
+      const freelancerId = autoAssign ? null : user?.id || null;
       
       // Créer l'objet de rendez-vous à envoyer
       const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -75,7 +75,7 @@ export const useAppointmentForm = (
         duration,
         status: AppointmentStatus.SCHEDULED,
         contactId,
-        freelancerId, // Use default ID if not auto-assigning
+        freelancerId: freelancerId as string, // Utiliser freelancerId pour la cohérence de l'application
         location: null,
         notes: null
       };

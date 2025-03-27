@@ -5,7 +5,7 @@ import AppointmentListHeader from "./list/AppointmentListHeader";
 import AppointmentTable from "./list/AppointmentTable";
 import AppointmentEmptyState from "./list/AppointmentEmptyState";
 import AppointmentLoadingSkeleton from "./list/AppointmentLoadingSkeleton";
-import { Appointment } from "@/types/appointment";
+import { Appointment, normalizeFreelancerId } from "@/types/appointment";
 import { useAppointments } from "@/hooks/use-appointments";
 
 interface AppointmentListProps {
@@ -29,11 +29,16 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   const appointments = externalAppointments || hookResult.appointments;
   const loading = externalLoading !== undefined ? externalLoading : hookResult.isLoading;
   
+  // Normaliser les rendez-vous pour s'assurer que freelancerId est toujours présent
+  const normalizedAppointments = React.useMemo(() => {
+    return appointments?.map(normalizeFreelancerId) || [];
+  }, [appointments]);
+  
   // Filtrer les rendez-vous selon les critères de recherche
   const filteredAppointments = React.useMemo(() => {
-    if (!appointments?.length) return [];
+    if (!normalizedAppointments?.length) return [];
     
-    let filtered = [...appointments];
+    let filtered = [...normalizedAppointments];
     
     // Filtrage par statut si nécessaire
     if (statusFilter) {
@@ -51,7 +56,7 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
     }
     
     return filtered;
-  }, [appointments, searchQuery, statusFilter]);
+  }, [normalizedAppointments, searchQuery, statusFilter]);
 
   const hasFilters = Boolean(searchQuery || statusFilter);
 
