@@ -17,6 +17,9 @@ export interface Appointment {
   contactName?: string;
   freelancerName?: string;
   currentUserId?: string;
+  
+  // Support pour la propriété freelancerid (legacy de la base de données)
+  freelancerid?: string;
 }
 
 // Type pour les statuts de rendez-vous venant de la base de données

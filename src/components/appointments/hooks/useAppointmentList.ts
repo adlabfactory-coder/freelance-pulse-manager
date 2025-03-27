@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Appointment } from "@/types/appointment";
 import { fetchAppointments } from "@/services/appointments";
@@ -33,11 +32,10 @@ export const useAppointmentList = ({
         
         // Normaliser les noms de champs pour s'assurer que freelancerId est toujours avec I majuscule
         const normalizedAppointments = allAppointments.map(app => {
+          const appointment = { ...app } as Appointment;
           // Si l'API renvoie freelancerid (avec i minuscule), le normaliser en freelancerId
-          const appointment = { ...app };
-          if ('freelancerid' in appointment && !('freelancerId' in appointment)) {
-            appointment.freelancerId = appointment.freelancerid;
-            delete appointment.freelancerid;
+          if (app.freelancerid && !app.freelancerId) {
+            appointment.freelancerId = app.freelancerid;
           }
           return appointment;
         });

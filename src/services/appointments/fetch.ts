@@ -17,18 +17,17 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
     // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
     const normalizedData = (data || []).map(item => {
       // Création d'un nouvel objet avec les propriétés normalisées
-      const appointment: any = {
+      const appointment = {
         ...item,
         status: item.status as Appointment['status']
-      };
+      } as Appointment;
       
       // Normaliser freelancerid en freelancerId si nécessaire
-      if ('freelancerid' in item && !('freelancerId' in item)) {
+      if (item.freelancerid && !item.freelancerId) {
         appointment.freelancerId = item.freelancerid;
-        delete appointment.freelancerid;
       }
       
-      return appointment as Appointment;
+      return appointment;
     });
 
     return normalizedData;
@@ -55,17 +54,16 @@ export const fetchAppointmentById = async (id: string): Promise<Appointment | nu
     if (!data) return null;
     
     // Normaliser freelancerid en freelancerId si nécessaire
-    const appointment: any = {
+    const appointment = {
       ...data,
       status: data.status as Appointment['status']
-    };
+    } as Appointment;
     
-    if ('freelancerid' in data && !('freelancerId' in data)) {
+    if (data.freelancerid && !data.freelancerId) {
       appointment.freelancerId = data.freelancerid;
-      delete appointment.freelancerid;
     }
     
-    return appointment as Appointment;
+    return appointment;
   } catch (error) {
     console.error('Unexpected error fetching appointment by ID:', error);
     return null;

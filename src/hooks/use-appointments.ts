@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { appointmentsService } from '@/services/supabase/appointments';
 import { Appointment, AppointmentStatus } from '@/types/appointment';
@@ -31,15 +30,14 @@ export function useAppointments(contactId?: string) {
       
       // Normaliser les données pour s'assurer que freelancerId est toujours avec I majuscule
       const normalizedData = data.map(item => {
-        const appointment: any = { ...item };
+        const appointment = { ...item } as Appointment;
         
         // Normaliser freelancerid en freelancerId si nécessaire
-        if ('freelancerid' in item && !('freelancerId' in item)) {
+        if (item.freelancerid && !item.freelancerId) {
           appointment.freelancerId = item.freelancerid;
-          delete appointment.freelancerid;
         }
         
-        return appointment as Appointment;
+        return appointment;
       });
       
       setAppointments(normalizedData);
