@@ -38,8 +38,8 @@ export const createAppointment = async (appointmentData: AppointmentCreateData):
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: appointmentData.status || 'scheduled',
-        contactId: appointmentData.contact_id,  // Utiliser contactId avec I majuscule comme dans la DB
-        freelancerid: appointmentData.freelancer_id,  // Garder freelancerid en minuscules comme dans la DB
+        contactId: appointmentData.contact_id,
+        freelancerid: appointmentData.freelancer_id,
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general'
@@ -82,7 +82,7 @@ export const createAutoAssignAppointment = async (appointmentData: AppointmentCr
         date: appointmentData.date,
         duration: appointmentData.duration || 30,
         status: 'pending',  // Toujours en attente
-        contactId: appointmentData.contact_id,  // Utiliser contactId avec I majuscule comme dans la DB
+        contactId: appointmentData.contact_id,
         location: appointmentData.location || null,
         notes: appointmentData.notes || null,
         folder: appointmentData.folder || 'general',
