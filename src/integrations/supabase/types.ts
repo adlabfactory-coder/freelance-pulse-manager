@@ -610,6 +610,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      add_quote_items: {
+        Args: {
+          items_data: Json[]
+        }
+        Returns: undefined
+      }
       check_table_exists: {
         Args: {
           table_name: string
@@ -632,15 +638,60 @@ export type Database = {
         }
         Returns: Json
       }
+      create_quote: {
+        Args: {
+          quote_data: Json
+        }
+        Returns: Json
+      }
       decline_appointment: {
         Args: {
           appointment_id: string
         }
         Returns: undefined
       }
+      delete_quote: {
+        Args: {
+          quote_id: string
+        }
+        Returns: undefined
+      }
+      delete_quote_items: {
+        Args: {
+          item_ids: string[]
+        }
+        Returns: undefined
+      }
       execute_sql: {
         Args: {
           sql: string
+        }
+        Returns: undefined
+      }
+      quote_id_literal: {
+        Args: {
+          v: string
+        }
+        Returns: string
+      }
+      update_quote: {
+        Args: {
+          quote_id: string
+          quote_updates: Json
+        }
+        Returns: undefined
+      }
+      update_quote_item: {
+        Args: {
+          item_id: string
+          item_updates: Json
+        }
+        Returns: undefined
+      }
+      update_quote_status: {
+        Args: {
+          quote_id: string
+          new_status: string
         }
         Returns: undefined
       }
