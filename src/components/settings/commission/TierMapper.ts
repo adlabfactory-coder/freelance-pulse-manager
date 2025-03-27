@@ -1,88 +1,91 @@
 
-import { CommissionTier } from "@/types/commissions";
+import { CommissionTier, CommissionTierValues } from "@/types/commissions";
 
 /**
- * Convertit une chaîne de tier de la base de données vers l'énumération
- * @param tierString Le tier sous forme de chaîne
- * @returns Le tier sous forme d'énumération
+ * Converts a tier string from the database to the application's tier format
+ * @param tierString The tier as a string
+ * @returns The tier in application format
  */
 export const mapTierToEnum = (tierString: string): string => {
-  if (!tierString) return CommissionTier.TIER_1;
+  if (!tierString) return CommissionTierValues.BRONZE;
 
-  // Conversion en minuscules pour la comparaison
+  // Convert to lowercase for comparison
   const normalizedTier = tierString.toLowerCase();
 
   switch(normalizedTier) {
     case 'bronze':
-      return CommissionTier.TIER_1;
+      return CommissionTierValues.BRONZE;
     case 'silver':
-      return CommissionTier.TIER_2;
+      return CommissionTierValues.SILVER;
     case 'gold':
-      return CommissionTier.TIER_3;
+      return CommissionTierValues.GOLD;
     case 'platinum':
-      return CommissionTier.TIER_4;
+      return CommissionTierValues.PLATINUM;
     default:
-      // Si c'est déjà une valeur d'énumération, la renvoyer telle quelle
-      if (Object.values(CommissionTier).includes(tierString as CommissionTier)) {
+      // If it's already a tier value, return as is
+      if (Object.values(CommissionTierValues).includes(tierString as CommissionTier)) {
         return tierString;
       }
-      console.warn(`Valeur de tier inconnue: ${tierString}, utilisation de TIER_1 par défaut`);
-      return CommissionTier.TIER_1;
+      console.warn(`Unknown tier value: ${tierString}, defaulting to BRONZE`);
+      return CommissionTierValues.BRONZE;
   }
 };
 
 /**
- * Convertit une valeur d'énumération vers une chaîne pour la base de données
- * @param tierEnum Le tier sous forme d'énumération
- * @returns Le tier sous forme de chaîne
+ * Converts an application tier value to a database string
+ * @param tierEnum The tier in application format
+ * @returns The tier as a string for the database
  */
 export const mapEnumToTier = (tierEnum: string): string => {
   if (!tierEnum) return 'bronze';
   
-  // Normalisation du tier
+  // Normalize the tier
   const normalizedTier = tierEnum.toLowerCase();
   
   switch(normalizedTier) {
-    case CommissionTier.TIER_1.toLowerCase():
+    case CommissionTierValues.BRONZE.toLowerCase():
       return 'bronze';
-    case CommissionTier.TIER_2.toLowerCase():
+    case CommissionTierValues.SILVER.toLowerCase():
       return 'silver';
-    case CommissionTier.TIER_3.toLowerCase():
+    case CommissionTierValues.GOLD.toLowerCase():
       return 'gold';
-    case CommissionTier.TIER_4.toLowerCase():
+    case CommissionTierValues.PLATINUM.toLowerCase():
       return 'platinum';
     default:
-      // Si c'est déjà une valeur de base de données, la renvoyer telle quelle en minuscules
+      // If it's already a database value, return as is in lowercase
       return tierEnum.toLowerCase();
   }
 };
 
 /**
- * Obtient le libellé d'affichage d'un tier
- * @param tier Le tier sous forme de chaîne ou d'énumération
- * @returns Le libellé du tier pour l'affichage
+ * Gets the display label for a tier
+ * @param tier The tier as a string
+ * @returns The tier label for display
  */
 export const getTierLabel = (tier: string): string => {
   if (!tier) return 'Bronze';
   
-  // Normalisation du tier
+  // Normalize the tier
   const normalizedTier = typeof tier === 'string' ? tier.toLowerCase() : '';
   
   switch(normalizedTier) {
     case 'bronze':
-    case CommissionTier.TIER_1.toLowerCase():
+    case CommissionTierValues.BRONZE.toLowerCase():
       return 'Bronze';
     case 'silver': 
-    case CommissionTier.TIER_2.toLowerCase():
+    case CommissionTierValues.SILVER.toLowerCase():
       return 'Argent';
     case 'gold':
-    case CommissionTier.TIER_3.toLowerCase():
+    case CommissionTierValues.GOLD.toLowerCase():
       return 'Or';
     case 'platinum':
-    case CommissionTier.TIER_4.toLowerCase():
+    case CommissionTierValues.PLATINUM.toLowerCase():
       return 'Platine';
+    case 'diamond':
+    case CommissionTierValues.DIAMOND.toLowerCase():
+      return 'Diamant';
     default:
-      console.warn(`Libellé de tier inconnu: ${tier}`);
-      return tier || 'Inconnu';
+      console.warn(`Unknown tier label: ${tier}`);
+      return tier || 'Unknown';
   }
 };

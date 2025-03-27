@@ -1,25 +1,29 @@
 
 import { supabase } from '@/lib/supabase-client';
-import { Commission, CommissionRule, CommissionStatus, CommissionTier } from '@/types/commissions';
+import { Commission, CommissionRule, CommissionStatus, CommissionTier, CommissionTierValues } from '@/types/commissions';
 import { User } from '@/types/user';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
+export interface CommissionServiceOptions {
+  client: any;  // Using any to avoid circular dependencies
+}
+
 /**
- * Récupère les commissions pour un utilisateur
+ * Fetches commissions for a user
  */
 export const fetchCommissionsByUserId = async (userId: string): Promise<Commission[]> => {
   try {
-    // Dans une implémentation réelle, nous ferions un appel à Supabase
-    // Pour l'instant, retournons des données simulées
+    // In a real implementation, we would fetch from Supabase
+    // For now, return simulated data
     const today = new Date();
     
-    // Données simulées pour la démonstration
+    // Simulated data for demonstration
     return [
       {
         id: '1',
         freelancerId: userId,
-        tier: 'gold',
+        tier: CommissionTierValues.GOLD,
         amount: 1250.00,
         status: 'paid' as CommissionStatus,
         periodStart: new Date(today.getFullYear(), today.getMonth() - 2, 1),
@@ -32,7 +36,7 @@ export const fetchCommissionsByUserId = async (userId: string): Promise<Commissi
       {
         id: '2',
         freelancerId: userId,
-        tier: 'gold',
+        tier: CommissionTierValues.GOLD,
         amount: 1400.00,
         status: 'pending' as CommissionStatus,
         periodStart: new Date(today.getFullYear(), today.getMonth() - 1, 1),
@@ -44,7 +48,7 @@ export const fetchCommissionsByUserId = async (userId: string): Promise<Commissi
       {
         id: '3',
         freelancerId: userId,
-        tier: 'platinum',
+        tier: CommissionTierValues.PLATINUM,
         amount: 2300.00,
         status: 'pending' as CommissionStatus,
         periodStart: new Date(today.getFullYear(), today.getMonth(), 1),
@@ -55,22 +59,22 @@ export const fetchCommissionsByUserId = async (userId: string): Promise<Commissi
       },
     ];
   } catch (error) {
-    console.error('Erreur lors de la récupération des commissions:', error);
+    console.error('Error fetching commissions:', error);
     return [];
   }
 };
 
 /**
- * Récupère tous les règles de commission
+ * Fetches all commission rules
  */
 export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
   try {
-    // Dans une implémentation réelle, nous ferions un appel à Supabase
-    // Pour l'instant, retournons des données simulées
+    // In a real implementation, we would fetch from Supabase
+    // For now, return simulated data
     return [
       {
         id: '1',
-        tier: 'bronze',
+        tier: CommissionTierValues.BRONZE,
         percentage: 2,
         unit_amount: 0,
         minContracts: 1,
@@ -78,7 +82,7 @@ export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
       },
       {
         id: '2',
-        tier: 'silver',
+        tier: CommissionTierValues.SILVER,
         percentage: 3,
         unit_amount: 0,
         minContracts: 6,
@@ -86,7 +90,7 @@ export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
       },
       {
         id: '3',
-        tier: 'gold',
+        tier: CommissionTierValues.GOLD,
         percentage: 5,
         unit_amount: 100,
         minContracts: 11,
@@ -94,7 +98,7 @@ export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
       },
       {
         id: '4',
-        tier: 'platinum',
+        tier: CommissionTierValues.PLATINUM,
         percentage: 7,
         unit_amount: 250,
         minContracts: 21,
@@ -102,7 +106,7 @@ export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
       },
       {
         id: '5',
-        tier: 'diamond',
+        tier: CommissionTierValues.DIAMOND,
         percentage: 10,
         unit_amount: 500,
         minContracts: 31,
@@ -110,19 +114,106 @@ export const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
       }
     ];
   } catch (error) {
-    console.error('Erreur lors de la récupération des règles de commission:', error);
+    console.error('Error fetching commission rules:', error);
     return [];
   }
 };
 
 /**
- * Formatte la période d'une commission (ex: "Janvier 2023")
+ * Formats a commission's period (e.g. "January 2023")
  */
 export const formatCommissionPeriod = (commission: Commission): string => {
   if (!commission.periodStart || !commission.periodEnd) return '-';
   
   const start = new Date(commission.periodStart);
   
-  // Formater avec date-fns
+  // Format with date-fns
   return format(start, 'MMMM yyyy', { locale: fr });
+};
+
+// Map tier from database
+export const mapTierFromDb = (tierString: string): CommissionTier => {
+  switch (tierString.toLowerCase()) {
+    case 'bronze': return CommissionTierValues.BRONZE;
+    case 'silver': return CommissionTierValues.SILVER;
+    case 'gold': return CommissionTierValues.GOLD;
+    case 'platinum': return CommissionTierValues.PLATINUM;
+    case 'diamond': return CommissionTierValues.DIAMOND;
+    default: return CommissionTierValues.BRONZE;
+  }
+};
+
+// Map tier to database
+export const mapTierToDb = (tier: CommissionTier): string => {
+  return tier.toLowerCase();
+};
+
+// Map commission from database
+export const mapCommissionFromDb = (dbRecord: any): Commission => {
+  return {
+    id: dbRecord.id,
+    freelancerId: dbRecord.freelancerId,
+    tier: mapTierFromDb(dbRecord.tier),
+    amount: dbRecord.amount,
+    status: dbRecord.status,
+    periodStart: new Date(dbRecord.periodStart),
+    periodEnd: new Date(dbRecord.periodEnd),
+    paidDate: dbRecord.paidDate ? new Date(dbRecord.paidDate) : null,
+    payment_requested: !!dbRecord.payment_requested,
+    contracts_count: dbRecord.contracts_count || 0,
+    createdAt: dbRecord.createdAt ? new Date(dbRecord.createdAt) : new Date(),
+    deleted_at: dbRecord.deleted_at ? new Date(dbRecord.deleted_at) : null,
+    quoteId: dbRecord.quoteId,
+    subscriptionId: dbRecord.subscriptionId
+  };
+};
+
+// Map commission rule from database
+export const mapCommissionRuleFromDb = (dbRule: any): CommissionRule => {
+  return {
+    id: dbRule.id,
+    tier: mapTierFromDb(dbRule.tier),
+    percentage: dbRule.percentage || 0,
+    unit_amount: dbRule.unit_amount || 0,
+    minContracts: dbRule.minContracts || 0,
+    maxContracts: dbRule.maxContracts
+  };
+};
+
+// Get default commission rules
+export const getDefaultCommissionRules = (): CommissionRule[] => {
+  return [
+    {
+      id: 'default-1',
+      tier: CommissionTierValues.BRONZE,
+      percentage: 2,
+      unit_amount: 500,
+      minContracts: 1,
+      maxContracts: 10
+    },
+    {
+      id: 'default-2',
+      tier: CommissionTierValues.SILVER,
+      percentage: 3,
+      unit_amount: 1000,
+      minContracts: 11,
+      maxContracts: 20
+    },
+    {
+      id: 'default-3',
+      tier: CommissionTierValues.GOLD,
+      percentage: 5,
+      unit_amount: 1500,
+      minContracts: 21,
+      maxContracts: 30
+    },
+    {
+      id: 'default-4',
+      tier: CommissionTierValues.PLATINUM,
+      percentage: 7,
+      unit_amount: 2000,
+      minContracts: 31,
+      maxContracts: null
+    }
+  ];
 };

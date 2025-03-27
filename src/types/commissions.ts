@@ -1,16 +1,17 @@
 
-export type CommissionStatus = 'pending' | 'processing' | 'paid' | 'cancelled';
+export type CommissionStatus = 'pending' | 'processing' | 'paid' | 'cancelled' | 'rejected';
 
-export enum CommissionTierEnum {
-  BRONZE = 'bronze',
-  SILVER = 'silver',
-  GOLD = 'gold',
-  PLATINUM = 'platinum',
-  DIAMOND = 'diamond'
-}
+// Define commission tiers as string constants instead of an enum to fix the "used as a value" errors
+export const CommissionTierValues = {
+  BRONZE: 'bronze',
+  SILVER: 'silver',
+  GOLD: 'gold',
+  PLATINUM: 'platinum',
+  DIAMOND: 'diamond'
+} as const;
 
-// Type alias pour assurer la compatibilité entre string et enum
-export type CommissionTier = CommissionTierEnum | string;
+// Type alias for commission tier
+export type CommissionTier = typeof CommissionTierValues[keyof typeof CommissionTierValues];
 
 export interface Commission {
   id: string;
@@ -38,9 +39,16 @@ export interface CommissionRule {
   maxContracts?: number | null;
 }
 
-// Type pour les commissions avec détails supplémentaires
+// Type for commissions with details
 export interface CommissionWithDetails extends Commission {
   freelancerName?: string;
   freelancerEmail?: string;
-  period?: string; // Format: "MM/YYYY" pour l'affichage
+  period?: string; // Format: "MM/YYYY" for display
+  // Add subscription details for FreelancerCommissionsList
+  subscriptionDetails?: {
+    name?: string;
+    client?: {
+      name?: string;
+    };
+  };
 }

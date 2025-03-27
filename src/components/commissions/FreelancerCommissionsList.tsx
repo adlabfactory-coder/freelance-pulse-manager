@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CommissionStatus, CommissionTier, CommissionWithDetails } from "@/types/commissions";
+import { CommissionStatus, CommissionWithDetails } from "@/types/commissions";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Link } from "react-router-dom";
 import { useCommissions } from "@/hooks/commission";
@@ -66,12 +66,10 @@ const FreelancerCommissionsList: React.FC<FreelancerCommissionsListProps> = ({
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h4 className="font-semibold">
-                      {commission.subscriptionDetails?.name || "Commission"} 
+                      Commission {commission.period || formatDate(commission.periodStart)}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {commission.subscriptionDetails?.client?.name ? (
-                        `Client: ${commission.subscriptionDetails.client.name}`
-                      ) : "Client non spécifié"}
+                      {commission.freelancerName || "Freelancer"}
                     </p>
                   </div>
                   <Badge 

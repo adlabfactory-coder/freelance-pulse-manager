@@ -3,17 +3,17 @@ import { useSupabase } from "@/hooks/use-supabase";
 import { toast } from "@/components/ui/use-toast";
 import { CommissionRuleForm } from "./types";
 import { mapTierToEnum, mapEnumToTier } from "./TierMapper";
-import { CommissionTier } from "@/types/commissions";
+import { CommissionTierValues } from "@/types/commissions";
 
 export const useCommissionTiers = () => {
   const { supabaseClient } = useSupabase();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [tiers, setTiers] = useState<CommissionRuleForm[]>([
-    { tier: CommissionTier.TIER_1, minContracts: 0, unit_amount: 500, maxContracts: 10 },
-    { tier: CommissionTier.TIER_2, minContracts: 11, unit_amount: 1000, maxContracts: 20 },
-    { tier: CommissionTier.TIER_3, minContracts: 21, unit_amount: 1500, maxContracts: 30 },
-    { tier: CommissionTier.TIER_4, minContracts: 31, unit_amount: 2000 },
+    { tier: CommissionTierValues.BRONZE, minContracts: 0, unit_amount: 500, maxContracts: 10 },
+    { tier: CommissionTierValues.SILVER, minContracts: 11, unit_amount: 1000, maxContracts: 20 },
+    { tier: CommissionTierValues.GOLD, minContracts: 21, unit_amount: 1500, maxContracts: 30 },
+    { tier: CommissionTierValues.PLATINUM, minContracts: 31, unit_amount: 2000 },
   ]);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export const useCommissionTiers = () => {
         
         const updatedTiers: CommissionRuleForm[] = [];
         
-        [CommissionTier.TIER_1, CommissionTier.TIER_2, CommissionTier.TIER_3, CommissionTier.TIER_4].forEach((tier) => {
+        [CommissionTierValues.BRONZE, CommissionTierValues.SILVER, CommissionTierValues.GOLD, CommissionTierValues.PLATINUM].forEach((tier) => {
           if (existingTiers[tier]) {
             updatedTiers.push(existingTiers[tier]);
           } else {
@@ -63,29 +63,29 @@ export const useCommissionTiers = () => {
         setTiers(updatedTiers);
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des règles de commission:", error);
+      console.error("Error loading commission rules:", error);
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de charger les règles de commission.",
+        title: "Error",
+        description: "Unable to load commission rules.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const getDefaultTier = (tier: CommissionTier): CommissionRuleForm => {
+  const getDefaultTier = (tier: string): CommissionRuleForm => {
     switch (tier) {
-      case CommissionTier.TIER_1:
-        return { tier: CommissionTier.TIER_1, minContracts: 0, unit_amount: 500, maxContracts: 10 };
-      case CommissionTier.TIER_2:
-        return { tier: CommissionTier.TIER_2, minContracts: 11, unit_amount: 1000, maxContracts: 20 };
-      case CommissionTier.TIER_3:
-        return { tier: CommissionTier.TIER_3, minContracts: 21, unit_amount: 1500, maxContracts: 30 };
-      case CommissionTier.TIER_4:
-        return { tier: CommissionTier.TIER_4, minContracts: 31, unit_amount: 2000 };
+      case CommissionTierValues.BRONZE:
+        return { tier: CommissionTierValues.BRONZE, minContracts: 0, unit_amount: 500, maxContracts: 10 };
+      case CommissionTierValues.SILVER:
+        return { tier: CommissionTierValues.SILVER, minContracts: 11, unit_amount: 1000, maxContracts: 20 };
+      case CommissionTierValues.GOLD:
+        return { tier: CommissionTierValues.GOLD, minContracts: 21, unit_amount: 1500, maxContracts: 30 };
+      case CommissionTierValues.PLATINUM:
+        return { tier: CommissionTierValues.PLATINUM, minContracts: 31, unit_amount: 2000 };
       default:
-        return { tier: CommissionTier.TIER_1, minContracts: 0, unit_amount: 500, maxContracts: 10 };
+        return { tier: CommissionTierValues.BRONZE, minContracts: 0, unit_amount: 500, maxContracts: 10 };
     }
   };
 
@@ -142,11 +142,11 @@ export const useCommissionTiers = () => {
       
       fetchCommissionRules();
     } catch (error: any) {
-      console.error("Erreur lors de l'enregistrement des paliers:", error);
+      console.error("Error saving commission rules:", error);
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue lors de l'enregistrement des paliers.",
+        title: "Error",
+        description: error.message || "An error occurred while saving commission rules.",
       });
     } finally {
       setIsSubmitting(false);

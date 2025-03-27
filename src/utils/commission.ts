@@ -1,20 +1,20 @@
 
-import { CommissionStatus, CommissionTier } from "@/types/commissions";
+import { CommissionStatus, CommissionTier, CommissionTierValues } from "@/types/commissions";
 
 /**
- * Obtient le libellé pour un niveau de commission
- * @param tier - Le niveau de commission
- * @returns Le libellé du niveau de commission
+ * Gets the label for a commission tier
+ * @param tier - The commission tier
+ * @returns The label for the commission tier
  */
 export const getTierLabel = (tier: CommissionTier): string => {
   switch (tier) {
-    case CommissionTier.TIER_1:
+    case CommissionTierValues.BRONZE:
       return "Bronze (1-10 contrats)";
-    case CommissionTier.TIER_2:
+    case CommissionTierValues.SILVER:
       return "Argent (11-20 contrats)";
-    case CommissionTier.TIER_3:
+    case CommissionTierValues.GOLD:
       return "Or (21-30 contrats)";
-    case CommissionTier.TIER_4:
+    case CommissionTierValues.PLATINUM:
       return "Platine (31+ contrats)";
     default:
       return "Inconnu";
@@ -22,19 +22,19 @@ export const getTierLabel = (tier: CommissionTier): string => {
 };
 
 /**
- * Formate une période (dates de début et de fin)
- * @param startDate - Date de début
- * @param endDate - Date de fin
- * @returns Période formatée
+ * Formats a period (start and end dates)
+ * @param startDate - Start date
+ * @param endDate - End date
+ * @returns Formatted period
  */
 export const formatPeriod = (startDate: Date, endDate: Date): string => {
   return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 };
 
 /**
- * Formate une date en format lisible
- * @param date - Date à formater
- * @returns Date formatée
+ * Formats a date in a readable format
+ * @param date - Date to format
+ * @returns Formatted date
  */
 export const formatDate = (date: Date | undefined): string => {
   if (!date) return "N/A";
@@ -46,9 +46,9 @@ export const formatDate = (date: Date | undefined): string => {
 };
 
 /**
- * Formate un montant en devise
- * @param amount: number - Montant à formater
- * @returns Montant formaté
+ * Formats an amount as currency
+ * @param amount: number - Amount to format
+ * @returns Formatted amount
  */
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("fr-FR", {
@@ -60,46 +60,46 @@ export const formatCurrency = (amount: number): string => {
 };
 
 /**
- * Calcule le montant de commission en fonction du nombre de contrats et du montant unitaire
- * @param contractsCount - Nombre de contrats
- * @param unitAmount - Montant unitaire par contrat
- * @returns Montant de commission calculé
+ * Calculates a commission amount based on contract count and unit amount
+ * @param contractsCount - Number of contracts
+ * @param unitAmount - Unit amount per contract
+ * @returns Calculated commission amount
  */
 export const calculateCommissionAmount = (contractsCount: number, unitAmount: number): number => {
   return contractsCount * unitAmount;
 };
 
 /**
- * Détermine le niveau de commission en fonction du nombre de contrats
- * @param contractsCount - Nombre de contrats
- * @param rules - Règles de commission
- * @returns Niveau de commission applicable
+ * Determines the commission tier based on contract count
+ * @param contractsCount - Number of contracts
+ * @param rules - Commission rules
+ * @returns Applicable commission tier
  */
 export const determineCommissionTier = (contractsCount: number, rules: any[]): CommissionTier => {
   if (!rules || rules.length === 0) {
-    return CommissionTier.TIER_1;
+    return CommissionTierValues.BRONZE;
   }
   
-  // Trier les règles par nombre minimum de contrats décroissant
+  // Sort rules by minimum contract count in descending order
   const sortedRules = [...rules].sort((a, b) => b.minContracts - a.minContracts);
   
-  // Trouver la première règle qui s'applique
+  // Find the first applicable rule
   for (const rule of sortedRules) {
     if (contractsCount >= rule.minContracts) {
       switch (rule.tier) {
-        case 'bronze': return CommissionTier.TIER_1;
-        case 'silver': return CommissionTier.TIER_2;
-        case 'gold': return CommissionTier.TIER_3;
-        case 'platinum': return CommissionTier.TIER_4;
+        case 'bronze': return CommissionTierValues.BRONZE;
+        case 'silver': return CommissionTierValues.SILVER;
+        case 'gold': return CommissionTierValues.GOLD;
+        case 'platinum': return CommissionTierValues.PLATINUM;
         default: 
-          if (rule.tier === CommissionTier.TIER_1) return CommissionTier.TIER_1;
-          if (rule.tier === CommissionTier.TIER_2) return CommissionTier.TIER_2;
-          if (rule.tier === CommissionTier.TIER_3) return CommissionTier.TIER_3;
-          if (rule.tier === CommissionTier.TIER_4) return CommissionTier.TIER_4;
-          return CommissionTier.TIER_1;
+          if (rule.tier === CommissionTierValues.BRONZE) return CommissionTierValues.BRONZE;
+          if (rule.tier === CommissionTierValues.SILVER) return CommissionTierValues.SILVER;
+          if (rule.tier === CommissionTierValues.GOLD) return CommissionTierValues.GOLD;
+          if (rule.tier === CommissionTierValues.PLATINUM) return CommissionTierValues.PLATINUM;
+          return CommissionTierValues.BRONZE;
       }
     }
   }
   
-  return CommissionTier.TIER_1;
+  return CommissionTierValues.BRONZE;
 };

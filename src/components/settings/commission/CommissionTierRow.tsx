@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CommissionTier } from "@/types/commissions";
+import { CommissionTierValues } from "@/types/commissions";
 import { CommissionRuleForm } from "./types";
 import { getTierLabel } from "./TierMapper";
 
@@ -17,8 +17,8 @@ const CommissionTierRow: React.FC<CommissionTierRowProps> = ({
   index, 
   onInputChange 
 }) => {
-  // Vérifie si c'est le dernier palier (pour désactiver le champ max si nécessaire)
-  const isLastTier = tier.tier === CommissionTier.TIER_4;
+  // Check if it's the last tier (to disable the max field if necessary)
+  const isLastTier = tier.tier === CommissionTierValues.PLATINUM;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-b pb-4">
