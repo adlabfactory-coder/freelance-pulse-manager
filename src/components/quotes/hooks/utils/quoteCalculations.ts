@@ -4,7 +4,7 @@ import { QuoteItem } from "@/types";
 /**
  * Calculates the total amount of a quote based on its items
  */
-export const calculateTotalAmount = (items: Partial<QuoteItem>[]) => {
+export const calculateTotalAmount = (items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]) => {
   return items.reduce((total, item) => {
     if (!item.quantity || !item.unitPrice) return total;
     
@@ -29,7 +29,7 @@ export const validateQuoteForm = (
   contactId: string,
   freelancerId: string,
   validUntil: Date | null,
-  items: Partial<QuoteItem>[]
+  items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]
 ): { isValid: boolean; errorMessage?: string } => {
   if (!contactId) {
     return { 

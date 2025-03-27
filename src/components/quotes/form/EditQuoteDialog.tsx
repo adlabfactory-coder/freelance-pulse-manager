@@ -48,12 +48,14 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
     if (open) {
       loadData();
       if (initialQuote) {
+        console.log('Setting initial quote data:', initialQuote);
         setQuoteData(initialQuote);
       } else if (quoteId) {
+        console.log('Loading quote data for ID:', quoteId);
         loadQuoteData(quoteId);
       }
     }
-  }, [open, quoteId, initialQuote]);
+  }, [open, quoteId, initialQuote, loadData, loadQuoteData, setQuoteData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

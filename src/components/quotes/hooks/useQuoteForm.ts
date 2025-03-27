@@ -80,7 +80,7 @@ export const useQuoteForm = ({
   }, [resetItems]);
 
   // Get the complete quote data
-  const getQuoteData = useCallback((): Omit<Quote, 'id' | 'createdAt' | 'updatedAt'> => {
+  const getQuoteData = useCallback(() => {
     return {
       contactId,
       freelancerId,
@@ -88,7 +88,15 @@ export const useQuoteForm = ({
       status,
       notes,
       totalAmount,
-      items: items
+      items: items.filter(item => {
+        // Vérifier que l'élément a toutes les propriétés requises pour être un QuoteItem valide
+        return (
+          item &&
+          item.description !== undefined &&
+          item.quantity !== undefined &&
+          item.unitPrice !== undefined
+        );
+      })
     };
   }, [contactId, freelancerId, validUntil, status, notes, totalAmount, items]);
 
