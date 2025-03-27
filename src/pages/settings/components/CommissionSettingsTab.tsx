@@ -7,9 +7,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Info } from "lucide-react";
 
 const CommissionSettingsTab: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdminOrSuperAdmin } = useAuth();
 
-  if (!isAdmin) {
+  if (!isAdminOrSuperAdmin) {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">

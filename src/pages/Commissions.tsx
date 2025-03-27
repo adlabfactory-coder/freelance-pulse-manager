@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useCommissions } from "@/hooks/commission";
 import FreelancerCommissionsList from "@/components/commissions/FreelancerCommissionsList";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,7 +9,7 @@ import { AlertCircle } from "lucide-react";
 import CommissionExplanation from "@/components/commissions/CommissionExplanation";
 
 const Commissions: React.FC = () => {
-  const { isAdmin, isFreelancer, isAccountManager } = useAuth();
+  const { isAdmin, isFreelancer, isAccountManager, isSuperAdmin } = useAuth();
   const { 
     commissions, 
     commissionRules, 
@@ -20,8 +20,6 @@ const Commissions: React.FC = () => {
     approvePayment,
     generateMonthlyCommissions
   } = useCommissions();
-  
-  // Suppression de l'état et du useEffect qui causent le rechargement en boucle
   
   // Si c'est un chargé d'affaires, afficher un message d'accès restreint
   if (isAccountManager) {
@@ -38,6 +36,9 @@ const Commissions: React.FC = () => {
       </div>
     );
   }
+
+  // Déterminer si l'utilisateur a des accès administratifs (admin ou super-admin)
+  const hasAdminAccess = isAdmin || isSuperAdmin;
 
   // Afficher l'explication du principe de commissionnement pour tous les utilisateurs autorisés
   return (

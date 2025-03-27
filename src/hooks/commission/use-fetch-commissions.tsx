@@ -1,9 +1,9 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Commission, CommissionTier } from "@/types/commissions";
 import { User, UserRole } from "@/types";
 import { createCommissionsService } from "@/services/supabase/commissions";
+import { hasMinimumRole } from "@/types/roles";
 
 export const useFetchCommissions = (user: User | null, role: UserRole | undefined) => {
   const [commissions, setCommissions] = useState<Commission[]>([]);
@@ -12,7 +12,9 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
   
   const commissionsService = createCommissionsService(supabase as any);
   const isFreelancer = role === UserRole.FREELANCER;
-  const isAdmin = role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+  const isAdmin = role === UserRole.ADMIN;
+  const isSuperAdmin = role === UserRole.SUPER_ADMIN;
+  const hasAdminAccess = isAdmin || isSuperAdmin;
   
   // Utiliser useRef pour suivre si les données ont déjà été chargées
   const dataFetchedRef = useRef(false);
@@ -39,7 +41,9 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
         throw new Error("Impossible de se connecter à la base de données");
       }
       
-      const data = await commissionsService.fetchCommissions(user.id, role || UserRole.FREELANCER);
+      // Utiliser le rôle pour le fetch, les super admins doivent obtenir l'accès complet
+      const effectiveRole = role === UserRole.SUPER_ADMIN ? UserRole.ADMIN : role;
+      const data = await commissionsService.fetchCommissions(user.id, effectiveRole || UserRole.FREELANCER);
       setCommissions(data);
     } catch (error: any) {
       console.error("Erreur lors du chargement des commissions:", error);
@@ -61,7 +65,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
             period: `${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString()} - ${new Date(new Date().getFullYear(), new Date().getMonth() - 1, 0).toLocaleDateString()}`
           }
         ]);
-      } else if (isAdmin) {
+      } else if (hasAdminAccess) {
         setCommissions([
           {
             id: "offline-commission-admin-1",
@@ -93,7 +97,7 @@ export const useFetchCommissions = (user: User | null, role: UserRole | undefine
     } finally {
       setLoading(false);
     }
-  }, [user, role, commissionsService, isFreelancer, isAdmin]);
+  }, [user, role, commissionsService, isFreelancer, hasAdminAccess]);
 
   useEffect(() => {
     // Chargement unique des données seulement

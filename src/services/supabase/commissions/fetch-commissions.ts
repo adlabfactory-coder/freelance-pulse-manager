@@ -4,10 +4,11 @@ import { Database } from '@/types/database';
 import { Commission } from '@/types/commissions';
 import { UserRole } from '@/types';
 import { mapCommissionFromDb } from './utils';
+import { hasMinimumRole } from '@/types/roles';
 
 /**
  * Récupère les commissions selon le rôle de l'utilisateur
- * - Admin: toutes les commissions
+ * - Admin/SuperAdmin: toutes les commissions
  * - Freelance: uniquement ses commissions
  * - Autres: aucune commission
  */
@@ -17,8 +18,11 @@ export async function fetchCommissions(
   userRole: UserRole
 ): Promise<Commission[]> {
   try {
-    // Vérifier le rôle de l'utilisateur
-    if (userRole !== UserRole.ADMIN && userRole !== UserRole.FREELANCER) {
+    // Vérifier que le rôle a au moins les permissions de freelance
+    const hasAccess = hasMinimumRole(userRole, UserRole.FREELANCER);
+    const isAdminOrHigher = hasMinimumRole(userRole, UserRole.ADMIN);
+    
+    if (!hasAccess) {
       console.log("Accès refusé: rôle non autorisé à voir les commissions");
       return [];
     }
@@ -31,6 +35,7 @@ export async function fetchCommissions(
       `);
     
     // Si c'est un freelancer, filtrer uniquement ses commissions
+    // Les admins et super admins voient toutes les commissions
     if (userRole === UserRole.FREELANCER) {
       query = query.eq("freelancerId", userId);
     }
