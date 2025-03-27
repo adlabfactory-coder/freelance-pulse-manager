@@ -4,11 +4,12 @@ import { useQuotesViewer } from "@/hooks/quotes/viewer/useQuotesViewer";
 import QuoteFilterBar from "./QuoteFilterBar";
 import QuotesTable from "./QuotesTable";
 import BulkActionsBar from "./BulkActionsBar";
+import { QuoteStatus } from "@/types/quote";
 
 interface QuoteViewerProps {
   title?: string;
   initialFilters?: {
-    status?: string | null;
+    status?: QuoteStatus | null;
     folder?: string | null;
   };
 }

@@ -28,7 +28,7 @@ const defaultFilters: QuoteFilters = {
 
 export const useQuotesFiltering = (
   quotes: Quote[],
-  initialFilters?: Partial<QuoteFilters>,
+  initialFilters: Partial<QuoteFilters> | undefined,
   getContactName: (contactId: string) => string,
   getFreelancerFullName: (freelancerId: string) => string
 ) => {
