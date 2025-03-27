@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download, X } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 import { Quote } from "@/types/quote";
 import { generateQuotePDF } from "@/utils/pdfGenerator";
 

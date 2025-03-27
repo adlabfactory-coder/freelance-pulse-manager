@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useQuotesViewer } from "./hooks/useQuotesViewer";
+import { useQuotesViewer } from "@/hooks/quotes/viewer/useQuotesViewer";
 import QuoteFilterBar from "./QuoteFilterBar";
 import QuotesTable from "./QuotesTable";
 import BulkActionsBar from "./BulkActionsBar";
