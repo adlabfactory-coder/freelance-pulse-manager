@@ -22,6 +22,7 @@ export const contactOperationsService = {
       let query = supabase
         .from('contacts')
         .select('*')
+        .is('deleted_at', null)
         .order('createdAt', { ascending: false });
       
       // Si l'utilisateur est un freelancer, filtrer par assignedTo
@@ -52,6 +53,7 @@ export const contactOperationsService = {
         .from('contacts')
         .select('*')
         .eq('id', contactId)
+        .is('deleted_at', null)
         .single();
       
       if (error) {
@@ -91,13 +93,50 @@ export const contactOperationsService = {
   },
 
   /**
-   * Supprime un contact par son ID
+   * Met à jour un contact
+   */
+  async updateContact(contactId: string, contactData: Partial<Contact>): Promise<Contact | null> {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .update({
+          ...contactData,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', contactId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error(`Erreur lors de la mise à jour du contact ${contactId}:`, error);
+        throw error;
+      }
+      
+      toast.success("Contact mis à jour", {
+        description: "Le contact a été mis à jour avec succès.",
+      });
+      
+      return data;
+    } catch (error: any) {
+      console.error(`Erreur lors de la mise à jour du contact ${contactId}:`, error);
+      
+      toast.error("Erreur", {
+        description: `Impossible de mettre à jour le contact: ${error.message}`,
+      });
+      
+      return null;
+    }
+  },
+
+  /**
+   * Supprime un contact par son ID (suppression logique)
    */
   async deleteContact(contactId: string): Promise<boolean> {
     try {
+      // Utilisation de la suppression logique en définissant deleted_at
       const { error } = await supabase
         .from('contacts')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', contactId);
       
       if (error) {

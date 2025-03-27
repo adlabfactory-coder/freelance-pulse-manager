@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatDateToFrench, formatTime } from "@/utils/format";
 import { Button } from "@/components/ui/button";
-import { Check, FileText, Info, MoreHorizontal, Trash, X } from "lucide-react";
+import { Check, FileText, Info, MoreHorizontal, Trash, X, Edit } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,14 +31,16 @@ interface AppointmentRowProps {
   appointment: Appointment;
   onUpdate: () => void;
   onView?: (appointment: Appointment) => void;
+  onEdit?: (appointment: Appointment) => void;
 }
 
 const AppointmentRow: React.FC<AppointmentRowProps> = ({
   appointment,
   onUpdate,
   onView,
+  onEdit,
 }) => {
-  const { isAdmin, isFreelancer, user } = useAuth();
+  const { isAdmin, isFreelancer, isAdminOrSuperAdmin, user } = useAuth();
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -91,11 +94,18 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
     }
   };
 
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(appointment);
+    }
+  };
+
   const handleCreateQuote = () => {
     setQuoteDialogOpen(true);
   };
 
-  const isActionable = isAdmin || (isFreelancer && appointment.freelancerId === currentUserId);
+  // Un utilisateur peut agir sur le rendez-vous s'il est admin/superadmin, ou s'il est le freelancer concerné
+  const isActionable = isAdminOrSuperAdmin || (isFreelancer && appointment.freelancerId === currentUserId);
 
   const contactName = appointment.contactName || "Client";
   const freelancerName = appointment.freelancerName || "Commercial";
@@ -142,6 +152,13 @@ const AppointmentRow: React.FC<AppointmentRowProps> = ({
 
               {isActionable && (
                 <>
+                  {onEdit && (
+                    <DropdownMenuItem onClick={handleEdit}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Modifier
+                    </DropdownMenuItem>
+                  )}
+                
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
                   <DropdownMenuItem

@@ -1,21 +1,14 @@
 
 import React, { useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Check, 
-  X, 
-  Clock, 
-  FileText, 
-  Pencil, 
-  Trash2, 
-  Send,
-  Copy
-} from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 import { Quote, QuoteStatus } from "@/types";
-import { formatCurrency, formatDate } from "@/utils/format";
+import { formatCurrency, formatDateToFrench } from "@/utils/format";
+import { updateQuoteStatus, deleteQuote } from "@/services/quote-service";
+import { Badge } from "@/components/ui/badge";
+import { Eye, Trash, FileEdit, MoreHorizontal, Check, X } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -35,346 +28,253 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { deleteQuote, updateQuoteStatus } from "@/services/quote-service";
+import { useAuth } from "@/hooks/use-auth";
 import EditQuoteDialog from "./form/EditQuoteDialog";
 
 interface QuotesTableProps {
   quotes: Quote[];
-  loading: boolean;
-  onStatusChange: () => void;
+  loading?: boolean;
+  onStatusChange?: () => void;
 }
 
-const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading, onStatusChange }) => {
+const QuotesTable: React.FC<QuotesTableProps> = ({ quotes, loading = false, onStatusChange }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [confirmSendId, setConfirmSendId] = useState<string | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [currentQuote, setCurrentQuote] = useState<Quote | null>(null);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { isAdminOrSuperAdmin } = useAuth();
 
-  const getStatusBadgeVariant = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.ACCEPTED:
-        return "default" as const;
-      case QuoteStatus.REJECTED:
-        return "destructive";
-      case QuoteStatus.SENT:
-        return "secondary";
-      case QuoteStatus.EXPIRED:
-        return "outline";
-      default:
-        return "outline";
-    }
-  };
-
-  const getStatusLabel = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.DRAFT: return "Brouillon";
-      case QuoteStatus.SENT: return "Envoyé";
-      case QuoteStatus.ACCEPTED: return "Accepté";
-      case QuoteStatus.REJECTED: return "Rejeté";
-      case QuoteStatus.EXPIRED: return "Expiré";
-      default: return status;
-    }
-  };
-
-  const handleViewDetail = (quoteId: string) => {
-    navigate(`/quotes/${quoteId}`);
-  };
-
-  const handleEditQuote = (quote: Quote) => {
-    setCurrentQuote(quote);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteQuote = async (quoteId: string) => {
-    try {
-      const success = await deleteQuote(quoteId);
-      if (success) {
-        toast({
-          title: "Devis supprimé",
-          description: "Le devis a été supprimé avec succès.",
-        });
-        onStatusChange();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de supprimer le devis.",
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de la suppression du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la suppression du devis.",
-      });
-    } finally {
-      setConfirmDeleteId(null);
-    }
-  };
-
-  const handleDuplicateQuote = (quote: Quote) => {
-    const duplicateQuote = {
-      ...quote,
-      id: undefined,
-      status: QuoteStatus.DRAFT,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+  const handleStatusChange = async (id: string | undefined, status: QuoteStatus) => {
+    if (!id) return;
     
-    setCurrentQuote(duplicateQuote as Quote);
-    setEditDialogOpen(true);
-    
-    toast({
-      title: "Devis dupliqué",
-      description: "Vous pouvez maintenant modifier le duplicata du devis.",
-    });
-  };
-
-  const handleSendQuote = async (quoteId: string) => {
     try {
-      const success = await updateQuoteStatus(quoteId, QuoteStatus.SENT);
-      if (success) {
-        toast({
-          title: "Devis envoyé",
-          description: "Le devis a été marqué comme envoyé.",
-        });
-        onStatusChange();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de mettre à jour le statut du devis.",
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'envoi du devis:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de l'envoi du devis.",
-      });
-    } finally {
-      setConfirmSendId(null);
-    }
-  };
-
-  const handleChangeStatus = async (quoteId: string, status: QuoteStatus) => {
-    try {
-      const success = await updateQuoteStatus(quoteId, status);
+      const success = await updateQuoteStatus(id, status);
       if (success) {
         toast({
           title: "Statut mis à jour",
-          description: `Le devis a été marqué comme "${getStatusLabel(status)}".`,
+          description: `Le devis a été marqué comme ${
+            status === QuoteStatus.ACCEPTED
+              ? "accepté"
+              : status === QuoteStatus.REJECTED
+              ? "refusé"
+              : status
+          }`,
         });
-        onStatusChange();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de mettre à jour le statut du devis.",
-        });
+        
+        if (onStatusChange) {
+          onStatusChange();
+        }
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de la mise à jour du statut.",
+        description: "Impossible de mettre à jour le statut du devis",
       });
     }
   };
 
+  const handleDelete = async (id: string | undefined) => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    try {
+      const success = await deleteQuote(id);
+      if (success) {
+        toast({
+          title: "Devis supprimé",
+          description: "Le devis a été supprimé avec succès",
+        });
+        
+        if (onStatusChange) {
+          onStatusChange();
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de supprimer le devis",
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(null);
+    }
+  };
+
+  const getStatusBadge = (status: QuoteStatus) => {
+    switch (status) {
+      case QuoteStatus.DRAFT:
+        return <Badge variant="outline">Brouillon</Badge>;
+      case QuoteStatus.SENT:
+        return <Badge variant="default">Envoyé</Badge>;
+      case QuoteStatus.ACCEPTED:
+        return <Badge variant="success">Accepté</Badge>;
+      case QuoteStatus.REJECTED:
+        return <Badge variant="destructive">Refusé</Badge>;
+      case QuoteStatus.EXPIRED:
+        return <Badge variant="secondary">Expiré</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
+  };
+
+  const viewQuoteDetails = (id: string | undefined) => {
+    if (!id) return;
+    navigate(`/quotes/${id}`);
+  };
+
+  const editQuote = (id: string | undefined) => {
+    if (!id) return;
+    setEditingQuoteId(id);
+  };
+
   if (loading) {
     return (
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Commercial</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Date de création</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={index}>
-                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                <TableCell className="text-right"><Skeleton className="h-9 w-9 rounded-md ml-auto" /></TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
       </div>
     );
   }
 
   if (quotes.length === 0) {
     return (
-      <div className="border rounded-md p-8 text-center">
-        <p className="text-muted-foreground">Aucun devis trouvé.</p>
+      <div className="text-center py-10 border rounded-lg">
+        <h3 className="text-lg font-medium">Aucun devis trouvé</h3>
+        <p className="text-muted-foreground mt-2">
+          Créez votre premier devis en cliquant sur le bouton "Ajouter un devis".
+        </p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Commercial</TableHead>
-              <TableHead>Montant</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Date de création</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+    <div className="border rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Client</TableHead>
+            <TableHead>Commercial</TableHead>
+            <TableHead>Montant</TableHead>
+            <TableHead>Date limite</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {quotes.map((quote) => (
+            <TableRow key={quote.id}>
+              <TableCell className="font-medium">{quote.contactId}</TableCell>
+              <TableCell>{quote.freelancerId}</TableCell>
+              <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
+              <TableCell>
+                {formatDateToFrench(new Date(quote.validUntil))}
+              </TableCell>
+              <TableCell>{getStatusBadge(quote.status)}</TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => viewQuoteDetails(quote.id)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Voir les détails
+                    </DropdownMenuItem>
+                    
+                    {isAdminOrSuperAdmin && (
+                      <>
+                        <DropdownMenuItem onClick={() => editQuote(quote.id)}>
+                          <FileEdit className="mr-2 h-4 w-4" />
+                          Modifier
+                        </DropdownMenuItem>
+                        
+                        {quote.status === QuoteStatus.SENT && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Changer le statut</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onClick={() => handleStatusChange(quote.id, QuoteStatus.ACCEPTED)}
+                            >
+                              <Check className="mr-2 h-4 w-4" />
+                              Marquer comme accepté
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleStatusChange(quote.id, QuoteStatus.REJECTED)}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              Marquer comme refusé
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => setIsDeleteDialogOpen(quote.id || null)}
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {quotes.map((quote) => (
-              <TableRow key={quote.id}>
-                <TableCell className="font-medium">{quote.id?.substring(0, 8)}</TableCell>
-                <TableCell>{quote.contactId}</TableCell>
-                <TableCell>{quote.freelancerId}</TableCell>
-                <TableCell>{formatCurrency(quote.totalAmount)}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(quote.status)}>
-                    {getStatusLabel(quote.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{formatDate(quote.createdAt)}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      
-                      <DropdownMenuItem onClick={() => handleViewDetail(quote.id!)}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Voir le détail
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuItem onClick={() => handleEditQuote(quote)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Modifier
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuItem onClick={() => handleDuplicateQuote(quote)}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Dupliquer
-                      </DropdownMenuItem>
-                      
-                      {quote.status === QuoteStatus.DRAFT && (
-                        <DropdownMenuItem onClick={() => setConfirmSendId(quote.id!)}>
-                          <Send className="mr-2 h-4 w-4" />
-                          Envoyer
-                        </DropdownMenuItem>
-                      )}
-                      
-                      {quote.status !== QuoteStatus.ACCEPTED && quote.status !== QuoteStatus.REJECTED && (
-                        <DropdownMenuItem onClick={() => handleChangeStatus(quote.id!, QuoteStatus.ACCEPTED)}>
-                          <Check className="mr-2 h-4 w-4 text-green-500" />
-                          Marquer comme accepté
-                        </DropdownMenuItem>
-                      )}
-                      
-                      {quote.status !== QuoteStatus.REJECTED && quote.status !== QuoteStatus.ACCEPTED && (
-                        <DropdownMenuItem onClick={() => handleChangeStatus(quote.id!, QuoteStatus.REJECTED)}>
-                          <X className="mr-2 h-4 w-4 text-red-500" />
-                          Marquer comme rejeté
-                        </DropdownMenuItem>
-                      )}
-                      
-                      <DropdownMenuSeparator />
-                      
-                      <DropdownMenuItem 
-                        onClick={() => setConfirmDeleteId(quote.id!)}
-                        className="text-red-500 focus:text-red-500 focus:bg-red-50"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
       
-      {/* Boîte de dialogue de confirmation pour la suppression */}
-      <AlertDialog open={!!confirmDeleteId} onOpenChange={() => setConfirmDeleteId(null)}>
+      {editingQuoteId && (
+        <EditQuoteDialog
+          open={!!editingQuoteId}
+          onOpenChange={(open) => {
+            if (!open) setEditingQuoteId(null);
+          }}
+          quoteId={editingQuoteId}
+          onQuoteUpdated={() => {
+            if (onStatusChange) onStatusChange();
+            setEditingQuoteId(null);
+          }}
+        />
+      )}
+      
+      <AlertDialog 
+        open={!!isDeleteDialogOpen} 
+        onOpenChange={(open) => {
+          if (!open) setIsDeleteDialogOpen(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce devis ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce devis ? Cette action ne peut pas être annulée.
+              Cette action est irréversible. Toutes les informations liées à ce devis seront définitivement supprimées.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={() => confirmDeleteId && handleDeleteQuote(confirmDeleteId)}
-              className="bg-red-500 hover:bg-red-600"
+              onClick={() => handleDelete(isDeleteDialogOpen || undefined)}
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={isDeleting}
             >
-              Supprimer
+              {isDeleting ? "Suppression..." : "Supprimer"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
-      {/* Boîte de dialogue de confirmation pour l'envoi */}
-      <AlertDialog open={!!confirmSendId} onOpenChange={() => setConfirmSendId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer l'envoi</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir marquer ce devis comme envoyé ? Un email sera envoyé au client.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => confirmSendId && handleSendQuote(confirmSendId)}
-            >
-              Envoyer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      {/* Dialogue de modification */}
-      <EditQuoteDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onQuoteUpdated={onStatusChange}
-        quoteId={currentQuote?.id || ""}
-        initialQuote={currentQuote || undefined}
-      />
-    </>
+    </div>
   );
 };
 
