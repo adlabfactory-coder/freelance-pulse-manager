@@ -8,7 +8,8 @@ interface QuoteStatusBadgeProps {
 }
 
 const QuoteStatusBadge: React.FC<QuoteStatusBadgeProps> = ({ status }) => {
-  const getVariant = () => {
+  // Conversion de variant vers Type pour Badge
+  const getVariant = (): "default" | "destructive" | "outline" | "secondary" | "success" | "warning" | null | undefined => {
     switch (status) {
       case QuoteStatus.ACCEPTED:
         return "success";
@@ -19,6 +20,10 @@ const QuoteStatusBadge: React.FC<QuoteStatusBadgeProps> = ({ status }) => {
         return "default";
       case QuoteStatus.EXPIRED:
         return "warning";
+      case QuoteStatus.DRAFT:
+        return "outline";
+      case QuoteStatus.PENDING:
+        return "secondary";
       default:
         return "secondary";
     }

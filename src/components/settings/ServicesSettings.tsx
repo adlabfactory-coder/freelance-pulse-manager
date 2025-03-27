@@ -79,16 +79,14 @@ const ServicesSettings: React.FC = () => {
       </Dialog>
 
       {/* Confirm Delete Dialog */}
-      <Dialog open={confirmDeleteDialogOpen} onOpenChange={setConfirmDeleteDialogOpen}>
-        {confirmDeleteDialogOpen && selectedService && (
-          <DeleteServiceDialog
-            service={selectedService}
-            onConfirm={handleConfirmDelete}
-            onClose={() => setConfirmDeleteDialogOpen(false)}
-            isOpen={confirmDeleteDialogOpen}
-          />
-        )}
-      </Dialog>
+      {confirmDeleteDialogOpen && selectedService && (
+        <DeleteServiceDialog
+          service={selectedService}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setConfirmDeleteDialogOpen(false)}
+          isOpen={confirmDeleteDialogOpen}
+        />
+      )}
     </div>
   );
 };

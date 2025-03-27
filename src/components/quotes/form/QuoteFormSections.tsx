@@ -109,7 +109,7 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
         )}
 
         <StatusSelector 
-          status={quoteData.status} 
+          status={quoteData.status as QuoteStatus} 
           onSelect={(status) => onQuoteDataChange({ ...quoteData, status })} 
         />
 

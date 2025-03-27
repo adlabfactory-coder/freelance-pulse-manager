@@ -23,7 +23,8 @@ export const fetchServices = async (): Promise<Service[]> => {
       type: service.type as ServiceType,
       is_active: service.is_active,
       created_at: service.created_at,
-      updated_at: service.updated_at
+      updated_at: service.updated_at,
+      serviceId: service.id // Assurer la compatibilité entre id et serviceId
     }));
   } catch (error) {
     console.error('Unexpected error fetching services:', error);
@@ -55,7 +56,8 @@ export const fetchServiceById = async (id: string): Promise<Service | null> => {
       type: data.type as ServiceType,
       is_active: data.is_active,
       created_at: data.created_at,
-      updated_at: data.updated_at
+      updated_at: data.updated_at,
+      serviceId: data.id // Assurer la compatibilité entre id et serviceId
     };
   } catch (error) {
     console.error(`Unexpected error fetching service with ID ${id}:`, error);
@@ -68,7 +70,7 @@ export const updateService = async (id: string, serviceData: Partial<Service>): 
     // S'assurer que les champs avec des noms différents sont correctement mappés
     const updateData = {
       ...serviceData,
-      is_active: serviceData.is_active
+      is_active: serviceData.is_active !== undefined ? serviceData.is_active : true
     };
     
     const { error } = await supabase
@@ -93,7 +95,7 @@ export const createService = async (serviceData: Omit<Service, 'id' | 'created_a
     // S'assurer que les champs avec des noms différents sont correctement mappés
     const insertData = {
       ...serviceData,
-      is_active: serviceData.is_active ?? true
+      is_active: serviceData.is_active !== undefined ? serviceData.is_active : true
     };
     
     const { data, error } = await supabase

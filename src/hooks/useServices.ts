@@ -1,15 +1,15 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Service, ServiceType } from "@/types/service";
-import { toast } from "@/components/ui/use-toast";
-import { fetchServices, createService, updateService, deleteService } from "@/services/services-service";
+import { useState, useEffect, useCallback } from 'react';
+import { Service } from '@/types/service';
+import { fetchServices, createService as apiCreateService, updateService as apiUpdateService, deleteService as apiDeleteService } from '@/services/services-service';
+import { toast } from 'sonner';
 
 export const useServices = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const loadServices = useCallback(async () => {
     setLoading(true);
@@ -17,13 +17,10 @@ export const useServices = () => {
     try {
       const data = await fetchServices();
       setServices(data);
-    } catch (err: any) {
-      setError(err.message || "Une erreur est survenue lors du chargement des services");
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de charger les services. Veuillez réessayer."
-      });
+    } catch (err) {
+      console.error('Error fetching services:', err);
+      setError('Impossible de charger les services');
+      toast.error('Erreur lors du chargement des services');
     } finally {
       setLoading(false);
     }
@@ -33,78 +30,66 @@ export const useServices = () => {
     loadServices();
   }, [loadServices]);
 
-  const handleCreateService = useCallback(async (serviceData: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+  const createService = useCallback(async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
     setIsSaving(true);
+    setError(null);
     try {
-      const result = await createService(serviceData);
+      const result = await apiCreateService(service);
       if (result.success) {
-        toast({
-          title: "Service créé",
-          description: "Le service a été créé avec succès."
-        });
-        await loadServices(); // Recharger la liste
-        return true;
+        toast.success('Service créé avec succès');
+        await loadServices();
+        return { success: true, id: result.id };
       } else {
-        throw new Error("Impossible de créer le service");
+        throw new Error('Échec de la création du service');
       }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: err.message || "Une erreur est survenue lors de la création du service"
-      });
-      return false;
+    } catch (err) {
+      console.error('Error creating service:', err);
+      setError('Impossible de créer le service');
+      toast.error('Erreur lors de la création du service');
+      return { success: false };
     } finally {
       setIsSaving(false);
     }
   }, [loadServices]);
 
-  const handleUpdateService = useCallback(async (id: string, serviceData: Partial<Service>) => {
+  const updateService = useCallback(async (id: string, service: Partial<Service>) => {
     setIsSaving(true);
+    setError(null);
     try {
-      const success = await updateService(id, serviceData);
+      const success = await apiUpdateService(id, service);
       if (success) {
-        toast({
-          title: "Service mis à jour",
-          description: "Le service a été mis à jour avec succès."
-        });
-        await loadServices(); // Recharger la liste
+        toast.success('Service mis à jour avec succès');
+        await loadServices();
         return true;
       } else {
-        throw new Error("Impossible de mettre à jour le service");
+        throw new Error('Échec de la mise à jour du service');
       }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: err.message || "Une erreur est survenue lors de la mise à jour du service"
-      });
+    } catch (err) {
+      console.error('Error updating service:', err);
+      setError('Impossible de mettre à jour le service');
+      toast.error('Erreur lors de la mise à jour du service');
       return false;
     } finally {
       setIsSaving(false);
     }
   }, [loadServices]);
 
-  const handleDeleteService = useCallback(async (id: string) => {
+  const deleteService = useCallback(async (id: string) => {
     setIsDeleting(true);
+    setError(null);
     try {
-      const success = await deleteService(id);
+      const success = await apiDeleteService(id);
       if (success) {
-        toast({
-          title: "Service supprimé",
-          description: "Le service a été supprimé avec succès."
-        });
-        await loadServices(); // Recharger la liste
+        toast.success('Service supprimé avec succès');
+        await loadServices();
         return true;
       } else {
-        throw new Error("Impossible de supprimer le service");
+        throw new Error('Échec de la suppression du service');
       }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: err.message || "Une erreur est survenue lors de la suppression du service"
-      });
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      setError('Impossible de supprimer le service');
+      toast.error('Erreur lors de la suppression du service');
       return false;
     } finally {
       setIsDeleting(false);
@@ -114,12 +99,12 @@ export const useServices = () => {
   return {
     services,
     loading,
-    error,
     isSaving,
     isDeleting,
+    error,
     loadServices,
-    createService: handleCreateService,
-    updateService: handleUpdateService,
-    deleteService: handleDeleteService
+    createService,
+    updateService,
+    deleteService
   };
 };

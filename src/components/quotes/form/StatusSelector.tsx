@@ -9,13 +9,15 @@ interface StatusSelectorProps {
   onSelect: (status: QuoteStatus) => void;
   value?: QuoteStatus;
   onChange?: React.Dispatch<React.SetStateAction<QuoteStatus>>;
+  disabled?: boolean;
 }
 
 const StatusSelector: React.FC<StatusSelectorProps> = ({
   status,
   onSelect,
   value,
-  onChange
+  onChange,
+  disabled = false
 }) => {
   // Si onChange est fourni, l'utiliser, sinon utiliser onSelect
   const handleChange = (newStatus: string) => {
@@ -36,6 +38,7 @@ const StatusSelector: React.FC<StatusSelectorProps> = ({
       <Select
         value={currentValue}
         onValueChange={handleChange}
+        disabled={disabled}
       >
         <SelectTrigger id="status">
           <SelectValue placeholder="Sélectionner un statut" />
