@@ -7,7 +7,8 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
   try {
     const { data, error } = await supabase
       .from('appointments')
-      .select('*');
+      .select('*')
+      .is('deleted_at', null);
 
     if (error) {
       console.error('Error fetching appointments:', error);
@@ -23,7 +24,7 @@ export const fetchAppointments = async (): Promise<Appointment[]> => {
       } as Appointment;
       
       // Normaliser freelancerid en freelancerId si nécessaire
-      if (item.freelancerid && !item.freelancerId) {
+      if (item.freelancerid !== undefined) {
         appointment.freelancerId = item.freelancerid;
       }
       
@@ -59,7 +60,7 @@ export const fetchAppointmentById = async (id: string): Promise<Appointment | nu
       status: data.status as Appointment['status']
     } as Appointment;
     
-    if (data.freelancerid && !data.freelancerId) {
+    if (data.freelancerid !== undefined) {
       appointment.freelancerId = data.freelancerid;
     }
     

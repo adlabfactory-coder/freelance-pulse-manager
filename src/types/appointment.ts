@@ -39,11 +39,11 @@ export function normalizeFreelancerId(appointment: Appointment): Appointment {
   const normalized = { ...appointment };
   
   // Si freelancerid existe mais pas freelancerId, on le copie
-  if (appointment.freelancerid && !appointment.freelancerId) {
+  if (appointment.freelancerid !== undefined && appointment.freelancerId === undefined) {
     normalized.freelancerId = appointment.freelancerid;
   }
   // Si freelancerId existe mais pas freelancerid, on le copie aussi (pour la cohérence)
-  else if (appointment.freelancerId && !appointment.freelancerid) {
+  else if (appointment.freelancerId !== undefined && appointment.freelancerid === undefined) {
     normalized.freelancerid = appointment.freelancerId;
   }
   

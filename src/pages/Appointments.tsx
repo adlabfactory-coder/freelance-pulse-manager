@@ -19,7 +19,7 @@ const Appointments: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
   const { refreshNotifications } = useNotifications();
   const { isAccountManager, isAdmin } = useAuth();
-  const { appointments, isLoading } = useAppointments();
+  const { appointments, isLoading, refresh } = useAppointments();
 
   const handleAddAppointment = () => {
     setOpenNewAppointmentDialog(true);
@@ -28,8 +28,9 @@ const Appointments: React.FC = () => {
   // Écouter l'événement de création de rendez-vous pour rafraîchir les notifications
   useEffect(() => {
     const handleAppointmentCreated = () => {
-      console.log("Événement de création de rendez-vous détecté, rafraîchissement des notifications");
+      console.log("Événement de création de rendez-vous détecté, rafraîchissement des données");
       refreshNotifications();
+      refresh(); // Rafraîchir la liste des rendez-vous
     };
 
     window.addEventListener('appointment-created', handleAppointmentCreated);
@@ -37,7 +38,7 @@ const Appointments: React.FC = () => {
     return () => {
       window.removeEventListener('appointment-created', handleAppointmentCreated);
     };
-  }, [refreshNotifications]);
+  }, [refreshNotifications, refresh]);
 
   // Filtrer les rendez-vous en fonction de l'onglet actif
   const filteredAppointments = activeTab === "upcoming" 

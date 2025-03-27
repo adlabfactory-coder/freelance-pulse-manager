@@ -104,10 +104,19 @@ export function useAppointments(contactId?: string) {
         .subscribe();
     }
     
+    // Configurer un écouteur d'événement personnalisé pour la création de rendez-vous
+    const handleAppointmentCreated = () => {
+      console.log("Événement de création de rendez-vous détecté");
+      fetchAppointments();
+    };
+
+    window.addEventListener('appointment-created', handleAppointmentCreated);
+    
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
       }
+      window.removeEventListener('appointment-created', handleAppointmentCreated);
     };
   }, [fetchAppointments, user, contactId]);
 

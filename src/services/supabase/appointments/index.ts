@@ -22,7 +22,7 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from('appointments')
       .select('*')
-      .eq('freelancerid', freelancerId)  // Utilisez le nom exact de la colonne
+      .eq('freelancerid', freelancerId)  // Utiliser le nom exact de la colonne
       .is('deleted_at', null)
       .order('date', { ascending: true });
 
@@ -68,9 +68,21 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
 
   const createAppointment = async (appointmentData) => {
     try {
+      // S'assurer que nous utilisons freelancerid et non freelancerId
+      const dataToSend = { 
+        ...appointmentData 
+      };
+      
+      // Si freelancerId est fourni, le copier vers freelancerid
+      if (appointmentData.freelancerId !== undefined) {
+        dataToSend.freelancerid = appointmentData.freelancerId;
+        // Supprimer freelancerId pour éviter les conflits
+        delete dataToSend.freelancerId;
+      }
+      
       const { data, error } = await supabase
         .rpc('create_appointment', {
-          appointment_data: appointmentData
+          appointment_data: dataToSend
         });
 
       if (error) {
@@ -87,9 +99,19 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
 
   const createAutoAssignAppointment = async (appointmentData) => {
     try {
+      // S'assurer que nous utilisons freelancerid et non freelancerId
+      const dataToSend = { 
+        ...appointmentData 
+      };
+      
+      // Supprimer freelancerId pour éviter les conflits
+      if (dataToSend.freelancerId !== undefined) {
+        delete dataToSend.freelancerId;
+      }
+      
       const { data, error } = await supabase
         .rpc('create_auto_assign_appointment', {
-          appointment_data: appointmentData
+          appointment_data: dataToSend
         });
 
       if (error) {
@@ -125,9 +147,16 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
   };
 
   const updateAppointment = async (appointmentId: string, updateData) => {
+    // Si updateData contient freelancerId, le convertir en freelancerid
+    const dataToUpdate = { ...updateData };
+    if (dataToUpdate.freelancerId !== undefined) {
+      dataToUpdate.freelancerid = dataToUpdate.freelancerId;
+      delete dataToUpdate.freelancerId;
+    }
+    
     const { error } = await supabase
       .from('appointments')
-      .update(updateData)
+      .update(dataToUpdate)
       .eq('id', appointmentId);
 
     if (error) {
@@ -165,6 +194,9 @@ export const createAppointmentsService = (supabase: SupabaseClient) => {
   };
 };
 
+// Import necessary Supabase client
+import { supabase } from '@/lib/supabase';
+
 // Export a simpler interface for usage in components
 export const appointmentsService = {
   getAppointments: () => createAppointmentsService(supabase).getAppointments(),
@@ -184,6 +216,3 @@ export const appointmentsService = {
   deleteAppointment: (appointmentId: string) => 
     createAppointmentsService(supabase).deleteAppointment(appointmentId)
 };
-
-// Import necessary Supabase client
-import { supabase } from '@/lib/supabase';

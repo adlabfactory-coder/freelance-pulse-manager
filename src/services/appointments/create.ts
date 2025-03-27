@@ -7,8 +7,21 @@ import { Appointment, AppointmentStatus } from "@/types/appointment";
 export const createAppointment = async (appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment | null> => {
   try {
     console.log("Création d'un rendez-vous avec les données:", appointmentData);
+
+    // S'assurer que freelancerid est utilisé correctement (et non freelancerId)
+    const dataToSend = {
+      ...appointmentData,
+      // Si freelancerId est présent, le copier vers freelancerid
+      freelancerid: appointmentData.freelancerId
+    };
+
+    // Supprimer freelancerId car la base de données utilise freelancerid
+    if ('freelancerId' in dataToSend) {
+      delete (dataToSend as any).freelancerId;
+    }
+
     const { data, error } = await supabase.rpc('create_appointment', {
-      appointment_data: appointmentData
+      appointment_data: dataToSend
     });
 
     if (error) {
@@ -18,6 +31,15 @@ export const createAppointment = async (appointmentData: Omit<Appointment, 'id' 
     }
 
     console.log("Rendez-vous créé avec succès:", data);
+    
+    // Normaliser la réponse en convertissant freelancerid en freelancerId
+    if (data && data.freelancerid) {
+      (data as any).freelancerId = data.freelancerid;
+    }
+    
+    // Déclencher l'événement de création de rendez-vous
+    window.dispatchEvent(new CustomEvent('appointment-created'));
+    
     return data;
   } catch (err) {
     console.error('Erreur inattendue lors de la création du rendez-vous:', err);
@@ -35,8 +57,14 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
     const cleanedData = {
       ...appointmentData,
       status: AppointmentStatus.PENDING,
-      freelancerId: null
+      // Utiliser freelancerid au lieu de freelancerId
+      freelancerid: null
     };
+    
+    // Supprimer freelancerId car la base de données utilise freelancerid
+    if ('freelancerId' in cleanedData) {
+      delete (cleanedData as any).freelancerId;
+    }
     
     const { data, error } = await supabase.rpc('create_auto_assign_appointment', {
       appointment_data: cleanedData
@@ -49,6 +77,10 @@ export const createAutoAssignAppointment = async (appointmentData: Omit<Appointm
     }
 
     console.log("Rendez-vous auto-assigné créé avec succès:", data);
+    
+    // Déclencher l'événement de création de rendez-vous
+    window.dispatchEvent(new CustomEvent('appointment-created'));
+    
     return data;
   } catch (err) {
     console.error('Erreur inattendue lors de la création du rendez-vous auto-assigné:', err);
