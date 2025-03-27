@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useSupabase } from './use-supabase';
-import { CommissionTier } from '@/types/commissions';
+import { CommissionTier, CommissionStatus } from '@/types/commissions';
 
 // Define the CommissionDetail interface
 export interface CommissionDetail {
@@ -13,7 +12,7 @@ export interface CommissionDetail {
   tier: CommissionTier; // Changed from string to CommissionTier
   periodStart: Date;
   periodEnd: Date;
-  status: string;
+  status: CommissionStatus; // Changed from string to CommissionStatus
   paidDate?: Date;
   paymentRequested: boolean;
   contact?: {
@@ -90,10 +89,11 @@ export function useCommissionDetail(commissionId: string | undefined) {
           }
         }
 
-        // Convert string tier to CommissionTier enum
+        // Convert string tier to CommissionTier enum and status to CommissionStatus
         const processedData = {
           ...data,
           tier: mapTierStringToEnum(data.tier), // Convert the tier string to enum
+          status: mapStatusStringToEnum(data.status), // Convert the status string to enum
           periodStart: new Date(data.periodStart),
           periodEnd: new Date(data.periodEnd),
           createdAt: new Date(data.createdAt),
@@ -127,6 +127,21 @@ export function useCommissionDetail(commissionId: string | undefined) {
       default:
         console.warn(`Unknown tier value: ${tierString}, defaulting to TIER_1`);
         return CommissionTier.TIER_1;
+    }
+  };
+
+  // Function to map string status values to CommissionStatus enum
+  const mapStatusStringToEnum = (statusString: string): CommissionStatus => {
+    switch (statusString.toLowerCase()) {
+      case 'paid':
+        return 'paid';
+      case 'rejected':
+        return 'rejected';
+      case 'processing':
+        return 'processing';
+      case 'pending':
+      default:
+        return 'pending';
     }
   };
 
