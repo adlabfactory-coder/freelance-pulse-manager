@@ -56,13 +56,13 @@ const ApiKeysList: React.FC<ApiKeysListProps> = ({
       <TableBody>
         {apiKeys.map((apiKey) => (
           <TableRow key={apiKey.id}>
-            <TableCell className="font-medium">{apiKey.key_name}</TableCell>
-            <TableCell>{formatDate(apiKey.created_at)}</TableCell>
+            <TableCell className="font-medium">{apiKey.keyName}</TableCell>
+            <TableCell>{formatDate(apiKey.createdAt)}</TableCell>
             <TableCell>
-              {apiKey.expires_at ? formatDate(apiKey.expires_at) : "Jamais"}
+              {apiKey.expiresAt ? formatDate(apiKey.expiresAt) : "Jamais"}
             </TableCell>
             <TableCell>
-              {apiKey.last_used ? formatDate(apiKey.last_used) : "Jamais utilisée"}
+              {apiKey.lastUsed ? formatDate(apiKey.lastUsed) : "Jamais utilisée"}
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
@@ -76,7 +76,7 @@ const ApiKeysList: React.FC<ApiKeysListProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onCopyKey(apiKey.api_key)}
+                  onClick={() => onCopyKey(apiKey.apiKey)}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
