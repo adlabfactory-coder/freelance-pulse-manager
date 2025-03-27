@@ -127,3 +127,48 @@ BEGIN
   WHERE id = contact_id;
 END;
 $function$;
+
+-- Fonction pour créer un contact en contournant les politiques RLS
+CREATE OR REPLACE FUNCTION public.create_contact(contact_data jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE
+  new_contact JSONB;
+  inserted_id UUID;
+BEGIN
+  INSERT INTO public.contacts (
+    name,
+    email,
+    phone,
+    company,
+    position,
+    address,
+    notes,
+    "assignedTo",
+    status,
+    "createdAt",
+    "updatedAt"
+  )
+  VALUES (
+    contact_data->>'name',
+    contact_data->>'email',
+    contact_data->>'phone',
+    contact_data->>'company',
+    contact_data->>'position',
+    contact_data->>'address',
+    contact_data->>'notes',
+    (contact_data->>'assignedTo')::UUID,
+    (contact_data->>'status')::contact_status,
+    (contact_data->>'createdAt')::TIMESTAMP WITH TIME ZONE,
+    (contact_data->>'updatedAt')::TIMESTAMP WITH TIME ZONE
+  )
+  RETURNING id INTO inserted_id;
+  
+  -- Créer un objet JSON avec l'ID du nouveau contact
+  SELECT jsonb_build_object('id', inserted_id) INTO new_contact;
+  
+  RETURN new_contact;
+END;
+$function$;

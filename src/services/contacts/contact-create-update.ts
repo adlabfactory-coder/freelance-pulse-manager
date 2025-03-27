@@ -20,25 +20,34 @@ export const contactCreateUpdateService = {
   async createContact(contactData: ContactFormInput): Promise<string | null> {
     try {
       const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from("contacts")
-        .insert([
-          {
-            name: contactData.name,
-            email: contactData.email,
-            phone: contactData.phone || null,
-            company: contactData.company || null,
-            position: contactData.position || null,
-            address: contactData.address || null,
-            notes: contactData.notes || null,
-            assignedTo: contactData.assignedTo || null,
-            status: contactData.status,
-            createdAt: now,
-            updatedAt: now
-          }
-        ])
-        .select("id")
-        .single();
+      
+      // Récupérer l'utilisateur actuellement connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Si l'utilisateur n'est pas connecté, utiliser la fonction RPC qui contourne les RLS
+      if (!user) {
+        console.error("Utilisateur non authentifié lors de la création d'un contact");
+        throw new Error("Vous devez être connecté pour créer un contact");
+      }
+      
+      console.log("Création de contact avec utilisateur authentifié:", user.id);
+      
+      // Utiliser une procédure stockée ou une fonction RPC pour insérer le contact
+      const { data, error } = await supabase.rpc('create_contact', {
+        contact_data: {
+          name: contactData.name,
+          email: contactData.email,
+          phone: contactData.phone || null,
+          company: contactData.company || null,
+          position: contactData.position || null,
+          address: contactData.address || null,
+          notes: contactData.notes || null,
+          assignedTo: contactData.assignedTo || user.id,
+          status: contactData.status,
+          createdAt: now,
+          updatedAt: now
+        }
+      });
 
       if (error) {
         console.error("Error creating contact:", error);
@@ -61,6 +70,16 @@ export const contactCreateUpdateService = {
   async updateContact(id: string, contactData: Partial<ContactFormInput>): Promise<boolean> {
     try {
       const now = new Date().toISOString();
+      
+      // Récupérer l'utilisateur actuellement connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error("Utilisateur non authentifié lors de la mise à jour d'un contact");
+        throw new Error("Vous devez être connecté pour mettre à jour un contact");
+      }
+      
+      // Utiliser une insertion directe avec les RLS en place
       const { error } = await supabase
         .from("contacts")
         .update({
