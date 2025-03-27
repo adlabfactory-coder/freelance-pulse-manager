@@ -1,10 +1,16 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Folder } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FOLDER_OPTIONS } from "./FolderSelect";
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { Check, Filter, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface AppointmentFolderFilterProps {
   selectedFolder: string | null;
@@ -13,55 +19,60 @@ interface AppointmentFolderFilterProps {
 
 const AppointmentFolderFilter: React.FC<AppointmentFolderFilterProps> = ({
   selectedFolder,
-  onFolderChange
+  onFolderChange,
 }) => {
-  const handleSelectFolder = (folder: string) => {
-    onFolderChange(selectedFolder === folder ? null : folder);
-  };
-
-  const getSelectedFolderLabel = () => {
-    if (!selectedFolder) return "Tous les dossiers";
-    const folder = FOLDER_OPTIONS.find(f => f.value === selectedFolder);
-    return folder ? folder.label : "Dossier inconnu";
-  };
-
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className={`flex items-center gap-2 ${selectedFolder ? 'bg-primary/10' : ''}`}
-        >
-          <Folder className="h-4 w-4" />
-          <span>{getSelectedFolderLabel()}</span>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="ml-auto h-8 lg:flex">
+          <Filter className="mr-2 h-4 w-4" />
+          Dossier
+          {selectedFolder && (
+            <span className="ml-2 rounded-full bg-primary text-primary-foreground px-1 py-0.5 text-xs">
+              {FOLDER_OPTIONS.find(f => f.value === selectedFolder)?.label || selectedFolder}
+            </span>
+          )}
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="p-0" align="start">
-        <Command>
-          <CommandList>
-            <CommandEmpty>Aucun dossier trouvé</CommandEmpty>
-            <CommandGroup heading="Dossiers">
-              <CommandItem
-                onSelect={() => onFolderChange(null)}
-                className={!selectedFolder ? 'bg-primary/10' : ''}
-              >
-                Tous les dossiers
-              </CommandItem>
-              {FOLDER_OPTIONS.map(folder => (
-                <CommandItem
-                  key={folder.value}
-                  onSelect={() => handleSelectFolder(folder.value)}
-                  className={selectedFolder === folder.value ? 'bg-primary/10' : ''}
-                >
-                  {folder.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuRadioGroup
+          value={selectedFolder || ""}
+          onValueChange={(value) => onFolderChange(value || null)}
+        >
+          <DropdownMenuRadioItem value="">
+            <Check
+              className={`mr-2 h-4 w-4 ${!selectedFolder ? "opacity-100" : "opacity-0"}`}
+            />
+            Tous les dossiers
+          </DropdownMenuRadioItem>
+          <DropdownMenuSeparator />
+          {FOLDER_OPTIONS.map((folder) => (
+            <DropdownMenuRadioItem key={folder.value} value={folder.value}>
+              <Check
+                className={`mr-2 h-4 w-4 ${
+                  selectedFolder === folder.value ? "opacity-100" : "opacity-0"
+                }`}
+              />
+              {folder.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        {selectedFolder && (
+          <>
+            <DropdownMenuSeparator />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              onClick={() => onFolderChange(null)}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Effacer le filtre
+            </Button>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

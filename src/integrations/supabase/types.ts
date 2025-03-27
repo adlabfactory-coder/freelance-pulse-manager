@@ -73,6 +73,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           duration: number
+          folder: string | null
           freelancerid: string
           id: string
           location: string | null
@@ -88,6 +89,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           duration: number
+          folder?: string | null
           freelancerid: string
           id?: string
           location?: string | null
@@ -103,6 +105,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           duration?: number
+          folder?: string | null
           freelancerid?: string
           id?: string
           location?: string | null
