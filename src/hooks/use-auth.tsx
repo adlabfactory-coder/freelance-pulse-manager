@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
-import { mockAuthentication } from "@/services/mock-auth-service";
+import { getMockUsers } from "@/utils/supabase-mock-data";
 import { AuthContextType } from "@/types/auth";
 
 // Context pour l'authentification
@@ -17,6 +17,8 @@ const defaultContext: AuthContextType = {
   isSuperAdmin: false,
   isAccountManager: false,
   isAdminOrSuperAdmin: false,
+  error: null,
+  loading: true,
   signIn: async () => ({ success: false }),
   signUp: async () => ({ success: false }),
   logout: async () => {},
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextType>(defaultContext);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Vérification de l'état de l'authentification au chargement
@@ -60,9 +63,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         } else {
           // Mode démonstration avec un utilisateur mocké
-          const mockUser = await mockAuthentication();
-          if (mockUser) {
-            setUser(mockUser);
+          const mockUsers = getMockUsers();
+          if (mockUsers && mockUsers.length > 0) {
+            setUser(mockUsers[0]);
           }
         }
       } catch (err) {
@@ -142,7 +145,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // Mode de démonstration
-      const mockUser = await mockAuthentication(email);
+      const mockUsers = getMockUsers();
+      const mockUser = mockUsers.find(u => u.email === email);
       if (mockUser) {
         setUser(mockUser);
         return { success: true };
@@ -200,6 +204,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isSuperAdmin,
     isAccountManager,
     isAdminOrSuperAdmin,
+    loading: isLoading,
+    error,
     signIn,
     signUp,
     logout,

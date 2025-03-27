@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase-client";
-import { Service } from "@/types/service";
+import { Service, ServiceType } from "@/types/service";
 
 export const fetchServices = async (): Promise<Service[]> => {
   try {
@@ -20,7 +20,7 @@ export const fetchServices = async (): Promise<Service[]> => {
       name: service.name,
       description: service.description,
       price: Number(service.price),
-      type: service.type,
+      type: service.type as ServiceType,
       is_active: service.is_active,
       created_at: service.created_at,
       updated_at: service.updated_at
@@ -52,7 +52,7 @@ export const fetchServiceById = async (id: string): Promise<Service | null> => {
       name: data.name,
       description: data.description,
       price: Number(data.price),
-      type: data.type,
+      type: data.type as ServiceType,
       is_active: data.is_active,
       created_at: data.created_at,
       updated_at: data.updated_at

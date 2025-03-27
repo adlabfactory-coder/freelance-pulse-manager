@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { Service } from "@/types/service";
-import { ServiceType } from "@/types/service";
+import { Service, ServiceType } from "@/types/service";
 import { toast } from "@/components/ui/use-toast";
 import { fetchServices, createService, updateService, deleteService } from "@/services/services-service";
 
@@ -9,7 +8,6 @@ export const useServices = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
@@ -34,10 +32,6 @@ export const useServices = () => {
   useEffect(() => {
     loadServices();
   }, [loadServices]);
-
-  const handleSelectService = useCallback((service: Service) => {
-    setSelectedService(service);
-  }, []);
 
   const handleCreateService = useCallback(async (serviceData: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
     setIsSaving(true);
@@ -68,13 +62,7 @@ export const useServices = () => {
   const handleUpdateService = useCallback(async (id: string, serviceData: Partial<Service>) => {
     setIsSaving(true);
     try {
-      // S'assurer que is_active est correctement défini
-      const dataToUpdate = {
-        ...serviceData,
-        is_active: serviceData.is_active
-      };
-      
-      const success = await updateService(id, dataToUpdate);
+      const success = await updateService(id, serviceData);
       if (success) {
         toast({
           title: "Service mis à jour",
@@ -127,11 +115,9 @@ export const useServices = () => {
     services,
     loading,
     error,
-    selectedService,
     isSaving,
     isDeleting,
     loadServices,
-    selectService: handleSelectService,
     createService: handleCreateService,
     updateService: handleUpdateService,
     deleteService: handleDeleteService

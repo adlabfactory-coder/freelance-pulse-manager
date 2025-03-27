@@ -4,7 +4,7 @@ export interface Service {
   name: string;
   description?: string;
   price: number;
-  type: string;
+  type: ServiceType;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;

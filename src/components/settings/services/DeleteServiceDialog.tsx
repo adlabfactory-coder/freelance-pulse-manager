@@ -16,14 +16,14 @@ interface DeleteServiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  serviceName: string;
+  service: Service;
 }
 
 const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  serviceName,
+  service,
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -31,12 +31,12 @@ const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Vous êtes sur le point de supprimer le service "{serviceName}".
+            Vous êtes sur le point de supprimer le service "{service.name}".
             Cette action ne peut pas être annulée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose}>Annuler</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

@@ -1,28 +1,59 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import ServicesHeader from "./services/ServicesHeader";
 import ServicesList from "./services/ServicesList";
 import ServiceForm from "./services/ServiceForm";
 import DeleteServiceDialog from "./services/DeleteServiceDialog";
-import { useServices } from "@/hooks/useServices"; // Using the updated hook
+import { useServices } from "@/hooks/useServices";
+import { Service } from "@/types/service";
 
 const ServicesSettings: React.FC = () => {
   const {
     services,
     loading,
-    editDialogOpen,
-    confirmDeleteDialogOpen,
-    selectedService,
-    handleAddClick,
-    handleEditClick,
-    handleDeleteClick,
-    handleServiceChange,
-    handleSaveService,
-    handleConfirmDelete,
-    setEditDialogOpen,
-    setConfirmDeleteDialogOpen
+    isSaving,
+    isDeleting,
+    createService,
+    updateService,
+    deleteService,
+    loadServices
   } = useServices();
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const handleAddClick = () => {
+    setSelectedService(null);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditClick = (service: Service) => {
+    setSelectedService(service);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (service: Service) => {
+    setSelectedService(service);
+    setConfirmDeleteDialogOpen(true);
+  };
+
+  const handleSaveService = async (service: Service) => {
+    if (selectedService && selectedService.id) {
+      await updateService(selectedService.id, service);
+    } else {
+      await createService(service);
+    }
+    setEditDialogOpen(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedService && selectedService.id) {
+      await deleteService(selectedService.id);
+      setConfirmDeleteDialogOpen(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -37,21 +68,26 @@ const ServicesSettings: React.FC = () => {
 
       {/* Edit/Add Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <ServiceForm
-          service={selectedService}
-          onSave={handleSaveService}
-          onCancel={() => setEditDialogOpen(false)}
-          onChange={handleServiceChange}
-        />
+        {editDialogOpen && (
+          <ServiceForm
+            service={selectedService}
+            onSave={handleSaveService}
+            onCancel={() => setEditDialogOpen(false)}
+            isSaving={isSaving}
+          />
+        )}
       </Dialog>
 
       {/* Confirm Delete Dialog */}
       <Dialog open={confirmDeleteDialogOpen} onOpenChange={setConfirmDeleteDialogOpen}>
-        <DeleteServiceDialog
-          service={selectedService as any}
-          onConfirm={handleConfirmDelete}
-          onCancel={() => setConfirmDeleteDialogOpen(false)}
-        />
+        {confirmDeleteDialogOpen && selectedService && (
+          <DeleteServiceDialog
+            service={selectedService}
+            onConfirm={handleConfirmDelete}
+            onClose={() => setConfirmDeleteDialogOpen(false)}
+            isOpen={confirmDeleteDialogOpen}
+          />
+        )}
       </Dialog>
     </div>
   );

@@ -37,3 +37,8 @@ export const getMockUsers = (): User[] => {
     }
   ];
 };
+
+export const getMockUserById = (id: string): User | null => {
+  const users = getMockUsers();
+  return users.find(user => user.id === id) || null;
+};
