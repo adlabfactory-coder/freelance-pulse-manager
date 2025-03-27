@@ -9,6 +9,7 @@ import { UserRole } from "@/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Trash2, Archive } from "lucide-react";
+import AddContactDialog from "@/components/contacts/AddContactDialog";
 
 const ContactsPage: React.FC = () => {
   const { 
@@ -26,6 +27,7 @@ const ContactsPage: React.FC = () => {
   } = useContactsData();
   
   const { role, isAdminOrSuperAdmin } = useAuth();
+  const [addContactDialogOpen, setAddContactDialogOpen] = useState(false);
 
   // Message de déboggage
   console.log("État actuel de la page contacts:", { 
@@ -34,7 +36,8 @@ const ContactsPage: React.FC = () => {
     loading, 
     error,
     role,
-    isAdmin: isAdminOrSuperAdmin
+    isAdmin: isAdminOrSuperAdmin,
+    includeTrash
   });
 
   // Afficher un message d'erreur si nécessaire
@@ -78,6 +81,9 @@ const ContactsPage: React.FC = () => {
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualiser
           </Button>
+          <Button onClick={() => setAddContactDialogOpen(true)} variant="default" size="sm">
+            Ajouter un contact
+          </Button>
         </div>
       </div>
       
@@ -119,6 +125,16 @@ const ContactsPage: React.FC = () => {
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Dialogue pour ajouter un contact */}
+      <AddContactDialog 
+        open={addContactDialogOpen} 
+        onOpenChange={setAddContactDialogOpen} 
+        onContactAdded={() => {
+          fetchContacts(includeTrash);
+          setAddContactDialogOpen(false);
+        }} 
+      />
     </div>
   );
 };
