@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import AppointmentHeader from "@/components/appointments/AppointmentHeader";
 import AddAppointmentDialog from "@/components/appointments/AddAppointmentDialog";
@@ -9,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AppointmentList from "@/components/appointments/AppointmentList";
 import PendingAppointmentsList from "@/components/appointments/PendingAppointmentsList";
 import { filterUpcomingAppointments, filterPastAppointments } from "@/services/appointments/filter";
-import { useAppointments } from "@/hooks/use-appointments";
+import { useAppointments } from "@/hooks/appointments/use-appointments";
 
 const Appointments: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -25,12 +24,11 @@ const Appointments: React.FC = () => {
     setOpenNewAppointmentDialog(true);
   };
 
-  // Écouter l'événement de création de rendez-vous pour rafraîchir les notifications
   useEffect(() => {
     const handleAppointmentCreated = () => {
       console.log("Événement de création de rendez-vous détecté, rafraîchissement des données");
       refreshNotifications();
-      refresh(); // Rafraîchir la liste des rendez-vous
+      refresh();
     };
 
     window.addEventListener('appointment-created', handleAppointmentCreated);
@@ -40,7 +38,6 @@ const Appointments: React.FC = () => {
     };
   }, [refreshNotifications, refresh]);
 
-  // Filtrer les rendez-vous en fonction de l'onglet actif
   const filteredAppointments = activeTab === "upcoming" 
     ? filterUpcomingAppointments(appointments)
     : filterPastAppointments(appointments);
@@ -58,12 +55,10 @@ const Appointments: React.FC = () => {
         onStatusFilterChange={setStatusFilter}
       />
 
-      {/* Afficher les rendez-vous en attente d'attribution pour les chargés de compte et admins */}
       {(isAccountManager || isAdmin) && (
         <PendingAppointmentsList />
       )}
 
-      {/* Onglets pour les rendez-vous à venir et passés */}
       <Tabs 
         defaultValue="upcoming" 
         value={activeTab} 

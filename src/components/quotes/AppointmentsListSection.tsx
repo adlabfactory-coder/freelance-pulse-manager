@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppointments } from "@/hooks/use-appointments";
+import { useAppointments } from "@/hooks/appointments/use-appointments";
 import { useAuth } from "@/hooks/use-auth";
 import { AppointmentStatus } from "@/types/appointment";
 import { format } from "date-fns";

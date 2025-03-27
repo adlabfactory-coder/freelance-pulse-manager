@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import AppointmentListHeader from "./list/AppointmentListHeader";
@@ -6,7 +5,7 @@ import AppointmentTable from "./list/AppointmentTable";
 import AppointmentEmptyState from "./list/AppointmentEmptyState";
 import AppointmentLoadingSkeleton from "./list/AppointmentLoadingSkeleton";
 import { Appointment, normalizeFreelancerId } from "@/types/appointment";
-import { useAppointments } from "@/hooks/use-appointments";
+import { useAppointments } from "@/hooks/appointments/use-appointments";
 
 interface AppointmentListProps {
   searchQuery?: string;
@@ -23,29 +22,24 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   appointments: externalAppointments,
   isLoading: externalLoading
 }) => {
-  // Utiliser soit les rendez-vous externes, soit charger les rendez-vous via le hook
   const hookResult = useAppointments();
   
   const appointments = externalAppointments || hookResult.appointments;
   const loading = externalLoading !== undefined ? externalLoading : hookResult.isLoading;
   
-  // Normaliser les rendez-vous pour s'assurer que freelancerId est toujours présent
   const normalizedAppointments = React.useMemo(() => {
     return appointments?.map(normalizeFreelancerId) || [];
   }, [appointments]);
   
-  // Filtrer les rendez-vous selon les critères de recherche
   const filteredAppointments = React.useMemo(() => {
     if (!normalizedAppointments?.length) return [];
     
     let filtered = [...normalizedAppointments];
     
-    // Filtrage par statut si nécessaire
     if (statusFilter) {
       filtered = filtered.filter(app => app.status === statusFilter);
     }
     
-    // Filtrage par terme de recherche
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(app => 
@@ -83,7 +77,6 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
     );
   }
 
-  // Récupérer les contacts pour l'affichage
   const contacts = filteredAppointments.reduce((acc, app) => {
     if (app.contactId && app.contactName) {
       acc[app.contactId] = app.contactName;

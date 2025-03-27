@@ -11,5 +11,6 @@ export * from "./use-subscriptions";
 // Export des hooks spécifiques
 export * from "./commission";
 
-// Export des hooks d'appointments depuis le nouveau dossier
+// Export direct des hooks d'appointments depuis leur dossier
 export * from "./appointments";
+
