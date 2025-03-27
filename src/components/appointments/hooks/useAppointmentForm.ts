@@ -115,7 +115,7 @@ export const useAppointmentForm = (
       }
       
       // Créer l'objet de rendez-vous à envoyer
-      const appointmentData: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'> = {
+      const appointmentData = {
         title,
         description,
         date: appointmentDate,

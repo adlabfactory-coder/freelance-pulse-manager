@@ -54,6 +54,7 @@ interface ContactAppointmentDialogProps {
   contactId: string;
   contactName: string;
   initialType?: string;
+  autoAssign?: boolean; // Ajout du prop autoAssign
 }
 
 const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
@@ -62,6 +63,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
   contactId,
   contactName,
   initialType,
+  autoAssign = false, // Valeur par défaut à false
 }) => {
   const { user } = useAuth();
   
@@ -86,7 +88,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       duration: initialAppointmentType?.duration || 60,
       contactId: contactId,
       freelancerId: user?.id || "",
-      status: "pending",
+      status: autoAssign ? "pending" : "scheduled", // Utiliser un statut différent si auto-assigné
       folder: "general" // Valeur par défaut pour le dossier
     },
   });
@@ -109,10 +111,21 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
     }
 
     try {
-      const result = await createAppointment({
-        ...data,
-        freelancerId: user.id,
-      });
+      // S'assurer que les champs requis sont présents
+      const appointmentData: CreateAppointmentInput = {
+        title: data.title,
+        description: data.description,
+        date: data.date,
+        duration: data.duration,
+        contactId: data.contactId,
+        freelancerId: data.freelancerId || user.id,
+        location: data.location,
+        notes: data.notes,
+        status: data.status as AppointmentStatus,
+        folder: data.folder
+      };
+
+      const result = await createAppointment(appointmentData);
 
       if (result) {
         toast.success("Rendez-vous créé avec succès");
@@ -138,6 +151,7 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
           <DialogTitle>Planifier un rendez-vous</DialogTitle>
           <DialogDescription>
             Planifier un rendez-vous avec {contactName}
+            {autoAssign && " (Assignation automatique à un freelancer)"}
           </DialogDescription>
         </DialogHeader>
 

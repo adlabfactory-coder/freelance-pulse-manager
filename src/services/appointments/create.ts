@@ -68,3 +68,34 @@ export const createAppointment = async (data: CreateAppointmentInput): Promise<A
     throw error;
   }
 };
+
+// Fonction pour créer un rendez-vous avec assignation automatique à un freelancer
+export const createAutoAssignAppointment = async (data: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Appointment | null> => {
+  try {
+    // Vérifier que les données requises sont présentes
+    if (!data.title || !data.date || !data.contactId) {
+      toast.error('Informations manquantes pour créer le rendez-vous');
+      throw new Error('Titre, date et contact sont requis');
+    }
+
+    // Convertir les données au format attendu par createAppointment
+    const appointmentInput: CreateAppointmentInput = {
+      title: data.title,
+      description: data.description || undefined,
+      date: data.date,
+      duration: data.duration,
+      contactId: data.contactId,
+      freelancerId: data.freelancerId,
+      location: data.location || undefined,
+      notes: data.notes || undefined,
+      status: data.status,
+      folder: data.folder || 'general'
+    };
+
+    // Utiliser la fonction createAppointment existante
+    return await createAppointment(appointmentInput);
+  } catch (error: any) {
+    console.error('Erreur lors de la création du rendez-vous auto-assigné:', error);
+    throw error;
+  }
+};
