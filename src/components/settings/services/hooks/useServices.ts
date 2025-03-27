@@ -1,120 +1,98 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { Service, ServiceType } from "@/types/service";
-import { useToast } from "@/hooks/use-toast";
-import { fetchServices, createService, updateService, deleteService } from "@/services/services-service";
+import { useState, useEffect, useCallback } from 'react';
+import { Service, ServiceType, ServiceCategory } from '@/types/service';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase-client';
 
 export const useServices = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const getServices = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
-      const fetchedServices = await fetchServices();
-      setServices(fetchedServices);
-      setError(null);
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      
+      setServices(data || []);
     } catch (err: any) {
-      setError(err.message || "Erreur lors du chargement des services");
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de charger les services"
-      });
+      console.error('Error loading services:', err);
+      setError(err.message);
+      toast.error('Erreur lors du chargement des services');
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
+
+  const addService = useCallback(async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .insert([service])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setServices(prev => [...prev, data]);
+      toast.success('Service ajouté avec succès');
+      return data;
+    } catch (err: any) {
+      console.error('Error adding service:', err);
+      toast.error('Erreur lors de l\'ajout du service');
+      throw err;
+    }
+  }, []);
+
+  const editService = useCallback(async (id: string, service: Partial<Omit<Service, 'id' | 'created_at' | 'updated_at'>>) => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .update(service)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setServices(prev => prev.map(s => s.id === id ? data : s));
+      toast.success('Service mis à jour avec succès');
+      return data;
+    } catch (err: any) {
+      console.error('Error updating service:', err);
+      toast.error('Erreur lors de la mise à jour du service');
+      throw err;
+    }
+  }, []);
+
+  const removeService = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('services')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setServices(prev => prev.filter(s => s.id !== id));
+      toast.success('Service supprimé avec succès');
+      return true;
+    } catch (err: any) {
+      console.error('Error removing service:', err);
+      toast.error('Erreur lors de la suppression du service');
+      throw err;
+    }
+  }, []);
 
   useEffect(() => {
     getServices();
   }, [getServices]);
-
-  const addService = useCallback(async (service: Omit<Service, 'id' | 'created_at' | 'updated_at'>) => {
-    try {
-      const result = await createService(service);
-      if (result.success) {
-        toast({
-          title: "Succès",
-          description: "Service ajouté avec succès"
-        });
-        await getServices();
-        return true;
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible d'ajouter le service"
-        });
-        return false;
-      }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: err.message || "Une erreur est survenue"
-      });
-      return false;
-    }
-  }, [getServices, toast]);
-
-  const editService = useCallback(async (id: string, service: Partial<Service>) => {
-    try {
-      const success = await updateService(id, service);
-      if (success) {
-        toast({
-          title: "Succès",
-          description: "Service mis à jour avec succès"
-        });
-        await getServices();
-        return true;
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de mettre à jour le service"
-        });
-        return false;
-      }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: err.message || "Une erreur est survenue"
-      });
-      return false;
-    }
-  }, [getServices, toast]);
-
-  const removeService = useCallback(async (id: string) => {
-    try {
-      const success = await deleteService(id);
-      if (success) {
-        toast({
-          title: "Succès",
-          description: "Service supprimé avec succès"
-        });
-        await getServices();
-        return true;
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de supprimer le service"
-        });
-        return false;
-      }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: err.message || "Une erreur est survenue"
-      });
-      return false;
-    }
-  }, [getServices, toast]);
 
   return {
     services,

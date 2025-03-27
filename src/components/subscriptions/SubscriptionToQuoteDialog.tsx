@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { QuoteStatus, SubscriptionPlan } from "@/types";
-import { useQuoteForm } from "@/hooks/useQuoteForm";
+import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
 import ClientSelector from "@/components/quotes/form/ClientSelector";
 import FreelancerSelector from "@/components/quotes/form/FreelancerSelector";
 import StatusSelector from "@/components/quotes/form/StatusSelector";

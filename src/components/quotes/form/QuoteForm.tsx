@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useQuoteForm } from '../hooks/useQuoteForm';
+import { useQuoteForm } from '@/hooks/quotes/useQuoteForm';
 import QuoteFormSections from './QuoteFormSections';
 import { Quote, QuoteItem } from '@/types';
 import { Loader2 } from 'lucide-react';

@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -11,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import QuoteForm from "./form/QuoteForm";
-import { useQuoteForm } from "./hooks/useQuoteForm";
+import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
 
 interface AddQuoteDialogProps {
   onQuoteAdded?: () => void;

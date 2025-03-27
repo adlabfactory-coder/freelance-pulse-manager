@@ -1,18 +1,19 @@
-import { supabase } from "@/lib/supabase-client";
-import { Subscription, SubscriptionPlan, SubscriptionStatus, SubscriptionInterval } from "@/types";
+import { supabase } from '@/lib/supabase-client';
+import { SubscriptionInterval, SubscriptionPlan, SubscriptionStatus } from '@/types';
 
-export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
+export async function fetchSubscriptionPlans(): Promise<SubscriptionPlan[]> {
   try {
     const { data, error } = await supabase
       .from('subscription_plans')
       .select('*')
-      .eq('is_active', true);
-    
+      .order('price', { ascending: true });
+
     if (error) {
       console.error('Error fetching subscription plans:', error);
-      throw error;
+      return [];
     }
-    
+
+    // Convertir les données pour correspondre à l'interface SubscriptionPlan
     return data.map(plan => ({
       id: plan.id,
       name: plan.name,
@@ -21,7 +22,7 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
       price: Number(plan.price),
       interval: plan.interval as SubscriptionInterval,
       features: plan.features,
-      is_active: plan.is_active,
+      isActive: plan.is_active, // Convertir is_active en isActive
       created_at: plan.created_at,
       updated_at: plan.updated_at
     }));
@@ -29,7 +30,7 @@ export const fetchSubscriptionPlans = async (): Promise<SubscriptionPlan[]> => {
     console.error('Unexpected error fetching subscription plans:', error);
     return [];
   }
-};
+}
 
 export const fetchSubscriptions = async (userId?: string): Promise<Subscription[]> => {
   try {
