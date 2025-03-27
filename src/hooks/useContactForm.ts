@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { contactCreateUpdateService } from '@/services/contacts/contact-create-update';
+import { contactCreateUpdateService, ContactFormInput } from '@/services/contacts/contact-create-update';
 import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
@@ -43,16 +43,30 @@ export const useContactForm = ({ onSuccess, initialData, isEditing = false }: Us
     try {
       setLoading(true);
       
-      console.log("Préparation données contact:", data);
+      // S'assurer que toutes les données requises sont présentes
+      const contactInput: ContactFormInput = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        position: data.position,
+        address: data.address,
+        notes: data.notes,
+        status: data.status as ContactStatus,
+        assignedTo: data.assignedTo || (user ? user.id : undefined),
+        folder: data.folder
+      };
+      
+      console.log("Préparation données contact:", contactInput);
       
       if (isEditing && initialData?.id) {
-        const success = await contactCreateUpdateService.updateContact(initialData.id, data);
+        const success = await contactCreateUpdateService.updateContact(initialData.id, contactInput);
         if (success) {
           toast.success("Contact mis à jour avec succès");
           if (onSuccess) onSuccess({id: initialData.id, name: data.name});
         }
       } else {
-        const contactId = await contactCreateUpdateService.createContact(data);
+        const contactId = await contactCreateUpdateService.createContact(contactInput);
         if (contactId) {
           toast.success("Contact ajouté avec succès");
           form.reset();
