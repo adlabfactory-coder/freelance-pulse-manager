@@ -19,6 +19,7 @@ interface PersonalInfoTabProps {
   currentUserRole: UserRole;
   isSubmitting: boolean;
   onSubmit: () => void;
+  canEditRole?: boolean;
 }
 
 const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
@@ -32,7 +33,8 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
   isCurrentUser,
   currentUserRole,
   isSubmitting,
-  onSubmit
+  onSubmit,
+  canEditRole = false
 }) => {
   return (
     <Card>
@@ -70,15 +72,15 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
           <Select 
             value={role} 
             onValueChange={(value) => setRole(value as UserRole)}
-            disabled={!canEdit || (isCurrentUser && currentUserRole === UserRole.ADMIN)}
+            disabled={!canEdit || !canEditRole || (isCurrentUser && currentUserRole === UserRole.ADMIN)}
           >
             <SelectTrigger id="role">
               <SelectValue placeholder="Sélectionnez un rôle" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={UserRole.ADMIN}>Administrateur</SelectItem>
-              <SelectItem value={UserRole.FREELANCER}>Chargé(e) d'affaires</SelectItem>
               <SelectItem value={UserRole.ACCOUNT_MANAGER}>Chargé(e) de compte</SelectItem>
+              <SelectItem value={UserRole.FREELANCER}>Chargé(e) d'affaires</SelectItem>
             </SelectContent>
           </Select>
         </div>

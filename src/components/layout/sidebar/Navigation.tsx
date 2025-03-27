@@ -69,19 +69,19 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
       !["/audit"].includes(item.href)
     );
   } else if (role === UserRole.ACCOUNT_MANAGER) {
-    // Accès pour les chargés de compte
+    // Accès pour les chargés de compte - Contacts, Rendez-vous, Devis, Commissions, Dashboard, Paramètres
     visibleItems = allNavItems.filter(item => 
       ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
     );
   } else if (role === UserRole.FREELANCER) {
-    // Accès pour les freelancers
+    // Accès pour les freelancers - Contacts, Rendez-vous, Devis, Commissions, Dashboard, Paramètres
     visibleItems = allNavItems.filter(item => 
       ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
     );
   } else {
     // Accès minimum par défaut si rôle non défini
     visibleItems = allNavItems.filter(item => 
-      ["/dashboard", "/contacts", "/settings"].includes(item.href)
+      ["/dashboard", "/contacts", "/appointments", "/quotes", "/settings"].includes(item.href)
     );
   }
   

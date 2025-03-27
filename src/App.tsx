@@ -25,6 +25,7 @@ import { Toaster as SonnerToaster } from "./components/ui/sonner";
 import { SupabaseProvider } from "./hooks/use-supabase";
 import UserManager from "@/pages/admin/UserManager";
 import AccountManagersDistributionPage from "@/pages/admin/AccountManagersDistributionPage";
+import { UserRole } from "./types/roles";
 
 function App() {
   return (
@@ -47,10 +48,16 @@ function App() {
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/commissions" element={<Commissions />} />
                 <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
+                
+                {/* Settings routes - accessible only to admins and super admins */}
                 <Route path="/settings/*" element={<SettingsRoutes />} />
+                
+                {/* Admin routes - accessible to admins and super admins */}
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/admin/users" element={<UserManager />} />
                 <Route path="/admin/account-managers" element={<AccountManagersDistributionPage />} />
+                
+                {/* Audit route - accessible only to super admins */}
                 <Route path="/audit" element={<AuditPage />} />
               </Route>
             </Route>

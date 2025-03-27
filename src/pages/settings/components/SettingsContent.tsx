@@ -37,6 +37,13 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Vérifier que l'utilisateur a les permissions d'accès aux paramètres
+  useEffect(() => {
+    if (!isAdminOrSuperAdmin && !isLoading) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAdminOrSuperAdmin, isLoading, navigate]);
   
   if (isLoading) {
     return (
@@ -58,6 +65,11 @@ const SettingsContent: React.FC<SettingsContentProps> = ({
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
+  }
+
+  // Rediriger si l'utilisateur n'est pas admin ou super admin
+  if (!isAdminOrSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Extract the current tab from the URL path

@@ -2,13 +2,14 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { UserRole } from "@/types/roles";
 
 interface ProtectedRouteProps {
   requiredRoles?: string[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, isAdminOrSuperAdmin } = useAuth();
   const location = useLocation();
 
   // Afficher un spinner pendant le chargement
@@ -24,6 +25,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
   if (!isAuthenticated) {
     console.log("Non authentifié, redirection vers la page de connexion");
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
+  }
+
+  // Restreindre l'accès aux paramètres uniquement aux admins et super admins
+  if (location.pathname.startsWith('/settings') && !isAdminOrSuperAdmin) {
+    console.log("Accès aux paramètres restreint, redirection vers le tableau de bord");
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Vérifier les rôles requis si spécifiés

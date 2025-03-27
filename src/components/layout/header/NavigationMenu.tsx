@@ -60,6 +60,10 @@ const NavigationMenu: React.FC = () => {
         { title: "Administration", href: "/admin", icon: Icons.Shield },
         { title: "Audit", href: "/audit", icon: Icons.Layers }
       );
+    } else if (role === UserRole.ADMIN) {
+      allNavItems.push(
+        { title: "Administration", href: "/admin", icon: Icons.Shield }
+      );
     }
     
     // Super Admin has access to everything
@@ -69,7 +73,7 @@ const NavigationMenu: React.FC = () => {
     // Regular admin access
     else if (role === UserRole.ADMIN) {
       return allNavItems.filter(item => 
-        !["/admin", "/audit"].includes(item.href)
+        !["/audit"].includes(item.href)
       );
     } else if (role === UserRole.ACCOUNT_MANAGER) {
       // Accès pour les chargés de compte
@@ -84,7 +88,7 @@ const NavigationMenu: React.FC = () => {
     } else {
       // Accès minimum par défaut si rôle non défini
       return allNavItems.filter(item => 
-        ["/dashboard", "/contacts", "/settings"].includes(item.href)
+        ["/dashboard", "/contacts", "/appointments", "/quotes"].includes(item.href)
       );
     }
   };

@@ -3,16 +3,14 @@ export enum UserRole {
   SUPER_ADMIN = "super_admin",
   ADMIN = "admin",
   ACCOUNT_MANAGER = "account_manager",
-  FREELANCER = "freelancer",
-  CLIENT = "client"
+  FREELANCER = "freelancer"
 }
 
 export const roleLabels: Record<UserRole, string> = {
   [UserRole.SUPER_ADMIN]: "Super Admin",
   [UserRole.ADMIN]: "Admin",
   [UserRole.ACCOUNT_MANAGER]: "Account Manager",
-  [UserRole.FREELANCER]: "Freelancer",
-  [UserRole.CLIENT]: "Client"
+  [UserRole.FREELANCER]: "Freelancer"
 };
 
 // Add missing exports for the role-related components
@@ -23,8 +21,7 @@ export const ROLE_HIERARCHY = [
   UserRole.SUPER_ADMIN,
   UserRole.ADMIN,
   UserRole.ACCOUNT_MANAGER,
-  UserRole.FREELANCER,
-  UserRole.CLIENT
+  UserRole.FREELANCER
 ];
 
 export enum PermissionCategory {
