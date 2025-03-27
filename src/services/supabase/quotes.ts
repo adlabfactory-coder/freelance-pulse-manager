@@ -1,23 +1,30 @@
-
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { ServiceResponse } from './types';
 import { Quote, QuoteItem, QuoteStatus } from '@/types/quote';
 import { toast } from 'sonner';
 
+// Fonction utilitaire pour convertir les dates de chaîne en objet Date
+const ensureDate = (dateStr: string | Date): Date => {
+  if (typeof dateStr === 'string') {
+    return new Date(dateStr);
+  }
+  return dateStr;
+};
+
 export const createQuotesService = (supabase: SupabaseClient<Database>) => {
-  // Utility function to map database quote to Quote type
+  // Fonction utilitaire pour convertir un devis de la base en objet Quote
   const mapDatabaseQuoteToQuote = (dbQuote: any): Quote => {
     return {
       id: dbQuote.id,
       contactId: dbQuote.contactId,
       freelancerId: dbQuote.freelancerId,
       totalAmount: dbQuote.totalAmount,
-      validUntil: dbQuote.validUntil ? new Date(dbQuote.validUntil) : new Date(),
+      validUntil: ensureDate(dbQuote.validUntil || new Date()),
       status: dbQuote.status as QuoteStatus,
       notes: dbQuote.notes,
-      createdAt: dbQuote.createdAt ? new Date(dbQuote.createdAt) : new Date(),
-      updatedAt: dbQuote.updatedAt ? new Date(dbQuote.updatedAt) : new Date(),
+      createdAt: ensureDate(dbQuote.createdAt || new Date()),
+      updatedAt: ensureDate(dbQuote.updatedAt || new Date()),
       folder: dbQuote.folder || 'general',
       items: dbQuote.quote_items 
         ? dbQuote.quote_items.map((item: any) => ({
@@ -35,7 +42,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
   };
 
   const service = {
-    // Fetch all quotes
+    // Récupérer tous les devis
     fetchQuotes: async (): Promise<Quote[]> => {
       const { data, error } = await supabase
         .from('quotes')
@@ -48,18 +55,18 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
         throw error;
       }
       
-      // Map database data to Quote type
+      // Conversion des données avec le folder
       return data.map(quote => ({
         id: quote.id,
         contactId: quote.contactId,
         freelancerId: quote.freelancerId,
         totalAmount: Number(quote.totalAmount),
-        validUntil: new Date(quote.validUntil),
+        validUntil: ensureDate(quote.validUntil),
         status: quote.status as QuoteStatus,
         notes: quote.notes,
         folder: quote.folder || 'general',
-        createdAt: new Date(quote.createdAt),
-        updatedAt: new Date(quote.updatedAt),
+        createdAt: ensureDate(quote.createdAt),
+        updatedAt: ensureDate(quote.updatedAt),
         items: quote.quote_items ? quote.quote_items.map((item: any) => ({
           id: item.id,
           quoteId: item.quoteId,
@@ -73,7 +80,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }));
     },
     
-    // Fetch a quote by ID
+    // Récupérer un devis par ID
     fetchQuoteById: async (id: string): Promise<Quote | null> => {
       const { data, error } = await supabase
         .from('quotes')
@@ -92,7 +99,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       return mapDatabaseQuoteToQuote(data);
     },
     
-    // Create a new quote
+    // Créer un nouveau devis
     createQuote: async (
       quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>,
       items: Omit<QuoteItem, 'id' | 'quoteId'>[]
@@ -154,18 +161,18 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     },
     
-    // Update an existing quote
+    // Mettre à jour un devis existant
     updateQuote: async (
       id: string,
       quoteData: Partial<Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>>,
       itemChanges: {
         add: Omit<QuoteItem, 'id' | 'quoteId'>[];
-        update: Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>[];
+        update: (Pick<QuoteItem, 'id'> & Partial<Omit<QuoteItem, 'id' | 'quoteId'>>)[];
         delete: string[];
       }
     ): Promise<Quote | null> => {
       try {
-        // Process quote data updates
+        // Traitement des mises à jour des données du devis
         if (Object.keys(quoteData).length > 0) {
           // Format date for database if present
           const formattedData: any = { ...quoteData };
@@ -257,7 +264,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     },
     
-    // Update quote status
+    // Mettre à jour le statut d'un devis
     updateQuoteStatus: async (id: string, status: QuoteStatus): Promise<boolean> => {
       try {
         const { error } = await supabase
@@ -281,7 +288,7 @@ export const createQuotesService = (supabase: SupabaseClient<Database>) => {
       }
     },
     
-    // Delete a quote (soft delete)
+    // Supprimer un devis (suppression soft)
     deleteQuote: async (id: string): Promise<boolean> => {
       try {
         const { error } = await supabase

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Service } from '@/types/service';
+import { Service, ServiceType } from '@/types/service';
 import { supabase } from '@/lib/supabase-client';
 import { toast } from 'sonner';
 
@@ -30,7 +30,7 @@ export function useServices() {
         name: service.name,
         description: service.description || "",
         price: service.price,
-        type: service.type,
+        type: service.type as ServiceType,
         is_active: service.is_active,
         created_at: service.created_at,
         updated_at: service.updated_at,
@@ -152,7 +152,7 @@ export function useServices() {
     services,
     loading,
     error,
-    refetch,
+    refetch: fetchServices,
     editDialogOpen,
     confirmDeleteDialogOpen,
     selectedService,

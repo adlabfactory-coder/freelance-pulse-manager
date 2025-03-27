@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { createQuotesService } from "@/services/supabase/quotes";
 import { supabase } from "@/lib/supabase-client";
@@ -23,17 +22,23 @@ export const useQuoteSubmission = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isQuoteSaved, setIsQuoteSaved] = useState(false);
   
+  // Fonction sécurisée pour la validation des dates
+  const validateDate = (date: string | Date): Date => {
+    return typeof date === 'string' ? new Date(date) : date;
+  };
+  
   const handleSubmit = useCallback(async (
     quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>, 
     items: (Partial<QuoteItem> & { isNew?: boolean; toDelete?: boolean })[]
   ) => {
     console.log("handleSubmit called with data:", quoteData);
     
-    // Validation des données du devis
+    // Validation des données du devis avec conversion de date sécurisée
+    const validationDate = validateDate(quoteData.validUntil);
     const validation = validateQuoteForm(
       quoteData.contactId,
       quoteData.freelancerId,
-      quoteData.validUntil,
+      validationDate,
       quoteData.items
     );
     
@@ -47,8 +52,7 @@ export const useQuoteSubmission = ({
     try {
       console.log("Création d'un nouveau devis");
       
-      // Filtrer et transformer les éléments pour n'inclure que ceux qui ne sont pas marqués pour suppression
-      // Et enlever les propriétés isNew et toDelete qui ne font pas partie du modèle de données
+      // Préparation des items avec types corrects
       const itemsToCreate = items
         .filter(item => !item.toDelete && item.description && item.quantity && item.unitPrice)
         .map(({ isNew, toDelete, id, ...item }) => ({
@@ -60,10 +64,7 @@ export const useQuoteSubmission = ({
           serviceId: item.serviceId
         }));
       
-      console.log("Données du devis:", quoteData);
-      console.log("Éléments du devis préparés:", itemsToCreate);
-      
-      // S'assurer que folder est inclus dans les données
+      // S'assurer que folder est inclus
       const quoteDataWithFolder = {
         ...quoteData,
         folder: quoteData.folder || 'general'
@@ -107,7 +108,7 @@ export const useQuoteSubmission = ({
     }
   }, [onCloseDialog, onQuoteCreated, onSuccess]);
 
-  // Handle editing an existing quote
+  // Gestion de la mise à jour d'un devis existant
   const handleSubmitEdit = useCallback(async (
     id: string, 
     quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>,
@@ -115,11 +116,12 @@ export const useQuoteSubmission = ({
   ) => {
     console.log("handleSubmitEdit called for ID:", id);
     
-    // Validation des données du devis
+    // Validation avec conversion de date sécurisée
+    const validationDate = validateDate(quoteData.validUntil);
     const validation = validateQuoteForm(
       quoteData.contactId,
       quoteData.freelancerId,
-      quoteData.validUntil,
+      validationDate,
       quoteData.items
     );
     
@@ -133,7 +135,7 @@ export const useQuoteSubmission = ({
     try {
       console.log("Mise à jour du devis", id);
       
-      // Filtrer les éléments à ajouter (nouveaux éléments non marqués pour suppression)
+      // Préparation des items avec les bonnes typologies
       const itemsToAdd = items
         .filter(item => item.isNew && !item.toDelete && item.description && item.quantity && item.unitPrice)
         .map(({ isNew, toDelete, id, ...item }) => ({
@@ -145,17 +147,19 @@ export const useQuoteSubmission = ({
           serviceId: item.serviceId
         }));
         
-      // Filtrer les éléments à mettre à jour (éléments existants non marqués pour suppression)
+      // Conversion explicite des types pour éviter les erreurs TypeScript  
       const itemsToUpdate = items
         .filter(item => item.id && !item.isNew && !item.toDelete)
-        .map(({ isNew, toDelete, ...item }) => item);
+        .map(({ isNew, toDelete, ...item }) => ({
+          ...item,
+          id: item.id // S'assurer que l'id est toujours présent
+        }));
         
-      // Obtenir les IDs des éléments à supprimer
       const itemsToDelete = items
         .filter(item => item.toDelete && item.id)
         .map(item => item.id as string);
       
-      // S'assurer que folder est inclus dans les données de mise à jour
+      // S'assurer que folder est inclus
       const quoteDataWithFolder = {
         ...quoteData,
         folder: quoteData.folder || 'general'

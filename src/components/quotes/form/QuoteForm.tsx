@@ -43,13 +43,18 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     }
   };
 
+  // Conversion des dates pour assurer la compatibilité
+  const validUntil = form.validUntil 
+    ? (typeof form.validUntil === 'string' ? new Date(form.validUntil) : form.validUntil) 
+    : new Date();
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <QuoteFormSections
         quoteData={{
           contactId: form.contactId,
           freelancerId: form.freelancerId,
-          validUntil: form.validUntil,
+          validUntil: validUntil,
           status: form.status,
           notes: form.notes,
           items: safeItems,

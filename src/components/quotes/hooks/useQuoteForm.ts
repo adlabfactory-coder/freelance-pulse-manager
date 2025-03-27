@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { Quote, QuoteStatus } from "@/types";
 import { useQuoteDataLoader } from "./useQuoteDataLoader";
@@ -63,14 +62,27 @@ export const useQuoteForm = ({
     handleSubmitEdit 
   } = useQuoteSubmission({ onSuccess, onCloseDialog, onQuoteCreated });
 
-  // Load a specific quote for editing
+  // Fonction sécurisée pour convertir les dates
+  const convertToDate = (value: string | Date): Date => {
+    if (typeof value === 'string') {
+      return new Date(value);
+    }
+    return value;
+  };
+
+  // Mise à jour de la date de validité avec conversion
+  const setValidUntilSafe = useCallback((value: string | Date) => {
+    setValidUntil(convertToDate(value));
+  }, []);
+
+  // Chargement d'un devis spécifique
   const loadQuoteData = useCallback(async (id: string) => {
     try {
       const quote = await quotesService.fetchQuoteById(id);
       if (quote) {
         setContactId(quote.contactId);
         setFreelancerId(quote.freelancerId);
-        setValidUntil(quote.validUntil);
+        setValidUntil(convertToDate(quote.validUntil));
         setStatus(quote.status);
         setNotes(quote.notes || "");
         setFolder(quote.folder || "general");
@@ -81,7 +93,7 @@ export const useQuoteForm = ({
     }
   }, [resetItems]);
 
-  // Get the complete quote data with type safety
+  // Récupération complète des données du devis
   const getQuoteData = useCallback(() => {
     // Filtrer les éléments pour s'assurer qu'ils sont complets et valides
     const validItems = items
@@ -114,25 +126,16 @@ export const useQuoteForm = ({
     };
   }, [contactId, freelancerId, validUntil, status, notes, folder, totalAmount, items]);
 
-  // Handle form submission
-  const submitForm = useCallback(async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    
-    const quoteData = getQuoteData();
-    console.log("Submit form with data:", quoteData);
-    return handleSubmit(quoteData, allItems);
-  }, [getQuoteData, handleSubmit, allItems]);
-
-  // Set the entire quote data at once
+  // Modification des données du devis
   const setQuoteData = useCallback((data: Partial<Quote>) => {
     if (data.contactId) setContactId(data.contactId);
     if (data.freelancerId) setFreelancerId(data.freelancerId);
-    if (data.validUntil) setValidUntil(data.validUntil);
+    if (data.validUntil) setValidUntil(convertToDate(data.validUntil));
     if (data.status) setStatus(data.status);
     if (data.notes !== undefined) setNotes(data.notes);
     if (data.folder) setFolder(data.folder);
     if (data.items) resetItems(data.items);
-  }, [resetItems]);
+  }, [resetItems, convertToDate]);
 
   // Cette propriété est utilisée pour l'affichage uniquement - on renvoie les items bruts
   const quoteDataForDisplay = {
@@ -160,7 +163,7 @@ export const useQuoteForm = ({
     freelancerId,
     setFreelancerId,
     validUntil,
-    setValidUntil,
+    setValidUntil: setValidUntilSafe,
     status,
     setStatus,
     notes,

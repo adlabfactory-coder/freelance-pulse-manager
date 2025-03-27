@@ -1,10 +1,11 @@
+
 import React from "react";
 import { Dialog } from "@/components/ui/dialog";
 import ServicesHeader from "./services/ServicesHeader";
 import ServicesList from "./services/ServicesList";
 import ServiceForm from "./services/ServiceForm";
 import DeleteServiceDialog from "./services/DeleteServiceDialog";
-import { useServices } from "./services/hooks/useServices";
+import { useServices } from "@/hooks/useServices"; // Correction du chemin d'importation
 
 const ServicesSettings: React.FC = () => {
   const {

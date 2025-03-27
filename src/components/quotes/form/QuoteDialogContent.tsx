@@ -65,6 +65,11 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     onSubmit();
   };
 
+  // Conversion des dates pour assurer la compatibilité
+  const validUntil = quoteData.validUntil 
+    ? (typeof quoteData.validUntil === 'string' ? new Date(quoteData.validUntil) : quoteData.validUntil)
+    : new Date();
+
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,7 +92,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <QuoteDetailsSection
-          validUntil={quoteData.validUntil || new Date()}
+          validUntil={validUntil}
           status={quoteData.status || "draft"}
           onValidUntilChange={(validUntil) =>
             onQuoteDataChange({ ...quoteData, validUntil })

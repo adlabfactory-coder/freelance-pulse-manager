@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import ClientSelector from "./ClientSelector";
 import FreelancerSelector from "./FreelancerSelector";
@@ -41,7 +40,6 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [selectedFreelancer, setSelectedFreelancer] = useState<User | null>(null);
 
-  // Charger les données du contact et du freelance sélectionnés
   useEffect(() => {
     const loadContactData = async () => {
       if (quoteData.contactId) {
@@ -73,8 +71,9 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
     loadFreelancerData();
   }, [quoteData.contactId, quoteData.freelancerId]);
 
-  // Vérifier que les items sont bien du type QuoteItem (et non pas Partial<QuoteItem>)
-  console.log("Items dans QuoteFormSections:", quoteData.items);
+  const validUntil = quoteData.validUntil 
+    ? (typeof quoteData.validUntil === 'string' ? new Date(quoteData.validUntil) : quoteData.validUntil) 
+    : new Date();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -114,7 +113,7 @@ export const QuoteFormSections: React.FC<QuoteFormProps> = ({
         />
 
         <QuoteValidityDatePicker 
-          date={quoteData.validUntil} 
+          date={validUntil} 
           onSelect={(validUntil) => onQuoteDataChange({ ...quoteData, validUntil })} 
         />
 

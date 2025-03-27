@@ -1,26 +1,13 @@
 
-// Import relevant components and change is_active property references
-// Only changing the affected parts of the file
-import React from "react";
-import {
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import React from 'react';
+import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Service, ServiceType } from "@/types/service";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Service } from '@/types/service';
 
 interface ServiceFormProps {
   service: Partial<Service> | null;
@@ -33,7 +20,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   service,
   onSave,
   onCancel,
-  onChange,
+  onChange
 }) => {
   if (!service) return null;
 
@@ -42,92 +29,112 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     onSave(service);
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    onChange(name, value);
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    onChange('price', isNaN(value) ? 0 : value);
+  };
+
   return (
     <DialogContent className="sm:max-w-[500px]">
       <form onSubmit={handleSubmit}>
         <DialogHeader>
-          <DialogTitle>
-            {service.id ? "Modifier le service" : "Ajouter un service"}
-          </DialogTitle>
+          <DialogTitle>{service.id ? 'Modifier le service' : 'Ajouter un service'}</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 mt-4">
-          {/* Name field */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Nom</Label>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Nom
+            </Label>
             <Input
               id="name"
-              value={service.name || ""}
-              onChange={(e) => onChange("name", e.target.value)}
+              name="name"
+              value={service.name || ''}
+              onChange={handleChange}
+              className="col-span-3"
               required
             />
           </div>
           
-          {/* Description field */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={service.description || ""}
-              onChange={(e) => onChange("description", e.target.value)}
-              rows={3}
-            />
-          </div>
-          
-          {/* Price field */}
-          <div className="space-y-2">
-            <Label htmlFor="price">Prix (€)</Label>
-            <Input
-              id="price"
-              type="number"
-              value={service.price || 0}
-              onChange={(e) => onChange("price", parseFloat(e.target.value))}
-              required
-              min={0}
-              step={0.01}
-            />
-          </div>
-          
-          {/* Type field */}
-          <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
-            <Select
-              value={service.type || ServiceType.SERVICE}
-              onValueChange={(value) => onChange("type", value)}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="type" className="text-right">
+              Type
+            </Label>
+            <Select 
+              value={service.type?.toString() || 'service'} 
+              onValueChange={(value) => onChange('type', value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un type" />
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Choisir un type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ServiceType.SERVICE}>Service</SelectItem>
-                <SelectItem value={ServiceType.PRODUCT}>Produit</SelectItem>
-                <SelectItem value={ServiceType.SUBSCRIPTION}>Abonnement</SelectItem>
-                <SelectItem value={ServiceType.PACK}>Pack</SelectItem>
+                <SelectItem value="service">Service</SelectItem>
+                <SelectItem value="product">Produit</SelectItem>
+                <SelectItem value="subscription">Abonnement</SelectItem>
+                <SelectItem value="pack">Pack</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
-          {/* Active status switch */}
-          <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="is_active">Actif</Label>
-            <Switch
-              id="is_active"
-              checked={service.is_active ?? true}
-              onCheckedChange={(checked) => onChange("is_active", checked)}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="price" className="text-right">
+              Prix (€)
+            </Label>
+            <Input
+              id="price"
+              name="price"
+              type="number"
+              min={0}
+              step={0.01}
+              value={service.price || 0}
+              onChange={handlePriceChange}
+              className="col-span-3"
+              required
             />
+          </div>
+          
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="description" className="text-right">
+              Description
+            </Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={service.description || ''}
+              onChange={handleChange}
+              className="col-span-3"
+              rows={3}
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="is_active" className="text-right">
+              Actif
+            </Label>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="is_active" 
+                checked={service.is_active !== false} 
+                onCheckedChange={(checked) => onChange('is_active', !!checked)}
+              />
+              <Label htmlFor="is_active" className="cursor-pointer">
+                Service actif
+              </Label>
+            </div>
           </div>
         </div>
         
-        <DialogFooter className="mt-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-          >
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Annuler
           </Button>
           <Button type="submit">
-            {service.id ? "Mettre à jour" : "Ajouter"}
+            {service.id ? 'Mettre à jour' : 'Créer'}
           </Button>
         </DialogFooter>
       </form>

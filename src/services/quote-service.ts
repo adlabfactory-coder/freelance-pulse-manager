@@ -14,5 +14,6 @@ export const updateQuote = quotesService.updateQuote;
 export const updateQuoteStatus = quotesService.updateQuoteStatus;
 export const deleteQuote = quotesService.deleteQuote;
 
-// Use the mapping function from the quotes service
-export const { mapDatabaseQuoteToQuote } = quotesService;
+// La fonction mapDatabaseQuoteToQuote est implémentée dans le service mais 
+// n'est pas exportée explicitement. Supprimons cette ligne qui cause une erreur.
+// export const { mapDatabaseQuoteToQuote } = quotesService;
