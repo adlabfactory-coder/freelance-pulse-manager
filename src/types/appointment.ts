@@ -6,16 +6,16 @@ export enum AppointmentStatus {
   PENDING = "pending",
   CONFIRMED = "confirmed",
   COMPLETED = "completed",
-  CANCELLED = "cancelled"
+  CANCELLED = "cancelled",
+  NO_SHOW = "no_show"
 }
 
 export interface Appointment {
   id: string;
   title: string;
   description?: string | null;
-  contactId: string;  // Utiliser le I majuscule pour être cohérent
-  freelancerId?: string;  // Utiliser le I majuscule pour être cohérent
-  freelancerid?: string;  // Garder le champ en minuscules pour la compatibilité
+  contactId: string;
+  freelancerId?: string;
   managerId?: string;
   date: string;
   duration: number;
@@ -25,9 +25,9 @@ export interface Appointment {
   createdAt?: string;
   updatedAt?: string;
   folder?: string;
-  contactName?: string;  // Champ supplémentaire pour l'affichage
-  freelancerName?: string;  // Champ supplémentaire pour l'affichage
-  managerName?: string;  // Champ supplémentaire pour l'affichage
+  contactName?: string;
+  freelancerName?: string;
+  managerName?: string;
 }
 
 /**
