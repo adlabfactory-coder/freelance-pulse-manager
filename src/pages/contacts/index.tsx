@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { UserRole } from "@/types";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, EyeOff, Eye } from "lucide-react";
 
 const ContactsPage: React.FC = () => {
   const { 
@@ -18,9 +18,11 @@ const ContactsPage: React.FC = () => {
     error,
     searchTerm, 
     statusFilter, 
+    includeDeleted,
     fetchContacts, 
     handleSearch, 
-    handleFilterByStatus
+    handleFilterByStatus,
+    toggleDeletedContacts
   } = useContactsData();
   
   const { role, isAdminOrSuperAdmin } = useAuth();
@@ -44,7 +46,7 @@ const ContactsPage: React.FC = () => {
           <AlertTitle>Erreur de chargement</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-        <Button onClick={fetchContacts} variant="outline">
+        <Button onClick={() => fetchContacts(includeDeleted)} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Réessayer
         </Button>
@@ -56,10 +58,27 @@ const ContactsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
-        <Button onClick={fetchContacts} variant="outline" size="sm" disabled={loading}>
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-2">
+          {isAdminOrSuperAdmin && (
+            <Button onClick={toggleDeletedContacts} variant="outline" size="sm">
+              {includeDeleted ? (
+                <>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  Masquer supprimés
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Afficher supprimés
+                </>
+              )}
+            </Button>
+          )}
+          <Button onClick={() => fetchContacts(includeDeleted)} variant="outline" size="sm" disabled={loading}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Actualiser
+          </Button>
+        </div>
       </div>
       
       {isAdminOrSuperAdmin ? (
@@ -71,7 +90,7 @@ const ContactsPage: React.FC = () => {
           statusFilter={statusFilter}
           onSearch={handleSearch}
           onStatusFilterChange={handleFilterByStatus}
-          onImportComplete={fetchContacts}
+          onImportComplete={() => fetchContacts(includeDeleted)}
         />
       ) : role === UserRole.ACCOUNT_MANAGER ? (
         // Vue account manager avec accès limité
@@ -95,7 +114,8 @@ const ContactsPage: React.FC = () => {
         <Alert>
           <AlertTitle>Aucun contact trouvé</AlertTitle>
           <AlertDescription>
-            Aucun contact n'a été trouvé dans la base de données. Utilisez le bouton d'importation ou ajoutez des contacts manuellement.
+            Aucun contact n'a été trouvé dans la base de données{includeDeleted ? ' (même supprimés)' : ''}. 
+            Utilisez le bouton d'importation ou ajoutez des contacts manuellement.
           </AlertDescription>
         </Alert>
       )}

@@ -1,4 +1,3 @@
-
 import { contactOperationsService } from './contact-operations';
 import { contactCreateUpdateService } from './contact-create-update';
 import { contactExcelService } from './contact-excel';
@@ -7,8 +6,8 @@ import { UserRole } from '@/types';
 
 export const contactService = {
   // Récupérer tous les contacts avec gestion des rôles
-  async getContacts(userId?: string, userRole?: string): Promise<Contact[]> {
-    return contactOperationsService.getContacts(userId, userRole);
+  async getContacts(userId?: string, userRole?: string, includeDeleted: boolean = false): Promise<Contact[]> {
+    return contactOperationsService.getContacts(userId, userRole, includeDeleted);
   },
 
   // Récupérer un contact par son ID

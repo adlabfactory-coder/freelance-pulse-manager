@@ -1,18 +1,25 @@
+
 import { supabase } from '@/lib/supabase-client';
 import { Contact } from './types';
 import { toast } from 'sonner';
 import { UserRole } from '@/types';
 
 export const contactOperationsService = {
-  async getContacts(userId?: string, userRole?: string): Promise<Contact[]> {
+  async getContacts(userId?: string, userRole?: string, includeDeleted: boolean = false): Promise<Contact[]> {
     try {
-      console.log("🔄 Récupération des contacts...", { userId, userRole });
+      console.log("🔄 Récupération des contacts...", { userId, userRole, includeDeleted });
       
       let query = supabase
         .from('contacts')
-        .select('*')
-        .is('deleted_at', null)
-        .order('createdAt', { ascending: false });
+        .select('*');
+      
+      // Si includeDeleted est false, ne récupérer que les contacts non supprimés
+      if (!includeDeleted) {
+        query = query.is('deleted_at', null);
+      }
+      
+      // Tri par date de création décroissante
+      query = query.order('createdAt', { ascending: false });
       
       // Si l'utilisateur n'est ni admin ni super_admin, filtrer les contacts
       if (userRole !== UserRole.ADMIN && userRole !== UserRole.SUPER_ADMIN) {
@@ -34,7 +41,7 @@ export const contactOperationsService = {
         throw error;
       }
       
-      console.log(`✅ ${data?.length || 0} contacts récupérés`);
+      console.log(`✅ ${data?.length || 0} contacts récupérés${includeDeleted ? ' (y compris supprimés)' : ''}`);
       
       // Si aucun contact n'est récupéré, afficher un message de débogage
       if (!data || data.length === 0) {
@@ -48,8 +55,20 @@ export const contactOperationsService = {
         if (countError) {
           console.error("Erreur lors de la vérification de la table 'contacts':", countError);
         } else {
-          console.log(`La table 'contacts' contient ${count} enregistrements au total (y compris les supprimés)`);
+          console.log(`La table 'contacts' contient ${count} enregistrements au total`);
         }
+      } else {
+        // Afficher la répartition des contacts par statut et supprimés/non supprimés
+        const deletedCount = data.filter(contact => contact.deleted_at !== null).length;
+        console.log(`Répartition des contacts: ${deletedCount} supprimés, ${data.length - deletedCount} actifs`);
+        
+        // Afficher la répartition par statut
+        const statusCounts = data.reduce((acc, contact) => {
+          acc[contact.status] = (acc[contact.status] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        
+        console.log("Répartition par statut:", statusCounts);
       }
       
       return data || [];
