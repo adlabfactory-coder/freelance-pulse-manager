@@ -18,14 +18,16 @@ import {
 } from '@/components/ui/popover';
 import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { NavItem } from '@/types/navigation';
-import * as Icons from 'lucide-react';
+import { getNavigationConfig } from '@/config/navigation';
 
 const NavigationMenu: React.FC = () => {
-  const { user, role, isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
+  const { isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
+
+  // Utiliser la configuration de navigation centralisée
+  const visibleItems = getNavigationConfig(isAdminOrSuperAdmin, isSuperAdmin);
 
   const handleNavigation = (href: string) => {
     // Assurer que toutes les routes commencent par /
@@ -33,35 +35,6 @@ const NavigationMenu: React.FC = () => {
     navigate(normalizedPath);
     setNavMenuOpen(false);
   };
-
-  // Navigation items - identiques à ceux définis dans Navigation.tsx
-  const navItems: NavItem[] = [
-    { title: "Tableau de bord", href: "/dashboard", icon: Icons.Home },
-    { title: "Contacts", href: "/contacts", icon: Icons.Users },
-    { title: "Rendez-vous", href: "/appointments", icon: Icons.Calendar },
-    { title: "Devis", href: "/quotes", icon: Icons.FileText },
-    { title: "Commissions", href: "/commissions", icon: Icons.BarChart },
-  ];
-  
-  // Éléments réservés aux administrateurs et super administrateurs
-  const adminNavItems: NavItem[] = [
-    { title: "Abonnements", href: "/subscriptions", icon: Icons.FileSpreadsheet },
-    { title: "Rapports", href: "/reports", icon: Icons.PieChart },
-  ];
-  
-  // Paramètres disponibles pour tous
-  const settingsNavItem: NavItem = { title: "Paramètres", href: "/settings", icon: Icons.Settings };
-  
-  // Construire la navigation en fonction du rôle
-  let visibleItems = [...navItems];
-  
-  // Ajouter les éléments admin si l'utilisateur est admin ou super admin
-  if (isAdminOrSuperAdmin) {
-    visibleItems = [...visibleItems, ...adminNavItems];
-  }
-  
-  // Ajouter l'item paramètres pour tous
-  visibleItems = [...visibleItems, settingsNavItem];
 
   return (
     <>
@@ -77,7 +50,7 @@ const NavigationMenu: React.FC = () => {
           <DropdownMenuSeparator />
           {visibleItems.map((item) => (
             <DropdownMenuItem key={item.href} onClick={() => handleNavigation(item.href)}>
-              <item.icon className="mr-2 h-4 w-4" />
+              {item.icon && <item.icon className="mr-2 h-4 w-4" />}
               <span>{item.title}</span>
             </DropdownMenuItem>
           ))}
@@ -100,7 +73,7 @@ const NavigationMenu: React.FC = () => {
                 className="justify-start" 
                 onClick={() => handleNavigation(item.href)}
               >
-                <item.icon className="mr-2 h-4 w-4" />
+                {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                 <span>{item.title}</span>
               </Button>
             ))}

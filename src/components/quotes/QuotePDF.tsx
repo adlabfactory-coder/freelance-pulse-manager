@@ -120,13 +120,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderColor: "#cbd5e1",
     paddingTop: 10,
-    fontSize: 9,
-    color: "#64748b",
   },
   agencyInfo: {
     fontSize: 9,
     color: "#64748b",
-    marginBottom: 5,
+    marginBottom: 3,
+    textAlign: "center",
   },
 });
 
@@ -166,7 +165,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({
         <Page size="A4" style={styles.page}>
           {/* <Image src="/logo.png" style={styles.logo} /> */}
           
-          <Text style={styles.header}>DEVIS</Text>
+          <Text style={styles.header}>DEVIS N° {quote.id.substring(0, 8).toUpperCase()}</Text>
           
           <View style={styles.flexRow}>
             {/* Informations du freelancer */}
@@ -174,6 +173,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({
               <Text style={styles.title}>De:</Text>
               <Text style={styles.text}>{freelancer?.name || "Non spécifié"}</Text>
               <Text style={styles.text}>{freelancer?.email || ""}</Text>
+              {agencySettings?.name && <Text style={styles.text}>{agencySettings.name}</Text>}
             </View>
             
             {/* Informations du client */}
@@ -188,7 +188,7 @@ const QuotePDF: React.FC<QuotePDFProps> = ({
           
           <View style={styles.section}>
             <Text style={styles.subtitle}>
-              Devis #{quote.id.substring(0, 8)} | Valable jusqu'au {formattedDate}
+              Devis créé le {format(new Date(), "dd/MM/yyyy")} | Valable jusqu'au {formattedDate}
             </Text>
           </View>
           
@@ -239,16 +239,24 @@ const QuotePDF: React.FC<QuotePDFProps> = ({
           
           {/* Pied de page avec les informations de l'agence */}
           <View style={styles.footer}>
-            {agencySettings && (
+            {agencySettings ? (
               <>
-                <Text style={styles.agencyInfo}>{agencySettings.name}</Text>
-                <Text style={styles.agencyInfo}>
-                  RC: {agencySettings.rc} | IF: {agencySettings.if_number} | Capital: {agencySettings.capital}
-                </Text>
-                <Text style={styles.agencyInfo}>
-                  Banque: {agencySettings.bank_name} | RIB: {agencySettings.rib}
-                </Text>
+                <Text style={styles.agencyInfo}>{agencySettings.name || "AdLab Factory"}</Text>
+                {agencySettings.rc && (
+                  <Text style={styles.agencyInfo}>
+                    RC: {agencySettings.rc}{agencySettings.if_number ? ` | IF: ${agencySettings.if_number}` : ""}
+                    {agencySettings.capital ? ` | Capital: ${agencySettings.capital}` : ""}
+                  </Text>
+                )}
+                {(agencySettings.bank_name || agencySettings.rib) && (
+                  <Text style={styles.agencyInfo}>
+                    {agencySettings.bank_name ? `Banque: ${agencySettings.bank_name}` : ""}
+                    {agencySettings.rib ? ` | RIB: ${agencySettings.rib}` : ""}
+                  </Text>
+                )}
               </>
+            ) : (
+              <Text style={styles.agencyInfo}>AdLab Factory</Text>
             )}
           </View>
         </Page>

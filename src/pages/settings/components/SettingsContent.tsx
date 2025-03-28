@@ -14,6 +14,7 @@ import AgencySettings from "@/components/settings/AgencySettings";
 import UserManagerSettings from "@/components/settings/UserManagerSettings";
 import AuditSettings from "@/components/settings/AuditSettings";
 import { useAuth } from "@/hooks/use-auth";
+import UsersManagementTabs from "@/components/settings/UsersManagementTabs";
 
 interface SettingsContentProps {
   onSelectUser: (userId: string) => void;
@@ -34,41 +35,31 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onSelectUser, current
     window.scrollTo(0, 0);
   }, [currentSection]);
 
-  // Vérifie si l'utilisateur a accès à certaines sections
+  // Vérification d'accès pour certaines sections
+  const renderAccessDenied = () => (
+    <div className="flex-1 md:max-w-3xl w-full">
+      <Card>
+        <CardHeader className="text-center text-destructive">
+          Accès non autorisé
+        </CardHeader>
+        <CardContent>
+          <p className="text-center">
+            Vous n'avez pas les droits nécessaires pour accéder à cette section.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Vérification des permissions pour les sections restreintes
   if ((currentSection === 'admin' || currentSection === 'audit') && !isSuperAdmin) {
-    return (
-      <div className="flex-1 md:max-w-3xl w-full">
-        <Card>
-          <CardHeader className="text-center text-destructive">
-            Accès non autorisé
-          </CardHeader>
-          <CardContent>
-            <p className="text-center">
-              Vous n'avez pas les droits nécessaires pour accéder à cette section.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return renderAccessDenied();
   }
 
   if ((currentSection === 'users' || currentSection === 'agency' || 
-       currentSection === 'freelancers' || currentSection === 'account-managers') && 
+      currentSection === 'freelancers' || currentSection === 'account-managers') && 
       !isAdminOrSuperAdmin) {
-    return (
-      <div className="flex-1 md:max-w-3xl w-full">
-        <Card>
-          <CardHeader className="text-center text-destructive">
-            Accès non autorisé
-          </CardHeader>
-          <CardContent>
-            <p className="text-center">
-              Vous n'avez pas les droits nécessaires pour accéder à cette section.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return renderAccessDenied();
   }
 
   // Rendu du contenu en fonction du chemin actuel
@@ -80,14 +71,14 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onSelectUser, current
         return <NotificationsSettings />;
       case "security":
         return <SecuritySettings />;
+      case "agency":
+        return <AgencySettings />;
       case "freelancers":
         return <FreelancerManagement />;
       case "account-managers":
         return <AccountManagerManagement />;
       case "users":
-        return <UsersList onSelectUser={onSelectUser} />;
-      case "agency":
-        return <AgencySettings />;
+        return <UsersManagementTabs onSelectUser={onSelectUser} />;
       case "admin":
         return <UserManagerSettings />;
       case "audit":

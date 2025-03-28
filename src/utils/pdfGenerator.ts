@@ -20,14 +20,21 @@ const getAgencyInfo = async (): Promise<AgencyInfo | null> => {
     const { data, error } = await supabase
       .from("agency_info")
       .select("*")
-      .single();
+      .maybeSingle();  // Utiliser maybeSingle au lieu de single pour éviter les erreurs
     
-    if (error) {
+    if (error && error.code !== 'PGRST116') {
       console.error("Erreur lors de la récupération des informations de l'agence:", error);
       return null;
     }
     
-    return data as AgencyInfo;
+    return data as AgencyInfo || {
+      legal_name: "AdLab Factory",
+      registration_number: "",
+      tax_id: "",
+      capital: "",
+      bank_account: "",
+      bank_name: ""
+    };
   } catch (error) {
     console.error("Exception lors de la récupération des informations de l'agence:", error);
     return null;
