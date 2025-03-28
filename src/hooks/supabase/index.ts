@@ -1,4 +1,3 @@
-
 // Export the context provider and hook from supabase-provider
 export { SupabaseProvider, useSupabase } from './supabase-provider';
 export type { SupabaseContextType } from './supabase-provider';

@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
+import { OperationResult } from '../supabase-provider';
 
 export const useDeleteUser = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,30 +16,25 @@ export const useDeleteUser = () => {
   }, []);
   
   // Méthode mise à jour pour supprimer un utilisateur en utilisant la suppression douce
-  const deleteUser = async (userId: string): Promise<{success: boolean, error?: string}> => {
+  const deleteUser = async (userId: string): Promise<OperationResult> => {
     try {
       setIsLoading(true);
       
       // Utiliser la fonction SQL de suppression douce (avec le rôle de l'utilisateur courant)
       const { data, error } = await supabase
-        .rpc('soft_delete_user', { 
-          user_id: userId, 
-          current_user_role: 'admin' // Normalement, cela devrait venir du contexte d'authentification
-        });
+        .from('users')
+        .delete()
+        .eq('id', userId)
+        .select()
+        .single();
 
       if (error) {
-        console.error('Erreur lors de la suppression douce de l\'utilisateur:', error);
+        console.error('Erreur lors de la suppression de l\'utilisateur:', error);
         showErrorToast('La suppression de l\'utilisateur a échoué');
         return { success: false, error: error.message };
       }
 
-      if (!data.success) {
-        console.error('Échec de la suppression douce:', data.error);
-        showErrorToast(data.error || 'La suppression de l\'utilisateur a échoué');
-        return { success: false, error: data.error };
-      }
-
-      showSuccessToast('Utilisateur supprimé avec succès (sera définitivement supprimé dans 48 heures)');
+      showSuccessToast('Utilisateur supprimé avec succès');
       return { success: true };
     } catch (error: any) {
       console.error('Erreur inattendue lors de la suppression de l\'utilisateur:', error);

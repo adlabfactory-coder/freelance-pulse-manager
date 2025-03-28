@@ -9,6 +9,7 @@ import FreelancerTable from "./freelancer/FreelancerTable";
 import DeleteFreelancerDialog from "./freelancer/DeleteFreelancerDialog";
 import SearchBar from "./account-manager/SearchBar";
 import { useAuth } from "@/hooks/use-auth";
+import CreateFreelancerForm from "./CreateFreelancerForm";
 
 const FreelancerManagement: React.FC = () => {
   const { isAdminOrSuperAdmin } = useAuth();
@@ -79,7 +80,7 @@ const FreelancerManagementContent: React.FC<{isAdminOrSuperAdmin: boolean}> = ({
                     Créez un nouveau compte pour un freelance dans l'application
                   </DialogDescription>
                 </DialogHeader>
-                {/* Form component would go here */}
+                <CreateFreelancerForm onSuccess={handleCreateSuccess} />
               </DialogContent>
             </Dialog>
           </div>
