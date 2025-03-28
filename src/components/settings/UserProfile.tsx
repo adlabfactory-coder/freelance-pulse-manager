@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { User } from '@/types';
 import { UserRole } from '@/types/roles';
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUserOperations } from '@/hooks/supabase/user-operations';
+import { OperationResult } from '@/hooks/supabase';
 
 export interface UserProfileProps {
   user: User;

@@ -18,7 +18,7 @@ export interface SupabaseContextType {
   // User operations
   fetchUsers: () => Promise<User[]>;
   fetchUserById: (id: string) => Promise<User | null>;
-  updateUser: (userData: Partial<User>) => Promise<boolean>;
+  updateUser: (userData: Partial<User>) => Promise<OperationResult>;
   createUser: (userData: Omit<User, 'id'>) => Promise<{ success: boolean; id?: string }>;
   deleteUser: (id: string) => Promise<OperationResult>;
   getMockUsers: () => User[];
