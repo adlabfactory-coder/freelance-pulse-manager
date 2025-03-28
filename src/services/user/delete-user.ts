@@ -1,11 +1,12 @@
 
 import { UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { OperationResult } from '@/hooks/supabase/supabase-provider';
 
 /**
  * Supprime un utilisateur
  */
-export const deleteUser = async (userId: string, currentUserRole: UserRole): Promise<{success: boolean, error?: string}> => {
+export const deleteUser = async (userId: string, currentUserRole: UserRole): Promise<OperationResult> => {
   // Vérifier que seuls les admin et superadmin peuvent supprimer des utilisateurs
   if (currentUserRole !== UserRole.ADMIN && currentUserRole !== UserRole.SUPER_ADMIN) {
     return { 

@@ -6,6 +6,12 @@ import { useAuthOperations } from './use-auth-operations';
 import { useDatabaseStatus } from './use-database-status';
 import { User } from '@/types';
 
+// Type pour les résultats d'opérations avec feedback d'erreur
+export interface OperationResult {
+  success: boolean;
+  error?: string;
+}
+
 // Type for the context value
 export interface SupabaseContextType {
   supabaseClient: typeof supabase;
@@ -14,7 +20,7 @@ export interface SupabaseContextType {
   fetchUserById: (id: string) => Promise<User | null>;
   updateUser: (userData: Partial<User>) => Promise<boolean>;
   createUser: (userData: Omit<User, 'id'>) => Promise<{ success: boolean; id?: string }>;
-  deleteUser: (id: string) => Promise<boolean>;
+  deleteUser: (id: string) => Promise<OperationResult>;
   getMockUsers: () => User[];
   // Auth operations
   signIn: (email: string, password: string) => Promise<void>;

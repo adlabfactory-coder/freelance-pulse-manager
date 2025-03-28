@@ -4,6 +4,7 @@ import { useFetchUsers } from './use-user-fetch';
 import { useCreateUser } from './use-user-create';
 import { useUpdateUser } from './use-user-update';
 import { useDeleteUser } from './use-user-delete';
+import { OperationResult } from '../supabase-provider';
 
 export const useUserOperations = () => {
   const { isLoading: isFetchLoading, fetchUsers, fetchUserById, getMockUsers } = useFetchUsers();
