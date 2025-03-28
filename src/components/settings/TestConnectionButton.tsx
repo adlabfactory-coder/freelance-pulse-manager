@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { initializeTestUsers } from '@/utils/user-creation-helper';
 
@@ -10,7 +10,6 @@ interface TestConnectionButtonProps {
 }
 
 const TestConnectionButton: React.FC<TestConnectionButtonProps> = ({ variant = 'outline' }) => {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
@@ -19,23 +18,18 @@ const TestConnectionButton: React.FC<TestConnectionButtonProps> = ({ variant = '
       const result = await initializeTestUsers();
       
       if (result.success) {
-        toast({
-          title: "Création d'utilisateurs réussie",
-          description: `${result.successCount} utilisateurs ont été créés avec succès.`,
+        toast.success("Création d'utilisateurs réussie", {
+          description: `${result.successCount} utilisateurs ont été créés avec succès.`
         });
       } else {
-        toast({
-          title: "Création d'utilisateurs partiellement réussie",
-          description: `${result.successCount} utilisateurs créés, ${result.errorCount} erreurs rencontrées.`,
-          variant: "destructive"
+        toast.error("Création d'utilisateurs partiellement réussie", {
+          description: `${result.successCount} utilisateurs créés, ${result.errorCount} erreurs rencontrées.`
         });
       }
     } catch (error) {
       console.error("Erreur lors de l'initialisation des utilisateurs de test:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer les utilisateurs de test. Consultez la console pour plus de détails.",
-        variant: "destructive"
+      toast.error("Erreur", {
+        description: "Impossible de créer les utilisateurs de test. Consultez la console pour plus de détails."
       });
     } finally {
       setIsLoading(false);

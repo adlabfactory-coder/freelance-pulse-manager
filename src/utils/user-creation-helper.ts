@@ -340,11 +340,5 @@ export const initializeTestUsers = async () => {
     superAdmin
   });
   
-  if (result.success) {
-    toast.success(`${result.successCount} utilisateurs ont été créés avec succès.`);
-  } else {
-    toast.warning(`${result.successCount} utilisateurs créés, ${result.errorCount} erreurs rencontrées.`);
-  }
-  
   return result;
 };
