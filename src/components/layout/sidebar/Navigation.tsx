@@ -10,7 +10,7 @@ import {
   FileSpreadsheet,
   PieChart,
 } from "lucide-react";
-import { NavItem } from "@/types/navigation";
+import { NavItem } from "@/types/index";
 import NavItemComponent from "./NavItem";
 import { useAuth } from "@/hooks/use-auth";
 
