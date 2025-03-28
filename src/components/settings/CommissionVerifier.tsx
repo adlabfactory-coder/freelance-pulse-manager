@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useCommissions } from "@/hooks/commission/use-commission-rules";
+import { useCommissionRules } from "@/hooks/commission/use-commission-rules";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { CommissionRule, CommissionTier } from "@/types/commissions";
@@ -22,7 +22,7 @@ interface TierVerificationResult {
 }
 
 const CommissionVerifier: React.FC = () => {
-  const { commissionRules, loading, error } = useCommissions();
+  const { commissionRules, loading, error } = useCommissionRules();
   const [verificationResults, setVerificationResults] = useState<TierVerificationResult[]>([]);
   const [verificationScore, setVerificationScore] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
