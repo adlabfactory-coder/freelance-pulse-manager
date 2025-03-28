@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabase } from "@/hooks/use-supabase";
-import { User } from "@/types/user";
+import { User } from "@/types";
 
 interface UserSelectorProps {
   onUserSelect: (userId: string) => void;
@@ -28,7 +28,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
       setIsLoading(true);
       try {
         const usersList = await supabase.fetchUsers();
-        setUsers(usersList);
+        setUsers(usersList as User[]);
       } catch (error) {
         console.error("Erreur lors du chargement des utilisateurs:", error);
       } finally {
@@ -46,7 +46,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
         try {
           const user = await supabase.fetchUserById(preselectedUserId);
           if (user) {
-            setUsers(prev => [...prev, user]);
+            setUsers(prev => [...prev, user as User]);
           }
         } catch (error) {
           console.error("Erreur lors du chargement de l'utilisateur présélectionné:", error);

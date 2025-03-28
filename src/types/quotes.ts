@@ -1,6 +1,12 @@
 
-// Importons les types de base de l'application
-import { QuoteStatus } from "./quote";
+// Types pour les devis
+export enum QuoteStatus {
+  DRAFT = "draft",
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  EXPIRED = "expired"
+}
 
 export interface QuoteItem {
   id?: string;

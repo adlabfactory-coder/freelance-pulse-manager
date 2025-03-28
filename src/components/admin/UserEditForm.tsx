@@ -54,7 +54,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onUpdate, onCancel, i
     defaultValues: {
       name: user.name,
       email: user.email,
-      role: user.role as any,
+      role: user.role as UserRole,
       password: '',
       confirmPassword: '',
     },
@@ -64,7 +64,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onUpdate, onCancel, i
     setIsSubmitting(true);
     try {
       // Vérifier si l'utilisateur a saisi un nouveau mot de passe
-      const updateData: Partial<User> & { id: string; password?: string } = {
+      const updateData: Partial<User> & { password?: string } = {
         id: user.id,
         name: values.name,
         email: values.email,

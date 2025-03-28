@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { User } from '@/types';
-import { UserRole } from '@/types/roles';
+import { User, UserRole } from '@/types';
 import { useSupabase } from '@/hooks/use-supabase';
 
 interface UserFormProps {
@@ -19,7 +17,6 @@ interface UserFormProps {
 
 interface UserCreateInput extends Omit<User, "id"> {
   password?: string;
-  schedule_enabled?: boolean;
 }
 
 export const UserForm: React.FC<UserFormProps> = ({
@@ -105,7 +102,6 @@ export const UserForm: React.FC<UserFormProps> = ({
           name,
           email,
           role,
-          schedule_enabled: false
         });
         
         if (result) {
@@ -129,7 +125,6 @@ export const UserForm: React.FC<UserFormProps> = ({
           email,
           role,
           avatar: null,
-          schedule_enabled: false,
           password: finalPassword
         };
         

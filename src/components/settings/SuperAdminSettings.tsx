@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CommissionVerifier from "./CommissionVerifier";
 import LoginTester from "./LoginTester";
+import { UserRole } from "@/types";
 
 const superAdminFormSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -61,7 +62,7 @@ const SuperAdminSettings: React.FC = () => {
         name: data.name,
         email: data.email,
         avatar: data.avatar,
-        role: user.role,
+        role: user.role as UserRole,
       });
       
       if (updatedUser) {

@@ -1,6 +1,5 @@
-
 import { useState, useCallback } from 'react';
-import { User } from '@/types/user';
+import { User, UserRole } from '@/types';
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
 import { getMockUsers as getMockUsersFromUtils } from "@/utils/supabase-mock-data";
@@ -30,7 +29,10 @@ export const useUserOperations = () => {
         return [];
       }
 
-      return data as User[];
+      return data.map(user => ({
+        ...user,
+        role: user.role as UserRole
+      })) as User[];
     } catch (error) {
       console.error('Erreur inattendue lors de la récupération des utilisateurs:', error);
       showErrorToast('Impossible de récupérer la liste des utilisateurs');
@@ -146,7 +148,7 @@ export const useUserOperations = () => {
     return getMockUsersFromUtils();
   };
 
-  const updateUserProfile = async (userData: Partial<User>): Promise<User | null> => {
+  const updateUserProfile = async (userData: Partial<User> & { password?: string }): Promise<User | null> => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -172,7 +174,10 @@ export const useUserOperations = () => {
       }
 
       showSuccessToast('Profil mis à jour avec succès');
-      return data as User;
+      return {
+        ...data,
+        role: data.role as UserRole
+      } as User;
     } catch (error) {
       console.error('Erreur inattendue lors de la mise à jour du profil:', error);
       showErrorToast('La mise à jour du profil a échoué');
