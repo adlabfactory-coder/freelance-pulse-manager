@@ -7,6 +7,7 @@ import { RefreshCw, UserPlus } from "lucide-react";
 import { useFreelancerManagement } from "@/hooks/useFreelancerManagement";
 import FreelancerTable from "./FreelancerTable";
 import SearchBar from "../account-manager/SearchBar";
+import { useAuth } from "@/hooks/use-auth";
 
 const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdminOrSuperAdmin }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,7 +79,7 @@ const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdmi
             freelancers={filteredFreelancers}
             isLoading={loading}
             isDeleting={deletingFreelancer}
-            onDelete={id => setFreelancerToDelete(id)}
+            onDelete={(id) => setFreelancerToDelete(id)}
           />
 
           {/* Delete confirmation dialog would go here */}

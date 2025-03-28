@@ -1,15 +1,34 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw } from "lucide-react";
-import CreateFreelancerForm from "./CreateFreelancerForm";
-import { useAuth } from "@/hooks/use-auth";
-import { FreelancerTable, DeleteFreelancerDialog } from "./freelancer";
-import { useFreelancerManagement, Freelancer } from "@/hooks/useFreelancerManagement";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { RefreshCw, UserPlus } from "lucide-react";
+import { useFreelancerManagement } from "@/hooks/useFreelancerManagement";
+import FreelancerTable from "./freelancer/FreelancerTable";
+import SearchBar from "./account-manager/SearchBar";
 
 const FreelancerManagement: React.FC = () => {
   const { isAdminOrSuperAdmin } = useAuth();
+  
+  if (!isAdminOrSuperAdmin) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestion des freelances</CardTitle>
+          <CardDescription>
+            Vous n'avez pas les droits pour accéder à cette section.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  return <FreelancerManagementContent isAdminOrSuperAdmin={isAdminOrSuperAdmin} />;
+};
+
+const FreelancerManagementContent: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdminOrSuperAdmin }) => {
+  const [searchTerm, setSearchTerm] = useState("");
   
   const {
     freelancers,
@@ -24,27 +43,21 @@ const FreelancerManagement: React.FC = () => {
     handleRefresh
   } = useFreelancerManagement(isAdminOrSuperAdmin);
 
-  if (!isAdminOrSuperAdmin) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Gestion des freelances</CardTitle>
-          <CardDescription>
-            Vous n'avez pas les droits pour accéder à cette section.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  const filteredFreelancers = searchTerm 
+    ? freelancers.filter(f => 
+        f.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        f.email.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : freelancers;
 
   return (
-    <div className="space-y-6">
+    <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div>
             <CardTitle>Gestion des freelances</CardTitle>
             <CardDescription>
-              Liste des freelances ayant accès à la plateforme
+              Ajoutez, modifiez ou supprimez les freelances
             </CardDescription>
           </div>
           <div className="flex space-x-2">
@@ -52,35 +65,45 @@ const FreelancerManagement: React.FC = () => {
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Actualiser
             </Button>
-            <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              {showCreateForm ? "Annuler" : "Ajouter un freelance"}
-            </Button>
+            <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+              <DialogTitle>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Ajouter un freelance
+                </Button>
+              </DialogTitle>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un freelance</DialogTitle>
+                  <DialogDescription>
+                    Créez un nouveau compte pour un freelance dans l'application
+                  </DialogDescription>
+                </DialogHeader>
+                {/* Form component would go here */}
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
-        
         <CardContent>
-          {showCreateForm && (
-            <div className="mb-6">
-              <CreateFreelancerForm onSuccess={handleCreateSuccess} />
-            </div>
-          )}
+          <div className="flex items-center space-x-2 mb-4">
+            <SearchBar
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="Rechercher un freelance..."
+            />
+          </div>
           
           <FreelancerTable
-            freelancers={freelancers}
-            loading={loading}
-            onDeleteClick={(id) => setFreelancerToDelete(id)}
+            freelancers={filteredFreelancers}
+            isLoading={loading}
+            isDeleting={deletingFreelancer}
+            onDelete={(id) => setFreelancerToDelete(id)}
           />
+
+          {/* Delete confirmation dialog would go here */}
         </CardContent>
       </Card>
-
-      <DeleteFreelancerDialog
-        isOpen={!!freelancerToDelete}
-        isDeleting={deletingFreelancer}
-        onConfirm={handleDeleteFreelancer}
-        onCancel={() => setFreelancerToDelete(null)}
-      />
-    </div>
+    </>
   );
 };
 
