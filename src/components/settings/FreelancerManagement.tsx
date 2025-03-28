@@ -4,11 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase-client";
-import { UserRole } from "@/types";
+import { User, UserRole } from "@/types";
 import { toast } from "sonner";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { Edit, PlusCircle, Loader2, Trash2 } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Freelancer {
   id: string;
@@ -21,6 +31,8 @@ const FreelancerManagement: React.FC = () => {
   const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(null);
+  const [deletingFreelancer, setDeletingFreelancer] = useState(false);
   const { isAdminOrSuperAdmin } = useAuth();
 
   useEffect(() => {
@@ -46,6 +58,50 @@ const FreelancerManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDeleteFreelancer = async () => {
+    if (!freelancerToDelete) return;
+
+    try {
+      setDeletingFreelancer(true);
+      
+      // D'abord supprimer l'authentification pour l'utilisateur
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("email")
+        .eq("id", freelancerToDelete)
+        .single();
+
+      if (userError) throw userError;
+
+      // Supprimer l'utilisateur de la table users
+      const { error: deleteError } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", freelancerToDelete);
+
+      if (deleteError) throw deleteError;
+
+      // Mettre à jour l'interface
+      setFreelancers(prevFreelancers => 
+        prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
+      );
+      
+      toast.success("Le freelance a été supprimé avec succès");
+    } catch (error: any) {
+      console.error("Erreur lors de la suppression du freelance:", error);
+      toast.error("Impossible de supprimer le freelance");
+    } finally {
+      setDeletingFreelancer(false);
+      setFreelancerToDelete(null);
+    }
+  };
+
+  const handleCreateSuccess = (newFreelancer: Freelancer) => {
+    setFreelancers(prev => [...prev, newFreelancer]);
+    setShowCreateForm(false);
+    toast.success(`Le freelance ${newFreelancer.name} a été ajouté avec succès`);
   };
 
   if (!isAdminOrSuperAdmin) {
@@ -80,7 +136,7 @@ const FreelancerManagement: React.FC = () => {
         <CardContent>
           {showCreateForm && (
             <div className="mb-6">
-              <CreateFreelancerForm />
+              <CreateFreelancerForm onSuccess={handleCreateSuccess} />
             </div>
           )}
           
@@ -96,12 +152,13 @@ const FreelancerManagement: React.FC = () => {
                   <TableHead>Nom</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Date de création</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {freelancers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center">
+                    <TableCell colSpan={4} className="text-center">
                       Aucun freelance trouvé
                     </TableCell>
                   </TableRow>
@@ -115,6 +172,20 @@ const FreelancerManagement: React.FC = () => {
                           ? new Date(freelancer.createdAt).toLocaleDateString() 
                           : "Non disponible"}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => setFreelancerToDelete(freelancer.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 )}
@@ -123,6 +194,33 @@ const FreelancerManagement: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Boîte de dialogue de confirmation de suppression */}
+      <AlertDialog open={!!freelancerToDelete} onOpenChange={(open) => !open && setFreelancerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce freelance ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingFreelancer}>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteFreelancer}
+              disabled={deletingFreelancer}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingFreelancer ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Suppression...
+                </>
+              ) : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

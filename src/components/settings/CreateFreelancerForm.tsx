@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { Loader2 } from "lucide-react";
 import { UserRole } from "@/types";
 
@@ -27,7 +27,11 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const CreateFreelancerForm: React.FC = () => {
+interface CreateFreelancerFormProps {
+  onSuccess?: (newFreelancer: { id: string; name: string; email: string }) => void;
+}
+
+const CreateFreelancerForm: React.FC<CreateFreelancerFormProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<FormValues>({
@@ -43,40 +47,45 @@ const CreateFreelancerForm: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Créer un utilisateur dans Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
+      // Créer manuellement l'utilisateur dans la table users (pour la démo)
+      const { data: insertedUser, error: insertError } = await supabase
+        .from("users")
+        .insert([
+          {
             name: data.name,
-            role: UserRole.FREELANCER
-          },
+            email: data.email,
+            role: UserRole.FREELANCER,
+            avatar: null
+          }
+        ])
+        .select();
+      
+      if (insertError) throw insertError;
+      
+      if (insertedUser && insertedUser.length > 0) {
+        const newFreelancer = {
+          id: insertedUser[0].id,
+          name: insertedUser[0].name,
+          email: insertedUser[0].email
+        };
+        
+        // Appeler le callback si fourni
+        if (onSuccess) {
+          onSuccess(newFreelancer);
+        } else {
+          toast.success("Freelance créé avec succès", {
+            description: `${data.name} (${data.email}) a été ajouté avec le rôle de freelance`
+          });
+          
+          // Réinitialiser le formulaire
+          form.reset();
         }
-      });
-      
-      if (authError) throw authError;
-      
-      if (!authData.user) {
-        throw new Error("Impossible de créer l'utilisateur");
       }
-      
-      // Notre déclencheur handle_new_user se chargera automatiquement d'ajouter l'utilisateur
-      // dans la table users avec le rôle "freelancer"
-      
-      toast("Freelance créé avec succès", {
-        description: `${data.name} (${data.email}) a été ajouté avec le rôle de commercial`
-      });
-      
-      // Réinitialiser le formulaire
-      form.reset();
-      
     } catch (error: any) {
       console.error("Erreur lors de la création du freelance:", error);
       
-      toast("Erreur", {
-        description: error.message || "Une erreur est survenue lors de la création du compte freelance",
-        style: { backgroundColor: 'hsl(var(--destructive))' }
+      toast.error("Erreur", {
+        description: error.message || "Une erreur est survenue lors de la création du compte freelance"
       });
     } finally {
       setIsLoading(false);
@@ -86,7 +95,7 @@ const CreateFreelancerForm: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Ajouter un nouveau commercial</CardTitle>
+        <CardTitle>Ajouter un nouveau freelance</CardTitle>
         <CardDescription>
           Créez un compte pour un nouveau commercial freelance
         </CardDescription>

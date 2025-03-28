@@ -101,11 +101,7 @@ export const initializeTestUsers = async (): Promise<UserCreationResult> => {
               name: userOp.name, 
               role: userOp.role,
               // Add default values for required fields
-              avatar: null,
-              supervisor_id: null,
-              schedule_enabled: false,
-              daily_availability: null,
-              weekly_availability: null
+              avatar: null
             }]);
           
           if (!error) {

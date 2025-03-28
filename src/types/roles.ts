@@ -1,7 +1,6 @@
 
 // User roles
 export enum UserRole {
-  USER = "user",
   FREELANCER = "freelancer",
   ACCOUNT_MANAGER = "account_manager",
   ADMIN = "admin",
@@ -105,7 +104,6 @@ export const ROLE_HIERARCHY = [
 
 // French labels for user roles
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  [UserRole.USER]: "Utilisateur",
   [UserRole.FREELANCER]: "Freelance",
   [UserRole.ACCOUNT_MANAGER]: "Chargé de compte",
   [UserRole.ADMIN]: "Administrateur",
