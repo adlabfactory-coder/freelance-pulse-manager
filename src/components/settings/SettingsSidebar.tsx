@@ -1,121 +1,137 @@
 
 import React from "react";
-import { NavLink } from "react-router-dom";
-import { 
-  UserCircle, 
-  Shield, 
-  Database, 
-  Users, 
-  Briefcase,
-  BarChart3,
-  Key,
-  DollarSign,
-  Bell
-} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
-import { User } from "@/types";
-
-interface SettingsLinkProps {
-  to: string;
-  label: string;
-  icon: React.ReactNode;
-  active?: boolean;
-  end?: boolean;
-}
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Bell,
+  Building,
+  Lock,
+  Settings,
+  User,
+  UserPlus,
+  Users,
+  Briefcase
+} from "lucide-react";
+import { User as UserType } from "@/types";
+import { UserRole } from "@/types/roles";
 
 interface SettingsSidebarProps {
-  currentUser: User;
+  currentUser: UserType | null;
   isAdmin: boolean;
   isSuperAdmin: boolean;
 }
 
-const SettingsLink: React.FC<SettingsLinkProps> = ({ to, label, icon, end = false }) => (
-  <NavLink
-    to={to}
-    end={end}
-    className={({ isActive }) =>
-      cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-        isActive
-          ? "bg-primary text-primary-foreground"
-          : "hover:bg-muted text-muted-foreground hover:text-foreground"
-      )
-    }
-  >
-    {icon}
-    {label}
-  </NavLink>
-);
+const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
+  currentUser,
+  isAdmin,
+  isSuperAdmin,
+}) => {
+  const location = useLocation();
+  const currentPath = location.pathname;
 
-const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ currentUser, isAdmin, isSuperAdmin }) => {
-  const { isAdminOrSuperAdmin } = useAuth();
-  
+  const menuItems = [
+    {
+      title: "Profil",
+      icon: <User className="mr-2 h-4 w-4" />,
+      href: "/settings/profile",
+      show: true,
+    },
+    {
+      title: "Notifications",
+      icon: <Bell className="mr-2 h-4 w-4" />,
+      href: "/settings/notifications",
+      show: true,
+    },
+    {
+      title: "Sécurité",
+      icon: <Lock className="mr-2 h-4 w-4" />,
+      href: "/settings/security",
+      show: true,
+    },
+    {
+      title: "Paramètres de l'entreprise",
+      icon: <Building className="mr-2 h-4 w-4" />,
+      href: "/settings",
+      show: isAdmin || isSuperAdmin,
+    },
+    {
+      title: "Paramètres de l'agence",
+      icon: <Briefcase className="mr-2 h-4 w-4" />,
+      href: "/settings/agency",
+      show: isAdmin || isSuperAdmin,
+    },
+    {
+      title: "Gestion des freelancers",
+      icon: <UserPlus className="mr-2 h-4 w-4" />,
+      href: "/settings/freelancers",
+      show: isAdmin || isSuperAdmin,
+    },
+    {
+      title: "Gestion des chargés d'affaires",
+      icon: <UserPlus className="mr-2 h-4 w-4" />,
+      href: "/settings/account-managers",
+      show: isAdmin || isSuperAdmin,
+    },
+    {
+      title: "Gestion des utilisateurs",
+      icon: <Users className="mr-2 h-4 w-4" />,
+      href: "/settings/users",
+      show: isAdmin || isSuperAdmin,
+    },
+  ];
+
+  const visibleMenuItems = menuItems.filter((item) => item.show);
+
   return (
-    <aside className="w-64 hidden md:block">
-      <nav className="space-y-1">
-        <SettingsLink
-          to="/settings"
-          label="Profil utilisateur"
-          icon={<UserCircle className="h-5 w-5" />}
-          end
-        />
-
-        <SettingsLink
-          to="/settings/security"
-          label="Sécurité"
-          icon={<Shield className="h-5 w-5" />}
-        />
-        
-        <SettingsLink
-          to="/settings/api-keys"
-          label="Clés API"
-          icon={<Key className="h-5 w-5" />}
-        />
-        
-        {isAdminOrSuperAdmin && (
-          <>
-            <div className="my-3 h-px bg-border" />
-            
-            <SettingsLink
-              to="/settings/users"
-              label="Utilisateurs"
-              icon={<Users className="h-5 w-5" />}
-            />
-            
-            <SettingsLink
-              to="/settings/services"
-              label="Services"
-              icon={<BarChart3 className="h-5 w-5" />}
-            />
-            
-            <SettingsLink
-              to="/settings/commissions"
-              label="Commissions"
-              icon={<DollarSign className="h-5 w-5" />}
-            />
-          </>
+    <Card className="min-w-52 w-full md:w-52">
+      <CardHeader>
+        <CardTitle className="text-xl">Paramètres</CardTitle>
+        {currentUser && (
+          <CardDescription>
+            {currentUser.name} ({currentUser.role || "Sans rôle"})
+          </CardDescription>
         )}
-        
-        {isSuperAdmin && (
-          <>
-            <div className="my-3 h-px bg-border" />
-            
-            <SettingsLink
-              to="/settings/database"
-              label="Base de données"
-              icon={<Database className="h-5 w-5" />}
-            />
-            
-            <SettingsLink
-              to="/settings/notifications"
-              label="Notifications"
-              icon={<Bell className="h-5 w-5" />}
-            />
-          </>
-        )}
-      </nav>
-    </aside>
+      </CardHeader>
+      <CardContent className="p-0">
+        <nav className="flex flex-col space-y-1">
+          {visibleMenuItems.map((item) => (
+            <Button
+              key={item.href}
+              variant="ghost"
+              className={cn(
+                "justify-start rounded-none border-l-4",
+                currentPath === item.href
+                  ? "border-primary bg-muted"
+                  : "border-transparent hover:border-primary/50"
+              )}
+              asChild
+            >
+              <Link to={item.href}>
+                {item.icon}
+                {item.title}
+              </Link>
+            </Button>
+          ))}
+        </nav>
+      </CardContent>
+      <CardFooter className="py-3 border-t">
+        <Button variant="outline" size="sm" className="w-full" asChild>
+          <Link to="/dashboard">
+            <Settings className="mr-2 h-4 w-4" />
+            Retour au tableau de bord
+          </Link>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

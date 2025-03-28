@@ -1,122 +1,57 @@
 
-import React, { useState, useEffect } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import UserProfileTabs from "@/components/settings/tabs/UserTabs";
-import SecurityTab from "@/components/settings/tabs/SecurityTab";
-import UsersManagementTabs from "@/components/settings/UsersManagementTabs";
-import ServicesSettings from "@/components/settings/ServicesSettings";
-import DatabaseTab from "@/components/settings/DatabaseTab";
-import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
-import CommissionSettingsTab from "@/pages/settings/components/CommissionSettingsTab";
-import { useAuth } from "@/hooks/use-auth";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import CompanySettings from "@/components/settings/CompanySettings";
+import UserProfileSettings from "@/components/settings/UserProfileSettings";
+import NotificationsSettings from "@/components/settings/NotificationsSettings";
+import SecuritySettings from "@/components/settings/SecuritySettings";
+import FreelancerManagement from "@/components/settings/FreelancerManagement";
+import AccountManagerManagement from "@/components/settings/AccountManagerManagement";
+import UsersList from "@/components/settings/UsersList";
+import { User } from "@/types";
+import AgencySettings from "@/components/settings/AgencySettings";
 
 interface SettingsContentProps {
-  onSelectUser?: (userId: string) => void;
-  currentUser?: any;
+  onSelectUser: (userId: string) => void;
+  currentUser: User | null;
 }
 
-const SettingsContent: React.FC<SettingsContentProps> = ({ 
-  onSelectUser = () => {}, 
-  currentUser 
-}) => {
-  const { isSuperAdmin, isAdminOrSuperAdmin, user } = useAuth();
-  const isCurrentUser = currentUser && user ? currentUser.id === user.id : true;
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const SettingsContent: React.FC<SettingsContentProps> = ({ onSelectUser, currentUser }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  
+  const pathSegments = location.pathname.split("/");
+  const currentSection = pathSegments[pathSegments.length - 1];
+
   useEffect(() => {
-    // Simulate loading state to give components time to initialize
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    // Scroll to top when section changes
+    window.scrollTo(0, 0);
+  }, [currentSection]);
 
-  // Vérifier que l'utilisateur a les permissions d'accès aux paramètres
-  useEffect(() => {
-    if (!isAdminOrSuperAdmin && !isLoading) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAdminOrSuperAdmin, isLoading, navigate]);
-  
-  if (isLoading) {
-    return (
-      <div className="flex-1 space-y-4">
-        <Skeleton className="h-12 w-full" />
-        <div className="space-y-4">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-6">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erreur</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Rediriger si l'utilisateur n'est pas admin ou super admin
-  if (!isAdminOrSuperAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Extract the current tab from the URL path
-  const path = location.pathname.split('/settings/')[1] || '';
-  
-  // Render the appropriate component based on the current path
+  // Rendu du contenu en fonction du chemin actuel
   const renderContent = () => {
-    // Base routes for all users
-    if (path === '' || path === 'profile') {
-      return <UserProfileTabs onSelectUser={onSelectUser} />;
+    switch (currentSection) {
+      case "profile":
+        return <UserProfileSettings currentUser={currentUser} />;
+      case "notifications":
+        return <NotificationsSettings />;
+      case "security":
+        return <SecuritySettings />;
+      case "freelancers":
+        return <FreelancerManagement />;
+      case "account-managers":
+        return <AccountManagerManagement />;
+      case "users":
+        return <UsersList onSelectUser={onSelectUser} />;
+      case "agency":
+        return <AgencySettings />;
+      case "settings": // Page par défaut
+      default:
+        return <CompanySettings />;
     }
-    if (path === 'security') {
-      return <SecurityTab isCurrentUser={isCurrentUser} />;
-    }
-    if (path === 'api-keys') {
-      return <ApiKeysTab />;
-    }
-    
-    // Admin & Super Admin routes
-    if (isAdminOrSuperAdmin) {
-      if (path === 'users') {
-        return <UsersManagementTabs onSelectUser={onSelectUser} />;
-      }
-      if (path === 'services') {
-        return <ServicesSettings />;
-      }
-      if (path === 'commissions') {
-        return <CommissionSettingsTab />;
-      }
-    }
-    
-    // Super Admin only routes
-    if (isSuperAdmin && path === 'database') {
-      return <DatabaseTab />;
-    }
-    
-    // If path doesn't match any valid route, navigate to settings home
-    if (path !== '') {
-      navigate('/settings', { replace: true });
-      return null;
-    }
-    
-    return <UserProfileTabs onSelectUser={onSelectUser} />;
   };
-  
+
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 md:max-w-3xl w-full">
       {renderContent()}
     </div>
   );
