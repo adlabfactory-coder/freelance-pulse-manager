@@ -2,37 +2,14 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, Trash } from 'lucide-react';
-import { SubscriptionInterval, SubscriptionPlan } from '@/types/subscription';
-import { createSubscriptionPlan, updateSubscriptionPlan } from '@/services/subscriptions';
+import { Form } from '@/components/ui/form';
 import { toast } from 'sonner';
-
-interface SubscriptionPlanFormProps {
-  plan?: SubscriptionPlan | null;
-  onSuccess: () => void;
-  onCancel: () => void;
-}
-
-const planFormSchema = z.object({
-  name: z.string().min(1, 'Le nom est requis'),
-  code: z.string().min(1, 'Le code est requis'),
-  description: z.string().optional(),
-  price: z.coerce.number().positive('Le prix doit être positif'),
-  interval: z.enum([SubscriptionInterval.MONTHLY, SubscriptionInterval.QUARTERLY, 
-                    SubscriptionInterval.BIANNUAL, SubscriptionInterval.ANNUAL, 
-                    SubscriptionInterval.YEARLY, SubscriptionInterval.CUSTOM]),
-  isActive: z.boolean().default(true),
-  features: z.array(z.string()).optional()
-});
-
-type PlanFormValues = z.infer<typeof planFormSchema>;
+import { SubscriptionInterval } from '@/types/subscription';
+import { createSubscriptionPlan, updateSubscriptionPlan } from '@/services/subscriptions';
+import { PlanFormValues, planFormSchema, SubscriptionPlanFormProps } from './types';
+import SubscriptionPlanFormFields from './SubscriptionPlanFormFields';
+import SubscriptionPlanFeatures from './SubscriptionPlanFeatures';
+import FormActions from './FormActions';
 
 const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +20,6 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
         : (plan.features.features || [])) 
       : []
   );
-  const [newFeature, setNewFeature] = useState('');
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
@@ -52,22 +28,13 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
       code: plan?.code || '',
       description: plan?.description || '',
       price: plan?.price || 0,
-      interval: plan?.interval || 'monthly',
+      interval: plan?.interval || SubscriptionInterval.MONTHLY,
       isActive: plan?.isActive !== undefined ? plan.isActive : true,
       features: features
     }
   });
 
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setFeatures(prev => [...prev, newFeature]);
-      form.setValue('features', [...features, newFeature]);
-      setNewFeature('');
-    }
-  };
-
-  const removeFeature = (index: number) => {
-    const updatedFeatures = features.filter((_, i) => i !== index);
+  const handleFeaturesChange = (updatedFeatures: string[]) => {
     setFeatures(updatedFeatures);
     form.setValue('features', updatedFeatures);
   };
@@ -128,167 +95,18 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom du plan*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Plan Basique" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Code*</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: BASIC" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <SubscriptionPlanFormFields form={form} />
           
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Description du plan d'abonnement" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          <SubscriptionPlanFeatures 
+            features={features} 
+            onFeaturesChange={handleFeaturesChange} 
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Prix (MAD)*</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="interval"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Intervalle*</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir un intervalle" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={SubscriptionInterval.MONTHLY}>Mensuel</SelectItem>
-                      <SelectItem value={SubscriptionInterval.QUARTERLY}>Trimestriel</SelectItem>
-                      <SelectItem value={SubscriptionInterval.BIANNUAL}>Semestriel</SelectItem>
-                      <SelectItem value={SubscriptionInterval.ANNUAL}>Annuel</SelectItem>
-                      <SelectItem value={SubscriptionInterval.YEARLY}>Annuel</SelectItem>
-                      <SelectItem value={SubscriptionInterval.CUSTOM}>Personnalisé</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <FormField
-            control={form.control}
-            name="isActive"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Actif</FormLabel>
-                  <p className="text-sm text-muted-foreground">
-                    Indique si le plan est actuellement disponible pour les clients
-                  </p>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          <FormActions 
+            isSubmitting={isSubmitting}
+            onCancel={onCancel}
+            isEditing={!!plan}
           />
-          
-          <div className="space-y-4">
-            <div>
-              <FormLabel>Fonctionnalités</FormLabel>
-              <div className="flex mt-2">
-                <Input
-                  value={newFeature}
-                  onChange={(e) => setNewFeature(e.target.value)}
-                  placeholder="Ajouter une fonctionnalité"
-                  className="flex-1"
-                />
-                <Button type="button" onClick={addFeature} className="ml-2">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center justify-between p-2 border rounded-md">
-                  <span>{feature}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFeature(index)}
-                  >
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              {features.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Aucune fonctionnalité ajoutée pour l'instant.
-                </p>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                plan ? 'Mettre à jour' : 'Créer le plan'
-              )}
-            </Button>
-          </div>
         </form>
       </Form>
     </div>
