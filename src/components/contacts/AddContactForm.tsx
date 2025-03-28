@@ -54,7 +54,7 @@ const AddContactForm: React.FC<AddContactFormProps> = ({
     isEditing: false,
     useAutoAssign,
     initialData: {
-      assignedTo: user?.id || ""
+      assignedTo: user?.role === "freelancer" ? user?.id : ""
     }
   });
 

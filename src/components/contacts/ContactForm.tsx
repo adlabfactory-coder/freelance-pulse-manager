@@ -16,12 +16,12 @@ import { ContactFormValues } from "./schema/contactFormSchema";
 import { Loader2 } from "lucide-react";
 import ContactStatusSelector from "./ContactStatusSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchAccountManagers } from "@/services/user/fetch-users";
 import { Switch } from "@/components/ui/switch";
 import { accountManagerService } from "@/services/account-manager/account-manager-service";
+import { toast } from "sonner";
 
 interface ContactFormProps {
   form: UseFormReturn<ContactFormValues>;
@@ -62,9 +62,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
           }
         } else {
           console.warn("Aucun chargé de compte trouvé");
+          toast.warning("Aucun chargé de compte disponible pour l'assignation");
         }
       } catch (error) {
         console.error("Erreur lors du chargement des chargés de compte:", error);
+        toast.error("Impossible de charger la liste des chargés de compte");
       } finally {
         setIsLoadingManagers(false);
       }
@@ -85,16 +87,21 @@ const ContactForm: React.FC<ContactFormProps> = ({
     if (checked && !isEditing) {
       setIsAutoAssigning(true);
       try {
+        // Obtenir le prochain gestionnaire disponible
         const nextManager = await accountManagerService.getNextAvailableAccountManager();
         
         if (nextManager) {
+          console.log("Attribution automatique au chargé de compte:", nextManager.name);
           form.setValue('assignedTo', nextManager.id);
+          toast.success(`Attribution automatique à ${nextManager.name}`);
         } else {
           // Si aucun manager n'est trouvé, revenir au mode manuel
           setUseAutoAssign(false);
+          toast.warning("Aucun chargé de compte disponible pour l'attribution automatique");
         }
       } catch (error) {
         console.error("Erreur lors de l'attribution automatique:", error);
+        toast.error("Erreur lors de l'attribution automatique du chargé de compte");
         setUseAutoAssign(false);
       } finally {
         setIsAutoAssigning(false);

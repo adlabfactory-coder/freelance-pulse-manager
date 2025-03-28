@@ -14,7 +14,8 @@ class AccountManagerService {
       const { data: accountManagers, error: userError } = await supabase
         .from('users')
         .select('*')
-        .eq('role', UserRole.ACCOUNT_MANAGER);
+        .eq('role', UserRole.ACCOUNT_MANAGER)
+        .is('deleted_at', null); // Ignorer les utilisateurs supprimés
 
       if (userError) {
         console.error("Erreur lors de la récupération des chargés de compte:", userError);
@@ -24,7 +25,8 @@ class AccountManagerService {
       // Récupérer le nombre de contacts assignés à chaque chargé de compte
       const { data: contacts, error: contactsError } = await supabase
         .from('contacts')
-        .select('assignedTo');
+        .select('assignedTo')
+        .is('deleted_at', null); // Ignorer les contacts supprimés
 
       if (contactsError) {
         console.error("Erreur lors de la récupération des contacts:", contactsError);
@@ -46,7 +48,7 @@ class AccountManagerService {
       }));
 
       // Trier par nombre de contacts (décroissant)
-      return stats.sort((a, b) => b.contactCount - a.contactCount);
+      return stats.sort((a, b) => a.contactCount - b.contactCount);
     } catch (error) {
       console.error("Erreur inattendue lors de la récupération des statistiques:", error);
       return [];
@@ -58,11 +60,16 @@ class AccountManagerService {
       const stats = await this.getDistributionStats();
       
       if (stats.length === 0) {
+        console.warn("Aucun chargé de compte disponible pour l'assignation automatique");
         return null;
       }
       
       // Trouver le chargé de compte avec le moins de contacts
-      return stats.sort((a, b) => a.contactCount - b.contactCount)[0].manager;
+      const selectedManager = stats[0].manager;
+      console.log("Chargé de compte sélectionné pour l'assignation automatique:", 
+        selectedManager.name, "avec", stats[0].contactCount, "contacts");
+      
+      return selectedManager;
     } catch (error) {
       console.error("Erreur lors de la recherche du prochain chargé de compte disponible:", error);
       return null;

@@ -7,6 +7,7 @@ import { contactService } from '@/services/contact-service';
 import { ContactStatus } from '@/types/contact';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
+import { accountManagerService } from '@/services/account-manager/account-manager-service';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -49,6 +50,19 @@ export const useContactForm = ({
   const onSubmit = async (data: ContactFormValues) => {
     try {
       setLoading(true);
+      
+      // Si l'utilisateur n'a pas assigné de chargé de compte et que l'auto-assignation est activée
+      if (!data.assignedTo && useAutoAssign) {
+        const nextManager = await accountManagerService.getNextAvailableAccountManager();
+        if (nextManager) {
+          data.assignedTo = nextManager.id;
+          console.log("Contact auto-assigné au chargé de compte:", nextManager.name);
+        } else {
+          toast.error("Aucun chargé de compte disponible pour l'auto-assignation");
+          setLoading(false);
+          return;
+        }
+      }
       
       // Vérifier que l'utilisateur a bien assigné un chargé de compte
       if (!data.assignedTo) {
