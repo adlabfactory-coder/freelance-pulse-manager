@@ -11,31 +11,34 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-export interface DeleteServiceDialogProps {
+interface DeleteServiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   serviceName: string;
 }
 
-const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({ 
-  isOpen, 
-  onClose, 
+const DeleteServiceDialog: React.FC<DeleteServiceDialogProps> = ({
+  isOpen,
+  onClose,
   onConfirm,
-  serviceName 
+  serviceName,
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce service?</AlertDialogTitle>
+          <AlertDialogTitle>Supprimer le service</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action supprimera définitivement le service "{serviceName}" et ne peut pas être annulée.
+            Êtes-vous sûr de vouloir supprimer le service "{serviceName}" ? Cette action ne peut pas être annulée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
             Supprimer
           </AlertDialogAction>
         </AlertDialogFooter>

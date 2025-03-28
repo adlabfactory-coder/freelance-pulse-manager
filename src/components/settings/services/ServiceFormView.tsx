@@ -8,12 +8,14 @@ interface ServiceFormViewProps {
   service: Service;
   onSave: (service: Service) => Promise<void>;
   onCancel: () => void;
+  isSaving?: boolean;
 }
 
 const ServiceFormView: React.FC<ServiceFormViewProps> = ({ 
   service, 
   onSave, 
-  onCancel 
+  onCancel,
+  isSaving
 }) => {
   const isEditing = !!service.id;
   
@@ -27,6 +29,7 @@ const ServiceFormView: React.FC<ServiceFormViewProps> = ({
           service={service}
           onSave={onSave}
           onCancel={onCancel}
+          isSaving={isSaving}
         />
       </CardContent>
     </Card>

@@ -1,19 +1,25 @@
 
 import React from 'react';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChevronLeft, Plus } from 'lucide-react';
 
 interface ServicesTabListProps {
   showForm: boolean;
   isEditing: boolean;
   onAddNew: () => void;
+  onCancel: () => void;
 }
 
-const ServicesTabList: React.FC<ServicesTabListProps> = ({ showForm, isEditing, onAddNew }) => {
+const ServicesTabList: React.FC<ServicesTabListProps> = ({ 
+  showForm, 
+  isEditing, 
+  onAddNew, 
+  onCancel 
+}) => {
   return (
-    <div className="flex justify-between items-center mb-6">
-      <TabsList>
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 mb-4">
+      <TabsList className="w-full sm:w-auto">
         <TabsTrigger value="list">Liste des services</TabsTrigger>
         {showForm && (
           <TabsTrigger value="form">
@@ -23,12 +29,12 @@ const ServicesTabList: React.FC<ServicesTabListProps> = ({ showForm, isEditing, 
       </TabsList>
       
       {showForm ? (
-        <Button variant="ghost" size="sm" className="gap-1">
+        <Button variant="ghost" size="sm" onClick={onCancel} className="gap-1">
           <ChevronLeft className="h-4 w-4" /> Retour
         </Button>
       ) : (
-        <Button variant="default" size="sm" onClick={onAddNew}>
-          Ajouter un service
+        <Button variant="default" size="sm" onClick={onAddNew} className="gap-1">
+          <Plus className="h-4 w-4" /> Ajouter un service
         </Button>
       )}
     </div>
