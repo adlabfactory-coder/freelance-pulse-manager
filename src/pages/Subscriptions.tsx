@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
 import SubscriptionsList from "@/components/subscriptions/SubscriptionsList";
+import AgencyServicesList from "@/components/subscriptions/AgencyServicesList";
 import { useAuth } from "@/hooks/use-auth";
 import SubscriptionPlanSettings from "@/components/settings/subscription/SubscriptionPlanSettings";
 
@@ -62,6 +63,7 @@ const Subscriptions: React.FC = () => {
         <TabsList>
           <TabsTrigger value="plans">Plans d'abonnement</TabsTrigger>
           <TabsTrigger value="subscriptions">Abonnements actifs</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
           {isAdminOrSuperAdmin && (
             <TabsTrigger value="settings" className="flex items-center gap-1">
               Paramètres <Badge variant="outline" className="ml-1 px-1">Admin</Badge>
@@ -99,6 +101,10 @@ const Subscriptions: React.FC = () => {
               <SubscriptionsList />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="services" className="space-y-4">
+          <AgencyServicesList />
         </TabsContent>
 
         {isAdminOrSuperAdmin && (

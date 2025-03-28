@@ -1,50 +1,59 @@
 
 import React from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { SubscriptionInterval } from "@/types/subscription";
-import { UseFormReturn } from 'react-hook-form';
-import { PlanFormValues } from './types';
+import { useForm } from 'react-hook-form';
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription, 
+  FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { SubscriptionInterval } from '@/types/subscription';
 
-interface SubscriptionPlanFormFieldsProps {
-  form: UseFormReturn<PlanFormValues>;
-}
-
-const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({ form }) => {
+const SubscriptionPlanFormFields = ({ form }) => {
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom du plan*</FormLabel>
-              <FormControl>
-                <Input placeholder="Ex: Plan Basique" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="code"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Code*</FormLabel>
-              <FormControl>
-                <Input placeholder="Ex: BASIC" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+    <div className="space-y-4">
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nom du plan</FormLabel>
+            <FormControl>
+              <Input placeholder="Nom du plan" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="code"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Code du plan</FormLabel>
+            <FormControl>
+              <Input placeholder="Code du plan (ex: basic, premium)" {...field} />
+            </FormControl>
+            <FormDescription>
+              Un identifiant unique pour ce plan (utilisé en interne)
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
       <FormField
         control={form.control}
@@ -53,22 +62,38 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea placeholder="Description du plan d'abonnement" {...field} />
+              <Textarea 
+                placeholder="Description du plan d'abonnement" 
+                {...field} 
+                value={field.value || ''} 
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <FormField
           control={form.control}
           name="price"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prix (MAD)*</FormLabel>
+            <FormItem className="flex-1">
+              <FormLabel>Prix (€)</FormLabel>
               <FormControl>
-                <Input type="number" step="0.01" {...field} />
+                <Input 
+                  type="number" 
+                  placeholder="0.00"
+                  {...field} 
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      field.onChange(0);
+                    } else {
+                      field.onChange(parseFloat(value));
+                    }
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -79,12 +104,12 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
           control={form.control}
           name="interval"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Intervalle*</FormLabel>
+            <FormItem className="flex-1">
+              <FormLabel>Intervalle</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir un intervalle" />
+                    <SelectValue placeholder="Sélectionner un intervalle" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -92,7 +117,7 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
                   <SelectItem value={SubscriptionInterval.QUARTERLY}>Trimestriel</SelectItem>
                   <SelectItem value={SubscriptionInterval.BIANNUAL}>Semestriel</SelectItem>
                   <SelectItem value={SubscriptionInterval.ANNUAL}>Annuel</SelectItem>
-                  <SelectItem value={SubscriptionInterval.YEARLY}>Annuel</SelectItem>
+                  <SelectItem value={SubscriptionInterval.YEARLY}>Annuel (alt.)</SelectItem>
                   <SelectItem value={SubscriptionInterval.CUSTOM}>Personnalisé</SelectItem>
                 </SelectContent>
               </Select>
@@ -106,24 +131,23 @@ const SubscriptionPlanFormFields: React.FC<SubscriptionPlanFormFieldsProps> = ({
         control={form.control}
         name="isActive"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <FormLabel className="text-base">Actif</FormLabel>
-              <p className="text-sm text-muted-foreground">
-                Indique si le plan est actuellement disponible pour les clients
-              </p>
-            </div>
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
             <FormControl>
-              <Switch
+              <Checkbox
                 checked={field.value}
                 onCheckedChange={field.onChange}
               />
             </FormControl>
-            <FormMessage />
+            <div className="space-y-1 leading-none">
+              <FormLabel>Plan actif</FormLabel>
+              <FormDescription>
+                Ce plan sera visible et disponible pour les clients
+              </FormDescription>
+            </div>
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 };
 
