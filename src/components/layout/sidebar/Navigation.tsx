@@ -11,7 +11,7 @@ import {
   PieChart,
 } from "lucide-react";
 import { NavItem } from "@/types/navigation";
-import NavItem as NavItemComponent from "./NavItem";
+import NavItemComponent from "./NavItem";
 import { useAuth } from "@/hooks/use-auth";
 
 interface NavigationProps {
