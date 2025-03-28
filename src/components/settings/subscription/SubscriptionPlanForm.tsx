@@ -25,7 +25,9 @@ const planFormSchema = z.object({
   code: z.string().min(1, 'Le code est requis'),
   description: z.string().optional(),
   price: z.coerce.number().positive('Le prix doit être positif'),
-  interval: z.enum(['monthly', 'quarterly', 'biannual', 'annual', 'yearly', 'custom']),
+  interval: z.enum([SubscriptionInterval.MONTHLY, SubscriptionInterval.QUARTERLY, 
+                    SubscriptionInterval.BIANNUAL, SubscriptionInterval.ANNUAL, 
+                    SubscriptionInterval.YEARLY, SubscriptionInterval.CUSTOM]),
   isActive: z.boolean().default(true),
   features: z.array(z.string()).optional()
 });
@@ -80,7 +82,7 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
           code: data.code,
           description: data.description || '',
           price: data.price,
-          interval: data.interval,
+          interval: data.interval as SubscriptionInterval,
           isActive: data.isActive,
           features: features
         });
@@ -98,7 +100,7 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
           code: data.code,
           description: data.description || '',
           price: data.price,
-          interval: data.interval,
+          interval: data.interval as SubscriptionInterval,
           isActive: data.isActive,
           features: features
         });
@@ -198,12 +200,12 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="monthly">Mensuel</SelectItem>
-                      <SelectItem value="quarterly">Trimestriel</SelectItem>
-                      <SelectItem value="biannual">Semestriel</SelectItem>
-                      <SelectItem value="annual">Annuel</SelectItem>
-                      <SelectItem value="yearly">Annuel</SelectItem>
-                      <SelectItem value="custom">Personnalisé</SelectItem>
+                      <SelectItem value={SubscriptionInterval.MONTHLY}>Mensuel</SelectItem>
+                      <SelectItem value={SubscriptionInterval.QUARTERLY}>Trimestriel</SelectItem>
+                      <SelectItem value={SubscriptionInterval.BIANNUAL}>Semestriel</SelectItem>
+                      <SelectItem value={SubscriptionInterval.ANNUAL}>Annuel</SelectItem>
+                      <SelectItem value={SubscriptionInterval.YEARLY}>Annuel</SelectItem>
+                      <SelectItem value={SubscriptionInterval.CUSTOM}>Personnalisé</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
