@@ -19,7 +19,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
   return (
     <div className="mt-auto border-t px-2 py-2">
       <Button
-        variant="ghost"
+        variant="destructive"
         size={collapsed ? "icon" : "default"}
         onClick={handleLogout}
         className={`${collapsed ? 'w-full justify-center' : 'w-full'} flex items-center`}

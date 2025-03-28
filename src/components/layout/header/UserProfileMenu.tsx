@@ -23,7 +23,7 @@ const UserProfileMenu: React.FC = () => {
   
   const handleLogout = async () => {
     await logout();
-    // Le hook useAuth s'occupera de la redirection vers la page de connexion
+    // Le hook useLogout s'occupera de la redirection vers la page de connexion
   };
 
   const handleExternalNavigation = (url: string) => {
@@ -64,7 +64,10 @@ const UserProfileMenu: React.FC = () => {
           <span>Support</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem 
+          onClick={handleLogout}
+          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           <span>Se déconnecter</span>
         </DropdownMenuItem>

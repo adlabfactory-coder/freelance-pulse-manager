@@ -13,7 +13,6 @@ export function useDashboard(): UseDashboardDataReturn {
   const [lastUpdated, setLastUpdated] = useState<Date | undefined>(undefined);
   const [isConnected, setIsConnected] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
-  // Suppression du shouldRefresh pour le mode manuel uniquement
   
   const { stats, dataSources, fetchStats } = useDashboardStats();
   const { activities, fetchActivities } = useDashboardActivities();
@@ -64,7 +63,7 @@ export function useDashboard(): UseDashboardDataReturn {
     }
   }, [fetchStats, fetchActivities, fetchTasks, refreshing, retryCount]);
 
-  // S'abonner aux mises à jour en temps réel
+  // S'abonner aux mises à jour en temps réel mais ne pas les utiliser pour actualiser automatiquement
   useRealtimeSubscriptions(fetchDashboardData);
 
   // Charger les données au montage du composant, mais ne pas effectuer d'actualisation automatique

@@ -72,7 +72,7 @@ const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
     <div className="flex items-center space-x-3">
       {/* Ajout d'un bouton d'actualisation visible en dehors du popover */}
       <Button 
-        variant="outline" 
+        variant="primary" 
         size="sm"
         onClick={handleRefreshClick}
         disabled={isRefreshing}

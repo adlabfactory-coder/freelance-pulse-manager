@@ -18,7 +18,7 @@ const FreelancerContactsHeader: React.FC<FreelancerContactsHeaderProps> = ({
       <div className="flex space-x-2">
         {onRefresh && (
           <Button 
-            variant="outline" 
+            variant="primary" 
             size="sm" 
             disabled={loading}
             onClick={onRefresh}

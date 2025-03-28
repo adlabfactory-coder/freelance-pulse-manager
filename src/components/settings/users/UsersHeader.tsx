@@ -18,7 +18,7 @@ const UsersHeader: React.FC<UsersHeaderProps> = ({ onRefresh }) => {
   return (
     <div className="flex space-x-2">
       <Button 
-        variant="outline" 
+        variant="primary" 
         size="sm" 
         onClick={onRefresh}
         className="h-8 gap-1"
