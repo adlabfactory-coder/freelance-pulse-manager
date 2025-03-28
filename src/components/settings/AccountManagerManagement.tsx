@@ -12,9 +12,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, Plus, RefreshCw, Search, Trash2, UserPlus } from "lucide-react";
 import { UserRole } from "@/types/roles";
-import { fetchAccountManagers } from "@/services/user/fetch-users";
 import { User } from "@/types";
 import { supabase } from "@/lib/supabase-client";
+
+// Extend the User type to include the createdAt property
+interface AccountManager extends User {
+  createdAt?: string;
+}
 
 const userFormSchema = z.object({
   name: z.string().min(3, "Le nom doit comporter au moins 3 caractères"),
@@ -24,8 +28,8 @@ const userFormSchema = z.object({
 type UserFormValues = z.infer<typeof userFormSchema>;
 
 const AccountManagerManagement: React.FC = () => {
-  const [accountManagers, setAccountManagers] = useState<User[]>([]);
-  const [filteredManagers, setFilteredManagers] = useState<User[]>([]);
+  const [accountManagers, setAccountManagers] = useState<AccountManager[]>([]);
+  const [filteredManagers, setFilteredManagers] = useState<AccountManager[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -77,7 +81,7 @@ const AccountManagerManagement: React.FC = () => {
         email: user.email,
         // Using createdAt for the component to render properly
         createdAt: user.created_at
-      })) as User[];
+      })) as AccountManager[];
       
       setAccountManagers(managersWithRole);
       setFilteredManagers(managersWithRole);
@@ -110,8 +114,9 @@ const AccountManagerManagement: React.FC = () => {
       if (data && data.length > 0) {
         const newManager = {
           ...data[0],
-          role: UserRole.ACCOUNT_MANAGER
-        } as User;
+          role: UserRole.ACCOUNT_MANAGER,
+          createdAt: data[0].created_at
+        } as AccountManager;
         
         setAccountManagers(prev => [...prev, newManager]);
         form.reset();
