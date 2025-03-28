@@ -27,7 +27,12 @@ export enum ServiceType {
   ONE_TIME = 'one_time',
   RECURRING = 'recurring',
   CONSULTING = 'consulting',
-  OTHER = 'other'
+  OTHER = 'other',
+  DIGITAL_STRATEGY = 'digital_strategy',
+  SEO = 'seo',
+  SEA = 'sea',
+  EMAIL_MARKETING = 'email_marketing',
+  FORMATION = 'formation'
 }
 
 export const ServiceTypeLabels: Record<ServiceType, string> = {
@@ -47,5 +52,10 @@ export const ServiceTypeLabels: Record<ServiceType, string> = {
   [ServiceType.ONE_TIME]: 'Service ponctuel',
   [ServiceType.RECURRING]: 'Service récurrent',
   [ServiceType.CONSULTING]: 'Consultation',
-  [ServiceType.OTHER]: 'Autre'
+  [ServiceType.OTHER]: 'Autre',
+  [ServiceType.DIGITAL_STRATEGY]: 'Stratégie de marketing digital',
+  [ServiceType.SEO]: 'Optimisation pour les moteurs de recherche (SEO)',
+  [ServiceType.SEA]: 'Publicité en ligne (SEA)',
+  [ServiceType.EMAIL_MARKETING]: 'Marketing par e-mail (Emailing)',
+  [ServiceType.FORMATION]: 'Formation et consultation en marketing digital'
 };

@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Service } from '@/types/service';
+import { Service, ServiceType, ServiceTypeLabels } from '@/types/service';
 import { Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface ServiceFormProps {
   service: Service;
@@ -34,6 +35,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     setFormData(prev => ({ ...prev, price: isNaN(value) ? 0 : value }));
   };
 
+  const handleTypeChange = (type: string) => {
+    setFormData(prev => ({ ...prev, type: type as ServiceType }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSave(formData);
@@ -54,17 +59,25 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
 
       <div className="space-y-2">
         <Label htmlFor="type">Type de service</Label>
-        <Input
-          id="type"
-          name="type"
+        <Select
           value={formData.type}
-          onChange={handleInputChange}
-          required
-        />
+          onValueChange={handleTypeChange}
+        >
+          <SelectTrigger id="type">
+            <SelectValue placeholder="Sélectionner un type de service" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px]">
+            {Object.entries(ServiceTypeLabels).map(([type, label]) => (
+              <SelectItem key={type} value={type}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="price">Prix (€)</Label>
+        <Label htmlFor="price">Prix (MAD)</Label>
         <Input
           id="price"
           name="price"
