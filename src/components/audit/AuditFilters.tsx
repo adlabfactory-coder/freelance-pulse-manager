@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLocation } from "react-router-dom";
 
 interface AuditFiltersProps {
   startDate: Date;
@@ -35,13 +36,16 @@ const AuditFilters: React.FC<AuditFiltersProps> = ({
   setSelectedAction,
   handleSearch,
 }) => {
+  const location = useLocation();
+  const isInSettings = location.pathname.includes("/settings/audit");
+  
   return (
-    <Card>
-      <CardHeader>
+    <Card className={isInSettings ? "border-0 shadow-none bg-transparent" : ""}>
+      <CardHeader className={isInSettings ? "px-0" : ""}>
         <CardTitle>Filtres</CardTitle>
         <CardDescription>Filtrer les journaux d'audit par date, module ou action</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className={isInSettings ? "px-0" : ""}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
             <label className="text-sm font-medium mb-1 block">Date de début</label>

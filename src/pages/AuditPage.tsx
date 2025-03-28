@@ -4,8 +4,12 @@ import { useAuditLogs } from "@/hooks/audit/useAuditLogs";
 import AuditHeader from "@/components/audit/AuditHeader";
 import AuditFilters from "@/components/audit/AuditFilters";
 import AuditResults from "@/components/audit/AuditResults";
+import { useLocation } from "react-router-dom";
 
 const AuditPage: React.FC = () => {
+  const location = useLocation();
+  const isInSettings = location.pathname.includes("/settings/audit");
+
   const {
     filteredLogs,
     startDate,
@@ -29,8 +33,8 @@ const AuditPage: React.FC = () => {
   } = useAuditLogs();
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <AuditHeader exportToCSV={exportToCSV} />
+    <div className={isInSettings ? "" : "container mx-auto py-6 space-y-6"}>
+      {!isInSettings && <AuditHeader exportToCSV={exportToCSV} />}
       
       <AuditFilters
         startDate={startDate}

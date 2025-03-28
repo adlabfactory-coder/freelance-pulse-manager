@@ -6,6 +6,7 @@ import AuditDetailDialog from "./AuditDetailDialog";
 import { AuditLog } from "@/types/audit";
 import { Button } from "@/components/ui/button";
 import { Download, FileText } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 interface AuditResultsProps {
   logs: AuditLog[];
@@ -26,6 +27,8 @@ const AuditResults: React.FC<AuditResultsProps> = ({
 }) => {
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const location = useLocation();
+  const isInSettings = location.pathname.includes("/settings/audit");
 
   const handleSelectAll = () => {
     if (selectedLogs.length === logs.length) {
@@ -50,8 +53,8 @@ const AuditResults: React.FC<AuditResultsProps> = ({
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className={isInSettings ? "border-0 shadow-none bg-transparent" : ""}>
+        <CardHeader className={isInSettings ? "px-0" : ""}>
           <div className="flex justify-between items-center">
             <CardTitle>Résultats ({logs.length})</CardTitle>
             {selectedLogs.length > 0 && (
@@ -64,7 +67,7 @@ const AuditResults: React.FC<AuditResultsProps> = ({
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className={isInSettings ? "px-0" : ""}>
           <AuditTable 
             logs={logs} 
             sortDirection={sortDirection} 
