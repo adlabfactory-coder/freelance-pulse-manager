@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
 import { toast } from "sonner";
-import { useUserOperations } from "@/hooks/supabase/use-user-operations";
+import { useUserOperations } from "@/hooks/supabase/user-operations";
 
 export interface Freelancer extends User {
   createdAt?: string;
@@ -15,7 +15,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(null);
   const [deletingFreelancer, setDeletingFreelancer] = useState(false);
-  const { deleteUser } = useUserOperations();
+  const { deleteUser, isLoading: isUserOpLoading } = useUserOperations();
 
   useEffect(() => {
     if (isAdminOrSuperAdmin) {
@@ -61,7 +61,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
       setDeletingFreelancer(true);
       
       // Utiliser le hook useUserOperations pour supprimer l'utilisateur
-      const success = await deleteUser(freelancerToDelete);
+      const { success, error } = await deleteUser(freelancerToDelete);
 
       if (success) {
         setFreelancers(prevFreelancers => 
@@ -70,7 +70,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
         
         toast.success("Le freelance a été supprimé avec succès");
       } else {
-        throw new Error("Échec de la suppression");
+        throw new Error(error || "Échec de la suppression");
       }
     } catch (error: any) {
       console.error("Erreur lors de la suppression du freelance:", error);

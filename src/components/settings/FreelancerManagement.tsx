@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { RefreshCw, UserPlus } from "lucide-react";
 import { useFreelancerManagement } from "@/hooks/useFreelancerManagement";
 import FreelancerTable from "./freelancer/FreelancerTable";
+import DeleteFreelancerDialog from "./freelancer/DeleteFreelancerDialog";
 import SearchBar from "./account-manager/SearchBar";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -99,7 +100,13 @@ const FreelancerManagementContent: React.FC<{isAdminOrSuperAdmin: boolean}> = ({
             onDelete={(id) => setFreelancerToDelete(id)}
           />
 
-          {/* Delete confirmation dialog would go here */}
+          {/* Delete confirmation dialog */}
+          <DeleteFreelancerDialog
+            isOpen={freelancerToDelete !== null}
+            isDeleting={deletingFreelancer}
+            onConfirm={handleDeleteFreelancer}
+            onCancel={() => setFreelancerToDelete(null)}
+          />
         </CardContent>
       </Card>
     </>
