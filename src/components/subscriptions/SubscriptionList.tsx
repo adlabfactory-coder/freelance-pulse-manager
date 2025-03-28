@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, MoreHorizontal } from "lucide-react";
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from 'react-router-dom';
 import { Subscription } from '@/types/subscription';
+import SubscriptionStatusBadge from './SubscriptionStatusBadge';
+import SubscriptionIntervalLabel from './SubscriptionIntervalLabel';
 
 interface SubscriptionListProps {
   subscriptions: Subscription[];
@@ -34,21 +36,6 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({
     return dateFormat(new Date(date), 'dd/MM/yyyy', { locale: fr });
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-500">Actif</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500">En attente</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Annulé</Badge>;
-      case 'expired':
-        return <Badge variant="outline">Expiré</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   const handleViewDetails = (id: string) => {
     navigate(`/subscriptions/${id}`);
   };
@@ -65,10 +52,10 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-medium">{subscription.name}</h3>
-                {getStatusBadge(subscription.status)}
+                <SubscriptionStatusBadge status={subscription.status} />
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {subscription.price} € / {subscription.interval}
+                {subscription.price} € / <SubscriptionIntervalLabel interval={subscription.interval} />
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -108,7 +95,7 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({
           <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
             <div>
               <p className="text-muted-foreground">Client</p>
-              <p>{subscription.clientId}</p>
+              <p>{subscription.clientName || subscription.clientId}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Date de début</p>

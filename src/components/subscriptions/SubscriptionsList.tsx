@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   fetchSubscriptions
@@ -9,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Subscription, SubscriptionStatus } from '@/types/subscription';
-import { ensureDate } from '@/services/subscriptions/subscriptions-service';
 
 // Placeholder for dialogs that will be implemented later
 const AddSubscriptionDialog = () => <div>Add Subscription Dialog Placeholder</div>;

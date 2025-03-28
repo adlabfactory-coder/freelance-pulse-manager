@@ -22,8 +22,8 @@ import {
 export {
   fetchSubscriptionPlans,
   fetchSubscriptionPlanById,
-  getSubscriptionById as fetchSubscriptionById, 
-  getAllSubscriptions as fetchSubscriptions, 
+  getSubscriptionById,
+  getAllSubscriptions, 
   createSubscription,
   updateSubscription,
   cancelSubscription,

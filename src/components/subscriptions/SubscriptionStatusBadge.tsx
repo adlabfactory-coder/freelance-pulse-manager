@@ -5,9 +5,10 @@ import { SubscriptionStatus } from '@/types/subscription';
 
 interface SubscriptionStatusBadgeProps {
   status: SubscriptionStatus;
+  className?: string;
 }
 
-const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = ({ status }) => {
+const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = ({ status, className = '' }) => {
   // Configuration des badges en fonction du statut
   const getBadgeVariant = () => {
     switch (status) {
@@ -29,7 +30,7 @@ const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = ({ statu
   };
 
   return (
-    <Badge className={getBadgeVariant()}>
+    <Badge className={`${getBadgeVariant()} ${className}`}>
       {status}
     </Badge>
   );

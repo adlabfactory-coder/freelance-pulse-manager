@@ -39,9 +39,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
   }
 
   // Restreindre l'accès aux paramètres uniquement aux admins et super admins
-  if (location.pathname.startsWith('/settings') && !isAdminOrSuperAdmin) {
-    console.log("Accès aux paramètres restreint, redirection vers le tableau de bord");
-    toast.error("Vous n'avez pas les droits nécessaires pour accéder aux paramètres");
+  if ((location.pathname.startsWith('/settings') || location.pathname.startsWith('/subscriptions')) && !isAdminOrSuperAdmin) {
+    console.log("Accès restreint, redirection vers le tableau de bord");
+    toast.error("Vous n'avez pas les droits nécessaires pour accéder à cette section");
     return <Navigate to="/dashboard" replace />;
   }
 

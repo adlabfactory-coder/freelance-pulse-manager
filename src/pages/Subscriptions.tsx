@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from "react";
 import { SubscriptionPlan } from "@/types/subscription";
 import { fetchSubscriptionPlans } from "@/services/subscriptions";
-import { useToast } from "@/hooks/use-toast"; // Updated import path to use the hook directly
+import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
 import SubscriptionsList from "@/components/subscriptions/SubscriptionsList";
 import { useAuth } from "@/hooks/use-auth";
+import SubscriptionPlanSettings from "@/components/settings/subscription/SubscriptionPlanSettings";
 
 const Subscriptions: React.FC = () => {
   const { toast } = useToast();
@@ -102,17 +103,7 @@ const Subscriptions: React.FC = () => {
 
         {isAdminOrSuperAdmin && (
           <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Paramètres des abonnements</CardTitle>
-                <CardDescription>
-                  Configuration des abonnements (réservé aux administrateurs)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Fonctionnalité en cours de développement</p>
-              </CardContent>
-            </Card>
+            <SubscriptionPlanSettings />
           </TabsContent>
         )}
       </Tabs>
