@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Building, FileSymlink } from "lucide-react";
+import { Loader2, Save, Building, MapPin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase-client";
@@ -20,6 +20,9 @@ const agencyFormSchema = z.object({
   capital: z.string().min(1, "Le capital doit être spécifié"),
   rib: z.string().min(10, "Le RIB doit contenir au moins 10 caractères"),
   bank_name: z.string().min(2, "Le nom de la banque doit contenir au moins 2 caractères"),
+  address: z.string().min(5, "L'adresse doit contenir au moins 5 caractères"),
+  city: z.string().min(2, "La ville doit contenir au moins 2 caractères"),
+  postal_code: z.string().min(3, "Le code postal doit contenir au moins 3 caractères"),
 });
 
 type AgencyFormData = z.infer<typeof agencyFormSchema>;
@@ -42,6 +45,9 @@ const AgencyInformationSettings: React.FC = () => {
       capital: "",
       rib: "",
       bank_name: "",
+      address: "",
+      city: "Casablanca",
+      postal_code: "",
     },
   });
 
@@ -65,6 +71,9 @@ const AgencyInformationSettings: React.FC = () => {
             capital: data.capital || "",
             rib: data.rib || "",
             bank_name: data.bank_name || "",
+            address: data.address || "",
+            city: data.city || "Casablanca",
+            postal_code: data.postal_code || "",
           });
         }
       } catch (error) {
@@ -110,6 +119,9 @@ const AgencyInformationSettings: React.FC = () => {
             capital: data.capital,
             rib: data.rib,
             bank_name: data.bank_name,
+            address: data.address,
+            city: data.city,
+            postal_code: data.postal_code,
             updated_at: new Date().toISOString(),
           })
           .eq("id", existingData.id);
@@ -124,6 +136,9 @@ const AgencyInformationSettings: React.FC = () => {
             capital: data.capital,
             rib: data.rib,
             bank_name: data.bank_name,
+            address: data.address,
+            city: data.city,
+            postal_code: data.postal_code,
           });
       }
 
@@ -239,6 +254,57 @@ const AgencyInformationSettings: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              <Separator />
+              
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium">Adresse</h3>
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Adresse</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="123 Rue Example" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ville</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Casablanca" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="postal_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Code postal</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="20000" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <Separator />
 
