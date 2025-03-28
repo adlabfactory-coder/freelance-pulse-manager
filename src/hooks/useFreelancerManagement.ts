@@ -55,23 +55,23 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
     }
   };
 
-  const handleDeleteFreelancer = async () => {
+  const handleDeleteFreelancer = async (): Promise<void> => {
     if (!freelancerToDelete) return;
 
     try {
       setDeletingFreelancer(true);
       
       // Utiliser le hook useUserOperations pour supprimer l'utilisateur
-      const { success, error } = await deleteUser(freelancerToDelete);
+      const result: OperationResult = await deleteUser(freelancerToDelete);
 
-      if (success) {
+      if (result.success) {
         setFreelancers(prevFreelancers => 
           prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
         );
         
         toast.success("Le freelance a été supprimé avec succès");
       } else {
-        throw new Error(error || "Échec de la suppression");
+        throw new Error(result.error || "Échec de la suppression");
       }
     } catch (error: any) {
       console.error("Erreur lors de la suppression du freelance:", error);
