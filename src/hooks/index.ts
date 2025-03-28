@@ -13,3 +13,6 @@ export * from "./commission";
 
 // Export direct des hooks d'appointments depuis leur dossier
 export * from "./appointments";
+
+// Re-export the backward compatibility useAuth hook
+export { useAuth } from "./use-auth";
