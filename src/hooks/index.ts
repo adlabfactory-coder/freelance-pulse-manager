@@ -1,6 +1,6 @@
 
 // Export des hooks génériques
-export * from "./use-auth";
+export * from "./auth";
 export * from "./use-mobile";
 export * from "./use-notifications";
 export * from "./use-theme";
@@ -13,4 +13,3 @@ export * from "./commission";
 
 // Export direct des hooks d'appointments depuis leur dossier
 export * from "./appointments";
-
