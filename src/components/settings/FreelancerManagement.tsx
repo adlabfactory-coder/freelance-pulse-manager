@@ -7,6 +7,7 @@ import { RefreshCw, UserPlus } from "lucide-react";
 import { useFreelancerManagement } from "@/hooks/useFreelancerManagement";
 import FreelancerTable from "./freelancer/FreelancerTable";
 import SearchBar from "./account-manager/SearchBar";
+import { useAuth } from "@/hooks/use-auth";
 
 const FreelancerManagement: React.FC = () => {
   const { isAdminOrSuperAdmin } = useAuth();
