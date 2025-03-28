@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import CompanySettings from "@/components/settings/CompanySettings";
 import UserProfileSettings from "@/components/settings/UserProfileSettings";
@@ -9,12 +9,13 @@ import SecuritySettings from "@/components/settings/SecuritySettings";
 import FreelancerManagement from "@/components/settings/FreelancerManagement";
 import AccountManagerManagement from "@/components/settings/AccountManagerManagement";
 import UsersList from "@/components/settings/UsersList";
-import { User } from "@/types";
+import { User, UserRole } from "@/types";
 import AgencySettings from "@/components/settings/AgencySettings";
 import UserManagerSettings from "@/components/settings/UserManagerSettings";
 import AuditSettings from "@/components/settings/AuditSettings";
 import { useAuth } from "@/hooks/use-auth";
 import UsersManagementTabs from "@/components/settings/UsersManagementTabs";
+import { toast } from "sonner";
 
 interface SettingsContentProps {
   onSelectUser: (userId: string) => void;
@@ -23,17 +24,29 @@ interface SettingsContentProps {
 
 const SettingsContent: React.FC<SettingsContentProps> = ({ onSelectUser, currentUser }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathSegments = location.pathname.split("/");
   const currentSection = pathSegments[pathSegments.length - 1] === "settings" 
     ? "profile"  // Default to profile if just /settings
     : pathSegments[pathSegments.length - 1];
     
-  const { isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
+  const { isAdminOrSuperAdmin, isSuperAdmin, role } = useAuth();
 
   useEffect(() => {
     // Scroll to top when section changes
     window.scrollTo(0, 0);
-  }, [currentSection]);
+    
+    // Vérification des autorisations lors du changement de route
+    if ((currentSection === 'admin' || currentSection === 'audit') && !isSuperAdmin) {
+      toast.error("Vous n'avez pas accès à cette section");
+      navigate("/settings/profile");
+    } else if ((currentSection === 'users' || currentSection === 'agency' || 
+        currentSection === 'freelancers' || currentSection === 'account-managers') && 
+        !isAdminOrSuperAdmin) {
+      toast.error("Vous n'avez pas accès à cette section");
+      navigate("/settings/profile");
+    }
+  }, [currentSection, isSuperAdmin, isAdminOrSuperAdmin, navigate]);
 
   // Vérification d'accès pour certaines sections
   const renderAccessDenied = () => (

@@ -1,20 +1,30 @@
 
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import SettingsPage from "./SettingsPage";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { UserRole } from "@/types";
 
 const SettingsRoutes: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, role, isAdminOrSuperAdmin } = useAuth();
   const isLoading = !user && !isAuthenticated;
+  const navigate = useNavigate();
   
+  // Vérifier si l'utilisateur est en cours de chargement
   if (isLoading) {
     return <div>Chargement...</div>;
   }
 
+  // Rediriger vers la connexion si non authentifié
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
+  }
+  
+  // Vérifier les droits d'accès - seuls les admin et super admin peuvent accéder aux paramètres
+  if (!isAdminOrSuperAdmin) {
+    toast.error("Vous n'avez pas accès aux paramètres. Redirection vers le tableau de bord.");
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

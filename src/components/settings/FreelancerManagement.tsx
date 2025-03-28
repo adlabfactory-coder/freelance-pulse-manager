@@ -3,9 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase-client";
 import { UserRole } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { PlusCircle, Loader2 } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,11 +21,13 @@ const FreelancerManagement: React.FC = () => {
   const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { isAdmin } = useAuth();
+  const { isAdminOrSuperAdmin } = useAuth();
 
   useEffect(() => {
-    fetchFreelancers();
-  }, []);
+    if (isAdminOrSuperAdmin) {
+      fetchFreelancers();
+    }
+  }, [isAdminOrSuperAdmin]);
 
   const fetchFreelancers = async () => {
     try {
@@ -39,22 +41,18 @@ const FreelancerManagement: React.FC = () => {
 
       setFreelancers(data || []);
     } catch (error: any) {
-      console.error("Erreur lors de la récupération des chargés d'affaires:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de récupérer la liste des chargés d'affaires",
-      });
+      console.error("Erreur lors de la récupération des freelances:", error);
+      toast.error("Impossible de récupérer la liste des freelances");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!isAdmin) {
+  if (!isAdminOrSuperAdmin) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Gestion des chargés d'affaires</CardTitle>
+          <CardTitle>Gestion des freelances</CardTitle>
           <CardDescription>
             Vous n'avez pas les droits pour accéder à cette section.
           </CardDescription>
@@ -68,14 +66,14 @@ const FreelancerManagement: React.FC = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Gestion des chargés d'affaires</CardTitle>
+            <CardTitle>Gestion des freelances</CardTitle>
             <CardDescription>
-              Liste des chargés d'affaires ayant accès à la plateforme
+              Liste des freelances ayant accès à la plateforme
             </CardDescription>
           </div>
           <Button onClick={() => setShowCreateForm(!showCreateForm)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            {showCreateForm ? "Annuler" : "Ajouter un chargé d'affaires"}
+            {showCreateForm ? "Annuler" : "Ajouter un freelance"}
           </Button>
         </CardHeader>
         
@@ -92,7 +90,7 @@ const FreelancerManagement: React.FC = () => {
             </div>
           ) : (
             <Table>
-              <TableCaption>Liste des chargés d'affaires</TableCaption>
+              <TableCaption>Liste des freelances</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nom</TableHead>
@@ -104,7 +102,7 @@ const FreelancerManagement: React.FC = () => {
                 {freelancers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center">
-                      Aucun chargé d'affaires trouvé
+                      Aucun freelance trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
