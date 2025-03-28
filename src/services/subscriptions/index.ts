@@ -18,10 +18,14 @@ import {
   deleteSubscriptionPlan
 } from './subscription-plan-service';
 
+// Create alias for getAllSubscriptions to match the naming convention
+const fetchSubscriptions = getAllSubscriptions;
+
 // Export all functions with proper names to avoid ambiguity
 export {
   fetchSubscriptionPlans,
   fetchSubscriptionPlanById,
+  fetchSubscriptions, // Add the new alias here
   getSubscriptionById,
   getAllSubscriptions, 
   createSubscription,
