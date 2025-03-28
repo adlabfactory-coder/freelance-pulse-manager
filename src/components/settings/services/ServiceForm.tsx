@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Service, ServiceType, ServiceTypeLabels } from '@/types/service';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from "@/components/ui/switch";
 
 export interface ServiceFormProps {
   service: Service;
@@ -37,6 +38,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
 
   const handleTypeChange = (type: string) => {
     setFormData(prev => ({ ...prev, type: type as ServiceType }));
+  };
+
+  const handleIsActiveChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, is_active: checked }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,6 +104,15 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
           onChange={handleInputChange}
           rows={3}
         />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="is_active" 
+          checked={formData.is_active} 
+          onCheckedChange={handleIsActiveChange} 
+        />
+        <Label htmlFor="is_active">Service actif</Label>
       </div>
 
       <div className="flex justify-end space-x-2 pt-4">

@@ -4,7 +4,7 @@ import { ServiceType, ServiceTypeLabels } from '@/types/service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-// Contenu statique des services avec leur description
+// Contenu des services de l'agence avec leur description
 const AGENCY_SERVICES = [
   {
     type: ServiceType.DIGITAL_STRATEGY,
