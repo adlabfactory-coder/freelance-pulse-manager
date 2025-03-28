@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { SubscriptionPlan, SubscriptionInterval } from '@/types/subscription';
 import SubscriptionIntervalLabel from './SubscriptionIntervalLabel';
+import { formatCurrency } from '@/utils/format';
 
 interface PlanCardProps {
   plan: SubscriptionPlan;
@@ -11,11 +12,6 @@ interface PlanCardProps {
 }
 
 const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => {
-  // Format price
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price);
-  };
-
   // Parse features
   const getFeatures = () => {
     if (!plan.features) return [];
@@ -40,7 +36,7 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => {
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="text-3xl font-bold mb-2">
-          {formatPrice(plan.price)} 
+          {formatCurrency(plan.price)} 
           <span className="text-sm font-normal text-muted-foreground">
             /<SubscriptionIntervalLabel interval={plan.interval} />
           </span>

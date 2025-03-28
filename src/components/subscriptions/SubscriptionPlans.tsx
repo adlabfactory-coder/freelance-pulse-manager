@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Loader2 } from "lucide-react";
 import { SubscriptionPlan } from "@/types/subscription";
+import { formatCurrency } from "@/utils/format";
 
 export interface SubscriptionPlansProps {
   plans: SubscriptionPlan[];
@@ -47,7 +48,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ plans, loading, o
           <CardContent>
             <div className="space-y-4">
               <div>
-                <span className="text-3xl font-bold">{plan.price}€</span>
+                <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
                 <span className="text-muted-foreground ml-1">{plan.interval === "monthly" ? "/mois" : "/an"}</span>
               </div>
               <ul className="space-y-2 text-sm">
