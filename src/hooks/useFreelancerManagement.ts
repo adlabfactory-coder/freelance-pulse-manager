@@ -29,7 +29,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
       
       const { data, error } = await supabase
         .from("users")
-        .select("id, name, email, created_at")
+        .select("id, name, email, created_at, role")
         .eq("role", "freelancer");
 
       if (error) throw error;
@@ -42,7 +42,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
         name: user.name,
         email: user.email,
         role: UserRole.FREELANCER,
-        createdAt: user.created_at // Récupérer la date de création
+        createdAt: user.created_at // Utiliser la colonne created_at récemment ajoutée
       })) as Freelancer[];
       
       setFreelancers(formattedFreelancers);

@@ -40,7 +40,7 @@ export const useAccountManagerManagement = () => {
       // Récupérer les chargés de compte depuis Supabase
       const { data, error } = await supabase
         .from("users")
-        .select("id, name, email, created_at")
+        .select("id, name, email, created_at, role")
         .eq("role", "account_manager");
         
       if (error) throw error;

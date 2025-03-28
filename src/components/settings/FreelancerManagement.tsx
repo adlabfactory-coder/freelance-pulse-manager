@@ -67,12 +67,10 @@ const FreelancerManagementContent: React.FC<{isAdminOrSuperAdmin: boolean}> = ({
               Actualiser
             </Button>
             <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-              <DialogTitle>
-                <Button>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Ajouter un freelance
-                </Button>
-              </DialogTitle>
+              <Button onClick={() => setShowCreateForm(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Ajouter un freelance
+              </Button>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Ajouter un freelance</DialogTitle>
