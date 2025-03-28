@@ -1,14 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
-import { User } from "@/types";
+import { User, UserRole } from "@/types";
 import { toast } from "sonner";
 import { useUserOperations } from "@/hooks/supabase/use-user-operations";
 
-export interface Freelancer {
-  id: string;
-  name: string;
-  email: string;
+export interface Freelancer extends User {
   createdAt?: string;
 }
 
@@ -36,16 +33,17 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
         .eq("role", "freelancer");
 
       if (error) throw error;
-
+      
       console.log("Freelancers récupérés:", data);
       
-      // Transformer les données pour inclure createdAt
-      const formattedFreelancers = data?.map(user => ({
+      // Transformer les données pour les rendre compatibles avec le type User
+      const formattedFreelancers = (data || []).map(user => ({
         id: user.id,
         name: user.name,
         email: user.email,
+        role: UserRole.FREELANCER,
         createdAt: user.created_at // Récupérer la date de création
-      })) || [];
+      })) as Freelancer[];
       
       setFreelancers(formattedFreelancers);
     } catch (error: any) {

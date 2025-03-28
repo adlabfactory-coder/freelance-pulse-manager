@@ -4,9 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,8 +67,20 @@ const AccountManagerManagement: React.FC = () => {
         
       if (error) throw error;
       
-      setAccountManagers(data || []);
-      setFilteredManagers(data || []);
+      // Convert the data to the User type with the required role property
+      const managersWithRole = (data || []).map(user => ({
+        ...user,
+        role: UserRole.ACCOUNT_MANAGER,
+        // Add explicitly all required fields from the User type
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        // Using createdAt for the component to render properly
+        createdAt: user.created_at
+      })) as User[];
+      
+      setAccountManagers(managersWithRole);
+      setFilteredManagers(managersWithRole);
     } catch (error) {
       console.error("Erreur lors du chargement des chargés de compte:", error);
       toast.error("Impossible de charger les chargés de compte");
@@ -97,7 +108,12 @@ const AccountManagerManagement: React.FC = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setAccountManagers(prev => [...prev, data[0] as User]);
+        const newManager = {
+          ...data[0],
+          role: UserRole.ACCOUNT_MANAGER
+        } as User;
+        
+        setAccountManagers(prev => [...prev, newManager]);
         form.reset();
         setIsDialogOpen(false);
         
@@ -251,8 +267,8 @@ const AccountManagerManagement: React.FC = () => {
                     <TableCell className="font-medium">{manager.name}</TableCell>
                     <TableCell>{manager.email}</TableCell>
                     <TableCell>
-                      {manager.created_at 
-                        ? new Date(manager.created_at).toLocaleDateString('fr-FR') 
+                      {manager.createdAt
+                        ? new Date(manager.createdAt).toLocaleDateString('fr-FR')
                         : "Non disponible"}
                     </TableCell>
                     <TableCell className="text-right">
