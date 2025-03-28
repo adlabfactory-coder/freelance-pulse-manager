@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
 import { toast } from "sonner";
-import { useUserOperations } from "@/hooks/supabase/user-operations";
+import { useUserOperations } from "@/hooks/supabase";
+import { OperationResult } from "@/hooks/supabase";
 
 export interface Freelancer extends User {
   createdAt?: string;

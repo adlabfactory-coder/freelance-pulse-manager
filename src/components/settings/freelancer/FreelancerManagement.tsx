@@ -8,7 +8,6 @@ import { useFreelancerManagement } from "@/hooks/useFreelancerManagement";
 import FreelancerTable from "./FreelancerTable";
 import DeleteFreelancerDialog from "./DeleteFreelancerDialog";
 import SearchBar from "../account-manager/SearchBar";
-import { useAuth } from "@/hooks/use-auth";
 import CreateFreelancerForm from "../CreateFreelancerForm";
 
 const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdminOrSuperAdmin }) => {

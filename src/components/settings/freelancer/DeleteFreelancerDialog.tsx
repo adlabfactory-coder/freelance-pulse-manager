@@ -37,7 +37,7 @@ const DeleteFreelancerDialog: React.FC<DeleteFreelancerDialogProps> = ({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
           <AlertDialogAction 
-            onClick={onConfirm}
+            onClick={() => { onConfirm(); }}
             disabled={isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
