@@ -1,125 +1,35 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase-client";
-import { User, UserRole } from "@/types";
-import { toast } from "sonner";
-import { Edit, PlusCircle, Loader2, Trash2, RefreshCw, Info } from "lucide-react";
+import { PlusCircle, RefreshCw } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
-import { useInitializeUsers } from "@/hooks/useInitializeUsers";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-interface Freelancer {
-  id: string;
-  name: string;
-  email: string;
-  createdAt?: string;
-}
+import UserInitializationSection from "./freelancer/UserInitializationSection";
+import FreelancerTable from "./freelancer/FreelancerTable";
+import DeleteFreelancerDialog from "./freelancer/DeleteFreelancerDialog";
+import { useFreelancerManagement, Freelancer } from "@/hooks/useFreelancerManagement";
 
 const FreelancerManagement: React.FC = () => {
-  const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(null);
-  const [deletingFreelancer, setDeletingFreelancer] = useState(false);
   const { isAdminOrSuperAdmin } = useAuth();
-  const { 
-    isInitializing, 
-    isInitialized, 
-    error: initError, 
-    initializeUsers, 
-    reset: resetInitialization 
-  } = useInitializeUsers();
-
-  useEffect(() => {
-    if (isAdminOrSuperAdmin) {
-      fetchFreelancers();
-    }
-  }, [isAdminOrSuperAdmin]);
-
-  const fetchFreelancers = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("role", UserRole.FREELANCER);
-
-      if (error) throw error;
-
-      console.log("Freelancers récupérés:", data);
-      setFreelancers(data || []);
-    } catch (error: any) {
-      console.error("Erreur lors de la récupération des freelances:", error);
-      toast.error("Impossible de récupérer la liste des freelances");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteFreelancer = async () => {
-    if (!freelancerToDelete) return;
-
-    try {
-      setDeletingFreelancer(true);
-      
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("email")
-        .eq("id", freelancerToDelete)
-        .single();
-
-      if (userError) throw userError;
-
-      const { error: deleteError } = await supabase
-        .from("users")
-        .delete()
-        .eq("id", freelancerToDelete);
-
-      if (deleteError) throw deleteError;
-
-      setFreelancers(prevFreelancers => 
-        prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
-      );
-      
-      toast.success("Le freelance a été supprimé avec succès");
-    } catch (error: any) {
-      console.error("Erreur lors de la suppression du freelance:", error);
-      toast.error("Impossible de supprimer le freelance");
-    } finally {
-      setDeletingFreelancer(false);
-      setFreelancerToDelete(null);
-    }
-  };
-
-  const handleCreateSuccess = (newFreelancer: Freelancer) => {
-    setFreelancers(prev => [...prev, newFreelancer]);
-    setShowCreateForm(false);
-    toast.success(`Le freelance ${newFreelancer.name} a été ajouté avec succès`);
-  };
-
-  const handleRefresh = async () => {
-    await fetchFreelancers();
-    toast.success("Liste des freelances actualisée");
-  };
-
-  const handleInitializeUsers = async () => {
-    await initializeUsers();
-    await fetchFreelancers();
-  };
+  
+  const {
+    freelancers,
+    loading,
+    showCreateForm,
+    setShowCreateForm,
+    freelancerToDelete,
+    setFreelancerToDelete,
+    deletingFreelancer,
+    isInitializing,
+    isInitialized,
+    initError,
+    resetInitialization,
+    handleDeleteFreelancer,
+    handleCreateSuccess,
+    handleRefresh,
+    handleInitializeUsers
+  } = useFreelancerManagement(isAdminOrSuperAdmin);
 
   if (!isAdminOrSuperAdmin) {
     return (
@@ -157,43 +67,13 @@ const FreelancerManagement: React.FC = () => {
         </CardHeader>
         
         <CardContent>
-          {/* Bouton d'initialisation des utilisateurs */}
-          <div className="mb-6">
-            <Alert variant="default">
-              <Info className="h-4 w-4" />
-              <AlertTitle>Initialisation des utilisateurs</AlertTitle>
-              <AlertDescription className="flex flex-col gap-2">
-                <p>Vous pouvez créer automatiquement les utilisateurs standards (freelancers, chargés de compte, administrateurs)</p>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleInitializeUsers} 
-                    disabled={isInitializing}
-                    variant="default"
-                  >
-                    {isInitializing ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Initialisation en cours...
-                      </>
-                    ) : (
-                      "Initialiser les utilisateurs"
-                    )}
-                  </Button>
-                  {isInitialized && (
-                    <Button variant="outline" onClick={resetInitialization}>
-                      Réinitialiser
-                    </Button>
-                  )}
-                </div>
-                {initError && (
-                  <p className="text-destructive text-sm">{initError}</p>
-                )}
-                {isInitialized && (
-                  <p className="text-green-600 text-sm">Utilisateurs initialisés avec succès</p>
-                )}
-              </AlertDescription>
-            </Alert>
-          </div>
+          <UserInitializationSection
+            isInitializing={isInitializing}
+            isInitialized={isInitialized}
+            initError={initError}
+            onInitialize={handleInitializeUsers}
+            onReset={resetInitialization}
+          />
           
           {showCreateForm && (
             <div className="mb-6">
@@ -201,86 +81,20 @@ const FreelancerManagement: React.FC = () => {
             </div>
           )}
           
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <Table>
-              <TableCaption>Liste des freelances</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Date de création</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {freelancers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center">
-                      Aucun freelance trouvé
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  freelancers.map((freelancer) => (
-                    <TableRow key={freelancer.id}>
-                      <TableCell className="font-medium">{freelancer.name}</TableCell>
-                      <TableCell>{freelancer.email}</TableCell>
-                      <TableCell>
-                        {freelancer.createdAt 
-                          ? new Date(freelancer.createdAt).toLocaleDateString() 
-                          : "Non disponible"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => setFreelancerToDelete(freelancer.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
+          <FreelancerTable
+            freelancers={freelancers}
+            loading={loading}
+            onDeleteClick={(id) => setFreelancerToDelete(id)}
+          />
         </CardContent>
       </Card>
 
-      <AlertDialog open={!!freelancerToDelete} onOpenChange={(open) => !open && setFreelancerToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce freelance ? Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingFreelancer}>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteFreelancer}
-              disabled={deletingFreelancer}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deletingFreelancer ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Suppression...
-                </>
-              ) : "Supprimer"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteFreelancerDialog
+        isOpen={!!freelancerToDelete}
+        isDeleting={deletingFreelancer}
+        onConfirm={handleDeleteFreelancer}
+        onCancel={() => setFreelancerToDelete(null)}
+      />
     </div>
   );
 };
