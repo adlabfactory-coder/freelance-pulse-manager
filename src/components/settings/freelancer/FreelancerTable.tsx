@@ -7,16 +7,18 @@ import { Freelancer } from "@/hooks/useFreelancerManagement";
 
 interface FreelancerTableProps {
   freelancers: Freelancer[];
-  loading: boolean;
-  onDeleteClick: (id: string) => void;
+  isLoading: boolean;
+  isDeleting: boolean;
+  onDelete: (id: string) => void;
 }
 
 const FreelancerTable: React.FC<FreelancerTableProps> = ({ 
   freelancers, 
-  loading, 
-  onDeleteClick 
+  isLoading, 
+  isDeleting,
+  onDelete 
 }) => {
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -65,7 +67,8 @@ const FreelancerTable: React.FC<FreelancerTableProps> = ({
                   <Button 
                     variant="destructive" 
                     size="sm"
-                    onClick={() => onDeleteClick(freelancer.id)}
+                    onClick={() => onDelete(freelancer.id)}
+                    disabled={isDeleting}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
