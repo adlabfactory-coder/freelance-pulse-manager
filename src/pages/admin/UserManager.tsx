@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UsersTable from '@/components/admin/UsersTable';
-import UserProfileTemplates from '@/components/admin/UserProfileTemplates';
+import { UserProfileTemplates } from '@/components/admin/UserProfileTemplates';
 import { useAdminUsers } from '@/hooks/admin/useAdminUsers';
 
 const UserManager = () => {

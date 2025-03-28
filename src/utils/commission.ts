@@ -1,4 +1,3 @@
-
 import { CommissionRule } from '@/types/commissions';
 import { format as dateFormat } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -34,10 +33,21 @@ export const formatDate = (date: Date): string => {
 
 /**
  * Format a period (month/year) to a human-readable string
+ * Supports both (month: number, year: number) and (start: Date, end: Date) signatures
  */
-export const formatPeriod = (month: number, year: number): string => {
-  const date = new Date(year, month - 1);
-  return dateFormat(date, 'MMMM yyyy', { locale: fr });
+export const formatPeriod = (monthOrStart: number | Date, yearOrEnd?: number | Date): string => {
+  // If first parameter is a Date, we're using the (start: Date, end: Date) signature
+  if (monthOrStart instanceof Date) {
+    const date = monthOrStart;
+    return dateFormat(date, 'MMMM yyyy', { locale: fr });
+  } 
+  // Otherwise we're using the original (month: number, year: number) signature
+  else {
+    const month = monthOrStart;
+    const year = yearOrEnd as number;
+    const date = new Date(year, month - 1);
+    return dateFormat(date, 'MMMM yyyy', { locale: fr });
+  }
 };
 
 /**

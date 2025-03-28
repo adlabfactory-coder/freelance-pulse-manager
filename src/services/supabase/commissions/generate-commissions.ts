@@ -28,7 +28,29 @@ const fetchCommissionRules = async (): Promise<CommissionRule[]> => {
 /**
  * Generate commissions for a specific month and year
  */
-export const generateCommissions = async (month: number, year: number) => {
+export const generateCommissions = async (month: number | Date, year?: number) => {
+  try {
+    // Handle both function signatures: (month: number, year: number) or (month: Date)
+    let date: Date;
+    
+    if (month instanceof Date) {
+      date = month;
+      // Now we can pass month and year as expected to inner implementation
+      return generateCommissionsInternal(date.getMonth() + 1, date.getFullYear());
+    } else {
+      // We're using the original signature (month: number, year: number)
+      return generateCommissionsInternal(month, year as number);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la génération des commissions:', error);
+    throw error;
+  }
+};
+
+/**
+ * Internal implementation for generating commissions
+ */
+const generateCommissionsInternal = async (month: number, year: number) => {
   try {
     // Get the start and end dates of the month
     const date = new Date(year, month - 1, 1);

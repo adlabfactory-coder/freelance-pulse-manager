@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Card, 
@@ -10,7 +9,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserRole } from "@/types/roles";
-import { DescriptionProps } from "./UserForm";
+
+interface DescriptionProps {
+  title: string;
+  description: string;
+  permissions: string[];
+}
 
 // Import from types directly to avoid conflict
 import { USER_ROLE_LABELS as RoleLabels } from "@/types/roles";
@@ -170,3 +174,5 @@ export const UserProfileTemplates: React.FC<{
     </div>
   );
 };
+
+export default UserProfileTemplates;
