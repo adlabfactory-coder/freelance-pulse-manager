@@ -226,6 +226,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signIn: handleLogin,
     signUp,
     logout: async () => {
+      console.log("Appel à la fonction de déconnexion depuis useAuth");
       setUser(null);
       await logoutFn();
     },

@@ -22,8 +22,9 @@ const UserProfileMenu: React.FC = () => {
   const userInitial = user.name ? user.name.charAt(0).toUpperCase() : 'U';
   
   const handleLogout = async () => {
+    console.log("Bouton de déconnexion UserProfileMenu cliqué");
     await logout();
-    // Le hook useLogout s'occupera de la redirection vers la page de connexion
+    // Le hook useLogout s'occupe de la redirection vers la page de connexion
   };
 
   const handleExternalNavigation = (url: string) => {

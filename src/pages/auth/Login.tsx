@@ -20,6 +20,7 @@ const LoginPage: React.FC = () => {
   // Rediriger si déjà authentifié
   useEffect(() => {
     if (isAuthenticated) {
+      console.log("Utilisateur déjà authentifié, redirection vers:", from);
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);
@@ -42,6 +43,7 @@ const LoginPage: React.FC = () => {
       
       if (result.success) {
         toast.success("Connexion réussie");
+        console.log("Connexion réussie, redirection vers:", from);
         navigate(from, { replace: true });
       } else {
         setError(result.error || "Identifiants invalides");

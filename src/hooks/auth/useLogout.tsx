@@ -18,6 +18,7 @@ export const useLogout = () => {
       
       if (DEMO_MODE) {
         // En mode démo, simplement supprimer les données utilisateur et rediriger
+        console.log("Déconnexion en mode démo effectuée");
         toast.success("Déconnexion réussie");
         // Toujours rediriger vers la page de connexion après déconnexion
         navigate('/auth/login', { replace: true });
@@ -33,6 +34,7 @@ export const useLogout = () => {
         return;
       }
       
+      console.log("Déconnexion Supabase réussie");
       // Toujours rediriger explicitement vers la page de connexion
       navigate('/auth/login', { replace: true });
       toast.success("Déconnexion réussie");
