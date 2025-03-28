@@ -98,3 +98,57 @@ export const createSubscriptionPlan = async (plan: Omit<SubscriptionPlan, 'id' |
     return { success: false, error: error.message || 'Une erreur est survenue' };
   }
 };
+
+/**
+ * Update an existing subscription plan
+ */
+export const updateSubscriptionPlan = async (id: string, plan: Partial<Omit<SubscriptionPlan, 'id' | 'created_at' | 'updated_at'>>): Promise<boolean> => {
+  try {
+    const updateData: any = {};
+    
+    if (plan.name !== undefined) updateData.name = plan.name;
+    if (plan.description !== undefined) updateData.description = plan.description;
+    if (plan.interval !== undefined) updateData.interval = plan.interval;
+    if (plan.price !== undefined) updateData.price = plan.price;
+    if (plan.isActive !== undefined) updateData.is_active = plan.isActive;
+    if (plan.code !== undefined) updateData.code = plan.code;
+    if (plan.features !== undefined) updateData.features = plan.features;
+    
+    const { error } = await supabase
+      .from('subscription_plans')
+      .update(updateData)
+      .eq('id', id);
+
+    if (error) {
+      console.error(`Erreur lors de la mise à jour du plan d'abonnement ${id}:`, error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Erreur lors de la mise à jour du plan d'abonnement ${id}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Delete a subscription plan
+ */
+export const deleteSubscriptionPlan = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscription_plans')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error(`Erreur lors de la suppression du plan d'abonnement ${id}:`, error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Erreur lors de la suppression du plan d'abonnement ${id}:`, error);
+    return false;
+  }
+};

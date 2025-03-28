@@ -12,12 +12,16 @@ import {
 
 import {
   fetchSubscriptionPlans,
-  createSubscriptionPlan
+  fetchSubscriptionPlanById,
+  createSubscriptionPlan,
+  updateSubscriptionPlan,
+  deleteSubscriptionPlan
 } from './subscription-plan-service';
 
 // Export all functions with proper names to avoid ambiguity
 export {
   fetchSubscriptionPlans,
+  fetchSubscriptionPlanById,
   getSubscriptionById as fetchSubscriptionById, 
   getAllSubscriptions as fetchSubscriptions, 
   createSubscription,
@@ -25,5 +29,7 @@ export {
   cancelSubscription,
   renewSubscription,
   deleteSubscription,
-  createSubscriptionPlan
+  createSubscriptionPlan,
+  updateSubscriptionPlan,
+  deleteSubscriptionPlan
 };

@@ -73,17 +73,18 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
   const onSubmit = async (data: PlanFormValues) => {
     setIsSubmitting(true);
     try {
-      // Intégrer les fonctionnalités à l'objet de données
-      const planData = {
-        ...data,
-        features: features
-      };
-      
-      let success;
-      
       if (plan) {
         // Mise à jour d'un plan existant
-        success = await updateSubscriptionPlan(plan.id, planData);
+        const success = await updateSubscriptionPlan(plan.id, {
+          name: data.name,
+          code: data.code,
+          description: data.description || '',
+          price: data.price,
+          interval: data.interval,
+          isActive: data.isActive,
+          features: features
+        });
+        
         if (success) {
           toast.success('Plan d\'abonnement mis à jour avec succès');
           onSuccess();
@@ -92,12 +93,21 @@ const SubscriptionPlanForm: React.FC<SubscriptionPlanFormProps> = ({ plan, onSuc
         }
       } else {
         // Création d'un nouveau plan
-        const result = await createSubscriptionPlan(planData);
-        if (result) {
+        const result = await createSubscriptionPlan({
+          name: data.name,
+          code: data.code,
+          description: data.description || '',
+          price: data.price,
+          interval: data.interval,
+          isActive: data.isActive,
+          features: features
+        });
+        
+        if (result.success) {
           toast.success('Plan d\'abonnement créé avec succès');
           onSuccess();
         } else {
-          toast.error('Échec de la création du plan');
+          toast.error(`Échec de la création du plan: ${result.error}`);
         }
       }
     } catch (error) {
