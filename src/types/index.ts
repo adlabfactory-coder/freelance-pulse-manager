@@ -5,6 +5,9 @@ export * from './audit';
 export * from './quotes';
 export * from './subscription';
 
+// Import UserRole from roles.ts for proper typing
+import { UserRole } from './roles';
+
 // Interfaces de base
 export interface User {
   id: string;
@@ -16,6 +19,7 @@ export interface User {
   schedule_enabled?: boolean;
   daily_availability?: Record<string, any> | null;
   weekly_availability?: Record<string, any> | null;
+  password?: string; // Adding password field for UserEditForm
 }
 
 export interface UserAuthData extends User {

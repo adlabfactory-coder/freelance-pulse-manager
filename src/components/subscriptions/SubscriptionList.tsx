@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +20,12 @@ interface SubscriptionListProps {
   subscriptions: Subscription[];
   loading: boolean;
 }
+
+const formatDate = (date: string | Date) => {
+  if (!date) return "-";
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return format(dateObj, 'dd/MM/yyyy');
+};
 
 const SubscriptionList: React.FC<SubscriptionListProps> = ({ subscriptions, loading }) => {
   const { toast } = useToast();
