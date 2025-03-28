@@ -31,59 +31,59 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
     { title: "Contacts", href: "/contacts", icon: Users },
     { title: "Rendez-vous", href: "/appointments", icon: Calendar },
     { title: "Devis", href: "/quotes", icon: FileText },
-    { title: "Abonnements", href: "/subscriptions", icon: FileSpreadsheet },
-    { title: "Commissions", href: "/commissions", icon: BarChart },
-    { title: "Rapports", href: "/reports", icon: PieChart },
-    { title: "Paramètres", href: "/settings", icon: Settings },
   ];
   
+  // Éléments réservés aux administrateurs et super administrateurs
+  const adminNavItems: NavItemType[] = [
+    { title: "Abonnements", href: "/subscriptions", icon: FileSpreadsheet },
+    { title: "Rapports", href: "/reports", icon: PieChart },
+  ];
+  
+  // Commissions disponibles pour tous
+  const commonNavItems: NavItemType[] = [
+    { title: "Commissions", href: "/commissions", icon: BarChart },
+  ];
+  
+  // Paramètres disponibles pour tous, mais avec contenu différent selon le rôle
+  const settingsNavItem: NavItemType = { title: "Paramètres", href: "/settings", icon: Settings };
+  
   // Éléments spécifiques pour les Super Admins
-  if (isSuperAdmin) {
-    allNavItems.push(
-      { title: "Administration", href: "/admin", icon: Shield },
-      { title: "Audit", href: "/audit", icon: Layers }
-    );
-  } else if (role === UserRole.ADMIN) {
-    allNavItems.push(
-      { title: "Administration", href: "/admin", icon: Shield }
-    );
-  }
+  const superAdminNavItems: NavItemType[] = [
+    { title: "Administration", href: "/admin", icon: Shield },
+    { title: "Audit", href: "/audit", icon: Layers },
+    { title: "Gestion utilisateurs", href: "/admin/users", icon: UserPlus }
+  ];
   
-  // Ajout de l'élément de gestion des utilisateurs pour les admins et super admins
+  // Éléments spécifiques pour les Admins
+  const adminOnlyNavItems: NavItemType[] = [
+    { title: "Administration", href: "/admin", icon: Shield },
+    { title: "Gestion utilisateurs", href: "/admin/users", icon: UserPlus }
+  ];
+  
+  // Construire la navigation en fonction du rôle
+  let visibleItems = [...allNavItems, ...commonNavItems];
+  
+  // Ajouter les éléments admin si l'utilisateur est admin ou super admin
   if (isAdminOrSuperAdmin) {
-    allNavItems.push(
-      { title: "Gestion utilisateurs", href: "/admin/users", icon: UserPlus }
-    );
+    visibleItems = [...visibleItems, ...adminNavItems];
   }
   
-  // La navigation est désormais contrôlée par le rôle de l'utilisateur
-  let visibleItems: NavItemType[] = [];
+  // Ajouter l'item paramètres pour tous
+  visibleItems = [...visibleItems, settingsNavItem];
   
-  // Super Admin a accès à TOUT sans restrictions
+  // Ajouter les éléments spécifiques aux super admins
   if (isSuperAdmin) {
-    visibleItems = allNavItems;
+    visibleItems = [...visibleItems, ...superAdminNavItems];
   } 
-  // Accès complet pour admins ordinaires
+  // Ajouter les éléments spécifiques aux admins
   else if (role === UserRole.ADMIN) {
-    visibleItems = allNavItems.filter(item => 
-      !["/audit"].includes(item.href)
-    );
-  } else if (role === UserRole.ACCOUNT_MANAGER) {
-    // Accès pour les chargés de compte - Contacts, Rendez-vous, Devis, Commissions, Dashboard, Paramètres
-    visibleItems = allNavItems.filter(item => 
-      ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
-    );
-  } else if (role === UserRole.FREELANCER) {
-    // Accès pour les freelancers - Contacts, Rendez-vous, Devis, Commissions, Dashboard, Paramètres
-    visibleItems = allNavItems.filter(item => 
-      ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
-    );
-  } else {
-    // Accès minimum par défaut si rôle non défini
-    visibleItems = allNavItems.filter(item => 
-      ["/dashboard", "/contacts", "/appointments", "/quotes", "/settings"].includes(item.href)
-    );
+    visibleItems = [...visibleItems, ...adminOnlyNavItems];
   }
+  
+  // Filtrer les doublons (par exemple si "Administration" est ajouté deux fois)
+  visibleItems = visibleItems.filter((item, index, self) => 
+    index === self.findIndex((t) => t.href === item.href)
+  );
   
   return (
     <nav className="space-y-1 px-2">

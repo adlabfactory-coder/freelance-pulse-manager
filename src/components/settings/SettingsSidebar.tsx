@@ -1,137 +1,87 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Bell,
-  Building,
-  Lock,
-  Settings,
   User,
-  UserPlus,
+  Bell,
+  ShieldAlert,
   Users,
-  Briefcase
+  Building,
+  Briefcase,
+  BarChart4,
+  ShieldCheck,
+  ScrollText
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/hooks/use-auth";
 import { User as UserType } from "@/types";
-import { UserRole } from "@/types/roles";
 
 interface SettingsSidebarProps {
   currentUser: UserType | null;
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
+  isAdmin?: boolean;
+  isSuperAdmin?: boolean;
 }
 
-const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
-  currentUser,
-  isAdmin,
-  isSuperAdmin,
+interface SidebarLink {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  requiresAdmin?: boolean;
+  requiresSuperAdmin?: boolean;
+}
+
+const SettingsSidebar: React.FC<SettingsSidebarProps> = ({ 
+  currentUser, 
+  isAdmin = false, 
+  isSuperAdmin = false
 }) => {
   const location = useLocation();
-  const currentPath = location.pathname;
-
-  const menuItems = [
-    {
-      title: "Profil",
-      icon: <User className="mr-2 h-4 w-4" />,
-      href: "/settings/profile",
-      show: true,
-    },
-    {
-      title: "Notifications",
-      icon: <Bell className="mr-2 h-4 w-4" />,
-      href: "/settings/notifications",
-      show: true,
-    },
-    {
-      title: "Sécurité",
-      icon: <Lock className="mr-2 h-4 w-4" />,
-      href: "/settings/security",
-      show: true,
-    },
-    {
-      title: "Paramètres de l'entreprise",
-      icon: <Building className="mr-2 h-4 w-4" />,
-      href: "/settings",
-      show: isAdmin || isSuperAdmin,
-    },
-    {
-      title: "Paramètres de l'agence",
-      icon: <Briefcase className="mr-2 h-4 w-4" />,
-      href: "/settings/agency",
-      show: isAdmin || isSuperAdmin,
-    },
-    {
-      title: "Gestion des freelancers",
-      icon: <UserPlus className="mr-2 h-4 w-4" />,
-      href: "/settings/freelancers",
-      show: isAdmin || isSuperAdmin,
-    },
-    {
-      title: "Gestion des chargés d'affaires",
-      icon: <UserPlus className="mr-2 h-4 w-4" />,
-      href: "/settings/account-managers",
-      show: isAdmin || isSuperAdmin,
-    },
-    {
-      title: "Gestion des utilisateurs",
-      icon: <Users className="mr-2 h-4 w-4" />,
-      href: "/settings/users",
-      show: isAdmin || isSuperAdmin,
-    },
+  const { isAdminOrSuperAdmin } = useAuth();
+  
+  // Tableau des liens de navigation
+  const sidebarLinks: SidebarLink[] = [
+    { href: "/settings/profile", icon: User, label: "Profil" },
+    { href: "/settings/notifications", icon: Bell, label: "Notifications" },
+    { href: "/settings/security", icon: ShieldAlert, label: "Sécurité" },
+    // Liens administratifs
+    { href: "/settings/users", icon: Users, label: "Utilisateurs", requiresAdmin: true },
+    { href: "/settings/agency", icon: Building, label: "Agence", requiresAdmin: true },
+    { href: "/settings/account-managers", icon: Briefcase, label: "Chargés d'affaires", requiresAdmin: true },
+    { href: "/settings/freelancers", icon: BarChart4, label: "Freelancers", requiresAdmin: true },
+    // Liens super administrateur
+    { href: "/settings/admin", icon: ShieldCheck, label: "Administration", requiresSuperAdmin: true },
+    { href: "/settings/audit", icon: ScrollText, label: "Audit", requiresSuperAdmin: true },
   ];
 
-  const visibleMenuItems = menuItems.filter((item) => item.show);
+  const filteredLinks = sidebarLinks.filter(link => {
+    if (link.requiresSuperAdmin && !isSuperAdmin) return false;
+    if (link.requiresAdmin && !isAdminOrSuperAdmin) return false;
+    return true;
+  });
 
   return (
-    <Card className="min-w-52 w-full md:w-52">
-      <CardHeader>
-        <CardTitle className="text-xl">Paramètres</CardTitle>
-        {currentUser && (
-          <CardDescription>
-            {currentUser.name} ({currentUser.role || "Sans rôle"})
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="p-0">
-        <nav className="flex flex-col space-y-1">
-          {visibleMenuItems.map((item) => (
-            <Button
-              key={item.href}
-              variant="ghost"
-              className={cn(
-                "justify-start rounded-none border-l-4",
-                currentPath === item.href
-                  ? "border-primary bg-muted"
-                  : "border-transparent hover:border-primary/50"
+    <div className="w-full md:w-64 bg-card border rounded-lg shrink-0">
+      <ScrollArea className="h-[calc(100vh-10rem)]">
+        <div className="py-6 space-y-1">
+          {filteredLinks.map((link) => (
+            <NavLink
+              key={link.href}
+              to={link.href}
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 px-3 py-2 mx-2 rounded-md text-sm transition-colors",
+                isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
+                location.pathname === link.href ? "bg-accent text-accent-foreground" : ""
               )}
-              asChild
             >
-              <Link to={item.href}>
-                {item.icon}
-                {item.title}
-              </Link>
-            </Button>
+              {React.createElement(link.icon, { className: "h-4 w-4" })}
+              <span>{link.label}</span>
+            </NavLink>
           ))}
-        </nav>
-      </CardContent>
-      <CardFooter className="py-3 border-t">
-        <Button variant="outline" size="sm" className="w-full" asChild>
-          <Link to="/dashboard">
-            <Settings className="mr-2 h-4 w-4" />
-            Retour au tableau de bord
-          </Link>
-        </Button>
-      </CardFooter>
-    </Card>
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
 
