@@ -9,9 +9,6 @@ import {
   Users,
   FileSpreadsheet,
   PieChart,
-  Shield,
-  Layers,
-  UserPlus
 } from "lucide-react";
 import { NavItem as NavItemType } from "@/types";
 import { UserRole } from "@/types";
@@ -47,19 +44,6 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
   // Paramètres disponibles pour tous, mais avec contenu différent selon le rôle
   const settingsNavItem: NavItemType = { title: "Paramètres", href: "/settings", icon: Settings };
   
-  // Éléments spécifiques pour les Super Admins
-  const superAdminNavItems: NavItemType[] = [
-    { title: "Administration", href: "/admin", icon: Shield },
-    { title: "Audit", href: "/audit", icon: Layers },
-    { title: "Gestion utilisateurs", href: "/admin/users", icon: UserPlus }
-  ];
-  
-  // Éléments spécifiques pour les Admins
-  const adminOnlyNavItems: NavItemType[] = [
-    { title: "Administration", href: "/admin", icon: Shield },
-    { title: "Gestion utilisateurs", href: "/admin/users", icon: UserPlus }
-  ];
-  
   // Construire la navigation en fonction du rôle
   let visibleItems = [...allNavItems, ...commonNavItems];
   
@@ -70,15 +54,6 @@ const Navigation: React.FC<NavigationProps> = ({ collapsed }) => {
   
   // Ajouter l'item paramètres pour tous
   visibleItems = [...visibleItems, settingsNavItem];
-  
-  // Ajouter les éléments spécifiques aux super admins
-  if (isSuperAdmin) {
-    visibleItems = [...visibleItems, ...superAdminNavItems];
-  } 
-  // Ajouter les éléments spécifiques aux admins
-  else if (role === UserRole.ADMIN) {
-    visibleItems = [...visibleItems, ...adminOnlyNavItems];
-  }
   
   // Filtrer les doublons (par exemple si "Administration" est ajouté deux fois)
   visibleItems = visibleItems.filter((item, index, self) => 

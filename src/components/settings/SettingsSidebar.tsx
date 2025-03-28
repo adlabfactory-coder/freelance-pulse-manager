@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   ScrollText
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { User as UserType } from "@/types";
@@ -40,13 +39,12 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
   const location = useLocation();
   const { isAdminOrSuperAdmin } = useAuth();
   
-  // Tableau des liens de navigation
+  // Tableau des liens de navigation pour les paramètres
   const sidebarLinks: SidebarLink[] = [
     { href: "/settings/profile", icon: User, label: "Profil" },
     { href: "/settings/notifications", icon: Bell, label: "Notifications" },
     { href: "/settings/security", icon: ShieldAlert, label: "Sécurité" },
     // Liens administratifs
-    { href: "/settings/users", icon: Users, label: "Utilisateurs", requiresAdmin: true },
     { href: "/settings/agency", icon: Building, label: "Agence", requiresAdmin: true },
     { href: "/settings/account-managers", icon: Briefcase, label: "Chargés d'affaires", requiresAdmin: true },
     { href: "/settings/freelancers", icon: BarChart4, label: "Freelancers", requiresAdmin: true },

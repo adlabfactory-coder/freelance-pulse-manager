@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import NotificationSettings from "@/pages/settings/components/NotificationSettings";
 import { NotificationSettings as NotificationSettingsType } from "@/types/notification-settings";
 import { toast } from "@/components/ui/use-toast";
+import { Bell } from "lucide-react";
 
 const NotificationsSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -53,7 +54,10 @@ const NotificationsSettings: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Paramètres de notification</CardTitle>
+        <div className="flex items-center gap-2">
+          <Bell className="h-5 w-5 text-primary" />
+          <CardTitle>Paramètres de notification</CardTitle>
+        </div>
         <CardDescription>
           Configurez comment et quand vous souhaitez être notifié
         </CardDescription>
