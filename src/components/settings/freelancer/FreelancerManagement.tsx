@@ -6,8 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { RefreshCw, UserPlus } from "lucide-react";
 import { useFreelancerManagement } from "@/hooks/useFreelancerManagement";
 import FreelancerTable from "./FreelancerTable";
+import DeleteFreelancerDialog from "./DeleteFreelancerDialog";
 import SearchBar from "../account-manager/SearchBar";
 import { useAuth } from "@/hooks/use-auth";
+import CreateFreelancerForm from "../CreateFreelancerForm";
 
 const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdminOrSuperAdmin }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,12 +50,10 @@ const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdmi
               Actualiser
             </Button>
             <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-              <DialogTitle>
-                <Button>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Ajouter un freelance
-                </Button>
-              </DialogTitle>
+              <Button onClick={() => setShowCreateForm(true)}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Ajouter un freelance
+              </Button>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Ajouter un freelance</DialogTitle>
@@ -61,7 +61,7 @@ const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdmi
                     Créez un nouveau compte pour un freelance dans l'application
                   </DialogDescription>
                 </DialogHeader>
-                {/* Form component would go here */}
+                <CreateFreelancerForm onSuccess={handleCreateSuccess} />
               </DialogContent>
             </Dialog>
           </div>
@@ -82,7 +82,13 @@ const FreelancerManagement: React.FC<{isAdminOrSuperAdmin: boolean}> = ({ isAdmi
             onDelete={(id) => setFreelancerToDelete(id)}
           />
 
-          {/* Delete confirmation dialog would go here */}
+          {/* Delete confirmation dialog */}
+          <DeleteFreelancerDialog
+            isOpen={freelancerToDelete !== null}
+            isDeleting={deletingFreelancer}
+            onConfirm={handleDeleteFreelancer}
+            onCancel={() => setFreelancerToDelete(null)}
+          />
         </CardContent>
       </Card>
     </>

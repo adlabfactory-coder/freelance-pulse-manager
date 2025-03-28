@@ -15,7 +15,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(null);
   const [deletingFreelancer, setDeletingFreelancer] = useState(false);
-  const { deleteUser, isLoading: isUserOpLoading } = useUserOperations();
+  const { deleteUser } = useUserOperations();
 
   useEffect(() => {
     if (isAdminOrSuperAdmin) {
