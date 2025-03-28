@@ -47,6 +47,9 @@ export const generateCommissions = async (month: number | Date, year?: number) =
   }
 };
 
+// Export the same function as generateMonthlyCommissions for compatibility
+export const generateMonthlyCommissions = generateCommissions;
+
 /**
  * Internal implementation for generating commissions
  */

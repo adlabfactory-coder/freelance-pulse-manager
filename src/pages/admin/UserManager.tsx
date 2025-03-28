@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UsersTable from '@/components/admin/UsersTable';
 import { UserProfileTemplates } from '@/components/admin/UserProfileTemplates';
 import { useAdminUsers } from '@/hooks/admin/useAdminUsers';
+import { UserRole } from '@/types';
 
 const UserManager = () => {
   const navigate = useNavigate();
@@ -21,6 +22,13 @@ const UserManager = () => {
     handleUpdateSuccess,
     handleDelete
   } = useAdminUsers();
+
+  // Add a handler for template selection
+  const handleSelectTemplate = (role: UserRole) => {
+    console.log(`Template selected: ${role}`);
+    // Here you would typically create a new user with the selected role template
+    // For now, we're just logging it
+  };
 
   return (
     <div className="space-y-6">
@@ -44,7 +52,7 @@ const UserManager = () => {
         </TabsList>
         
         <TabsContent value="templates" className="mt-6">
-          <UserProfileTemplates />
+          <UserProfileTemplates onSelectTemplate={handleSelectTemplate} />
         </TabsContent>
         
         <TabsContent value="users" className="mt-6">

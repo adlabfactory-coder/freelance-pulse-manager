@@ -4,7 +4,7 @@ import { Database } from '@/types/database';
 import { fetchCommissions } from './fetch-commissions';
 import { fetchCommissionRules } from './fetch-rules';
 import { requestPayment, approvePayment } from './payment-operations';
-import { generateCommissions } from './generate-commissions';
+import { generateCommissions, generateMonthlyCommissions } from './generate-commissions';
 
 // Import from utils separately to avoid re-export conflicts
 import { CommissionServiceOptions } from './types';
@@ -24,7 +24,7 @@ export const createCommissionsService = (supabase: SupabaseClient<Database>) => 
       approvePayment(supabase, commissionId, userRole),
       
     generateMonthlyCommissions: (month: Date, userRole: any) => 
-      generateCommissions(month.getMonth() + 1, month.getFullYear())
+      generateMonthlyCommissions(month)
   };
 };
 
@@ -38,5 +38,4 @@ export * from './utils';
 export { fetchCommissions } from './fetch-commissions';
 export { fetchCommissionRules as getFetchCommissionRules } from './fetch-rules';
 export { requestPayment, approvePayment } from './payment-operations';
-export { generateCommissions } from './generate-commissions';
-
+export { generateCommissions, generateMonthlyCommissions } from './generate-commissions';
