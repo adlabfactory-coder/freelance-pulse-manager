@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,7 +63,7 @@ const UserEditForm: React.FC<UserEditFormProps> = ({ user, onUpdate, onCancel, i
     setIsSubmitting(true);
     try {
       // Vérifier si l'utilisateur a saisi un nouveau mot de passe
-      const updateData: Partial<User> & { password?: string } = {
+      const updateData: Partial<User> = {
         id: user.id,
         name: values.name,
         email: values.email,

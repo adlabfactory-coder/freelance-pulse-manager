@@ -1,11 +1,6 @@
 
-export * from './navigation';
-export * from './roles';
-export * from './audit';
-export * from './quotes';
-export * from './subscription';
+import { UserRole } from './roles';
 
-// Interfaces de base
 export interface User {
   id: string;
   name: string;

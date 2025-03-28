@@ -1,9 +1,9 @@
-
 import { supabase } from '@/lib/supabase-client';
 import { Commission, CommissionRule, CommissionStatus, CommissionTier, CommissionTierValues } from '@/types/commissions';
 import { User } from '@/types/user';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { getMonthDates, getDaysBetweenDates } from '@/utils/commission';
 
 export interface CommissionServiceOptions {
   client: any;  // Using any to avoid circular dependencies

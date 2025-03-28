@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useRouter } from 'react-router-dom';
 import { supabase } from '@/lib/supabase-client';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { User } from '@/types/user';
 
 export const useAuthOperations = () => {

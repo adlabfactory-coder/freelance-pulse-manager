@@ -3,9 +3,12 @@
 export enum QuoteStatus {
   DRAFT = "draft",
   PENDING = "pending",
+  SENT = "sent",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
-  EXPIRED = "expired"
+  EXPIRED = "expired",
+  PAID = "paid",
+  CANCELLED = "cancelled"
 }
 
 export interface QuoteItem {
@@ -31,4 +34,22 @@ export interface Quote {
   createdAt?: Date | string;
   updatedAt?: Date | string;
   items?: QuoteItem[];
+}
+
+/**
+ * Retourne le libellé français correspondant au statut d'un devis
+ */
+export function getQuoteStatusLabel(status: QuoteStatus): string {
+  const statusLabels: Record<QuoteStatus, string> = {
+    [QuoteStatus.DRAFT]: "Brouillon",
+    [QuoteStatus.PENDING]: "En attente",
+    [QuoteStatus.SENT]: "Envoyé",
+    [QuoteStatus.ACCEPTED]: "Accepté",
+    [QuoteStatus.REJECTED]: "Rejeté",
+    [QuoteStatus.EXPIRED]: "Expiré",
+    [QuoteStatus.PAID]: "Payé",
+    [QuoteStatus.CANCELLED]: "Annulé"
+  };
+  
+  return statusLabels[status] || "Inconnu";
 }

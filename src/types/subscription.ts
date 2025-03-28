@@ -4,7 +4,8 @@ export enum SubscriptionInterval {
   QUARTERLY = "quarterly",
   YEARLY = "yearly",
   BIANNUAL = "biannual",
-  ANNUAL = "annual"
+  ANNUAL = "annual",
+  CUSTOM = "custom"
 }
 
 export enum SubscriptionStatus {
@@ -23,7 +24,8 @@ export interface SubscriptionPlan {
   price: number;
   interval: SubscriptionInterval;
   features?: string[] | { features: string[] };
-  isActive?: boolean;
+  is_active?: boolean;
+  isActive?: boolean; // Pour la compatibilité avec le code existant
   code: string;
   created_at?: Date;
   updated_at?: Date;
@@ -35,14 +37,12 @@ export interface Subscription {
   description: string;
   price: number;
   interval: SubscriptionInterval;
-  startDate: Date;
-  endDate?: Date;
-  renewalDate?: Date;
+  startDate: Date | string;
+  endDate?: Date | string;
+  renewalDate?: Date | string;
   status: SubscriptionStatus;
   clientId: string;
   freelancerId: string;
   clientName?: string;
   freelancerName?: string;
 }
-
-// We don't need to re-export these enums since they're already exported above

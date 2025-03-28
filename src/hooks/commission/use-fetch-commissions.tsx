@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase-client";
-import { Commission, CommissionStatus, CommissionTier } from "@/types/commissions";
-import { User } from "@/types/user";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase-client';
+import { formatCurrency } from '@/utils/format';
+import { Commission, CommissionStatus, CommissionTier } from '@/types/commissions';
+import { User } from '@/types/user';
+import { toast } from 'sonner';
 
 export const useFetchCommissions = (userId?: string, isAdmin: boolean = false) => {
   const [commissions, setCommissions] = useState<Commission[]>([]);

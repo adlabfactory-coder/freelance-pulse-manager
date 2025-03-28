@@ -2,7 +2,7 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { QuoteStatus } from "@/types/quote";
+import { QuoteStatus } from "@/types";
 
 interface StatusSelectorProps {
   status?: QuoteStatus;
@@ -50,6 +50,8 @@ const StatusSelector: React.FC<StatusSelectorProps> = ({
           <SelectItem value={QuoteStatus.ACCEPTED}>Accepté</SelectItem>
           <SelectItem value={QuoteStatus.REJECTED}>Rejeté</SelectItem>
           <SelectItem value={QuoteStatus.EXPIRED}>Expiré</SelectItem>
+          <SelectItem value={QuoteStatus.PAID}>Payé</SelectItem>
+          <SelectItem value={QuoteStatus.CANCELLED}>Annulé</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -10,7 +10,7 @@ interface SubscriptionDataProps {
   price: number;
   interval: SubscriptionInterval;
   status: SubscriptionStatus;
-  startDate: Date;
+  startDate: Date | string;
   endDate?: Date | null;
   clientName?: string;
   freelancerName?: string;
@@ -32,7 +32,8 @@ const intervalLabels: Record<SubscriptionInterval, string> = {
   [SubscriptionInterval.QUARTERLY]: "Trimestriel",
   [SubscriptionInterval.BIANNUAL]: "Semestriel",
   [SubscriptionInterval.ANNUAL]: "Annuel",
-  [SubscriptionInterval.YEARLY]: "Annuel"
+  [SubscriptionInterval.YEARLY]: "Annuel",
+  [SubscriptionInterval.CUSTOM]: "Personnalisé"
 };
 
 // Mapping des statuts vers du texte lisible
@@ -86,12 +87,12 @@ const SubscriptionData: React.FC<SubscriptionDataProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Date de début:</span>
-                <span className="font-medium">{formatDate(startDate)}</span>
+                <span className="font-medium">{formatDate(new Date(startDate))}</span>
               </div>
               {endDate && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date de fin:</span>
-                  <span className="font-medium">{formatDate(endDate)}</span>
+                  <span className="font-medium">{formatDate(new Date(endDate))}</span>
                 </div>
               )}
               {clientName && (

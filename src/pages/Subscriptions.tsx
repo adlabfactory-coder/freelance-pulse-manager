@@ -26,7 +26,7 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ plans, loading, o
     );
   }
 
-  const activePlans = plans.filter(plan => plan.isActive);
+  const activePlans = plans.filter(plan => plan.is_active || plan.isActive);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -49,7 +49,7 @@ const Subscriptions: React.FC = () => {
       setLoading(true);
       try {
         const fetchedPlans = await fetchSubscriptionPlans();
-        setPlans(fetchedPlans);
+        setPlans(fetchedPlans as SubscriptionPlan[]);
       } catch (error) {
         console.error('Error loading subscription plans', error);
         toast({
