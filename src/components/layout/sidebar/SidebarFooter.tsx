@@ -3,7 +3,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -11,12 +10,10 @@ interface SidebarFooterProps {
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
   const { logout } = useAuth();
-  const navigate = useNavigate();
   
   const handleLogout = async () => {
     await logout();
-    // Redirection explicite vers la page de connexion
-    navigate("/auth/login", { replace: true });
+    // Nous ne faisons pas de navigation explicite ici car le hook useAuth s'en charge
   };
 
   return (

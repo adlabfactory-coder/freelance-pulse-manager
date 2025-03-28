@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase-client";
@@ -6,6 +7,7 @@ import { getMockUsers } from "@/utils/supabase-mock-data";
 import { AuthContextType } from "@/types/auth";
 import { toast } from "sonner";
 import { Session } from "@supabase/supabase-js";
+import { useLogout } from "./auth/useLogout";
 
 const defaultContext: AuthContextType = {
   user: null,
@@ -32,6 +34,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  
+  // Utiliser notre hook logout séparé
+  const logoutFn = useLogout();
 
   const DEMO_MODE = true;
 
@@ -200,35 +205,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = async () => {
-    try {
-      if (DEMO_MODE) {
-        setUser(null);
-        // Toujours rediriger vers la page de connexion après déconnexion
-        navigate('/auth/login', { replace: true });
-        toast.success("Déconnexion réussie");
-        return;
-      }
-      
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Erreur lors de la déconnexion Supabase:", error.message);
-        toast.error(`Erreur lors de la déconnexion: ${error.message}`);
-        return;
-      }
-      
-      // Toujours rediriger explicitement vers la page de connexion
-      navigate('/auth/login', { replace: true });
-      toast.success("Déconnexion réussie");
-    } catch (err: any) {
-      console.error("Erreur lors de la déconnexion:", err);
-      toast.error(`Erreur lors de la déconnexion: ${err.message}`);
-      // Même en cas d'erreur, rediriger vers la page de connexion
-      navigate('/auth/login', { replace: true });
-    }
-  };
-
   const isAdmin = !!user && (user.role === UserRole.ADMIN);
   const isSuperAdmin = !!user && (user.role === UserRole.SUPER_ADMIN);
   const isAccountManager = !!user && (user.role === UserRole.ACCOUNT_MANAGER);
@@ -249,7 +225,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     error,
     signIn: handleLogin,
     signUp,
-    logout,
+    logout: async () => {
+      setUser(null);
+      await logoutFn();
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

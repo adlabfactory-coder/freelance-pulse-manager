@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
 import { BookOpen, HelpCircle, LogOut, Settings, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const UserProfileMenu: React.FC = () => {
   const { user, logout } = useAuth();
@@ -23,8 +23,7 @@ const UserProfileMenu: React.FC = () => {
   
   const handleLogout = async () => {
     await logout();
-    // Redirection explicite vers la page de connexion
-    navigate("/auth/login", { replace: true });
+    // Le hook useAuth s'occupera de la redirection vers la page de connexion
   };
 
   const handleExternalNavigation = (url: string) => {
