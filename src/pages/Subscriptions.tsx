@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { SubscriptionPlan } from "@/types/subscription";
 import { fetchSubscriptionPlans } from "@/services/subscriptions";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast"; // Updated import path
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,14 @@ const Subscriptions: React.FC = () => {
     loadPlans();
   }, []);
 
+  const handleSelectPlan = (plan: SubscriptionPlan) => {
+    toast({
+      title: "Plan sélectionné",
+      description: `Vous avez sélectionné le plan ${plan.name}`,
+    });
+    // Logic for plan selection
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -69,7 +77,11 @@ const Subscriptions: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <SubscriptionPlans plans={plans} loading={loading} />
+              <SubscriptionPlans 
+                plans={plans} 
+                loading={loading} 
+                onSelectPlan={handleSelectPlan} 
+              />
             </CardContent>
           </Card>
         </TabsContent>

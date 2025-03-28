@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,15 +21,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, UserRole } from '@/types';
+import { User } from '@/types';
+import { UserRole } from '@/types/roles';
 import { useUserOperations } from '@/hooks/supabase/use-user-operations';
 import { toast } from 'sonner';
 import UserStatusBadge from '../settings/users/UserStatusBadge';
 
+// Define the schema using strings for role values to match the SelectItem values
 const userSchema = z.object({
   name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères' }),
   email: z.string().email({ message: 'Email invalide' }),
-  role: z.enum(['admin', 'super_admin', 'freelancer', 'account_manager']),
+  role: z.enum(['user', 'freelancer', 'account_manager', 'admin', 'super_admin']),
   password: z.string().min(6, { message: 'Le mot de passe doit contenir au moins 6 caractères' }).optional().or(z.literal('')),
   confirmPassword: z.string().optional().or(z.literal(''))
 }).refine((data) => !data.password || data.password === data.confirmPassword, {

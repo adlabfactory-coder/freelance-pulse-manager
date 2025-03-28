@@ -1,8 +1,8 @@
 
 // Import subscription service functions from appropriate modules
 import { 
-  getSubscriptionById as fetchSubscriptionById,
-  getAllSubscriptions as fetchAllSubscriptions,
+  getSubscriptionById,
+  getAllSubscriptions,
   createSubscription,
   updateSubscription,
   cancelSubscription,
@@ -18,8 +18,8 @@ import {
 // Export all functions with proper names to avoid ambiguity
 export {
   fetchSubscriptionPlans,
-  fetchSubscriptionById, 
-  fetchAllSubscriptions as fetchSubscriptions, 
+  getSubscriptionById as fetchSubscriptionById, 
+  getAllSubscriptions as fetchSubscriptions, 
   createSubscription,
   updateSubscription,
   cancelSubscription,

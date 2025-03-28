@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/tabs';
 import { UserForm } from '@/components/settings/UserForm';
 import { User } from '@/types';
-import { UserRole } from '@/types/roles';
+import { UserRole, USER_ROLE_LABELS } from '@/types/roles';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, ChevronRight } from 'lucide-react';
 
