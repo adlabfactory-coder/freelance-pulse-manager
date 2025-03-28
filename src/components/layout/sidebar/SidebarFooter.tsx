@@ -15,7 +15,8 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
   
   const handleLogout = async () => {
     await logout();
-    // Nous ne faisons pas de navigation explicite ici car le hook useAuth s'en charge
+    // Redirection explicite vers la page de connexion
+    navigate("/auth/login", { replace: true });
   };
 
   return (
