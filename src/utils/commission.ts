@@ -1,99 +1,87 @@
 
-import { startOfMonth, endOfMonth, eachDayOfInterval, format } from 'date-fns';
+import { CommissionRule } from '@/types/commissions';
+import { format as dateFormat } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CommissionTier, CommissionRule } from '@/types/commissions';
 
 /**
- * Get the start and end dates of a month
+ * Get the start and end dates for a given month
  */
 export const getMonthDates = (date: Date) => {
-  const start = startOfMonth(date);
-  const end = endOfMonth(date);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+  
   return { start, end };
 };
 
 /**
- * Get all days between two dates
+ * Calculate the number of days between two dates
  */
-export const getDaysBetweenDates = (startDate: Date, endDate: Date) => {
-  return eachDayOfInterval({ start: startDate, end: endDate });
+export const getDaysBetweenDates = (startDate: Date, endDate: Date): number => {
+  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
 };
 
 /**
- * Format date in a standardized way
+ * Format a date to a human-readable string
  */
 export const formatDate = (date: Date): string => {
-  return format(date, 'dd/MM/yyyy', { locale: fr });
+  return dateFormat(date, 'dd MMMM yyyy', { locale: fr });
 };
 
 /**
- * Format period (start-end) in a standardized way
+ * Format a period (month/year) to a human-readable string
  */
-export const formatPeriod = (startDate: Date, endDate: Date): string => {
-  return `${format(startDate, 'MMMM yyyy', { locale: fr })}`;
+export const formatPeriod = (month: number, year: number): string => {
+  const date = new Date(year, month - 1);
+  return dateFormat(date, 'MMMM yyyy', { locale: fr });
 };
 
 /**
- * Determine commission tier based on contract count
+ * Determine commission tier based on number of contracts
  */
-export const determineCommissionTier = (
-  contractsCount: number,
-  rules: CommissionRule[]
-): CommissionTier => {
-  // Sort rules by minContracts in ascending order
-  const sortedRules = [...rules].sort((a, b) => a.minContracts - b.minContracts);
-  
-  // Find the appropriate tier based on contract count
-  for (let i = sortedRules.length - 1; i >= 0; i--) {
-    const rule = sortedRules[i];
-    if (contractsCount >= rule.minContracts && 
-        (rule.maxContracts === null || contractsCount <= rule.maxContracts)) {
-      return rule.tier;
-    }
-  }
-  
-  // Default to the lowest tier if no match found
-  return sortedRules[0]?.tier || 'bronze';
+export const determineCommissionTier = (contractCount: number): string => {
+  if (contractCount < 5) return 'bronze';
+  if (contractCount < 10) return 'silver';
+  if (contractCount < 20) return 'gold';
+  return 'platinum';
 };
 
 /**
- * Calculate commission amount based on tier and contract count
- */
-export const calculateCommissionAmount = (
-  contractsCount: number,
-  tier: CommissionTier,
-  rules: CommissionRule[]
-): number => {
-  const rule = rules.find(r => r.tier === tier);
-  
-  if (!rule) {
-    return 0;
-  }
-  
-  return rule.unit_amount * contractsCount;
-};
-
-/**
- * Get the display label for a tier
+ * Get label for a commission tier
  */
 export const getTierLabel = (tier: string): string => {
-  if (!tier) return 'Bronze';
+  const labels: Record<string, string> = {
+    bronze: 'Bronze',
+    silver: 'Argent',
+    gold: 'Or',
+    platinum: 'Platine'
+  };
   
-  // Normalize the tier
-  const normalizedTier = typeof tier === 'string' ? tier.toLowerCase() : '';
+  return labels[tier] || tier;
+};
+
+/**
+ * Calculate commission amount based on number of contracts and tier
+ */
+export const calculateCommissionAmount = (
+  contractCount: number, 
+  tier: string, 
+  totalValue: number
+): number => {
+  // Simple calculation for demo purposes
+  const baseRate = {
+    bronze: 0.05,
+    silver: 0.08,
+    gold: 0.12,
+    platinum: 0.15
+  };
   
-  switch(normalizedTier) {
-    case 'bronze':
-      return 'Bronze';
-    case 'silver': 
-      return 'Argent';
-    case 'gold':
-      return 'Or';
-    case 'platinum':
-      return 'Platine';
-    case 'diamond':
-      return 'Diamant';
-    default:
-      return tier || 'Unknown';
-  }
+  const rate = baseRate[tier as keyof typeof baseRate] || 0.05;
+  
+  // Calculate based on contract total value
+  return Math.round(totalValue * rate);
 };

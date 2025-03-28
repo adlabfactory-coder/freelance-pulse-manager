@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { SubscriptionPlan } from "@/types/subscription";
 import { fetchSubscriptionPlans } from "@/services/subscriptions";
-import { useToast } from "@/hooks/use-toast"; // Updated import path
+import { useToast } from "@/hooks/use-toast"; // Updated import path to use the hook directly
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

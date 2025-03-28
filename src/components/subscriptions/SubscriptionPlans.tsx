@@ -32,14 +32,14 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ plans, loading, o
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
       {plans.map((plan) => (
-        <Card key={plan.id} className={plan.is_popular ? "border-primary shadow-md" : ""}>
+        <Card key={plan.id} className={plan.isActive ? "border-primary shadow-md" : ""}>
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
                 <CardTitle className="text-xl">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
               </div>
-              {plan.is_popular && (
+              {plan.isActive && (
                 <Badge variant="default" className="bg-primary/80">Populaire</Badge>
               )}
             </div>
@@ -48,21 +48,30 @@ const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ plans, loading, o
             <div className="space-y-4">
               <div>
                 <span className="text-3xl font-bold">{plan.price}€</span>
-                <span className="text-muted-foreground ml-1">{plan.billing_period === "monthly" ? "/mois" : "/an"}</span>
+                <span className="text-muted-foreground ml-1">{plan.interval === "monthly" ? "/mois" : "/an"}</span>
               </div>
               <ul className="space-y-2 text-sm">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    {feature}
-                  </li>
-                ))}
+                {Array.isArray(plan.features) ? 
+                  plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <Check className="h-4 w-4 mr-2 text-green-500" />
+                      {feature}
+                    </li>
+                  )) : 
+                  plan.features && Array.isArray(plan.features.features) && 
+                  plan.features.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <Check className="h-4 w-4 mr-2 text-green-500" />
+                      {feature}
+                    </li>
+                  ))
+                }
               </ul>
             </div>
           </CardContent>
           <CardFooter>
             <Button 
-              variant={plan.is_popular ? "default" : "outline"} 
+              variant={plan.isActive ? "default" : "outline"} 
               className="w-full"
               onClick={() => onSelectPlan && onSelectPlan(plan)}
             >

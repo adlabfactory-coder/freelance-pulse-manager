@@ -1,129 +1,172 @@
 
-import React, { useState } from 'react';
+import React from "react";
 import { 
   Card, 
   CardContent, 
   CardDescription, 
+  CardFooter, 
   CardHeader, 
   CardTitle 
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from '@/components/ui/tabs';
-import { UserForm } from '@/components/settings/UserForm';
-import { User } from '@/types';
-import { UserRole, USER_ROLE_LABELS } from '@/types/roles';
-import { useToast } from '@/hooks/use-toast';
-import { UserPlus, ChevronRight } from 'lucide-react';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { UserRole } from "@/types/roles";
+import { DescriptionProps } from "./UserForm";
 
-interface Template {
-  id: string;
-  name: string;
+// Import from types directly to avoid conflict
+import { USER_ROLE_LABELS as RoleLabels } from "@/types/roles";
+
+interface UserTemplateCardProps {
   role: UserRole;
+  title: string;
   description: string;
+  onClick: () => void;
 }
 
-const UserProfileTemplates = () => {
-  const { toast } = useToast();
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  const [showForm, setShowForm] = useState(false);
-
-  const templates: Template[] = [
-    {
-      id: '1',
-      name: 'Chargé de compte standard',
-      role: UserRole.ACCOUNT_MANAGER,
-      description: 'Utilisateur responsable du suivi clients et de la génération des devis'
-    },
-    {
-      id: '2',
-      name: 'Freelancer commercial',
-      role: UserRole.FREELANCER,
-      description: 'Commercial indépendant gérant ses propres contacts et obtenant des commissions'
-    },
-    {
-      id: '3',
-      name: 'Administrateur',
-      role: UserRole.ADMIN,
-      description: 'Accès complet à la gestion des utilisateurs et des données'
-    }
-  ];
-
-  const handleSelectTemplate = (template: Template) => {
-    setSelectedTemplate(template);
-    setShowForm(true);
-  };
-
-  const handleSuccess = (newUser: User) => {
-    toast({
-      title: "Utilisateur créé",
-      description: `${newUser.name} a été ajouté avec succès en tant que ${USER_ROLE_LABELS[newUser.role as UserRole]}.`,
-    });
-    setShowForm(false);
-    setSelectedTemplate(null);
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setSelectedTemplate(null);
-  };
-
+const UserTemplateCard: React.FC<UserTemplateCardProps> = ({
+  role,
+  title,
+  description,
+  onClick,
+}) => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Ajout d'utilisateur</CardTitle>
-        <CardDescription>
-          Sélectionnez un modèle de profil pour ajouter rapidement un nouvel utilisateur
-        </CardDescription>
+        <CardTitle className="text-xl">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        {!showForm ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templates.map(template => (
-              <Card 
-                key={template.id} 
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => handleSelectTemplate(template)}
-              >
-                <CardHeader className="p-4">
-                  <CardTitle className="text-lg flex justify-between items-center">
-                    {template.name}
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-sm text-muted-foreground">{template.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-medium">Création d'un {selectedTemplate?.name}</h3>
-              <p className="text-sm text-muted-foreground">{selectedTemplate?.description}</p>
-            </div>
-            <UserForm 
-              defaultRole={selectedTemplate?.role}
-              onSuccess={handleSuccess} 
-              onCancel={handleCancel} 
-            />
-          </div>
-        )}
+        <p className="text-sm text-muted-foreground">
+          {ROLE_DESCRIPTIONS[role]}
+        </p>
       </CardContent>
+      <CardFooter>
+        <Button
+          variant="default"
+          onClick={onClick}
+          className="w-full"
+        >
+          Sélectionner
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
 
-const USER_ROLE_LABELS: Record<UserRole, string> = {
-  [UserRole.SUPER_ADMIN]: "Super Administrateur",
-  [UserRole.ADMIN]: "Administrateur",
-  [UserRole.ACCOUNT_MANAGER]: "Chargé de compte",
-  [UserRole.FREELANCER]: "Freelancer"
+const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
+  [UserRole.SUPER_ADMIN]:
+    "Accès complet à toutes les fonctionnalités du système, y compris la configuration, les rapports financiers et les paramètres administratifs.",
+  [UserRole.ADMIN]:
+    "Gestion des utilisateurs, accès aux rapports et statistiques, configuration des paramètres généraux.",
+  [UserRole.ACCOUNT_MANAGER]:
+    "Gestion des contacts et des devis, accès aux rapports de leur activité, suivi des abonnements.",
+  [UserRole.FREELANCER]:
+    "Gestion des contacts assignés, création de devis, suivi de commissions.",
+  [UserRole.USER]:
+    "Accès limité au tableau de bord et informations de base.",
 };
 
-export default UserProfileTemplates;
+export const getUserDescriptionByRole = (role: UserRole): DescriptionProps => {
+  const descriptions: Record<UserRole, DescriptionProps> = {
+    [UserRole.SUPER_ADMIN]: {
+      title: "Super Administrateur",
+      description: "Accès complet et illimité à la plateforme",
+      permissions: [
+        "Gestion complète des utilisateurs",
+        "Configuration du système",
+        "Rapports financiers détaillés",
+        "Audit et sécurité",
+        "Paramètres administratifs avancés",
+        "Gestion des rôles et permissions",
+      ],
+    },
+    [UserRole.ADMIN]: {
+      title: "Administrateur",
+      description: "Gestion administrative de la plateforme",
+      permissions: [
+        "Gestion des utilisateurs",
+        "Rapports et statistiques",
+        "Paramètres généraux",
+        "Distribution des contacts",
+        "Gestion des abonnements",
+      ],
+    },
+    [UserRole.ACCOUNT_MANAGER]: {
+      title: "Chargé de compte",
+      description: "Gestion commerciale et suivi client",
+      permissions: [
+        "Gestion des contacts",
+        "Création et suivi de devis",
+        "Rapports d'activité",
+        "Suivi des abonnements clients",
+        "Gestion du calendrier",
+      ],
+    },
+    [UserRole.FREELANCER]: {
+      title: "Freelance",
+      description: "Gestion commerciale et prospection",
+      permissions: [
+        "Gestion des contacts assignés",
+        "Création de devis",
+        "Suivi de commissions",
+        "Calendrier des rendez-vous",
+      ],
+    },
+    [UserRole.USER]: {
+      title: "Utilisateur",
+      description: "Accès limité à la plateforme",
+      permissions: [
+        "Accès au tableau de bord",
+        "Informations de base",
+      ],
+    },
+  };
+
+  return descriptions[role];
+};
+
+const ROLE_DESC_TEMPLATES: Record<UserRole, string> = {
+  [UserRole.SUPER_ADMIN]: "Accès complet à toutes les fonctionnalités",
+  [UserRole.ADMIN]: "Gestion administrative et supervision",
+  [UserRole.ACCOUNT_MANAGER]: "Suivi clients et gestion commerciale",
+  [UserRole.FREELANCER]: "Prospection et développement commercial",
+  [UserRole.USER]: "Accès utilisateur standard"
+};
+
+export const UserProfileTemplates: React.FC<{
+  onSelectTemplate: (role: UserRole) => void;
+}> = ({ onSelectTemplate }) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-4">
+      <UserTemplateCard
+        role={UserRole.FREELANCER}
+        title="Freelance"
+        description="Profil pour les commerciaux indépendants"
+        onClick={() => onSelectTemplate(UserRole.FREELANCER)}
+      />
+      <UserTemplateCard
+        role={UserRole.ACCOUNT_MANAGER}
+        title="Chargé de compte"
+        description="Profil pour les gestionnaires de comptes"
+        onClick={() => onSelectTemplate(UserRole.ACCOUNT_MANAGER)}
+      />
+      <UserTemplateCard
+        role={UserRole.ADMIN}
+        title="Administrateur"
+        description="Profil pour les administrateurs de plateforme"
+        onClick={() => onSelectTemplate(UserRole.ADMIN)}
+      />
+      <UserTemplateCard
+        role={UserRole.SUPER_ADMIN}
+        title="Super Administrateur"
+        description="Profil avec accès complet"
+        onClick={() => onSelectTemplate(UserRole.SUPER_ADMIN)}
+      />
+      <UserTemplateCard
+        role={UserRole.USER}
+        title="Utilisateur standard"
+        description="Profil avec accès limité"
+        onClick={() => onSelectTemplate(UserRole.USER)}
+      />
+    </div>
+  );
+};
