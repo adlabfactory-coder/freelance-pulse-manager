@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PersonalInfoTab from "../PersonalInfoTab";
-import SecurityTab from "./SecurityTab";
 import { useAuth } from "@/hooks/use-auth";
 import { UserRole } from "@/types/roles";
 import ApiKeysTab from "@/components/settings/api-keys/ApiKeysTab";
 import { toast } from "@/components/ui/use-toast";
 import { useSupabase } from "@/hooks/use-supabase";
+import PersonalInfoTab from "../PersonalInfoTab";
+import SecurityTab from "./SecurityTab";
 
 // Interface for component props
 interface UserProfileTabsProps {
