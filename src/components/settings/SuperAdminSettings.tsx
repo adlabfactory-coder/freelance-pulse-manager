@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,8 +11,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useUserOperations } from "@/hooks/supabase/use-user-operations";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, Shield } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Shield, Settings, User, Mail, LinkIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CommissionVerifier from "./CommissionVerifier";
+import LoginTester from "./LoginTester";
 
 const superAdminFormSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -26,6 +30,7 @@ const SuperAdminSettings: React.FC = () => {
   const { user, isSuperAdmin } = useAuth();
   const { updateUserProfile, isLoading } = useUserOperations();
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
   const form = useForm<SuperAdminFormData>({
     resolver: zodResolver(superAdminFormSchema),
@@ -36,7 +41,7 @@ const SuperAdminSettings: React.FC = () => {
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       form.reset({
         name: user.name,
@@ -82,7 +87,8 @@ const SuperAdminSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Alert>
+          <Alert variant="destructive">
+            <AlertTitle>Accès restreint</AlertTitle>
             <AlertDescription>
               Vous n'avez pas les droits pour accéder à ces paramètres. Seul un Super Admin peut modifier ces informations.
             </AlertDescription>
@@ -98,7 +104,7 @@ const SuperAdminSettings: React.FC = () => {
         <div>
           <CardTitle>Paramètres Super Admin</CardTitle>
           <CardDescription>
-            Gérer les paramètres de votre compte Super Admin
+            Gérer les paramètres de votre compte Super Admin et les fonctionnalités système
           </CardDescription>
         </div>
         <div className="bg-primary/10 p-2 rounded-full">
@@ -106,78 +112,109 @@ const SuperAdminSettings: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center space-x-4 mb-6">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={user?.avatar || ""} alt={user?.name} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-              {user?.name ? user.name[0].toUpperCase() : "SA"}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-medium">{user?.name}</h3>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
-            <span className="inline-block px-2 py-1 mt-1 text-xs rounded bg-primary/10 text-primary font-medium">
-              Super Admin
-            </span>
-          </div>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="profile">Profil</TabsTrigger>
+            <TabsTrigger value="tests">Tests Système</TabsTrigger>
+            <TabsTrigger value="commissions">Commissions</TabsTrigger>
+          </TabsList>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom complet</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <TabsContent value="profile">
+            <div className="flex items-center space-x-4 mb-6">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={user?.avatar || ""} alt={user?.name} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-lg">
+                  {user?.name ? user.name[0].toUpperCase() : "SA"}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-medium">{user?.name}</h3>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <span className="inline-block px-2 py-1 mt-1 text-xs rounded bg-primary/10 text-primary font-medium">
+                  Super Admin
+                </span>
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom complet</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input className="pl-9" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="avatar"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL de l'avatar</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="https://exemple.com/avatar.png" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input className="pl-9" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Button type="submit" disabled={saving || isLoading}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                "Mettre à jour le profil"
-              )}
-            </Button>
-          </form>
-        </Form>
+                <FormField
+                  control={form.control}
+                  name="avatar"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL de l'avatar</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input className="pl-9" {...field} placeholder="https://exemple.com/avatar.png" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" disabled={saving || isLoading} className="w-full">
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    "Mettre à jour le profil"
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="tests">
+            <div className="space-y-6">
+              <LoginTester />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="commissions">
+            <div className="space-y-6">
+              <CommissionVerifier />
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
