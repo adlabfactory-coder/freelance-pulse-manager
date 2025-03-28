@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
-import { Freelancer } from "@/types";
+import { User } from "@/types";
 import { toast } from "sonner";
 import { useInitializeUsers } from "@/hooks/useInitializeUsers";
 

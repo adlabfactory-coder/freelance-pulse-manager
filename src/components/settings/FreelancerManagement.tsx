@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, RefreshCw } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
-import UserInitializationSection from "./freelancer/UserInitializationSection";
-import FreelancerTable from "./freelancer/FreelancerTable";
-import DeleteFreelancerDialog from "./freelancer/DeleteFreelancerDialog";
+import { FreelancerTable, UserInitializationSection, DeleteFreelancerDialog } from "./freelancer";
 import { useFreelancerManagement, Freelancer } from "@/hooks/useFreelancerManagement";
 
 const FreelancerManagement: React.FC = () => {
