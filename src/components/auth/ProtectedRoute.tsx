@@ -2,7 +2,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import LoadingSpinner from "@/components/ui/loading-spinner";
-import { UserRole } from "@/types/roles";
+import { UserRole } from "@/types";
 
 interface ProtectedRouteProps {
   requiredRoles?: string[];
@@ -24,6 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
   // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
     console.log("Non authentifié, redirection vers la page de connexion");
+    // Utiliser replace: true pour éviter les boucles de navigation
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 

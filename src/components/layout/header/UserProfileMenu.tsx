@@ -23,7 +23,8 @@ const UserProfileMenu: React.FC = () => {
   
   const handleLogout = async () => {
     await logout();
-    navigate("/auth/login");
+    // Redirection explicite vers la page de connexion
+    navigate("/auth/login", { replace: true });
   };
 
   const handleExternalNavigation = (url: string) => {

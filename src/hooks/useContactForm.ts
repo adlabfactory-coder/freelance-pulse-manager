@@ -1,13 +1,12 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { contactCreateUpdateService, ContactFormInput } from '@/services/contacts/contact-create-update';
-import { ContactStatus } from '@/types/database/enums';
+import { contactService } from '@/services/contact-service';
+import { ContactStatus } from '@/types/contact';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase-client';
-import { accountManagerService } from '@/services/account-manager/account-manager-service';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -25,7 +24,7 @@ export const useContactForm = ({
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   
-  // Freelancer actuel (créateur du contact)
+  // Utilisateur actuel
   const currentUserId = user?.id || '';
   
   const form = useForm<ContactFormValues>({
@@ -51,16 +50,6 @@ export const useContactForm = ({
     try {
       setLoading(true);
       
-      // Si le mode d'attribution automatique est activé et qu'aucun chargé n'est assigné
-      if (useAutoAssign && !data.assignedTo && !isEditing) {
-        const nextManager = await accountManagerService.getNextAvailableAccountManager();
-        if (nextManager) {
-          data.assignedTo = nextManager.id;
-        } else {
-          toast.error("Aucun chargé de compte disponible pour l'attribution automatique");
-        }
-      }
-      
       // Vérifier que l'utilisateur a bien assigné un chargé de compte
       if (!data.assignedTo) {
         toast.error("Vous devez assigner ce contact à un chargé de compte");
@@ -71,7 +60,7 @@ export const useContactForm = ({
       // Si createdBy n'est pas défini, utiliser l'ID de l'utilisateur actuel
       const createdById = data.createdBy || currentUserId;
       
-      const contactInput: ContactFormInput = {
+      const contactInput = {
         name: data.name,
         email: data.email,
         phone: data.phone,
@@ -86,13 +75,13 @@ export const useContactForm = ({
       };
       
       if (isEditing && initialData?.id) {
-        const success = await contactCreateUpdateService.updateContact(initialData.id, contactInput);
-        if (success) {
+        const updatedContact = await contactService.updateContact(initialData.id, contactInput);
+        if (updatedContact) {
           toast.success("Contact mis à jour avec succès");
           if (onSuccess) onSuccess({id: initialData.id, name: data.name});
         }
       } else {
-        const contactId = await contactCreateUpdateService.createContact(contactInput);
+        const contactId = await contactService.createContact(contactInput);
         if (contactId) {
           toast.success("Contact ajouté avec succès");
           form.reset();
