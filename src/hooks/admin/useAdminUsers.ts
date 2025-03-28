@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { User } from '@/types';
@@ -38,14 +37,11 @@ export const useAdminUsers = () => {
         const fetchedUsers = await userOperations.fetchUsers();
         setUsers(fetchedUsers);
       } else {
-        // Fall back to mock data if Supabase is not connected
         setUsers(userOperations.getMockUsers());
       }
     } catch (error) {
       console.error('Error loading users:', error);
       toast("Impossible de charger les utilisateurs.");
-      
-      // Fall back to mock data in case of error
       setUsers(userOperations.getMockUsers());
     } finally {
       setLoading(false);
@@ -70,7 +66,6 @@ export const useAdminUsers = () => {
 
   const handleUpdateSuccess = async (updatedUser: User): Promise<void> => {
     try {
-      // Update the user in the state
       setUsers(prev => prev.map(user => 
         user.id === updatedUser.id ? updatedUser : user
       ));
@@ -95,7 +90,6 @@ export const useAdminUsers = () => {
       const result = await userOperations.updateUser(userData);
       
       if (result) {
-        // Update the user in the local state
         setUsers(prev => prev.map(user => 
           user.id === userData.id ? { ...user, ...userData } : user
         ));
@@ -121,7 +115,7 @@ export const useAdminUsers = () => {
   const handleDelete = async (userId: string): Promise<void> => {
     if (!userId) return Promise.resolve();
     
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Il sera définitivement supprimé après 48 heures.")) {
       return Promise.resolve();
     }
     
@@ -135,7 +129,7 @@ export const useAdminUsers = () => {
           setSelectedUser(null);
         }
         
-        toast("Utilisateur supprimé");
+        toast("Utilisateur supprimé (sera définitivement supprimé après 48 heures)");
       } else {
         toast("Impossible de supprimer l'utilisateur.");
       }

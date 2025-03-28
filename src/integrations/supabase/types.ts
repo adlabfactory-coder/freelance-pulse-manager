@@ -475,6 +475,7 @@ export type Database = {
       services: {
         Row: {
           created_at: string | null
+          deleted_at: string | null
           description: string | null
           id: string
           is_active: boolean | null
@@ -485,6 +486,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -495,6 +497,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deleted_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -692,6 +695,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_expired_soft_deleted_records: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       delete_quote: {
         Args: {
           quote_id: string
@@ -715,6 +722,13 @@ export type Database = {
           v: string
         }
         Returns: string
+      }
+      soft_delete_user: {
+        Args: {
+          user_id: string
+          current_user_role: string
+        }
+        Returns: Json
       }
       update_quote: {
         Args: {

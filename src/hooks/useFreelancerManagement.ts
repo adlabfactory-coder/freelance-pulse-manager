@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
@@ -69,7 +68,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
 
       const { error: deleteError } = await supabase
         .from("users")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", freelancerToDelete);
 
       if (deleteError) throw deleteError;
@@ -78,10 +77,10 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
         prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
       );
       
-      toast.success("Le freelance a été supprimé avec succès");
+      toast.success("Le freelance a été supprimé et sera définitivement effacé dans 48 heures");
     } catch (error: any) {
       console.error("Erreur lors de la suppression du freelance:", error);
-      toast.error("Impossible de supprimer le freelance");
+      toast.error("Impossible de supprimer le freelance: " + (error.message || 'Erreur inconnue'));
     } finally {
       setDeletingFreelancer(false);
       setFreelancerToDelete(null);
