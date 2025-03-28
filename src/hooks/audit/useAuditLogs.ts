@@ -9,9 +9,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "1",
       timestamp: "2023-05-15T09:30:00Z",
-      user: "Admin Démo",
-      role: "Administrateur",
-      avatar: null,
+      user_email: "Admin Démo",
+      user_role: "Administrateur",
       module: "users",
       action: "create",
       details: "Création de l'utilisateur John Doe (john.doe@example.com)"
@@ -19,9 +18,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "2",
       timestamp: "2023-05-15T10:15:00Z",
-      user: "Commercial Démo",
-      role: "Freelance",
-      avatar: null,
+      user_email: "Commercial Démo",
+      user_role: "Freelance",
       module: "contacts",
       action: "update",
       details: "Mise à jour des informations du contact #123: Entreprise XYZ"
@@ -29,9 +27,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "3",
       timestamp: "2023-05-15T11:00:00Z",
-      user: "Admin Démo",
-      role: "Administrateur",
-      avatar: null,
+      user_email: "Admin Démo",
+      user_role: "Administrateur",
       module: "auth",
       action: "login",
       details: "Connexion réussie à l'application"
@@ -39,9 +36,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "4",
       timestamp: "2023-05-16T09:00:00Z",
-      user: "Super Admin Démo",
-      role: "Super Administrateur",
-      avatar: null,
+      user_email: "Super Admin Démo",
+      user_role: "Super Administrateur",
       module: "quotes",
       action: "delete",
       details: "Suppression du devis #456 pour le client Société ABC"
@@ -49,9 +45,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "5",
       timestamp: "2023-05-16T14:30:00Z",
-      user: "Commercial Démo",
-      role: "Freelance",
-      avatar: null,
+      user_email: "Commercial Démo",
+      user_role: "Freelance",
       module: "auth",
       action: "logout",
       details: "Déconnexion de l'application"
@@ -59,9 +54,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "6",
       timestamp: "2023-05-17T10:00:00Z",
-      user: "Admin Démo",
-      role: "Administrateur",
-      avatar: null,
+      user_email: "Admin Démo",
+      user_role: "Administrateur",
       module: "users",
       action: "update",
       details: "Modification des droits d'accès pour l'utilisateur Jane Smith"
@@ -69,9 +63,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "7",
       timestamp: "2023-05-17T11:45:00Z",
-      user: "Super Admin Démo",
-      role: "Super Administrateur",
-      avatar: null,
+      user_email: "Super Admin Démo",
+      user_role: "Super Administrateur",
       module: "contacts",
       action: "create",
       details: "Ajout d'un nouveau contact: Entreprise DEF"
@@ -79,9 +72,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "8",
       timestamp: "2023-05-18T09:15:00Z",
-      user: "Chargé de Compte Démo",
-      role: "Chargé de compte",
-      avatar: null,
+      user_email: "Chargé de Compte Démo",
+      user_role: "Chargé de compte",
       module: "quotes",
       action: "update",
       details: "Mise à jour du statut du devis #789 de 'Brouillon' à 'Envoyé'"
@@ -89,9 +81,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "9",
       timestamp: "2023-05-18T16:00:00Z",
-      user: "Admin Démo",
-      role: "Administrateur",
-      avatar: null,
+      user_email: "Admin Démo",
+      user_role: "Administrateur",
       module: "auth",
       action: "login",
       details: "Connexion réussie depuis une nouvelle adresse IP"
@@ -99,9 +90,8 @@ const getMockAuditLogs = (): AuditLog[] => {
     {
       id: "10",
       timestamp: new Date().toISOString(),
-      user: "Commercial Démo",
-      role: "Freelance",
-      avatar: null,
+      user_email: "Commercial Démo",
+      user_role: "Freelance",
       module: "contacts",
       action: "delete",
       details: "Suppression du contact #321: Contact inactif"
@@ -136,7 +126,7 @@ export const useAuditLogs = () => {
         const moduleMatch = selectedModule === 'all' || log.module === selectedModule;
         const actionMatch = selectedAction === 'all' || log.action === selectedAction;
         const searchMatch = searchTerm === '' || 
-          log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          log.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
           log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
           log.module.toLowerCase().includes(searchTerm.toLowerCase()) ||
           log.action.toLowerCase().includes(searchTerm.toLowerCase());
