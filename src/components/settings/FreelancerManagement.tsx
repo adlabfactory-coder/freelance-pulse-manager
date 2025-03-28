@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
 import { toast } from "sonner";
-import { Edit, PlusCircle, Loader2, Trash2, RefreshCw } from "lucide-react";
+import { Edit, PlusCircle, Loader2, Trash2, RefreshCw, Info } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
 import { useInitializeUsers } from "@/hooks/useInitializeUsers";
@@ -21,7 +21,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoCircle } from "lucide-react";
 
 interface Freelancer {
   id: string;
@@ -77,7 +76,6 @@ const FreelancerManagement: React.FC = () => {
     try {
       setDeletingFreelancer(true);
       
-      // D'abord supprimer l'authentification pour l'utilisateur
       const { data: userData, error: userError } = await supabase
         .from("users")
         .select("email")
@@ -86,7 +84,6 @@ const FreelancerManagement: React.FC = () => {
 
       if (userError) throw userError;
 
-      // Supprimer l'utilisateur de la table users
       const { error: deleteError } = await supabase
         .from("users")
         .delete()
@@ -94,7 +91,6 @@ const FreelancerManagement: React.FC = () => {
 
       if (deleteError) throw deleteError;
 
-      // Mettre à jour l'interface
       setFreelancers(prevFreelancers => 
         prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
       );
@@ -122,7 +118,6 @@ const FreelancerManagement: React.FC = () => {
 
   const handleInitializeUsers = async () => {
     await initializeUsers();
-    // Rafraîchir la liste des freelances après initialisation
     await fetchFreelancers();
   };
 
@@ -165,7 +160,7 @@ const FreelancerManagement: React.FC = () => {
           {/* Bouton d'initialisation des utilisateurs */}
           <div className="mb-6">
             <Alert variant="default">
-              <InfoCircle className="h-4 w-4" />
+              <Info className="h-4 w-4" />
               <AlertTitle>Initialisation des utilisateurs</AlertTitle>
               <AlertDescription className="flex flex-col gap-2">
                 <p>Vous pouvez créer automatiquement les utilisateurs standards (freelancers, chargés de compte, administrateurs)</p>
@@ -261,7 +256,6 @@ const FreelancerManagement: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Boîte de dialogue de confirmation de suppression */}
       <AlertDialog open={!!freelancerToDelete} onOpenChange={(open) => !open && setFreelancerToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
