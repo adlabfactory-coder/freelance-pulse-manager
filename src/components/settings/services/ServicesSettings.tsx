@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { Service } from '@/types/service';
+import { Service, ServiceType } from '@/types/service';
 import { useServices } from '@/hooks/useServices';
 import ServicesList from './ServicesList';
 import ServicesHeader from './ServicesHeader';
@@ -86,7 +86,7 @@ const ServicesSettings: React.FC = () => {
   const emptyService: Service = {
     id: '',
     name: '',
-    type: 'service',
+    type: ServiceType.OTHER, // Fix: Use a proper enum value from ServiceType instead of the string "service"
     price: 0,
     description: '',
     is_active: true
