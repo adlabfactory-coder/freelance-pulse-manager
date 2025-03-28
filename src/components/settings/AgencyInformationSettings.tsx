@@ -52,7 +52,17 @@ const AgencyInformationSettings = () => {
 
   const onSubmit = async (data: AgencyFormData) => {
     try {
-      const success = await updateSettings(data);
+      // Ensure name is always provided and not optional
+      const settingsData = {
+        name: data.name, // This makes it non-optional
+        rc: data.rc || "",
+        if_number: data.if_number || "",
+        capital: data.capital || "",
+        rib: data.rib || "",
+        bank_name: data.bank_name || ""
+      };
+      
+      const success = await updateSettings(settingsData);
       if (success) {
         toast.success("Informations de l'agence mises à jour avec succès");
       }
