@@ -4,31 +4,39 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAgencySettings } from "@/hooks/settings/use-agency-settings";
+import { Loader2, Save, Building, FileSymlink } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Save, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase-client";
+import { useAuth } from "@/hooks/use-auth";
 
-const formSchema = z.object({
-  name: z.string().min(2, "Le nom de l'agence est requis"),
-  rc: z.string().optional(),
-  if_number: z.string().optional(),
-  capital: z.string().optional(),
-  rib: z.string().optional(),
-  bank_name: z.string().optional(),
+const agencyFormSchema = z.object({
+  name: z.string().min(2, "La raison sociale doit contenir au moins 2 caractères"),
+  rc: z.string().min(2, "Le RC doit contenir au moins 2 caractères"),
+  if_number: z.string().min(2, "L'identifiant fiscal doit contenir au moins 2 caractères"),
+  capital: z.string().min(1, "Le capital doit être spécifié"),
+  rib: z.string().min(10, "Le RIB doit contenir au moins 10 caractères"),
+  bank_name: z.string().min(2, "Le nom de la banque doit contenir au moins 2 caractères"),
 });
 
-type AgencyFormData = z.infer<typeof formSchema>;
+type AgencyFormData = z.infer<typeof agencyFormSchema>;
 
-const AgencyInformationSettings = () => {
-  const { settings, loading, saving, updateSettings } = useAgencySettings();
+interface AgencyData extends AgencyFormData {
+  id?: string;
+}
 
+const AgencyInformationSettings: React.FC = () => {
+  const { isAdminOrSuperAdmin } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
   const form = useForm<AgencyFormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(agencyFormSchema),
     defaultValues: {
-      name: "",
+      name: "AdLab Factory",
       rc: "",
       if_number: "",
       capital: "",
@@ -38,45 +46,114 @@ const AgencyInformationSettings = () => {
   });
 
   useEffect(() => {
-    if (settings) {
-      form.reset({
-        name: settings.name || "",
-        rc: settings.rc || "",
-        if_number: settings.if_number || "",
-        capital: settings.capital || "",
-        rib: settings.rib || "",
-        bank_name: settings.bank_name || "",
-      });
+    async function fetchAgencySettings() {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("agency_settings")
+          .select("*")
+          .single();
+        
+        if (error) {
+          console.error("Erreur lors de la récupération des paramètres de l'agence:", error);
+        } else if (data) {
+          // Populate form with existing data
+          form.reset({
+            name: data.name || "AdLab Factory",
+            rc: data.rc || "",
+            if_number: data.if_number || "",
+            capital: data.capital || "",
+            rib: data.rib || "",
+            bank_name: data.bank_name || "",
+          });
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des paramètres:", error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [settings, form]);
+
+    fetchAgencySettings();
+  }, [form]);
 
   const onSubmit = async (data: AgencyFormData) => {
+    if (!isAdminOrSuperAdmin) {
+      toast.error("Vous n'avez pas les droits pour effectuer cette action");
+      return;
+    }
+
+    setSaving(true);
     try {
-      // Ensure name is always provided and not optional
-      const settingsData = {
-        name: data.name, // This makes it non-optional
-        rc: data.rc || "",
-        if_number: data.if_number || "",
-        capital: data.capital || "",
-        rib: data.rib || "",
-        bank_name: data.bank_name || ""
-      };
-      
-      const success = await updateSettings(settingsData);
-      if (success) {
-        toast.success("Informations de l'agence mises à jour avec succès");
+      // Check if a record already exists
+      const { data: existingData, error: fetchError } = await supabase
+        .from("agency_settings")
+        .select("id")
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 is "no rows returned" error, which just means we need to create a new record
+        console.error("Erreur lors de la vérification des paramètres:", fetchError);
+        toast.error("Erreur lors de la mise à jour des paramètres");
+        return;
+      }
+
+      let updateResult;
+      if (existingData?.id) {
+        // Update existing record
+        updateResult = await supabase
+          .from("agency_settings")
+          .update({
+            name: data.name,
+            rc: data.rc,
+            if_number: data.if_number,
+            capital: data.capital,
+            rib: data.rib,
+            bank_name: data.bank_name,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingData.id);
+      } else {
+        // Insert new record
+        updateResult = await supabase
+          .from("agency_settings")
+          .insert({
+            name: data.name,
+            rc: data.rc,
+            if_number: data.if_number,
+            capital: data.capital,
+            rib: data.rib,
+            bank_name: data.bank_name,
+          });
+      }
+
+      if (updateResult.error) {
+        console.error("Erreur lors de la mise à jour des paramètres:", updateResult.error);
+        toast.error("Erreur lors de la mise à jour des paramètres");
+      } else {
+        toast.success("Paramètres de l'agence mis à jour avec succès");
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour des informations:", error);
-      toast.error("Une erreur est survenue lors de la mise à jour des informations");
+      console.error("Erreur lors de la mise à jour des paramètres:", error);
+      toast.error("Erreur lors de la mise à jour des paramètres");
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) {
+  if (!isAdminOrSuperAdmin) {
     return (
       <Card>
-        <CardContent className="pt-6 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <CardHeader>
+          <CardTitle>Paramètres de l'agence</CardTitle>
+          <CardDescription>
+            Gérer les informations de l'agence qui apparaîtront sur les documents générés
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6 text-muted-foreground">
+            Vous n'avez pas les droits pour accéder à ces paramètres.
+          </div>
         </CardContent>
       </Card>
     );
@@ -85,57 +162,69 @@ const AgencyInformationSettings = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Informations de l'agence</CardTitle>
-        <CardDescription>
-          Ces informations apparaîtront sur les devis et factures envoyés aux clients
-        </CardDescription>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>Paramètres de l'agence</CardTitle>
+            <CardDescription>
+              Gérer les informations de l'agence qui apparaîtront sur les documents générés
+            </CardDescription>
+          </div>
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Building className="h-6 w-6 text-primary" />
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {loading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom de l'agence</FormLabel>
+                    <FormLabel>Raison sociale</FormLabel>
                     <FormControl>
-                      <Input placeholder="AdLab Factory" {...field} />
+                      <Input {...field} placeholder="AdLab Factory" />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="rc"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Numéro RC</FormLabel>
-                    <FormControl>
-                      <Input placeholder="RC123456789" {...field} />
-                    </FormControl>
-                    <FormDescription>Numéro du registre de commerce</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="if_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Identifiant fiscal</FormLabel>
-                    <FormControl>
-                      <Input placeholder="12345678" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="rc"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>RC (Registre du commerce)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="123456" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="if_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IF (Identifiant fiscal)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="12345678" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -144,57 +233,67 @@ const AgencyInformationSettings = () => {
                   <FormItem>
                     <FormLabel>Capital</FormLabel>
                     <FormControl>
-                      <Input placeholder="100 000 €" {...field} />
+                      <Input {...field} placeholder="100 000 MAD" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="bank_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Banque</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nom de la banque" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Separator />
 
-              <FormField
-                control={form.control}
-                name="rib"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>RIB</FormLabel>
-                    <FormControl>
-                      <Input placeholder="FR76 1234 5678 9012 3456 7890 123" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="bank_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nom de la banque</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Banque Populaire" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Button type="submit" disabled={saving} className="w-full md:w-auto">
-              {saving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Enregistrer
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
+                <FormField
+                  control={form.control}
+                  name="rib"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>RIB bancaire</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="123456789012345678901234" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <CardFooter className="flex justify-between px-0 pt-4">
+                <Button
+                  type="submit"
+                  disabled={saving || !form.formState.isDirty}
+                  className="ml-auto"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
+        )}
       </CardContent>
     </Card>
   );
