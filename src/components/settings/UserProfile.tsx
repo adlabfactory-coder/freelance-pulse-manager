@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { User } from '@/types';
 import { UserRole } from '@/types/roles';
@@ -10,15 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useUserOperations } from '@/hooks/supabase/user-operations';
 
 export interface UserProfileProps {
   user: User;
   onUpdate: (user: User) => void;
-  onDelete?: () => Promise<void>; // Make onDelete optional
+  onDelete?: () => Promise<void>;
   canDelete?: boolean;
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onDelete, canDelete = false }) => {
+  const { updateUserProfile } = useUserOperations();
   const [name, setName] = useState(user.name || "");
   const [email, setEmail] = useState(user.email || "");
   const [role, setRole] = useState<UserRole>(user.role as UserRole);
@@ -31,19 +32,32 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onUpdate, onDelete, can
     setIsSubmitting(true);
     
     try {
-      const updatedUser = {
-        ...user,
+      const updateData = {
+        id: user.id,
         name,
         email,
-        role,
+        role
       };
       
-      onUpdate(updatedUser);
+      const updatedUser = await updateUserProfile(updateData);
       
-      toast({
-        title: "Utilisateur mis à jour",
-        description: "Les modifications ont été enregistrées avec succès."
-      });
+      if (updatedUser) {
+        const finalUpdatedUser = {
+          ...user,
+          name,
+          email,
+          role
+        };
+        
+        onUpdate(finalUpdatedUser);
+        
+        toast({
+          title: "Utilisateur mis à jour",
+          description: "Les modifications ont été enregistrées avec succès."
+        });
+      } else {
+        throw new Error("La mise à jour a échoué");
+      }
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
       toast({

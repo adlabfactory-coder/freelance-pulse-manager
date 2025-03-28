@@ -54,7 +54,15 @@ const UsersTable: React.FC<UsersTableProps> = ({
         {selectedUser ? (
           <UserProfile 
             user={selectedUser} 
-            onUpdate={async (updatedUser) => await onUpdateSuccess(updatedUser)}
+            onUpdate={async (updatedUser) => {
+              try {
+                await onUpdateSuccess(updatedUser);
+                toast.success("Utilisateur mis à jour avec succès");
+              } catch (error) {
+                console.error("Erreur lors de la mise à jour:", error);
+                toast.error("La mise à jour a échoué");
+              }
+            }}
             onDelete={async () => await onDelete(selectedUser.id)}
             canDelete={selectedUser.role !== UserRole.SUPER_ADMIN}
           />

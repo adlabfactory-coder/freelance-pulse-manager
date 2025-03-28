@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { User } from '@/types';
-import { useUserOperations } from '@/hooks/supabase/use-user-operations';
+import { useUserOperations } from '@/hooks/supabase/user-operations';
 import { checkSupabaseConnection } from '@/lib/supabase-client';
+import { OperationResult } from '@/hooks/supabase';
 
 export const useAdminUsers = () => {
   const userOperations = useUserOperations();
@@ -41,7 +43,7 @@ export const useAdminUsers = () => {
       }
     } catch (error) {
       console.error('Error loading users:', error);
-      toast("Impossible de charger les utilisateurs.");
+      toast.error("Impossible de charger les utilisateurs.");
       setUsers(userOperations.getMockUsers());
     } finally {
       setLoading(false);
@@ -66,30 +68,46 @@ export const useAdminUsers = () => {
 
   const handleUpdateSuccess = async (updatedUser: User): Promise<void> => {
     try {
-      setUsers(prev => prev.map(user => 
-        user.id === updatedUser.id ? updatedUser : user
-      ));
+      // Mettre à jour l'utilisateur avec le hook useUserOperations
+      const result = await userOperations.updateUser({
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        avatar: updatedUser.avatar,
+        supervisor_id: updatedUser.supervisor_id
+      });
       
-      if (selectedUser && selectedUser.id === updatedUser.id) {
-        setSelectedUser(updatedUser);
+      if (result.success) {
+        // Mise à jour de la liste des utilisateurs
+        setUsers(prev => prev.map(user => 
+          user.id === updatedUser.id ? updatedUser : user
+        ));
+        
+        // Mise à jour de l'utilisateur sélectionné
+        if (selectedUser && selectedUser.id === updatedUser.id) {
+          setSelectedUser(updatedUser);
+        }
+        
+        toast.success("Utilisateur mis à jour avec succès");
+        return Promise.resolve();
+      } else {
+        throw new Error(result.error || "La mise à jour a échoué");
       }
-
-      toast.success("Utilisateur mis à jour avec succès");
-      return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
       toast.error("Une erreur est survenue lors de la mise à jour");
       return Promise.reject(error);
     }
   };
 
-  const handleUpdateUser = async (userData: Partial<User>) => {
+  const handleUpdateUser = async (userData: Partial<User>): Promise<boolean> => {
     if (!userData.id) return false;
     
     try {
       const result = await userOperations.updateUser(userData);
       
-      if (result) {
+      if (result.success) {
         setUsers(prev => prev.map(user => 
           user.id === userData.id ? { ...user, ...userData } : user
         ));
@@ -98,16 +116,16 @@ export const useAdminUsers = () => {
           setSelectedUser(prev => prev ? { ...prev, ...userData } : null);
         }
         
-        toast("Utilisateur mis à jour");
+        toast.success("Utilisateur mis à jour");
         
         return true;
       }
       
-      toast("Impossible de mettre à jour l'utilisateur.");
+      toast.error("Impossible de mettre à jour l'utilisateur.");
       return false;
     } catch (error) {
       console.error('Error updating user:', error);
-      toast("Une erreur est survenue lors de la mise à jour de l'utilisateur.");
+      toast.error("Une erreur est survenue lors de la mise à jour de l'utilisateur.");
       return false;
     }
   };
@@ -120,24 +138,24 @@ export const useAdminUsers = () => {
     }
     
     try {
-      const success = await userOperations.deleteUser(userId);
+      const result: OperationResult = await userOperations.deleteUser(userId);
       
-      if (success) {
+      if (result.success) {
         setUsers(prev => prev.filter(user => user.id !== userId));
         
         if (selectedUser && selectedUser.id === userId) {
           setSelectedUser(null);
         }
         
-        toast("Utilisateur supprimé (sera définitivement supprimé après 48 heures)");
+        toast.success("Utilisateur supprimé (sera définitivement supprimé après 48 heures)");
       } else {
-        toast("Impossible de supprimer l'utilisateur.");
+        toast.error("Impossible de supprimer l'utilisateur.");
       }
       
       return Promise.resolve();
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast("Une erreur est survenue lors de la suppression de l'utilisateur.");
+      toast.error("Une erreur est survenue lors de la suppression de l'utilisateur.");
       return Promise.reject(error);
     }
   };
