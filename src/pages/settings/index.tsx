@@ -2,22 +2,13 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import SettingsPage from "./SettingsPage";
-import NotificationSettings from "./components/NotificationSettings";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
 const SettingsRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
-  const isLoading = !user && !isAuthenticated; // Simuler isLoading en vérifiant si user est null et non authentifié
+  const isLoading = !user && !isAuthenticated;
   
-  // Fonction factice pour gérer l'enregistrement des paramètres de notification
-  const handleSaveNotificationSettings = async (settings: any) => {
-    // Dans une véritable implémentation, vous enverriez ces paramètres à votre API
-    console.log("Saving notification settings:", settings);
-    toast.success("Paramètres de notification enregistrés avec succès");
-    return Promise.resolve();
-  };
-
   if (isLoading) {
     return <div>Chargement...</div>;
   }
@@ -28,17 +19,22 @@ const SettingsRoutes: React.FC = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<SettingsPage />}>
-        <Route index element={<Navigate to="/settings/profile" replace />} />
-        <Route path="profile" element={null} />
-        <Route path="security" element={null} />
-        <Route path="api-keys" element={null} />
-        <Route path="users" element={null} />
-        <Route path="services" element={null} />
-        <Route path="commissions" element={null} />
-        <Route path="database" element={null} />
-        <Route path="notifications" element={<NotificationSettings onSave={handleSaveNotificationSettings} />} />
-      </Route>
+      {/* Route principale qui affiche la page Settings avec tous ses enfants */}
+      <Route index element={<SettingsPage />} />
+      <Route path="profile" element={<SettingsPage />} />
+      <Route path="notifications" element={<SettingsPage />} />
+      <Route path="security" element={<SettingsPage />} />
+      <Route path="api-keys" element={<SettingsPage />} />
+      <Route path="users" element={<SettingsPage />} />
+      <Route path="services" element={<SettingsPage />} />
+      <Route path="commissions" element={<SettingsPage />} />
+      <Route path="database" element={<SettingsPage />} />
+      <Route path="agency" element={<SettingsPage />} />
+      <Route path="freelancers" element={<SettingsPage />} />
+      <Route path="account-managers" element={<SettingsPage />} />
+      <Route path="admin" element={<SettingsPage />} />
+      <Route path="audit" element={<SettingsPage />} />
+      <Route path="*" element={<Navigate to="/settings/profile" replace />} />
     </Routes>
   );
 };
