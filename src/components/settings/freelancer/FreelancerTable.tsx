@@ -24,6 +24,15 @@ const FreelancerTable: React.FC<FreelancerTableProps> = ({
     );
   }
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Non disponible";
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR');
+    } catch (e) {
+      return "Format invalide";
+    }
+  };
+
   return (
     <Table>
       <TableCaption>Liste des freelances</TableCaption>
@@ -47,11 +56,7 @@ const FreelancerTable: React.FC<FreelancerTableProps> = ({
             <TableRow key={freelancer.id}>
               <TableCell className="font-medium">{freelancer.name}</TableCell>
               <TableCell>{freelancer.email}</TableCell>
-              <TableCell>
-                {freelancer.createdAt 
-                  ? new Date(freelancer.createdAt).toLocaleDateString('fr-FR')
-                  : "Non disponible"}
-              </TableCell>
+              <TableCell>{formatDate(freelancer.createdAt)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" size="sm">

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, RefreshCw } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
-import { FreelancerTable, UserInitializationSection, DeleteFreelancerDialog } from "./freelancer";
+import { FreelancerTable, DeleteFreelancerDialog } from "./freelancer";
 import { useFreelancerManagement, Freelancer } from "@/hooks/useFreelancerManagement";
 
 const FreelancerManagement: React.FC = () => {
@@ -19,14 +19,9 @@ const FreelancerManagement: React.FC = () => {
     freelancerToDelete,
     setFreelancerToDelete,
     deletingFreelancer,
-    isInitializing,
-    isInitialized,
-    initError,
-    resetInitialization,
     handleDeleteFreelancer,
     handleCreateSuccess,
-    handleRefresh,
-    handleInitializeUsers
+    handleRefresh
   } = useFreelancerManagement(isAdminOrSuperAdmin);
 
   if (!isAdminOrSuperAdmin) {
@@ -65,14 +60,6 @@ const FreelancerManagement: React.FC = () => {
         </CardHeader>
         
         <CardContent>
-          <UserInitializationSection
-            isInitializing={isInitializing}
-            isInitialized={isInitialized}
-            initError={initError}
-            onInitialize={handleInitializeUsers}
-            onReset={resetInitialization}
-          />
-          
           {showCreateForm && (
             <div className="mb-6">
               <CreateFreelancerForm onSuccess={handleCreateSuccess} />

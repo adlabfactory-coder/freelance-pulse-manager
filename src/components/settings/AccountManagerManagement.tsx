@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { UseFormReturn, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Search, Trash2, UserPlus } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Search, Trash2, UserPlus } from "lucide-react";
 import { UserRole } from "@/types/roles";
 import { fetchAccountManagers } from "@/services/user/fetch-users";
 import { User } from "@/types";
+import { supabase } from "@/lib/supabase-client";
 
 const userFormSchema = z.object({
   name: z.string().min(3, "Le nom doit comporter au moins 3 caractères"),
@@ -29,6 +30,7 @@ const AccountManagerManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -39,23 +41,6 @@ const AccountManagerManagement: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadAccountManagers = async () => {
-      try {
-        const data = await fetchAccountManagers();
-        setAccountManagers(data);
-        setFilteredManagers(data);
-      } catch (error) {
-        console.error("Erreur lors du chargement des chargés de compte:", error);
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les chargés de compte"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadAccountManagers();
   }, []);
 
@@ -71,51 +56,86 @@ const AccountManagerManagement: React.FC = () => {
     }
   }, [searchTerm, accountManagers]);
 
+  const loadAccountManagers = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Récupérer les chargés de compte depuis Supabase
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, name, email, created_at")
+        .eq("role", "account_manager");
+        
+      if (error) throw error;
+      
+      setAccountManagers(data || []);
+      setFilteredManagers(data || []);
+    } catch (error) {
+      console.error("Erreur lors du chargement des chargés de compte:", error);
+      toast.error("Impossible de charger les chargés de compte");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleAddAccountManager = async (values: UserFormValues) => {
     try {
-      // Simuler l'ajout d'un chargé de compte
-      const newManager: User = {
-        id: `temp-id-${Date.now()}`,
-        name: values.name,
-        email: values.email,
-        role: UserRole.ACCOUNT_MANAGER,
-      };
+      setIsLoading(true);
       
-      setAccountManagers(prev => [...prev, newManager]);
-      form.reset();
-      setIsDialogOpen(false);
+      // Créer le nouvel utilisateur dans Supabase
+      const { data, error } = await supabase
+        .from("users")
+        .insert([
+          {
+            name: values.name,
+            email: values.email,
+            role: UserRole.ACCOUNT_MANAGER
+          }
+        ])
+        .select();
       
-      toast({
-        title: "Chargé de compte ajouté",
-        description: `${values.name} a été ajouté avec succès`
-      });
-    } catch (error) {
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setAccountManagers(prev => [...prev, data[0] as User]);
+        form.reset();
+        setIsDialogOpen(false);
+        
+        toast.success(`${values.name} a été ajouté avec succès comme chargé de compte`);
+      }
+    } catch (error: any) {
       console.error("Erreur lors de l'ajout du chargé de compte:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible d'ajouter le chargé de compte"
-      });
+      toast.error("Impossible d'ajouter le chargé de compte: " + (error.message || 'Erreur inconnue'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteAccountManager = async (id: string) => {
     try {
-      // Simuler la suppression
-      setAccountManagers(prev => prev.filter(manager => manager.id !== id));
+      setIsDeleting(true);
       
-      toast({
-        title: "Chargé de compte supprimé",
-        description: "Le chargé de compte a été supprimé avec succès"
-      });
-    } catch (error) {
+      // Supprimer l'utilisateur de Supabase
+      const { error } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      setAccountManagers(prev => prev.filter(manager => manager.id !== id));
+      toast.success("Le chargé de compte a été supprimé avec succès");
+    } catch (error: any) {
       console.error("Erreur lors de la suppression du chargé de compte:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de supprimer le chargé de compte"
-      });
+      toast.error("Impossible de supprimer le chargé de compte: " + (error.message || 'Erreur inconnue'));
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    await loadAccountManagers();
+    toast.success("Liste des chargés de compte actualisée");
   };
 
   return (
@@ -128,55 +148,73 @@ const AccountManagerManagement: React.FC = () => {
               Ajoutez, modifiez ou supprimez les chargés de compte
             </CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Nouveau chargé de compte
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter un chargé de compte</DialogTitle>
-                <DialogDescription>
-                  Créez un nouveau compte pour un chargé de compte dans l'application
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleAddAccountManager)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nom complet" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter>
-                    <Button type="submit">Ajouter</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Ajouter un chargé de compte
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un chargé de compte</DialogTitle>
+                  <DialogDescription>
+                    Créez un nouveau compte pour un chargé de compte dans l'application
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(handleAddAccountManager)} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nom complet" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="Email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Ajout en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Ajouter
+                          </>
+                        )}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2 mb-4">
@@ -191,7 +229,7 @@ const AccountManagerManagement: React.FC = () => {
           
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : filteredManagers.length === 0 ? (
             <div className="text-center py-8">
@@ -203,7 +241,7 @@ const AccountManagerManagement: React.FC = () => {
                 <TableRow>
                   <TableHead>Nom</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Statut</TableHead>
+                  <TableHead>Date de création</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -213,15 +251,18 @@ const AccountManagerManagement: React.FC = () => {
                     <TableCell className="font-medium">{manager.name}</TableCell>
                     <TableCell>{manager.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">Actif</Badge>
+                      {manager.created_at 
+                        ? new Date(manager.created_at).toLocaleDateString('fr-FR') 
+                        : "Non disponible"}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteAccountManager(manager.id)}
+                        disabled={isDeleting}
                       >
-                        <Trash2 className="h-4 w-4 text-destructive" />
+                        {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                       </Button>
                     </TableCell>
                   </TableRow>

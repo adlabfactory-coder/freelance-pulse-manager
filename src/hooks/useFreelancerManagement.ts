@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
 import { toast } from "sonner";
-import { useInitializeUsers } from "@/hooks/useInitializeUsers";
+import { useUserOperations } from "@/hooks/supabase/use-user-operations";
 
 export interface Freelancer {
   id: string;
@@ -18,14 +18,7 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(null);
   const [deletingFreelancer, setDeletingFreelancer] = useState(false);
-  
-  const { 
-    isInitializing, 
-    isInitialized, 
-    error: initError, 
-    initializeUsers, 
-    reset: resetInitialization 
-  } = useInitializeUsers();
+  const { deleteUser } = useUserOperations();
 
   useEffect(() => {
     if (isAdminOrSuperAdmin) {
@@ -69,21 +62,18 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
     try {
       setDeletingFreelancer(true);
       
-      const { error } = await supabase
-        .from("users")
-        .delete()
-        .eq("id", freelancerToDelete);
+      // Utiliser le hook useUserOperations pour supprimer l'utilisateur
+      const success = await deleteUser(freelancerToDelete);
 
-      if (error) {
-        console.error("Erreur de suppression:", error);
-        throw error;
+      if (success) {
+        setFreelancers(prevFreelancers => 
+          prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
+        );
+        
+        toast.success("Le freelance a été supprimé avec succès");
+      } else {
+        throw new Error("Échec de la suppression");
       }
-
-      setFreelancers(prevFreelancers => 
-        prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
-      );
-      
-      toast.success("Le freelance a été supprimé avec succès");
     } catch (error: any) {
       console.error("Erreur lors de la suppression du freelance:", error);
       toast.error("Impossible de supprimer le freelance: " + (error.message || 'Erreur inconnue'));
@@ -104,11 +94,6 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
     toast.success("Liste des freelances actualisée");
   };
 
-  const handleInitializeUsers = async () => {
-    await initializeUsers();
-    await fetchFreelancers();
-  };
-
   return {
     freelancers,
     loading,
@@ -117,13 +102,8 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
     freelancerToDelete,
     setFreelancerToDelete,
     deletingFreelancer,
-    isInitializing,
-    isInitialized,
-    initError,
-    resetInitialization,
     handleDeleteFreelancer,
     handleCreateSuccess,
-    handleRefresh,
-    handleInitializeUsers
+    handleRefresh
   };
 };
