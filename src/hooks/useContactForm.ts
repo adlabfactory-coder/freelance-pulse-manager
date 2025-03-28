@@ -57,6 +57,7 @@ export const useContactForm = ({
         if (nextManager) {
           data.assignedTo = nextManager.id;
           console.log("Contact auto-assigné au chargé de compte:", nextManager.name);
+          toast.success(`Contact auto-assigné à ${nextManager.name}`);
         } else {
           toast.error("Aucun chargé de compte disponible pour l'auto-assignation");
           setLoading(false);

@@ -1,6 +1,7 @@
 
 import { User, UserRole } from '@/types';
 import { supabase } from '@/lib/supabase-client';
+import { fetchAccountManagers } from '@/services/user/fetch-users';
 
 interface DistributionStat {
   manager: User;
@@ -10,15 +11,11 @@ interface DistributionStat {
 class AccountManagerService {
   async getDistributionStats(): Promise<DistributionStat[]> {
     try {
-      // Récupérer tous les chargés de compte
-      const { data: accountManagers, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', UserRole.ACCOUNT_MANAGER)
-        .is('deleted_at', null); // Ignorer les utilisateurs supprimés
+      // Récupérer tous les chargés de compte depuis le service approprié
+      const accountManagers = await fetchAccountManagers();
 
-      if (userError) {
-        console.error("Erreur lors de la récupération des chargés de compte:", userError);
+      if (!accountManagers || accountManagers.length === 0) {
+        console.error("Aucun chargé de compte trouvé");
         return [];
       }
 
@@ -47,7 +44,7 @@ class AccountManagerService {
         contactCount: contactCounts[manager.id] || 0
       }));
 
-      // Trier par nombre de contacts (décroissant)
+      // Trier par nombre de contacts (croissant)
       return stats.sort((a, b) => a.contactCount - b.contactCount);
     } catch (error) {
       console.error("Erreur inattendue lors de la récupération des statistiques:", error);
