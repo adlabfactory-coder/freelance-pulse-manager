@@ -18,7 +18,7 @@ interface AgencyInfo {
 }
 
 const AgencyInformationForm: React.FC = () => {
-  const { supabase } = useSupabase();
+  const { supabaseClient } = useSupabase();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [agencyInfo, setAgencyInfo] = useState<AgencyInfo>({
@@ -38,7 +38,7 @@ const AgencyInformationForm: React.FC = () => {
     setIsLoading(true);
     try {
       // Try to get the agency information from the "agency_info" table
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from("agency_info")
         .select("*")
         .single();
@@ -77,7 +77,7 @@ const AgencyInformationForm: React.FC = () => {
     setIsSaving(true);
     try {
       // Check if data already exists
-      const { data: existingData, error: checkError } = await supabase
+      const { data: existingData, error: checkError } = await supabaseClient
         .from("agency_info")
         .select("id")
         .limit(1);
@@ -92,13 +92,13 @@ const AgencyInformationForm: React.FC = () => {
 
       if (existingData && existingData.length > 0) {
         // Update existing record
-        result = await supabase
+        result = await supabaseClient
           .from("agency_info")
           .update(agencyInfo)
           .eq("id", existingData[0].id);
       } else {
         // Insert new record
-        result = await supabase
+        result = await supabaseClient
           .from("agency_info")
           .insert([agencyInfo]);
       }
