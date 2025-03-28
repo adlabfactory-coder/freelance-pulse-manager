@@ -64,7 +64,14 @@ const UsersTable: React.FC<UsersTableProps> = ({
                 toast.error("La mise à jour a échoué");
               }
             }}
-            onDelete={async () => await onDelete(selectedUser.id)}
+            onDelete={async () => {
+              try {
+                await onDelete(selectedUser.id);
+              } catch (error) {
+                console.error("Erreur lors de la suppression:", error);
+                toast.error("La suppression a échoué");
+              }
+            }}
             canDelete={selectedUser.role !== UserRole.SUPER_ADMIN}
           />
         ) : (

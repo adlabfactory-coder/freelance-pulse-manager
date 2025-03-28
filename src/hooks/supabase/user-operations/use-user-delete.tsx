@@ -20,13 +20,11 @@ export const useDeleteUser = () => {
     try {
       setIsLoading(true);
       
-      // Utiliser la fonction SQL de suppression douce (avec le rôle de l'utilisateur courant)
-      const { data, error } = await supabase
+      // Utiliser la suppression douce au lieu de la suppression définitive
+      const { error } = await supabase
         .from('users')
-        .delete()
-        .eq('id', userId)
-        .select()
-        .single();
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', userId);
 
       if (error) {
         console.error('Erreur lors de la suppression de l\'utilisateur:', error);
@@ -34,7 +32,7 @@ export const useDeleteUser = () => {
         return { success: false, error: error.message };
       }
 
-      showSuccessToast('Utilisateur supprimé avec succès');
+      showSuccessToast('Utilisateur supprimé avec succès (sera définitivement supprimé après 48 heures)');
       return { success: true };
     } catch (error: any) {
       console.error('Erreur inattendue lors de la suppression de l\'utilisateur:', error);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { User } from '@/types';
@@ -68,7 +67,6 @@ export const useAdminUsers = () => {
 
   const handleUpdateSuccess = async (updatedUser: User): Promise<void> => {
     try {
-      // Mettre à jour l'utilisateur avec le hook useUserOperations
       const result = await userOperations.updateUser({
         id: updatedUser.id,
         name: updatedUser.name,
@@ -79,12 +77,10 @@ export const useAdminUsers = () => {
       });
       
       if (result.success) {
-        // Mise à jour de la liste des utilisateurs
         setUsers(prev => prev.map(user => 
           user.id === updatedUser.id ? updatedUser : user
         ));
         
-        // Mise à jour de l'utilisateur sélectionné
         if (selectedUser && selectedUser.id === updatedUser.id) {
           setSelectedUser(updatedUser);
         }
@@ -133,7 +129,7 @@ export const useAdminUsers = () => {
   const handleDelete = async (userId: string): Promise<void> => {
     if (!userId) return Promise.resolve();
     
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Il sera définitivement supprimé après 48 heures.")) {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action utilise la suppression douce (l'utilisateur sera définitivement supprimé après 48 heures).")) {
       return Promise.resolve();
     }
     
@@ -149,13 +145,13 @@ export const useAdminUsers = () => {
         
         toast.success("Utilisateur supprimé (sera définitivement supprimé après 48 heures)");
       } else {
-        toast.error("Impossible de supprimer l'utilisateur.");
+        toast.error("Impossible de supprimer l'utilisateur: " + (result.error || "Erreur inconnue"));
       }
       
       return Promise.resolve();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
-      toast.error("Une erreur est survenue lors de la suppression de l'utilisateur.");
+      toast.error("Une erreur est survenue lors de la suppression de l'utilisateur: " + (error.message || "Erreur inconnue"));
       return Promise.reject(error);
     }
   };

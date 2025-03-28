@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -33,7 +32,6 @@ const UserActions: React.FC<UserActionsProps> = ({
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>(user.supervisor_id || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Seuls les administrateurs et super-administrateurs peuvent gérer les utilisateurs
   const canManageUsers = currentUserRole === UserRole.ADMIN || currentUserRole === UserRole.SUPER_ADMIN;
   const isSuperAdmin = currentUserRole === UserRole.SUPER_ADMIN;
   
@@ -47,7 +45,6 @@ const UserActions: React.FC<UserActionsProps> = ({
       return;
     }
     
-    // Vérifier les droits spécifiques - seul un super admin peut supprimer un admin
     if (user.role === UserRole.ADMIN && !isSuperAdmin) {
       toast({
         variant: "destructive",
@@ -57,7 +54,6 @@ const UserActions: React.FC<UserActionsProps> = ({
       return;
     }
     
-    // Un Super Admin ne peut pas être supprimé
     if (user.role === UserRole.SUPER_ADMIN) {
       toast({
         variant: "destructive",
@@ -73,7 +69,7 @@ const UserActions: React.FC<UserActionsProps> = ({
       if (result.success) {
         toast({
           title: "Utilisateur supprimé",
-          description: `L'utilisateur ${user.name} a été supprimé avec succès.`
+          description: `L'utilisateur ${user.name} a été supprimé avec succès (sera définitivement supprimé après 48 heures).`
         });
         setIsDeleteDialogOpen(false);
         onUserUpdated();
@@ -106,7 +102,6 @@ const UserActions: React.FC<UserActionsProps> = ({
       return;
     }
     
-    // Vérifier les droits spécifiques - seul un super admin peut gérer les admin
     if (user.role === UserRole.ADMIN && !isSuperAdmin) {
       toast({
         variant: "destructive",
@@ -116,7 +111,6 @@ const UserActions: React.FC<UserActionsProps> = ({
       return;
     }
     
-    // Un Super Admin ne peut pas avoir de superviseur
     if (user.role === UserRole.SUPER_ADMIN) {
       toast({
         variant: "destructive",
@@ -159,7 +153,6 @@ const UserActions: React.FC<UserActionsProps> = ({
   };
   
   const handleEditUser = () => {
-    // Rediriger vers la page d'édition de l'utilisateur
     navigate(`/settings/users/edit/${user.id}`);
   };
   
@@ -201,7 +194,6 @@ const UserActions: React.FC<UserActionsProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
       
-      {/* Dialogue d'assignation de superviseur */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -230,7 +222,6 @@ const UserActions: React.FC<UserActionsProps> = ({
                     <SelectItem value="">Aucun superviseur</SelectItem>
                     {supervisors
                       .filter(s => {
-                        // Filtrer les superviseurs potentiels selon la hiérarchie des rôles
                         if (user.role === UserRole.FREELANCER) {
                           return s.role === UserRole.ACCOUNT_MANAGER || 
                                 s.role === UserRole.ADMIN || 
@@ -270,13 +261,12 @@ const UserActions: React.FC<UserActionsProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Dialogue de confirmation de suppression */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmer la suppression</DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer l'utilisateur {user.name} ? Cette action est irréversible.
+              Êtes-vous sûr de vouloir supprimer l'utilisateur {user.name} ? Cette action utilise la suppression douce (l'utilisateur sera définitivement supprimé après 48 heures).
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
