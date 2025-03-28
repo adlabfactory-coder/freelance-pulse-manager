@@ -24,6 +24,42 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_settings: {
+        Row: {
+          bank_name: string | null
+          capital: string | null
+          created_at: string | null
+          id: string
+          if_number: string | null
+          name: string
+          rc: string | null
+          rib: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bank_name?: string | null
+          capital?: string | null
+          created_at?: string | null
+          id?: string
+          if_number?: string | null
+          name?: string
+          rc?: string | null
+          rib?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bank_name?: string | null
+          capital?: string | null
+          created_at?: string | null
+          id?: string
+          if_number?: string | null
+          name?: string
+          rc?: string | null
+          rib?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           api_key: string

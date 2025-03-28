@@ -1,83 +1,62 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/use-toast";
 
 const CompanySettings: React.FC = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSave = () => {
-    setIsSubmitting(true);
-    // Simulation d'un appel API
-    setTimeout(() => {
-      toast({
-        title: "Paramètres enregistrés",
-        description: "Les informations de l'entreprise ont été mises à jour.",
-      });
-      setIsSubmitting(false);
-    }, 1000);
-  };
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Informations de l'entreprise</CardTitle>
+        <CardTitle>Paramètres de l'entreprise</CardTitle>
         <CardDescription>
-          Modifiez les informations de votre entreprise
+          Vue d'ensemble des paramètres de l'application AdLab Hub
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">À propos d'AdLab Hub</h3>
+          <p className="text-sm text-muted-foreground">
+            AdLab Hub est une plateforme interne pour la gestion des prospects, le suivi des contrats
+            et la gestion des commissions des freelances.
+          </p>
+        </div>
+        
+        <Separator />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="company-name">Nom de l'entreprise</Label>
-            <Input id="company-name" defaultValue="FreelancePulse" />
+          <div className="space-y-1">
+            <Label>Fonctionnalités principales</Label>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+              <li>Gestion des contacts et prospects</li>
+              <li>Planification et suivi des rendez-vous</li>
+              <li>Création et suivi des devis</li>
+              <li>Gestion des abonnements et contrats</li>
+              <li>Calcul et suivi des commissions</li>
+            </ul>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="company-website">Site web</Label>
-            <Input
-              id="company-website"
-              defaultValue="https://www.example.com"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="company-address">Adresse</Label>
-          <Input
-            id="company-address"
-            defaultValue="123 Rue du Commerce, 75001 Paris"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="company-phone">Téléphone</Label>
-            <Input id="company-phone" defaultValue="+33 1 23 45 67 89" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="company-email">Email</Label>
-            <Input
-              id="company-email"
-              type="email"
-              defaultValue="contact@example.com"
-            />
+          
+          <div className="space-y-1">
+            <Label>Rôles utilisateurs</Label>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+              <li>Admin - Accès complet à toutes les fonctionnalités</li>
+              <li>Super Admin - Configuration système et rapports avancés</li>
+              <li>Chargé de compte - Gestion des clients et contrats</li>
+              <li>Freelance - Gestion des prospects et commissions</li>
+            </ul>
           </div>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="company-vat">Numéro de TVA</Label>
-          <Input id="company-vat" defaultValue="FR12345678901" />
+        
+        <Separator />
+        
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Paramètres supplémentaires</h3>
+          <p className="text-sm text-muted-foreground">
+            Pour modifier les paramètres spécifiques, accédez aux sections correspondantes dans 
+            le menu de navigation des paramètres.
+          </p>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline">Annuler</Button>
-        <Button onClick={handleSave} disabled={isSubmitting}>
-          {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
