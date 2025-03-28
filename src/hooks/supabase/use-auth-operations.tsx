@@ -19,22 +19,14 @@ export const useAuthOperations = () => {
 
       if (error) {
         console.error('Error signing in:', error);
-        toast({
-          description: "Email ou mot de passe incorrect.",
-          variant: "destructive"
-        });
+        toast("Email ou mot de passe incorrect.");
       } else {
         console.log('Sign in successful:', data);
-        toast({
-          description: "Vous êtes maintenant connecté.",
-        });
+        toast("Vous êtes maintenant connecté.");
       }
     } catch (error) {
       console.error("Erreur inattendue lors de la connexion:", error);
-      toast({
-        description: "Une erreur est survenue lors de la connexion.",
-        variant: "destructive"
-      });
+      toast("Une erreur est survenue lors de la connexion.");
     } finally {
       setIsLoading(false);
     }
@@ -46,22 +38,14 @@ export const useAuthOperations = () => {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
-        toast({
-          description: "Impossible de se déconnecter.",
-          variant: "destructive"
-        });
+        toast("Impossible de se déconnecter.");
       } else {
         console.log('Sign out successful');
-        toast({
-          description: "Vous êtes maintenant déconnecté.",
-        });
+        toast("Vous êtes maintenant déconnecté.");
       }
     } catch (error) {
       console.error("Erreur inattendue lors de la déconnexion:", error);
-      toast({
-          description: "Une erreur est survenue lors de la déconnexion.",
-          variant: "destructive"
-      });
+      toast("Une erreur est survenue lors de la déconnexion.");
     } finally {
       setIsLoading(false);
     }
@@ -74,19 +58,13 @@ export const useAuthOperations = () => {
 
       if (error) {
         console.error('Error refreshing session:', error);
-        toast({
-          description: "Impossible de rafraîchir la session.",
-          variant: "destructive"
-        });
+        toast("Impossible de rafraîchir la session.");
       } 
       
       return data.session;
     } catch (error) {
       console.error("Erreur inattendue lors du rafraîchissement de la session:", error);
-      toast({
-        description: "Une erreur est survenue lors du rafraîchissement de la session.",
-        variant: "destructive"
-      });
+      toast("Une erreur est survenue lors du rafraîchissement de la session.");
       return null;
     } finally {
       setIsLoading(false);

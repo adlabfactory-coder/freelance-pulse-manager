@@ -1,166 +1,136 @@
 import React, { useState, useEffect } from 'react';
-import { Subscription } from '@/types/subscription';
-import { subscriptionService } from '@/services/subscriptions/subscriptions-service';
-import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  fetchSubscriptions
+} from '@/services/subscriptions';
+import SubscriptionList from './SubscriptionList';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import AddSubscriptionDialog from './AddSubscriptionDialog';
-import EditSubscriptionDialog from './EditSubscriptionDialog';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Subscription, SubscriptionStatus } from '@/types/subscription';
+import { ensureDate } from '@/services/subscriptions/subscriptions-service';
 
-const SubscriptionsList: React.FC = () => {
+// Placeholder for dialogs that will be implemented later
+const AddSubscriptionDialog = () => <div>Add Subscription Dialog Placeholder</div>;
+const EditSubscriptionDialog = () => <div>Edit Subscription Dialog Placeholder</div>;
+
+interface SubscriptionsListProps {
+  filter?: "all" | "active" | "inactive";
+}
+
+const SubscriptionsList: React.FC<SubscriptionsListProps> = ({ filter = "all" }) => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<"all" | "active" | "inactive">(filter);
+  const [addDialogOpen, setAddDialogOpen] = useState<boolean>(false);
+  const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const loadSubscriptions = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchSubscriptions();
+      if (data) {
+        setSubscriptions(data);
+      }
+    } catch (error) {
+      console.error('Error loading subscriptions:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les abonnements',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadSubscriptions();
   }, []);
 
-  const loadSubscriptions = async () => {
-    setLoading(true);
-    try {
-      const subs = await subscriptionService.fetchAllSubscriptions();
-      setSubscriptions(subs);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load subscriptions');
-      toast.error(`Failed to load subscriptions: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
+  const handleRenew = async (id: string) => {
+    // This would be implemented with a real service call
+    toast({
+      title: 'Information',
+      description: 'Fonctionnalité de renouvellement en développement'
+    });
+  };
+
+  const handleCancel = async (id: string) => {
+    // This would be implemented with a real service call
+    toast({
+      title: 'Information',
+      description: 'Fonctionnalité d\'annulation en développement'
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    // This would be implemented with a real service call
+    toast({
+      title: 'Information',
+      description: 'Fonctionnalité de suppression en développement'
+    });
   };
 
   const handleAddClick = () => {
     setAddDialogOpen(true);
   };
 
-  const handleEditClick = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
+  const handleEditClick = (id: string) => {
+    setSelectedSubscriptionId(id);
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClick = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this subscription?')) {
-      try {
-        await subscriptionService.deleteSubscription(id);
-        setSubscriptions(subs => subs.filter(sub => sub.id !== id));
-        toast.success('Subscription deleted successfully');
-      } catch (err: any) {
-        toast.error(`Failed to delete subscription: ${err.message}`);
-      }
-    }
-  };
-
-  const handleQuoteClick = (subscriptionId: string) => {
-    navigate(`/subscriptions/to-quote/${subscriptionId}`);
-  };
-
-  const SubscriptionCard = ({ subscription, onEdit, onDelete, onClick }: SubscriptionCardProps) => {
-    const formatDate = (date: string | Date) => {
-      if (!date) return "-";
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return format(dateObj, 'dd/MM/yyyy');
-    };
-
-    return (
-      <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle>{subscription.name}</CardTitle>
-          <CardDescription>{subscription.description}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Price: ${subscription.price} / {subscription.interval}</p>
-          <p>Status: {subscription.status}</p>
-          <p>Start Date: {formatDate(subscription.startDate)}</p>
-          <p>End Date: {subscription.endDate ? formatDate(subscription.endDate) : 'N/A'}</p>
-          <p>Renewal Date: {subscription.renewalDate ? formatDate(subscription.renewalDate) : 'N/A'}</p>
-        </CardContent>
-        <div className="flex justify-between items-center p-4">
-          <div>
-            <Button size="sm" variant="secondary" onClick={onClick}>
-              Create Quote
-            </Button>
-          </div>
-          <div className="flex space-x-2">
-            <Button size="sm" variant="outline" onClick={onEdit}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-            <Button size="sm" variant="destructive" onClick={onDelete}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-          </div>
-        </div>
-      </Card>
-    );
-  };
-
-  interface SubscriptionCardProps {
-    subscription: Subscription;
-    onEdit: () => void;
-    onDelete: () => void;
-    onClick: () => void;
-  }
+  const filteredSubscriptions = subscriptions.filter(sub => {
+    if (activeTab === 'all') return true;
+    if (activeTab === 'active') return sub.status === SubscriptionStatus.ACTIVE;
+    if (activeTab === 'inactive') return sub.status !== SubscriptionStatus.ACTIVE;
+    return true;
+  });
 
   if (loading) {
     return (
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <CardTitle><Skeleton className="h-5 w-3/4" /></CardTitle>
-              <CardDescription><Skeleton className="h-4 w-1/2" /></CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-32 w-full" />
       </div>
     );
   }
 
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
-
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Subscriptions</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+          <TabsList>
+            <TabsTrigger value="all">Tous</TabsTrigger>
+            <TabsTrigger value="active">Actifs</TabsTrigger>
+            <TabsTrigger value="inactive">Inactifs</TabsTrigger>
+          </TabsList>
+        </Tabs>
         <Button onClick={handleAddClick}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Subscription
+          <Plus className="mr-2 h-4 w-4" /> Nouvel abonnement
         </Button>
       </div>
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {subscriptions.map(subscription => (
-          <SubscriptionCard
-            key={subscription.id}
-            subscription={subscription}
-            onEdit={() => handleEditClick(subscription)}
-            onDelete={() => handleDeleteClick(subscription.id)}
-            onClick={() => handleQuoteClick(subscription.id)}
-          />
-        ))}
-      </div>
-      <AddSubscriptionDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onSubscriptionAdded={loadSubscriptions} />
-      {selectedSubscription && (
-        <EditSubscriptionDialog
-          open={editDialogOpen}
-          onOpenChange={setEditDialogOpen}
-          subscription={selectedSubscription}
-          onSubscriptionUpdated={loadSubscriptions}
+
+      <TabsContent value={activeTab} className="mt-0">
+        <SubscriptionList
+          subscriptions={filteredSubscriptions}
+          onRenew={handleRenew}
+          onCancel={handleCancel}
+          onDelete={handleDelete}
         />
+      </TabsContent>
+
+      {addDialogOpen && (
+        <div>Add Subscription Dialog would be shown here</div>
+      )}
+
+      {editDialogOpen && selectedSubscriptionId && (
+        <div>Edit Subscription Dialog would be shown here</div>
       )}
     </div>
   );

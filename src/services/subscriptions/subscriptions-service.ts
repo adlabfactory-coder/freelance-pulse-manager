@@ -1,160 +1,191 @@
-import { SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '@/types/database';
-import { Subscription, SubscriptionInterval, SubscriptionStatus, SubscriptionPlan } from '@/types/subscription';
 
-/**
- * Service pour la gestion des abonnements
- */
-export const createSubscriptionsService = (supabase: SupabaseClient<Database>) => {
-  /**
-   * Récupérer tous les abonnements
-   */
-  const fetchSubscriptions = async (): Promise<Subscription[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*');
+import { supabase } from '@/lib/supabase-client';
+import { Subscription, SubscriptionStatus } from '@/types/subscription';
 
-      if (error) throw error;
-      return data as Subscription[];
-    } catch (error) {
-      console.error('Error fetching subscriptions:', error);
-      throw error;
-    }
-  };
-
-  /**
-   * Récupérer un abonnement par ID
-   */
-  const fetchSubscriptionById = async (id: string): Promise<Subscription | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data as Subscription | null;
-    } catch (error) {
-      console.error('Error fetching subscription by ID:', error);
-      return null;
-    }
-  };
-
-  /**
-   * Créer un nouvel abonnement
-   */
-  const createSubscription = async (data: Omit<Subscription, 'id'>) => {
-    try {
-    // Convert date objects to ISO strings
-    const startDate = typeof data.startDate === 'string' 
-      ? data.startDate 
-      : data.startDate.toISOString();
-      
-    const endDate = data.endDate 
-      ? (typeof data.endDate === 'string' ? data.endDate : data.endDate.toISOString())
-      : null;
-      
-    const renewalDate = data.renewalDate
-      ? (typeof data.renewalDate === 'string' ? data.renewalDate : data.renewalDate.toISOString())
-      : null;
-
-    const { data: subscription, error } = await supabase
+// Get a single subscription by ID
+export const getSubscriptionById = async (id: string): Promise<Subscription | null> => {
+  try {
+    const { data, error } = await supabase
       .from('subscriptions')
-      .insert({
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        interval: data.interval,
-        start_date: startDate,
-        end_date: endDate,
-        renewal_date: renewalDate,
-        status: data.status,
-        client_id: data.clientId,
-        freelancer_id: data.freelancerId
-      })
-      .select()
+      .select('*')
+      .eq('id', id)
+      .is('deleted_at', null)
       .single();
 
-    if (error) throw error;
-    return subscription;
+    if (error) {
+      console.error('Error fetching subscription:', error);
+      return null;
+    }
+
+    return data as Subscription;
   } catch (error) {
-    console.error('Error creating subscription:', error);
-    throw error;
+    console.error('Exception while fetching subscription:', error);
+    return null;
   }
 };
 
-  /**
-   * Mettre à jour un abonnement
-   */
-  const updateSubscription = async (id: string, data: Partial<Subscription>) => {
-    try {
-    const updateData: any = {
-      name: data.name,
-      description: data.description,
-      price: data.price,
-      interval: data.interval,
-      status: data.status,
-      client_id: data.clientId,
-      freelancer_id: data.freelancerId
-    };
-
-    // Convert dates if they exist
-    if (data.startDate) {
-      updateData.start_date = typeof data.startDate === 'string' ? data.startDate : data.startDate.toISOString();
-    }
-    if (data.endDate) {
-      updateData.end_date = typeof data.endDate === 'string' ? data.endDate : data.endDate.toISOString();
-    }
-    if (data.renewalDate) {
-      updateData.renewal_date = typeof data.renewalDate === 'string' ? data.renewalDate : data.renewalDate.toISOString();
-    }
-
-    // Remove undefined values
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key] === undefined) {
-        delete updateData[key];
-      }
-    });
-
-    const { data: updatedSubscription, error } = await supabase
+// Get all subscriptions
+export const getAllSubscriptions = async (): Promise<Subscription[]> => {
+  try {
+    const { data, error } = await supabase
       .from('subscriptions')
-      .update(updateData)
+      .select('*')
+      .is('deleted_at', null)
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching subscriptions:', error);
+      return [];
+    }
+
+    return data as Subscription[];
+  } catch (error) {
+    console.error('Exception while fetching subscriptions:', error);
+    return [];
+  }
+};
+
+// Create a new subscription
+export const createSubscription = async (subscription: Omit<Subscription, 'id' | 'createdAt' | 'updatedAt'>): Promise<Subscription | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .insert([{
+        ...subscription,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating subscription:', error);
+      return null;
+    }
+
+    return data as Subscription;
+  } catch (error) {
+    console.error('Exception while creating subscription:', error);
+    return null;
+  }
+};
+
+// Update an existing subscription
+export const updateSubscription = async (id: string, subscription: Partial<Subscription>): Promise<Subscription | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .update({
+        ...subscription,
+        updatedAt: new Date()
+      })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
-    return updatedSubscription;
+    if (error) {
+      console.error('Error updating subscription:', error);
+      return null;
+    }
+
+    return data as Subscription;
   } catch (error) {
-    console.error('Error updating subscription:', error);
-    throw error;
+    console.error('Exception while updating subscription:', error);
+    return null;
   }
 };
 
-  /**
-   * Supprimer un abonnement
-   */
-  const deleteSubscription = async (id: string): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .delete()
-        .eq('id', id);
+// Cancel a subscription
+export const cancelSubscription = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        status: SubscriptionStatus.CANCELLED,
+        endDate: new Date(),
+        updatedAt: new Date()
+      })
+      .eq('id', id);
 
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting subscription:', error);
-      throw error;
+    if (error) {
+      console.error('Error cancelling subscription:', error);
+      return false;
     }
-  };
 
-  return {
-    fetchSubscriptions,
-    fetchSubscriptionById,
-    createSubscription,
-    updateSubscription,
-    deleteSubscription
-  };
+    return true;
+  } catch (error) {
+    console.error('Exception while cancelling subscription:', error);
+    return false;
+  }
+};
+
+// Renew a subscription
+export const renewSubscription = async (id: string, months: number = 1): Promise<Subscription | null> => {
+  try {
+    // First, get the current subscription
+    const { data: currentSubscription, error: fetchError } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !currentSubscription) {
+      console.error('Error fetching subscription for renewal:', fetchError);
+      return null;
+    }
+
+    // Calculate new renewal date (1 month from now)
+    const renewalDate = new Date();
+    renewalDate.setMonth(renewalDate.getMonth() + months);
+
+    // Update subscription
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .update({
+        renewalDate,
+        status: SubscriptionStatus.ACTIVE,
+        updatedAt: new Date()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error renewing subscription:', error);
+      return null;
+    }
+
+    return data as Subscription;
+  } catch (error) {
+    console.error('Exception while renewing subscription:', error);
+    return null;
+  }
+};
+
+// Soft delete a subscription
+export const deleteSubscription = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        deleted_at: new Date(),
+        updatedAt: new Date()
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting subscription:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Exception while deleting subscription:', error);
+    return false;
+  }
+};
+
+// Helper function to ensure date is properly handled
+export const ensureDate = (date: string | Date): Date => {
+  return typeof date === 'string' ? new Date(date) : date;
 };

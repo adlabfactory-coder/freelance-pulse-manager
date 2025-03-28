@@ -1,109 +1,108 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { fetchSubscriptionPlans } from '@/services/subscriptions';
-import { SubscriptionPlan } from '@/types';
-import { Loader2 } from 'lucide-react';
-import PlanCard from '@/components/subscriptions/PlanCard';
-import SubscriptionsList from '@/components/subscriptions/SubscriptionsList';
-import SubscriptionFilters from '@/components/subscriptions/SubscriptionFilters';
-
-interface SubscriptionPlansProps {
-  plans: SubscriptionPlan[];
-  loading: boolean;
-  onSelectPlan: (plan: SubscriptionPlan) => void;
-}
-
-const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ plans, loading, onSelectPlan }) => {
-  if (loading) {
-    return (
-      <div className="flex justify-center my-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const activePlans = plans.filter(plan => plan.is_active || plan.isActive);
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {activePlans.map(plan => (
-        <PlanCard key={plan.id} plan={plan} onSelect={() => onSelectPlan(plan)} />
-      ))}
-    </div>
-  );
-};
+import React, { useState, useEffect } from "react";
+import { SubscriptionPlan } from "@/types/subscription";
+import { fetchSubscriptionPlans } from "@/services/subscriptions";
+import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import SubscriptionPlans from "@/components/subscriptions/SubscriptionPlans";
+import SubscriptionsList from "@/components/subscriptions/SubscriptionsList";
+import { useAuth } from "@/hooks/use-auth";
 
 const Subscriptions: React.FC = () => {
   const { toast } = useToast();
+  const { isAdminOrSuperAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>("plans");
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('plans');
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function loadPlans() {
+    const loadPlans = async () => {
       setLoading(true);
       try {
-        const fetchedPlans = await fetchSubscriptionPlans();
-        setPlans(fetchedPlans as SubscriptionPlan[]);
+        const data = await fetchSubscriptionPlans();
+        if (data) {
+          setPlans(data);
+        }
       } catch (error) {
-        console.error('Error loading subscription plans', error);
+        console.error('Error loading subscription plans:', error);
         toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Impossible de charger les plans d\'abonnement'
+          title: 'Erreur',
+          description: 'Impossible de charger les plans d\'abonnement',
+          variant: 'destructive'
         });
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     loadPlans();
-  }, [toast]);
-
-  const handleSelectPlan = (plan: SubscriptionPlan) => {
-    console.log('Selected plan:', plan);
-    // Implémentation à venir : ouvrir un dialogue pour créer un abonnement
-  };
+  }, []);
 
   return (
-    <div className="container mx-auto py-6 max-w-7xl">
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Abonnements</h1>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Abonnements</h2>
+        <p className="text-muted-foreground">
+          Gérez les plans d'abonnement et suivez les abonnements actifs.
+        </p>
+      </div>
 
-      <Tabs defaultValue="plans" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="plans">Plans</TabsTrigger>
-          <TabsTrigger value="subscriptions">Abonnements</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="plans">Plans d'abonnement</TabsTrigger>
+          <TabsTrigger value="subscriptions">Abonnements actifs</TabsTrigger>
+          {isAdminOrSuperAdmin && (
+            <TabsTrigger value="settings" className="flex items-center gap-1">
+              Paramètres <Badge variant="outline" className="ml-1 px-1">Admin</Badge>
+            </TabsTrigger>
+          )}
         </TabsList>
 
-        <TabsContent value="plans">
+        <TabsContent value="plans" className="space-y-4">
           <Card>
-            <CardContent className="pt-6">
-              <SubscriptionPlans 
-                plans={plans} 
-                loading={loading} 
-                onSelectPlan={handleSelectPlan}
-              />
+            <CardHeader>
+              <CardTitle>Plans d'abonnement disponibles</CardTitle>
+              <CardDescription>
+                Choisissez parmi nos différents plans d'abonnement
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <SubscriptionPlans plans={plans} loading={loading} />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="subscriptions">
-          <div className="flex items-center justify-between mb-4">
-            <SubscriptionFilters 
-              filter={filter}
-              onFilterChange={setFilter}
-            />
-            <Button>Nouvel abonnement</Button>
-          </div>
-          <SubscriptionsList 
-            filter={filter}
-          />
+        <TabsContent value="subscriptions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Abonnements</CardTitle>
+              <CardDescription>
+                Liste de tous les abonnements actifs et expirés
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SubscriptionsList />
+            </CardContent>
+          </Card>
         </TabsContent>
+
+        {isAdminOrSuperAdmin && (
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Paramètres des abonnements</CardTitle>
+                <CardDescription>
+                  Configuration des abonnements (réservé aux administrateurs)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Fonctionnalité en cours de développement</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

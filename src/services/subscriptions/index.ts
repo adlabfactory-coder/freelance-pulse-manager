@@ -1,8 +1,8 @@
 
-// Re-export subscription service functions from appropriate modules
+// Import subscription service functions from appropriate modules
 import { 
-  fetchSubscriptionById,
-  fetchAllSubscriptions as fetchSubscriptions,
+  getSubscriptionById as fetchSubscriptionById,
+  getAllSubscriptions as fetchAllSubscriptions,
   createSubscription,
   updateSubscription,
   cancelSubscription,
@@ -19,7 +19,7 @@ import {
 export {
   fetchSubscriptionPlans,
   fetchSubscriptionById, 
-  fetchSubscriptions, 
+  fetchAllSubscriptions as fetchSubscriptions, 
   createSubscription,
   updateSubscription,
   cancelSubscription,
