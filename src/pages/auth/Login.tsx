@@ -8,27 +8,27 @@ import LoginForm, { LoginFormData } from "@/components/auth/LoginForm";
 import DemoLoginOptions, { mockData } from "@/components/auth/DemoLoginOptions";
 
 const LoginPage: React.FC = () => {
-  const { signIn, isAuthenticated } = useAuth();
+  const { signIn, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(false);
 
   // État pour stocker la page d'origine
   const from = location.state?.from?.pathname || "/dashboard";
 
-  // Rediriger si déjà authentifié
+  // Rediriger si déjà authentifié - avec une vérification supplémentaire pour s'assurer que le chargement est terminé
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isLoading && isAuthenticated) {
       console.log("Utilisateur déjà authentifié, redirection vers:", from);
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate, from, isLoading]);
 
   // Gestion de la soumission du formulaire
   const handleSubmit = async (data: LoginFormData) => {
     setError(null);
-    setIsLoading(true);
+    setIsFormLoading(true);
 
     try {
       // Configurer les options de persistance en fonction de "Se souvenir de moi"
@@ -44,14 +44,18 @@ const LoginPage: React.FC = () => {
       if (result.success) {
         toast.success("Connexion réussie");
         console.log("Connexion réussie, redirection vers:", from);
-        navigate(from, { replace: true });
+        
+        // Assurer un délai court avant la redirection pour permettre la mise à jour de l'état
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 100);
       } else {
         setError(result.error || "Identifiants invalides");
       }
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue lors de la connexion");
     } finally {
-      setIsLoading(false);
+      setIsFormLoading(false);
     }
   };
 
@@ -81,7 +85,7 @@ const LoginPage: React.FC = () => {
           <LoginForm 
             onSubmit={handleSubmit}
             error={error}
-            isLoading={isLoading}
+            isLoading={isFormLoading}
           />
         </CardContent>
         <CardFooter className="flex flex-col">

@@ -14,14 +14,24 @@ export const useLogout = () => {
    */
   const logout = async () => {
     try {
+      console.log("Début du processus de déconnexion");
       const DEMO_MODE = true; // Même valeur que dans useAuth
+      
+      // Toujours nettoyer le localStorage pour les données d'authentification
+      localStorage.removeItem('auth_persistence');
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('currentUser');
       
       if (DEMO_MODE) {
         // En mode démo, simplement supprimer les données utilisateur et rediriger
         console.log("Déconnexion en mode démo effectuée");
         toast.success("Déconnexion réussie");
-        // Toujours rediriger vers la page de connexion après déconnexion
-        navigate('/auth/login', { replace: true });
+        
+        // Assurer un délai court avant la redirection pour permettre la mise à jour de l'état
+        setTimeout(() => {
+          console.log("Redirection vers /auth/login après déconnexion en mode démo");
+          navigate('/auth/login', { replace: true });
+        }, 100);
         return;
       }
       
@@ -35,14 +45,21 @@ export const useLogout = () => {
       }
       
       console.log("Déconnexion Supabase réussie");
-      // Toujours rediriger explicitement vers la page de connexion
-      navigate('/auth/login', { replace: true });
-      toast.success("Déconnexion réussie");
+      
+      // Assurer un délai court avant la redirection pour permettre la mise à jour de l'état
+      setTimeout(() => {
+        console.log("Redirection vers /auth/login après déconnexion Supabase");
+        navigate('/auth/login', { replace: true });
+        toast.success("Déconnexion réussie");
+      }, 100);
     } catch (err: any) {
       console.error("Erreur lors de la déconnexion:", err);
       toast.error(`Erreur lors de la déconnexion: ${err.message}`);
+      
       // Même en cas d'erreur, rediriger vers la page de connexion
-      navigate('/auth/login', { replace: true });
+      setTimeout(() => {
+        navigate('/auth/login', { replace: true });
+      }, 100);
     }
   };
 

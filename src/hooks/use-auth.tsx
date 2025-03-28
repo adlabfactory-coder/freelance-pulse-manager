@@ -44,11 +44,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkAuth = async () => {
       try {
         if (DEMO_MODE) {
+          // Vérifier si l'utilisateur devrait être connecté
+          const shouldBeLoggedIn = localStorage.getItem('currentUser');
+          
+          if (!shouldBeLoggedIn) {
+            console.log("Mode démo: aucun utilisateur actif trouvé dans localStorage");
+            setUser(null);
+            setIsLoading(false);
+            return;
+          }
+          
           const mockUsers = getMockUsers();
           const defaultUser = mockUsers[0];
           
           console.log("Mode démonstration activé, utilisation d'un utilisateur par défaut:", defaultUser.email);
           setUser(defaultUser);
+          localStorage.setItem('currentUser', JSON.stringify(defaultUser));
           setIsLoading(false);
           
           try {
@@ -125,6 +136,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (mockUser) {
           console.log("Utilisateur de démonstration trouvé:", mockUser.name);
           setUser(mockUser);
+          // Stocker l'utilisateur dans localStorage pour la persistance en mode démo
+          localStorage.setItem('currentUser', JSON.stringify(mockUser));
           toast.success(`Connecté en tant que ${mockUser.name}`);
           return { success: true };
         }
@@ -132,6 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log("Email non reconnu, utilisation de l'admin par défaut");
         const defaultAdmin = mockUsers.find(u => u.role === UserRole.ADMIN) || mockUsers[0];
         setUser(defaultAdmin);
+        localStorage.setItem('currentUser', JSON.stringify(defaultAdmin));
         toast.success(`Connecté en tant que ${defaultAdmin.name}`);
         
         return { success: true };
@@ -227,7 +241,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signUp,
     logout: async () => {
       console.log("Appel à la fonction de déconnexion depuis useAuth");
+      // Nettoyer immédiatement l'état d'authentification
       setUser(null);
+      setSession(null);
+      
+      // En mode démo, on supprime l'utilisateur du localStorage
+      if (DEMO_MODE) {
+        localStorage.removeItem('currentUser');
+      }
+      
+      // Appeler le hook de déconnexion pour gérer la déconnexion Supabase et la navigation
       await logoutFn();
     },
   };

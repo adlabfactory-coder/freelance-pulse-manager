@@ -12,9 +12,13 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
   const { logout } = useAuth();
   
   const handleLogout = async () => {
-    console.log("Bouton de déconnexion cliqué");
-    await logout();
-    // Le hook useLogout s'occupe de la redirection vers la page de connexion
+    console.log("Bouton de déconnexion cliqué dans SidebarFooter");
+    try {
+      await logout();
+      // Le processus complet de déconnexion est géré par le hook useLogout
+    } catch (err) {
+      console.error("Erreur lors de la déconnexion depuis SidebarFooter:", err);
+    }
   };
 
   return (

@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { UserRole } from "@/types";
+import { useEffect } from "react";
 
 interface ProtectedRouteProps {
   requiredRoles?: string[];
@@ -11,6 +12,13 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) => {
   const { isAuthenticated, isLoading, user, isAdminOrSuperAdmin } = useAuth();
   const location = useLocation();
+
+  // Vérification de sécurité supplémentaire pour s'assurer que l'utilisateur est authentifié
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      console.log("ProtectedRoute: Utilisateur non authentifié, redirection nécessaire");
+    }
+  }, [isLoading, isAuthenticated]);
 
   // Afficher un spinner pendant le chargement
   if (isLoading) {

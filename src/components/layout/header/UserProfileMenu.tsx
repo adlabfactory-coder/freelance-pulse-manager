@@ -23,8 +23,12 @@ const UserProfileMenu: React.FC = () => {
   
   const handleLogout = async () => {
     console.log("Bouton de déconnexion UserProfileMenu cliqué");
-    await logout();
-    // Le hook useLogout s'occupe de la redirection vers la page de connexion
+    try {
+      await logout();
+      // Le processus complet de déconnexion est géré par le hook useLogout
+    } catch (err) {
+      console.error("Erreur lors de la déconnexion depuis UserProfileMenu:", err);
+    }
   };
 
   const handleExternalNavigation = (url: string) => {
