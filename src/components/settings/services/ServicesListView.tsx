@@ -86,11 +86,11 @@ const ServicesListView: React.FC<ServicesListViewProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {services.map(service => (
+            {services.map((service) => (
               <TableRow key={service.id}>
                 <TableCell className="font-medium">{service.name}</TableCell>
                 <TableCell>{service.type}</TableCell>
-                <TableCell>{formatCurrency(service.price, 'MAD')}</TableCell>
+                <TableCell>{formatCurrency(service.price)}</TableCell>
                 <TableCell>
                   <Badge
                     variant={service.is_active ? "success" : "secondary"}
