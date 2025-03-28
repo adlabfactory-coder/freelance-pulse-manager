@@ -18,15 +18,8 @@ import {
 } from '@/components/ui/popover';
 import { useAuth } from '@/hooks/use-auth';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { LucideIcon } from 'lucide-react';
+import { NavItem } from '@/types/navigation';
 import * as Icons from 'lucide-react';
-import { UserRole } from '@/types';
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: LucideIcon;
-}
 
 const NavigationMenu: React.FC = () => {
   const { user, role, isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
@@ -41,59 +34,34 @@ const NavigationMenu: React.FC = () => {
     setNavMenuOpen(false);
   };
 
-  // Navigation items based on role
-  const getNavItems = (): NavItem[] => {
-    const allNavItems: NavItem[] = [
-      { title: "Tableau de bord", href: "/dashboard", icon: Icons.Home },
-      { title: "Contacts", href: "/contacts", icon: Icons.Users },
-      { title: "Rendez-vous", href: "/appointments", icon: Icons.Calendar },
-      { title: "Devis", href: "/quotes", icon: Icons.FileText },
-      { title: "Abonnements", href: "/subscriptions", icon: Icons.FileSpreadsheet },
-      { title: "Commissions", href: "/commissions", icon: Icons.BarChart },
-      { title: "Rapports", href: "/reports", icon: Icons.PieChart },
-      { title: "Paramètres", href: "/settings", icon: Icons.Settings },
-    ];
-    
-    // Super Admin specific items
-    if (isSuperAdmin) {
-      allNavItems.push(
-        { title: "Administration", href: "/admin", icon: Icons.Shield },
-        { title: "Audit", href: "/audit", icon: Icons.Layers }
-      );
-    } else if (role === UserRole.ADMIN) {
-      allNavItems.push(
-        { title: "Administration", href: "/admin", icon: Icons.Shield }
-      );
-    }
-    
-    // Super Admin has access to everything
-    if (isSuperAdmin) {
-      return allNavItems;
-    } 
-    // Regular admin access
-    else if (role === UserRole.ADMIN) {
-      return allNavItems.filter(item => 
-        !["/audit"].includes(item.href)
-      );
-    } else if (role === UserRole.ACCOUNT_MANAGER) {
-      // Accès pour les chargés de compte
-      return allNavItems.filter(item => 
-        ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
-      );
-    } else if (role === UserRole.FREELANCER) {
-      // Accès pour les freelancers
-      return allNavItems.filter(item => 
-        ["/dashboard", "/contacts", "/appointments", "/quotes", "/commissions", "/settings"].includes(item.href)
-      );
-    } else {
-      // Accès minimum par défaut si rôle non défini
-      return allNavItems.filter(item => 
-        ["/dashboard", "/contacts", "/appointments", "/quotes"].includes(item.href)
-      );
-    }
-  };
-
-  const navItems = getNavItems();
+  // Navigation items - identiques à ceux définis dans Navigation.tsx
+  const navItems: NavItem[] = [
+    { title: "Tableau de bord", href: "/dashboard", icon: Icons.Home },
+    { title: "Contacts", href: "/contacts", icon: Icons.Users },
+    { title: "Rendez-vous", href: "/appointments", icon: Icons.Calendar },
+    { title: "Devis", href: "/quotes", icon: Icons.FileText },
+    { title: "Commissions", href: "/commissions", icon: Icons.BarChart },
+  ];
+  
+  // Éléments réservés aux administrateurs et super administrateurs
+  const adminNavItems: NavItem[] = [
+    { title: "Abonnements", href: "/subscriptions", icon: Icons.FileSpreadsheet },
+    { title: "Rapports", href: "/reports", icon: Icons.PieChart },
+  ];
+  
+  // Paramètres disponibles pour tous
+  const settingsNavItem: NavItem = { title: "Paramètres", href: "/settings", icon: Icons.Settings };
+  
+  // Construire la navigation en fonction du rôle
+  let visibleItems = [...navItems];
+  
+  // Ajouter les éléments admin si l'utilisateur est admin ou super admin
+  if (isAdminOrSuperAdmin) {
+    visibleItems = [...visibleItems, ...adminNavItems];
+  }
+  
+  // Ajouter l'item paramètres pour tous
+  visibleItems = [...visibleItems, settingsNavItem];
 
   return (
     <>
@@ -107,7 +75,7 @@ const NavigationMenu: React.FC = () => {
         <DropdownMenuContent align="start" className="w-56">
           <DropdownMenuLabel>Menu de navigation</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {navItems.map((item) => (
+          {visibleItems.map((item) => (
             <DropdownMenuItem key={item.href} onClick={() => handleNavigation(item.href)}>
               <item.icon className="mr-2 h-4 w-4" />
               <span>{item.title}</span>
@@ -125,7 +93,7 @@ const NavigationMenu: React.FC = () => {
         </PopoverTrigger>
         <PopoverContent className="w-64" align="start">
           <div className="grid gap-1">
-            {navItems.map((item) => (
+            {visibleItems.map((item) => (
               <Button 
                 key={item.href} 
                 variant="ghost" 

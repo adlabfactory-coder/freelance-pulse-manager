@@ -23,7 +23,10 @@ interface SettingsContentProps {
 const SettingsContent: React.FC<SettingsContentProps> = ({ onSelectUser, currentUser }) => {
   const location = useLocation();
   const pathSegments = location.pathname.split("/");
-  const currentSection = pathSegments[pathSegments.length - 1];
+  const currentSection = pathSegments[pathSegments.length - 1] === "settings" 
+    ? "profile"  // Default to profile if just /settings
+    : pathSegments[pathSegments.length - 1];
+    
   const { isAdminOrSuperAdmin, isSuperAdmin } = useAuth();
 
   useEffect(() => {
@@ -89,9 +92,8 @@ const SettingsContent: React.FC<SettingsContentProps> = ({ onSelectUser, current
         return <UserManagerSettings />;
       case "audit":
         return <AuditSettings />;
-      case "settings": // Page par défaut
       default:
-        return <CompanySettings />;
+        return <UserProfileSettings currentUser={currentUser} />;
     }
   };
 

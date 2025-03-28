@@ -1,6 +1,38 @@
 
 import { Quote } from "@/types/quote";
 import { formatCurrency, formatDate } from "@/utils/format";
+import { supabase } from "@/lib/supabase-client";
+
+interface AgencyInfo {
+  legal_name: string;
+  registration_number: string;
+  tax_id: string;
+  capital: string;
+  bank_account: string;
+  bank_name: string;
+}
+
+/**
+ * Récupère les informations de l'agence depuis la base de données
+ */
+const getAgencyInfo = async (): Promise<AgencyInfo | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("agency_info")
+      .select("*")
+      .single();
+    
+    if (error) {
+      console.error("Erreur lors de la récupération des informations de l'agence:", error);
+      return null;
+    }
+    
+    return data as AgencyInfo;
+  } catch (error) {
+    console.error("Exception lors de la récupération des informations de l'agence:", error);
+    return null;
+  }
+};
 
 /**
  * Génère un PDF à partir d'un devis
@@ -8,6 +40,9 @@ import { formatCurrency, formatDate } from "@/utils/format";
  */
 export const generateQuotePDF = async (quote: Quote, contactName = "", freelancerName = ""): Promise<void> => {
   try {
+    // Récupérer les informations de l'agence
+    const agencyInfo = await getAgencyInfo();
+    
     // Créer un élément de contenu temporaire pour le PDF
     const tempElement = document.createElement('div');
     tempElement.className = 'print-only';
@@ -70,6 +105,16 @@ export const generateQuotePDF = async (quote: Quote, contactName = "", freelance
         <div style="margin-top: 30px;">
           <h3>Notes:</h3>
           <p style="white-space: pre-line;">${quote.notes}</p>
+        </div>
+      ` : ''}
+      ${agencyInfo ? `
+        <div style="margin-top: 30px; text-align: center; border-top: 1px solid #ddd; padding-top: 15px;">
+          <p style="font-size: 12px; margin: 3px 0;">${agencyInfo.legal_name || 'AdLab Factory'}</p>
+          ${agencyInfo.registration_number ? `<p style="font-size: 12px; margin: 3px 0;">RC: ${agencyInfo.registration_number}</p>` : ''}
+          ${agencyInfo.tax_id ? `<p style="font-size: 12px; margin: 3px 0;">IF: ${agencyInfo.tax_id}</p>` : ''}
+          ${agencyInfo.capital ? `<p style="font-size: 12px; margin: 3px 0;">Capital: ${agencyInfo.capital}</p>` : ''}
+          ${agencyInfo.bank_name && agencyInfo.bank_account ? 
+            `<p style="font-size: 12px; margin: 3px 0;">RIB: ${agencyInfo.bank_account} | ${agencyInfo.bank_name}</p>` : ''}
         </div>
       ` : ''}
     `;

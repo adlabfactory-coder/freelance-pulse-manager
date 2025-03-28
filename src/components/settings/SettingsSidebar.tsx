@@ -46,8 +46,8 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
     { href: "/settings/security", icon: ShieldAlert, label: "Sécurité" },
     // Liens administratifs
     { href: "/settings/agency", icon: Building, label: "Agence", requiresAdmin: true },
-    { href: "/settings/account-managers", icon: Briefcase, label: "Chargés d'affaires", requiresAdmin: true },
     { href: "/settings/freelancers", icon: BarChart4, label: "Freelancers", requiresAdmin: true },
+    { href: "/settings/account-managers", icon: Briefcase, label: "Chargés d'affaires", requiresAdmin: true },
     // Liens super administrateur
     { href: "/settings/admin", icon: ShieldCheck, label: "Administration", requiresSuperAdmin: true },
     { href: "/settings/audit", icon: ScrollText, label: "Audit", requiresSuperAdmin: true },
