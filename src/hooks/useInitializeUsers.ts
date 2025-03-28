@@ -9,16 +9,20 @@ export const useInitializeUsers = () => {
   const [error, setError] = useState<string | null>(null);
 
   const initializeUsers = async () => {
-    if (isInitializing || isInitialized) return;
+    if (isInitializing) return;
     
     try {
       setIsInitializing(true);
       setError(null);
       
+      console.log("🚀 Démarrage de l'initialisation des utilisateurs...");
       const result = await initializeTestUsers();
+      console.log("📊 Résultat de l'initialisation:", result);
       
       if (result.success) {
-        toast.success(`${result.successCount} utilisateurs créés/mis à jour avec succès`);
+        toast.success(`${result.successCount} utilisateurs créés/mis à jour avec succès`, {
+          description: "Les profils utilisateurs ont été initialisés"
+        });
         setIsInitialized(true);
       } else {
         setError(`${result.errorCount} erreurs rencontrées pendant l'initialisation`);
@@ -27,6 +31,7 @@ export const useInitializeUsers = () => {
         });
       }
     } catch (err: any) {
+      console.error("❌ Erreur lors de l'initialisation des utilisateurs:", err);
       setError(err.message || 'Une erreur inconnue est survenue');
       toast.error('Erreur lors de l\'initialisation des utilisateurs');
     } finally {
@@ -34,10 +39,17 @@ export const useInitializeUsers = () => {
     }
   };
 
+  // Fonction pour réinitialiser l'état pour permettre une nouvelle tentative
+  const reset = () => {
+    setIsInitialized(false);
+    setError(null);
+  };
+
   return {
     isInitializing,
     isInitialized,
     error,
-    initializeUsers
+    initializeUsers,
+    reset
   };
 };

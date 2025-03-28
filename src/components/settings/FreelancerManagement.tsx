@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase-client";
 import { User, UserRole } from "@/types";
 import { toast } from "sonner";
-import { Edit, PlusCircle, Loader2, Trash2 } from "lucide-react";
+import { Edit, PlusCircle, Loader2, Trash2, RefreshCw } from "lucide-react";
 import CreateFreelancerForm from "./CreateFreelancerForm";
 import { useAuth } from "@/hooks/use-auth";
+import { useInitializeUsers } from "@/hooks/useInitializeUsers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoCircle } from "lucide-react";
 
 interface Freelancer {
   id: string;
@@ -34,6 +37,13 @@ const FreelancerManagement: React.FC = () => {
   const [freelancerToDelete, setFreelancerToDelete] = useState<string | null>(null);
   const [deletingFreelancer, setDeletingFreelancer] = useState(false);
   const { isAdminOrSuperAdmin } = useAuth();
+  const { 
+    isInitializing, 
+    isInitialized, 
+    error: initError, 
+    initializeUsers, 
+    reset: resetInitialization 
+  } = useInitializeUsers();
 
   useEffect(() => {
     if (isAdminOrSuperAdmin) {
@@ -51,6 +61,7 @@ const FreelancerManagement: React.FC = () => {
 
       if (error) throw error;
 
+      console.log("Freelancers récupérés:", data);
       setFreelancers(data || []);
     } catch (error: any) {
       console.error("Erreur lors de la récupération des freelances:", error);
@@ -104,6 +115,17 @@ const FreelancerManagement: React.FC = () => {
     toast.success(`Le freelance ${newFreelancer.name} a été ajouté avec succès`);
   };
 
+  const handleRefresh = async () => {
+    await fetchFreelancers();
+    toast.success("Liste des freelances actualisée");
+  };
+
+  const handleInitializeUsers = async () => {
+    await initializeUsers();
+    // Rafraîchir la liste des freelances après initialisation
+    await fetchFreelancers();
+  };
+
   if (!isAdminOrSuperAdmin) {
     return (
       <Card>
@@ -127,13 +149,57 @@ const FreelancerManagement: React.FC = () => {
               Liste des freelances ayant accès à la plateforme
             </CardDescription>
           </div>
-          <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            {showCreateForm ? "Annuler" : "Ajouter un freelance"}
-          </Button>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+            <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {showCreateForm ? "Annuler" : "Ajouter un freelance"}
+            </Button>
+          </div>
         </CardHeader>
         
         <CardContent>
+          {/* Bouton d'initialisation des utilisateurs */}
+          <div className="mb-6">
+            <Alert variant="default">
+              <InfoCircle className="h-4 w-4" />
+              <AlertTitle>Initialisation des utilisateurs</AlertTitle>
+              <AlertDescription className="flex flex-col gap-2">
+                <p>Vous pouvez créer automatiquement les utilisateurs standards (freelancers, chargés de compte, administrateurs)</p>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleInitializeUsers} 
+                    disabled={isInitializing}
+                    variant="default"
+                  >
+                    {isInitializing ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Initialisation en cours...
+                      </>
+                    ) : (
+                      "Initialiser les utilisateurs"
+                    )}
+                  </Button>
+                  {isInitialized && (
+                    <Button variant="outline" onClick={resetInitialization}>
+                      Réinitialiser
+                    </Button>
+                  )}
+                </div>
+                {initError && (
+                  <p className="text-destructive text-sm">{initError}</p>
+                )}
+                {isInitialized && (
+                  <p className="text-green-600 text-sm">Utilisateurs initialisés avec succès</p>
+                )}
+              </AlertDescription>
+            </Alert>
+          </div>
+          
           {showCreateForm && (
             <div className="mb-6">
               <CreateFreelancerForm onSuccess={handleCreateSuccess} />

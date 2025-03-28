@@ -7,6 +7,7 @@ interface UserCreationResult {
   successCount: number;
   errorCount: number;
   errors?: Error[];
+  messages?: string[];
 }
 
 export const initializeTestUsers = async (): Promise<UserCreationResult> => {
@@ -15,12 +16,15 @@ export const initializeTestUsers = async (): Promise<UserCreationResult> => {
     successCount: 0,
     errorCount: 0,
     errors: [],
+    messages: [],
   };
   
   try {
     // Arrays to hold our user creation operations
     const userOperations = [];
     const createdUsers = [];
+    
+    console.log("🏁 Démarrage de l'initialisation des utilisateurs...");
     
     // Create 20 freelancer accounts
     for (let i = 1; i <= 20; i++) {
@@ -68,9 +72,13 @@ export const initializeTestUsers = async (): Promise<UserCreationResult> => {
       role: UserRole.SUPER_ADMIN,
     });
     
+    console.log(`📋 ${userOperations.length} utilisateurs à créer ou mettre à jour...`);
+    
     // Create all the users in the database
     for (const userOp of userOperations) {
       try {
+        console.log(`🔄 Traitement de l'utilisateur ${userOp.email}...`);
+        
         const { data: existingUser } = await supabase
           .from('users')
           .select('id, email')
@@ -78,6 +86,7 @@ export const initializeTestUsers = async (): Promise<UserCreationResult> => {
           .single();
         
         if (existingUser) {
+          console.log(`📝 L'utilisateur ${userOp.email} existe déjà, mise à jour...`);
           // Update existing user
           const { error } = await supabase
             .from('users')
@@ -87,12 +96,14 @@ export const initializeTestUsers = async (): Promise<UserCreationResult> => {
           if (!error) {
             result.successCount++;
             createdUsers.push(userOp.email);
+            result.messages?.push(`Utilisateur ${userOp.email} mis à jour avec succès`);
           } else {
-            console.error(`Error updating user ${userOp.email}:`, error);
+            console.error(`❌ Erreur lors de la mise à jour de l'utilisateur ${userOp.email}:`, error);
             result.errorCount++;
-            result.errors?.push(new Error(`Failed to update ${userOp.email}: ${error.message}`));
+            result.errors?.push(new Error(`Échec de mise à jour de ${userOp.email}: ${error.message}`));
           }
         } else {
+          console.log(`➕ Création d'un nouvel utilisateur ${userOp.email}...`);
           // Create new user
           const { error } = await supabase
             .from('users')
@@ -107,25 +118,26 @@ export const initializeTestUsers = async (): Promise<UserCreationResult> => {
           if (!error) {
             result.successCount++;
             createdUsers.push(userOp.email);
+            result.messages?.push(`Utilisateur ${userOp.email} créé avec succès`);
           } else {
-            console.error(`Error creating user ${userOp.email}:`, error);
+            console.error(`❌ Erreur lors de la création de l'utilisateur ${userOp.email}:`, error);
             result.errorCount++;
-            result.errors?.push(new Error(`Failed to create ${userOp.email}: ${error.message}`));
+            result.errors?.push(new Error(`Échec de création de ${userOp.email}: ${error.message}`));
           }
         }
       } catch (error: any) {
-        console.error(`Error processing user ${userOp.email}:`, error);
+        console.error(`❌ Erreur lors du traitement de l'utilisateur ${userOp.email}:`, error);
         result.errorCount++;
-        result.errors?.push(new Error(`Failed to process ${userOp.email}: ${error.message}`));
+        result.errors?.push(new Error(`Échec du traitement de ${userOp.email}: ${error.message}`));
       }
     }
     
     result.success = result.errorCount === 0;
-    console.log(`Created/updated ${result.successCount} users with ${result.errorCount} errors`);
+    console.log(`✅ Terminé: ${result.successCount} utilisateurs créés/mis à jour avec ${result.errorCount} erreurs`);
     return result;
     
   } catch (error: any) {
-    console.error("Error in initializeTestUsers:", error);
+    console.error("❌ Erreur dans initializeTestUsers:", error);
     result.success = false;
     result.errorCount++;
     result.errors?.push(error);
