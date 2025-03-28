@@ -1,3 +1,4 @@
+
 import React from "react";
 import { 
   Card, 
@@ -64,9 +65,7 @@ const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
   [UserRole.ACCOUNT_MANAGER]:
     "Gestion des contacts et des devis, accès aux rapports de leur activité, suivi des abonnements.",
   [UserRole.FREELANCER]:
-    "Gestion des contacts assignés, création de devis, suivi de commissions.",
-  [UserRole.USER]:
-    "Accès limité au tableau de bord et informations de base.",
+    "Gestion des contacts assignés, création de devis, suivi de commissions."
 };
 
 export const getUserDescriptionByRole = (role: UserRole): DescriptionProps => {
@@ -114,15 +113,7 @@ export const getUserDescriptionByRole = (role: UserRole): DescriptionProps => {
         "Suivi de commissions",
         "Calendrier des rendez-vous",
       ],
-    },
-    [UserRole.USER]: {
-      title: "Utilisateur",
-      description: "Accès limité à la plateforme",
-      permissions: [
-        "Accès au tableau de bord",
-        "Informations de base",
-      ],
-    },
+    }
   };
 
   return descriptions[role];
@@ -132,8 +123,7 @@ const ROLE_DESC_TEMPLATES: Record<UserRole, string> = {
   [UserRole.SUPER_ADMIN]: "Accès complet à toutes les fonctionnalités",
   [UserRole.ADMIN]: "Gestion administrative et supervision",
   [UserRole.ACCOUNT_MANAGER]: "Suivi clients et gestion commerciale",
-  [UserRole.FREELANCER]: "Prospection et développement commercial",
-  [UserRole.USER]: "Accès utilisateur standard"
+  [UserRole.FREELANCER]: "Prospection et développement commercial"
 };
 
 export const UserProfileTemplates: React.FC<{
@@ -164,12 +154,6 @@ export const UserProfileTemplates: React.FC<{
         title="Super Administrateur"
         description="Profil avec accès complet"
         onClick={() => onSelectTemplate(UserRole.SUPER_ADMIN)}
-      />
-      <UserTemplateCard
-        role={UserRole.USER}
-        title="Utilisateur standard"
-        description="Profil avec accès limité"
-        onClick={() => onSelectTemplate(UserRole.USER)}
       />
     </div>
   );
