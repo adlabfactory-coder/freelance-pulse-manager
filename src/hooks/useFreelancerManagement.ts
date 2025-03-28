@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
@@ -38,13 +39,22 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
       
       const { data, error } = await supabase
         .from("users")
-        .select("*")
+        .select("id, name, email, created_at")
         .eq("role", "freelancer");
 
       if (error) throw error;
 
       console.log("Freelancers récupérés:", data);
-      setFreelancers(data || []);
+      
+      // Transformer les données pour inclure createdAt
+      const formattedFreelancers = data?.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.created_at // Récupérer la date de création
+      })) || [];
+      
+      setFreelancers(formattedFreelancers);
     } catch (error: any) {
       console.error("Erreur lors de la récupération des freelances:", error);
       toast.error("Impossible de récupérer la liste des freelances");

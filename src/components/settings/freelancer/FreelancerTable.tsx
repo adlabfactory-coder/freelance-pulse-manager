@@ -49,7 +49,7 @@ const FreelancerTable: React.FC<FreelancerTableProps> = ({
               <TableCell>{freelancer.email}</TableCell>
               <TableCell>
                 {freelancer.createdAt 
-                  ? new Date(freelancer.createdAt).toLocaleDateString() 
+                  ? new Date(freelancer.createdAt).toLocaleDateString('fr-FR')
                   : "Non disponible"}
               </TableCell>
               <TableCell className="text-right">
