@@ -4,7 +4,8 @@ import { User } from "@/types";
 import { UserRole } from "@/types/roles";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { fetchUserById, updateUser } from "@/services/user";
+import { fetchUserById } from "@/services/user";
+import { updateUser } from "@/services/user/update-user";
 
 export const useUserProfileData = (userId?: string) => {
   const { user: currentUser, isLoading: authLoading } = useAuth();
@@ -70,17 +71,17 @@ export const useUserProfileData = (userId?: string) => {
 
   // Fonction pour sauvegarder les modifications
   const saveChanges = async () => {
-    if (!user) return;
+    if (!user) return false;
     
     setIsSaving(true);
     try {
-      const success = await updateUser(user.id, {
+      const result = await updateUser(user.id, {
         name,
         email,
         role,
       });
       
-      if (success) {
+      if (result.success) {
         setUser({
           ...user,
           name,
@@ -94,7 +95,7 @@ export const useUserProfileData = (userId?: string) => {
         });
         return true;
       } else {
-        throw new Error("Échec de la mise à jour du profil");
+        throw new Error(result.error || "Échec de la mise à jour du profil");
       }
     } catch (err: any) {
       toast({

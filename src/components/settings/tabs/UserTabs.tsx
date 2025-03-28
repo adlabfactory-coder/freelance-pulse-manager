@@ -92,7 +92,7 @@ const UserProfileTabs: React.FC<UserProfileTabsProps> = ({ onSelectUser }) => {
         role: userRole
       });
       
-      if (result) {
+      if (result.success) {
         toast({
           title: "Profil mis à jour",
           description: "Les informations ont été enregistrées avec succès.",

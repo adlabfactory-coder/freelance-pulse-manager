@@ -2,11 +2,12 @@
 import { supabase } from '@/lib/supabase';
 import { User, UserRole } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { OperationResult } from '@/hooks/supabase';
 
 /**
  * Met à jour les informations d'un utilisateur
  */
-export const updateUser = async (userId: string, userData: Partial<User>): Promise<boolean> => {
+export const updateUser = async (userId: string, userData: Partial<User>): Promise<OperationResult> => {
   try {
     // Pour les utilisateurs de démo, simuler une mise à jour réussie
     if (userId === "1" || userId === "2" || userId === "3" || 
@@ -17,7 +18,7 @@ export const updateUser = async (userId: string, userData: Partial<User>): Promi
         title: "Succès",
         description: "Les informations de l'utilisateur ont été mises à jour.",
       });
-      return true;
+      return { success: true };
     }
     
     const { error } = await supabase
@@ -32,21 +33,21 @@ export const updateUser = async (userId: string, userData: Partial<User>): Promi
         title: "Erreur",
         description: "Impossible de mettre à jour les informations de l'utilisateur.",
       });
-      return false;
+      return { success: false, error: error.message };
     }
     
     toast({
       title: "Succès",
       description: "Les informations de l'utilisateur ont été mises à jour.",
     });
-    return true;
-  } catch (error) {
+    return { success: true };
+  } catch (error: any) {
     console.error('Erreur lors de la mise à jour de l\'utilisateur:', error);
     toast({
       variant: "destructive",
       title: "Erreur",
       description: "Impossible de mettre à jour les informations de l'utilisateur.",
     });
-    return false;
+    return { success: false, error: error.message };
   }
 };

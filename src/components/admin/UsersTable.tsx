@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { User, UserRole } from '@/types';
 import UserProfile from '@/components/settings/UserProfile';
 import { checkSupabaseConnection } from '@/lib/supabase-client';
+import { OperationResult } from '@/hooks/supabase';
 
 interface UsersTableProps {
   users: User[];
