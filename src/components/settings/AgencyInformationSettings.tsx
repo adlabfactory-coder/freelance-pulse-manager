@@ -27,10 +27,6 @@ const agencyFormSchema = z.object({
 
 type AgencyFormData = z.infer<typeof agencyFormSchema>;
 
-interface AgencyData extends AgencyFormData {
-  id?: string;
-}
-
 const AgencyInformationSettings: React.FC = () => {
   const { isAdminOrSuperAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -155,24 +151,6 @@ const AgencyInformationSettings: React.FC = () => {
       setSaving(false);
     }
   };
-
-  if (!isAdminOrSuperAdmin) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Paramètres de l'agence</CardTitle>
-          <CardDescription>
-            Gérer les informations de l'agence qui apparaîtront sur les documents générés
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6 text-muted-foreground">
-            Vous n'avez pas les droits pour accéder à ces paramètres.
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
