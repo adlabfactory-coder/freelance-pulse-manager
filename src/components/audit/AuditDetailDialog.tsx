@@ -1,18 +1,18 @@
 
 import React from "react";
-import { AuditLog } from "@/types/audit";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { AuditLog } from "@/types/audit";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, Clock, FileText, Info, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
 
 interface AuditDetailDialogProps {
   log: AuditLog | null;
@@ -23,119 +23,96 @@ interface AuditDetailDialogProps {
 const AuditDetailDialog: React.FC<AuditDetailDialogProps> = ({
   log,
   open,
-  onOpenChange
+  onOpenChange,
 }) => {
   if (!log) return null;
 
-  const formatDateTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return new Intl.DateTimeFormat('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).format(date);
-  };
-
-  const getActionBadgeColor = (action: string) => {
-    switch (action) {
-      case 'create':
-        return 'bg-green-500';
-      case 'update':
-        return 'bg-blue-500';
-      case 'delete':
-        return 'bg-red-500';
-      case 'login':
-        return 'bg-purple-500';
-      case 'logout':
-        return 'bg-gray-500';
-      default:
-        return 'bg-secondary';
-    }
-  };
-
-  const getModuleIcon = (module: string) => {
-    switch (module) {
-      case 'users':
-        return <User className="h-4 w-4" />;
-      case 'contacts':
-        return <ClipboardList className="h-4 w-4" />;
-      case 'quotes':
-        return <FileText className="h-4 w-4" />;
-      case 'auth':
-        return <User className="h-4 w-4" />;
-      default:
-        return <Info className="h-4 w-4" />;
-    }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copié dans le presse-papier");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Détails du journal d'audit</DialogTitle>
+          <DialogTitle>Détails de l'entrée d'audit</DialogTitle>
           <DialogDescription>
-            Informations détaillées sur l'activité enregistrée
+            Événement enregistré le {new Date(log.timestamp).toLocaleString()}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-6 py-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={log.avatar || ""} />
-              <AvatarFallback className="text-lg">{log.user.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="font-medium text-lg">{log.user}</div>
-              <div className="text-sm text-muted-foreground">{log.role}</div>
+        <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">ID</span>
+            <div className="flex items-center">
+              <span className="font-mono text-sm truncate">{log.id}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 ml-1"
+                onClick={() => copyToClipboard(log.id)}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">Horodatage</div>
-              <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span>{formatDateTime(log.timestamp)}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">Module</div>
-              <div className="flex items-center">
-                {getModuleIcon(log.module)}
-                <span className="ml-2 capitalize">{log.module}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">Action</div>
-              <Badge className={getActionBadgeColor(log.action)}>
-                {log.action}
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground">ID de journal</div>
-              <div className="text-sm">{log.id}</div>
-            </div>
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">Horodatage</span>
+            <span>{new Date(log.timestamp).toLocaleString()}</span>
           </div>
 
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-muted-foreground">Détails</div>
-            <div className="rounded-md bg-muted p-4 text-sm">
-              {log.details}
-            </div>
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">Utilisateur</span>
+            <span>{log.user_email || "Système"}</span>
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">Rôle</span>
+            <span>{log.user_role || "N/A"}</span>
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">Module</span>
+            <Badge>{log.module}</Badge>
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">Action</span>
+            <Badge>{log.action}</Badge>
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">Adresse IP</span>
+            <span className="font-mono">{log.ip_address}</span>
+          </div>
+
+          <div className="flex flex-col space-y-1">
+            <span className="text-xs text-muted-foreground">User Agent</span>
+            <span className="text-xs truncate">{log.user_agent}</span>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fermer
-          </Button>
-        </DialogFooter>
+        <Separator />
+
+        <div className="pt-4">
+          <h3 className="mb-2 text-sm font-medium">Détails</h3>
+          <div className="bg-muted p-3 rounded-md">
+            <p className="text-sm whitespace-pre-wrap">{log.details}</p>
+          </div>
+        </div>
+
+        {log.metadata && Object.keys(log.metadata).length > 0 && (
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Métadonnées</h3>
+            <div className="bg-muted p-3 rounded-md">
+              <pre className="text-xs overflow-auto">
+                {JSON.stringify(log.metadata, null, 2)}
+              </pre>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

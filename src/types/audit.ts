@@ -2,22 +2,21 @@
 export interface AuditLog {
   id: string;
   timestamp: string;
-  user: string;
-  role: string;
-  avatar: string | null;
-  module: string;
-  action: string;
+  user_id?: string;
+  user_email?: string;
+  user_role?: string;
+  action: string; // 'create', 'read', 'update', 'delete', 'login', 'logout', 'error', etc.
+  module: string; // 'users', 'contacts', 'quotes', 'auth', etc.
   details: string;
+  ip_address?: string;
+  user_agent?: string;
+  metadata?: Record<string, any>;
 }
 
-export enum AuditAction {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LOGIN = 'login',
-  LOGOUT = 'logout',
-  PERMISSIONS_CHANGE = 'permissions_change',
-  SETTINGS_CHANGE = 'settings_change',
-  OTHER = 'other'
-}
-
+export type AuditFilter = {
+  startDate: Date;
+  endDate: Date;
+  module?: string;
+  action?: string;
+  searchTerm?: string;
+};
