@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
 import { Service } from '@/types/service';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ServiceForm from './ServiceForm';
 
 interface ServiceFormViewProps {
@@ -15,30 +15,18 @@ const ServiceFormView: React.FC<ServiceFormViewProps> = ({
   onSave, 
   onCancel 
 }) => {
-  const [isSaving, setIsSaving] = useState(false);
-
-  const handleSave = async (serviceData: Service) => {
-    setIsSaving(true);
-    try {
-      await onSave(serviceData);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+  const isEditing = !!service.id;
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {service.id ? "Modifier le service" : "Ajouter un service"}
-        </CardTitle>
+        <CardTitle>{isEditing ? 'Modifier le service' : 'Ajouter un nouveau service'}</CardTitle>
       </CardHeader>
       <CardContent>
         <ServiceForm 
-          service={service} 
-          onSave={handleSave} 
+          service={service}
+          onSave={onSave}
           onCancel={onCancel}
-          isSaving={isSaving}
         />
       </CardContent>
     </Card>

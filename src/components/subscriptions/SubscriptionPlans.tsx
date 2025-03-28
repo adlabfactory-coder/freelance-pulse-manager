@@ -1,85 +1,98 @@
 
-import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Check, Loader2 } from "lucide-react";
-import { SubscriptionPlan } from "@/types/subscription";
-import { formatCurrency } from "@/utils/format";
+import React from 'react';
+import { SubscriptionPlan } from '@/types/subscription';
+import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { formatCurrency } from '@/utils/format';
+import SubscriptionIntervalLabel from './SubscriptionIntervalLabel';
 
-export interface SubscriptionPlansProps {
+interface SubscriptionPlansProps {
   plans: SubscriptionPlan[];
   loading: boolean;
-  onSelectPlan?: (plan: SubscriptionPlan) => void;
+  onSelectPlan: (plan: SubscriptionPlan) => void;
 }
 
-const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ plans, loading, onSelectPlan }) => {
+const SubscriptionPlans: React.FC<SubscriptionPlansProps> = ({ 
+  plans, 
+  loading,
+  onSelectPlan 
+}) => {
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="border rounded-lg shadow-sm p-6">
+            <Skeleton className="h-8 w-3/4 mb-4" />
+            <Skeleton className="h-12 w-1/2 mb-6" />
+            <div className="space-y-2 mb-6">
+              {[...Array(4)].map((_, j) => (
+                <Skeleton key={j} className="h-4 w-full" />
+              ))}
+            </div>
+            <Skeleton className="h-10 w-full mt-auto" />
+          </div>
+        ))}
       </div>
     );
   }
 
   if (plans.length === 0) {
     return (
-      <div className="text-center p-8">
-        <p className="text-muted-foreground">Aucun plan d'abonnement disponible pour le moment.</p>
+      <div className="flex justify-center items-center p-12">
+        <p className="text-muted-foreground text-center">
+          Aucun plan d'abonnement disponible.
+        </p>
       </div>
     );
   }
 
+  // Fonction pour obtenir les fonctionnalités à partir du plan
+  const getPlanFeatures = (plan: SubscriptionPlan): string[] => {
+    if (!plan.features) return [];
+    
+    if (Array.isArray(plan.features)) {
+      return plan.features;
+    }
+    
+    if (typeof plan.features === 'object' && plan.features.features && Array.isArray(plan.features.features)) {
+      return plan.features.features;
+    }
+    
+    return [];
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
       {plans.map((plan) => (
-        <Card key={plan.id} className={plan.isActive ? "border-primary shadow-md" : ""}>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
+        <div 
+          key={plan.id} 
+          className="border rounded-lg shadow-sm p-6 flex flex-col h-full hover:shadow-md transition-shadow"
+        >
+          <h3 className="text-lg font-medium mb-2">{plan.name}</h3>
+          <div className="mb-4">
+            <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
+            <span className="text-muted-foreground">/{' '}<SubscriptionIntervalLabel interval={plan.interval} /></span>
+          </div>
+          
+          <p className="text-muted-foreground mb-6">{plan.description}</p>
+          
+          <div className="space-y-2 mb-6 flex-grow">
+            {getPlanFeatures(plan).map((feature, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <span>{feature}</span>
               </div>
-              {plan.isActive && (
-                <Badge variant="default" className="bg-primary/80">Populaire</Badge>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
-                <span className="text-muted-foreground ml-1">{plan.interval === "monthly" ? "/mois" : "/an"}</span>
-              </div>
-              <ul className="space-y-2 text-sm">
-                {Array.isArray(plan.features) ? 
-                  plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="h-4 w-4 mr-2 text-green-500" />
-                      {feature}
-                    </li>
-                  )) : 
-                  plan.features && Array.isArray(plan.features.features) && 
-                  plan.features.features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <Check className="h-4 w-4 mr-2 text-green-500" />
-                      {feature}
-                    </li>
-                  ))
-                }
-              </ul>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              variant={plan.isActive ? "default" : "outline"} 
-              className="w-full"
-              onClick={() => onSelectPlan && onSelectPlan(plan)}
-            >
-              Choisir ce plan
-            </Button>
-          </CardFooter>
-        </Card>
+            ))}
+          </div>
+          
+          <Button 
+            onClick={() => onSelectPlan(plan)} 
+            className="w-full mt-auto"
+          >
+            Sélectionner ce plan
+          </Button>
+        </div>
       ))}
     </div>
   );

@@ -3,30 +3,33 @@ import React from 'react';
 import { SubscriptionInterval } from '@/types/subscription';
 
 interface SubscriptionIntervalLabelProps {
-  interval: SubscriptionInterval;
-  className?: string;
+  interval: string;
+  capitalize?: boolean;
 }
 
-const SubscriptionIntervalLabel: React.FC<SubscriptionIntervalLabelProps> = ({ interval, className = '' }) => {
+const SubscriptionIntervalLabel: React.FC<SubscriptionIntervalLabelProps> = ({ 
+  interval, 
+  capitalize = false 
+}) => {
   const getIntervalLabel = () => {
     switch (interval) {
       case SubscriptionInterval.MONTHLY:
-        return 'Mensuel';
+        return capitalize ? 'Mensuel' : 'mois';
       case SubscriptionInterval.QUARTERLY:
-        return 'Trimestriel';
+        return capitalize ? 'Trimestriel' : 'trimestre';
       case SubscriptionInterval.BIANNUAL:
-        return 'Semestriel';
+        return capitalize ? 'Semestriel' : 'semestre';
       case SubscriptionInterval.ANNUAL:
       case SubscriptionInterval.YEARLY:
-        return 'Annuel';
+        return capitalize ? 'Annuel' : 'an';
       case SubscriptionInterval.CUSTOM:
-        return 'Personnalisé';
+        return capitalize ? 'Personnalisé' : 'personnalisé';
       default:
-        return interval;
+        return capitalize ? 'Période' : 'période';
     }
   };
 
-  return <span className={className}>{getIntervalLabel()}</span>;
+  return <>{getIntervalLabel()}</>;
 };
 
 export default SubscriptionIntervalLabel;
