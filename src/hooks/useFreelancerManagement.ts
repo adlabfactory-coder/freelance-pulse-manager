@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase-client";
 import { User } from "@/types";
@@ -38,7 +39,8 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
       const { data, error } = await supabase
         .from("users")
         .select("*")
-        .eq("role", "freelancer");
+        .eq("role", "freelancer")
+        .is("deleted_at", null);
 
       if (error) throw error;
 
@@ -58,26 +60,24 @@ export const useFreelancerManagement = (isAdminOrSuperAdmin: boolean) => {
     try {
       setDeletingFreelancer(true);
       
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("email")
-        .eq("id", freelancerToDelete)
-        .single();
+      // Utiliser la fonction RPC soft_delete_user au lieu de la mise à jour directe
+      const { data, error } = await supabase.rpc('soft_delete_user', {
+        user_id: freelancerToDelete,
+        current_user_role: 'admin' // À remplacer par le rôle réel de l'utilisateur si disponible
+      });
 
-      if (userError) throw userError;
+      if (error) throw error;
 
-      const { error: deleteError } = await supabase
-        .from("users")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", freelancerToDelete);
-
-      if (deleteError) throw deleteError;
-
-      setFreelancers(prevFreelancers => 
-        prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
-      );
-      
-      toast.success("Le freelance a été supprimé et sera définitivement effacé dans 48 heures");
+      // Vérifier si l'opération a réussi
+      if (data && data.success) {
+        setFreelancers(prevFreelancers => 
+          prevFreelancers.filter(freelancer => freelancer.id !== freelancerToDelete)
+        );
+        
+        toast.success(data.message || "Le freelance a été supprimé et sera définitivement effacé dans 48 heures");
+      } else {
+        toast.error(data?.error || "Impossible de supprimer le freelance");
+      }
     } catch (error: any) {
       console.error("Erreur lors de la suppression du freelance:", error);
       toast.error("Impossible de supprimer le freelance: " + (error.message || 'Erreur inconnue'));
