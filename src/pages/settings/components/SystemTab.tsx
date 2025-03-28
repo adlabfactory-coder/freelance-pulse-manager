@@ -20,7 +20,7 @@ const SystemTab: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="default" className="mb-4 bg-amber-50">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Attention</AlertTitle>
             <AlertDescription>
