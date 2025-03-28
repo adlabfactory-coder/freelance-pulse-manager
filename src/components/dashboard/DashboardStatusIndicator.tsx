@@ -70,7 +70,7 @@ const DashboardStatusIndicator: React.FC<DashboardStatusIndicatorProps> = ({
   
   return (
     <div className="flex items-center space-x-3">
-      {/* Ajout d'un bouton d'actualisation visible en dehors du popover */}
+      {/* Bouton d'actualisation principal et bien visible */}
       <Button 
         variant="primary" 
         size="sm"

@@ -13,7 +13,7 @@ export function useRealtimeSubscriptions(
     fetchDataRef.current = fetchDashboardData;
   }, [fetchDashboardData]);
 
-  // Configurer les écouteurs pour les mises à jour en temps réel
+  // Configurer les écouteurs pour les mises à jour en temps réel, mais sans actualisation automatique
   useEffect(() => {
     const setupRealtime = async () => {
       try {
@@ -22,6 +22,8 @@ export function useRealtimeSubscriptions(
         
         if (!result.success) {
           console.error("Échec de l'activation du Realtime:", result.error);
+        } else {
+          console.log("Canaux Realtime activés avec succès, actualisation manuelle uniquement");
         }
       } catch (error) {
         console.error("Erreur lors de l'initialisation du Realtime:", error);
@@ -30,9 +32,6 @@ export function useRealtimeSubscriptions(
 
     // Appeler la fonction de configuration
     setupRealtime();
-
-    // Dans cette version, nous n'ajoutons plus de gestionnaire d'événements
-    // pour déclencher automatiquement les mises à jour
 
     // Nettoyer les canaux à la suppression du composant
     return () => {

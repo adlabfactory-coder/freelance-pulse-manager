@@ -66,9 +66,10 @@ export function useDashboard(): UseDashboardDataReturn {
   // S'abonner aux mises à jour en temps réel mais ne pas les utiliser pour actualiser automatiquement
   useRealtimeSubscriptions(fetchDashboardData);
 
-  // Charger les données au montage du composant, mais ne pas effectuer d'actualisation automatique
+  // Charger les données au montage du composant, mais pas d'actualisation automatique périodique
   useEffect(() => {
     fetchDashboardData();
+    // Pas de setInterval ici pour l'actualisation automatique
   }, [fetchDashboardData]);
 
   return {
