@@ -15,7 +15,7 @@ export const useDeleteUser = () => {
     toast.error(message);
   }, []);
   
-  // Méthode mise à jour pour supprimer un utilisateur en utilisant la suppression douce
+  // Méthode pour supprimer un utilisateur en utilisant la suppression douce
   const deleteUser = async (userId: string): Promise<OperationResult> => {
     try {
       setIsLoading(true);

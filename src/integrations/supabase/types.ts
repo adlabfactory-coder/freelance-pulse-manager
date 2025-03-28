@@ -617,6 +617,7 @@ export type Database = {
         Row: {
           avatar: string | null
           created_at: string | null
+          deleted_at: string | null
           email: string
           id: string
           name: string
@@ -625,6 +626,7 @@ export type Database = {
         Insert: {
           avatar?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           email: string
           id?: string
           name: string
@@ -633,6 +635,7 @@ export type Database = {
         Update: {
           avatar?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           email?: string
           id?: string
           name?: string
