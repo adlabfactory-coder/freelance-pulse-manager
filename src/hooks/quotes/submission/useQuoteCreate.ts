@@ -54,6 +54,7 @@ export const useQuoteCreate = ({
       }
       
       setIsSubmitting(true);
+      console.log("Validation passed, proceeding with submission");
       
       // Formater les items pour l'envoi
       const formattedItems = items.map(item => ({
@@ -76,10 +77,14 @@ export const useQuoteCreate = ({
         folder: quoteData.folder || "general"
       };
       
+      console.log("Calling quotesService.createQuote with:", quoteDataObj);
+      
       // Appel avec les bons arguments
       const result = await quotesService.createQuote(quoteDataObj, formattedItems);
+      console.log("Quote creation result:", result);
       
       if (result && result.id) {
+        console.log("Quote created successfully with ID:", result.id);
         toast.success("Devis créé avec succès");
         
         if (onCloseDialog) {

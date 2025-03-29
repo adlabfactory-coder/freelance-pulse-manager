@@ -57,7 +57,16 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
       }
       
       // Return the quote with ID
-      return { id: quoteResult.id, ...quoteData } as Quote;
+      return { 
+        id: quoteResult.id, 
+        contactId: quoteData.contactId,
+        freelancerId: quoteData.freelancerId,
+        totalAmount: quoteData.totalAmount,
+        status: status,
+        validUntil: quoteData.validUntil,
+        notes: quoteData.notes,
+        folder: quoteData.folder
+      } as Quote;
     } catch (error) {
       console.error('Erreur inattendue lors de la création du devis:', error);
       toast.error('Erreur inattendue lors de la création du devis');
