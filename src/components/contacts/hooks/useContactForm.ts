@@ -2,9 +2,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contactService } from "@/services/contacts";
-import { ContactStatus } from "@/types/database/enums";
 import { toast } from "sonner";
 import { contactSchema, ContactFormValues } from "../schema/contactFormSchema";
+import { ContactStatus } from "@/types/database/enums";
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;

@@ -14,10 +14,10 @@ import ContactStatusBadge from "./ContactStatusBadge";
 
 interface ContactStatusSelectorProps {
   contactId?: string;
-  value?: ContactStatus;
-  currentStatus?: ContactStatus; // For backward compatibility
-  onChange?: (newStatus: ContactStatus) => void;
-  onStatusChange?: (newStatus: ContactStatus) => void; // For backward compatibility
+  value?: string;
+  currentStatus?: string; // For backward compatibility
+  onChange?: (newStatus: string) => void;
+  onStatusChange?: (newStatus: string) => void; // For backward compatibility
 }
 
 const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({ 
@@ -34,18 +34,18 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
   const handleChange = onChange || onStatusChange;
   
   const statusItems = [
-    { value: "lead" as ContactStatus, label: "Lead" },
-    { value: "prospect" as ContactStatus, label: "Prospect" },
-    { value: "negotiation" as ContactStatus, label: "En négociation" },
-    { value: "signed" as ContactStatus, label: "Signé" },
-    { value: "lost" as ContactStatus, label: "Perdu" },
+    { value: "lead", label: "Lead" },
+    { value: "prospect", label: "Prospect" },
+    { value: "negotiation", label: "En négociation" },
+    { value: "signed", label: "Signé" },
+    { value: "lost", label: "Perdu" },
   ];
 
-  const handleStatusChange = async (status: ContactStatus) => {
+  const handleStatusChange = async (status: string) => {
     if (contactId) {
       try {
         // Use updateContact instead of updateContactStatus
-        await contactService.updateContact(contactId, { status });
+        await contactService.updateContact(contactId, { status: status as ContactStatus });
         if (handleChange) {
           handleChange(status);
         }
@@ -75,7 +75,7 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
             {currentValue === item.value && (
               <Check className="h-4 w-4" />
             )}
-            <ContactStatusBadge status={item.value} />
+            <ContactStatusBadge status={item.value as ContactStatus} />
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

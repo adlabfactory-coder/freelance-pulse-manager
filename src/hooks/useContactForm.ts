@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contactService } from '@/services/contact-service';
-import { ContactStatus } from '@/types/contact';
+import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
 import { accountManagerService } from '@/services/account-manager/account-manager-service';
