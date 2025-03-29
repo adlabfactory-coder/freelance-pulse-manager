@@ -94,7 +94,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                       (roleValue === UserRole.ADMIN && currentUserRole !== UserRole.SUPER_ADMIN && currentUserRole !== UserRole.ADMIN)
                     }
                   >
-                    {USER_ROLE_LABELS[roleValue]}
+                    {USER_ROLE_LABELS[roleValue as UserRole]}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -70,7 +70,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     }
   };
 
-  // Conversion des dates pour assurer la compatibilité
+  // Correction: s'assurer que validUntil est bien un objet Date
   const validUntil = form.validUntil 
     ? (typeof form.validUntil === 'string' ? new Date(form.validUntil) : form.validUntil) 
     : new Date();
@@ -94,7 +94,13 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         onQuoteDataChange={(data) => {
           if (data.contactId !== undefined) form.setContactId(data.contactId);
           if (data.freelancerId !== undefined) form.setFreelancerId(data.freelancerId);
-          if (data.validUntil !== undefined) form.setValidUntil(data.validUntil);
+          // Fix pour validUntil, en s'assurant qu'on passe un objet Date
+          if (data.validUntil !== undefined) {
+            const dateValue = typeof data.validUntil === 'string' 
+              ? new Date(data.validUntil) 
+              : data.validUntil;
+            form.setValidUntil(dateValue);
+          }
           if (data.status !== undefined) form.setStatus(data.status as QuoteStatus);
           if (data.notes !== undefined) form.setNotes(data.notes);
         }}
