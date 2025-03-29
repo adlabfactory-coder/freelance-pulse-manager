@@ -10,7 +10,7 @@ export const contactSchema = z.object({
   position: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  status: z.nativeEnum(ContactStatus).optional(),
+  status: z.string().default("lead").optional(),
   assignedTo: z.string().optional().nullable(),
   folder: z.string().default("general").optional()
 });
