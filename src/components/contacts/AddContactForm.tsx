@@ -1,11 +1,10 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import ContactForm from "./ContactForm";
 import { useAuth } from "@/hooks/use-auth";
 import ContactAppointmentDialog from "./ContactAppointmentDialog";
 import { useContactForm } from "@/hooks/useContactForm";
 import { toast } from "sonner";
+import ContactForm from "./ContactForm";
 
 interface AddContactFormProps {
   onSuccess?: () => void;
