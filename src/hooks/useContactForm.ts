@@ -35,7 +35,7 @@ export const useContactForm = ({
       position: initialData?.position || "",
       address: initialData?.address || "",
       notes: initialData?.notes || "",
-      status: initialData?.status || "lead",
+      status: initialData?.status || ContactStatus.LEAD,
       assignedTo: initialData?.assignedTo || "",
       folder: initialData?.folder || "general"
     },

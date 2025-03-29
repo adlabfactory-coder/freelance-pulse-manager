@@ -27,7 +27,7 @@ export enum QuoteStatus {
   CANCELLED = "cancelled"
 }
 
-// Ajouter cette interface pour exporter les énumérations 
+// Export interface for database enums
 export interface DatabaseEnums {
   Enums: {
     contact_status: ContactStatus;
