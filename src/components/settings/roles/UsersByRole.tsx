@@ -8,8 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserRole, User } from "@/types";
-import { supabase } from "@/lib/supabase-client";
+import { UserRole } from "@/types";
 import { USER_ROLE_LABELS } from "@/types/roles";
 import { fetchUsers } from "@/services/user/fetch-users";
 import UserAvatar from "@/components/settings/UserAvatar";
@@ -24,7 +23,7 @@ const UsersByRole: React.FC<UsersByRoleProps> = ({
   activeTab = UserRole.ADMIN, 
   onTabChange 
 }) => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   
   // Charge les utilisateurs au chargement du composant

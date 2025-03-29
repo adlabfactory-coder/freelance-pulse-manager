@@ -54,7 +54,7 @@ const RoleSettingsTab: React.FC = () => {
             </TabsList>
             
             <TabsContent value="users">
-              <UsersByRole forceUsers={users} />
+              <UsersByRole />
             </TabsContent>
             
             <TabsContent value="permissions">

@@ -9,10 +9,10 @@ export { UserRole } from './roles';
 export type { DatabaseEnums } from './database';
 
 // Re-export status enums with explicit names to avoid ambiguity
-export { AppointmentStatus as AppointmentStatusEnum } from './appointment';
+export { AppointmentStatus } from './appointment';
 export type { Appointment } from './appointment';
 
-export { QuoteStatus as QuoteStatusEnum } from './quote';
+export { QuoteStatus } from './quote';
 export type { Quote, QuoteItem } from './quote';
 
 export * from './contacts';

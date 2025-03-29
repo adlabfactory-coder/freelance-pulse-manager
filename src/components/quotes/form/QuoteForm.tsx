@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useQuoteForm } from '@/hooks/quotes/useQuoteForm';
 import QuoteFormSections from './QuoteFormSections';
-import { Quote, QuoteItem } from '@/types/quote';
+import { Quote, QuoteItem } from '@/types';
 import { Loader2 } from 'lucide-react';
 import { QuoteStatus } from '@/types/quote';
 
@@ -70,10 +70,14 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
     }
   };
 
-  // Correction: s'assurer que validUntil est bien un objet Date
-  const validUntil = form.validUntil 
-    ? (typeof form.validUntil === 'string' ? new Date(form.validUntil) : form.validUntil) 
-    : new Date();
+  // Ensure validUntil is a Date object
+  const handleDateChange = (date: Date | string) => {
+    if (typeof date === 'string') {
+      form.setValidUntil(new Date(date));
+    } else {
+      form.setValidUntil(date);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -81,7 +85,7 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         quoteData={{
           contactId: form.contactId,
           freelancerId: form.freelancerId,
-          validUntil: validUntil,
+          validUntil: form.validUntil,
           status: form.status,
           notes: form.notes,
           items: safeItems,
@@ -94,12 +98,9 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         onQuoteDataChange={(data) => {
           if (data.contactId !== undefined) form.setContactId(data.contactId);
           if (data.freelancerId !== undefined) form.setFreelancerId(data.freelancerId);
-          // Fix pour validUntil, en s'assurant qu'on passe un objet Date
+          // Handle validUntil date properly
           if (data.validUntil !== undefined) {
-            const dateValue = typeof data.validUntil === 'string' 
-              ? new Date(data.validUntil) 
-              : data.validUntil;
-            form.setValidUntil(dateValue);
+            handleDateChange(data.validUntil);
           }
           if (data.status !== undefined) form.setStatus(data.status as QuoteStatus);
           if (data.notes !== undefined) form.setNotes(data.notes);
