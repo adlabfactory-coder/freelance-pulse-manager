@@ -54,20 +54,20 @@ const ContactsSearchFilter: React.FC<ContactsSearchFilterProps> = ({
             Tous les statuts
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => onStatusFilterChange("lead")}>
-            <ContactStatusBadge status="lead" />
+          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.LEAD)}>
+            <ContactStatusBadge status={ContactStatus.LEAD} />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange("prospect")}>
-            <ContactStatusBadge status="prospect" />
+          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.PROSPECT)}>
+            <ContactStatusBadge status={ContactStatus.PROSPECT} />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange("negotiation")}>
-            <ContactStatusBadge status="negotiation" />
+          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.NEGOTIATION)}>
+            <ContactStatusBadge status={ContactStatus.NEGOTIATION} />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange("signed")}>
-            <ContactStatusBadge status="signed" />
+          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.SIGNED)}>
+            <ContactStatusBadge status={ContactStatus.SIGNED} />
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onStatusFilterChange("lost")}>
-            <ContactStatusBadge status="lost" />
+          <DropdownMenuItem onClick={() => onStatusFilterChange(ContactStatus.LOST)}>
+            <ContactStatusBadge status={ContactStatus.LOST} />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

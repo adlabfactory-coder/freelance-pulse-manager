@@ -1,5 +1,5 @@
 
-import { ContactStatus as ContactStatusUnion } from "@/types/database/enums";
+import { ContactStatus } from "@/types/database/enums";
 
 export enum ContactStatusEnum {
   LEAD = "lead",
@@ -9,61 +9,43 @@ export enum ContactStatusEnum {
   LOST = "lost"
 }
 
-export function normalizeContactStatus(status: ContactStatusEnum | ContactStatusUnion | string): ContactStatusUnion {
+export function normalizeContactStatus(status: ContactStatusEnum | ContactStatus | string): ContactStatus {
   if (typeof status === 'string') {
-    const validStatuses: ContactStatusUnion[] = ['lead', 'prospect', 'negotiation', 'signed', 'lost'];
-    if (validStatuses.includes(status as ContactStatusUnion)) {
-      return status as ContactStatusUnion;
-    }
-    
     switch (status.toUpperCase()) {
       case 'LEAD':
       case ContactStatusEnum.LEAD:
-        return 'lead';
+        return ContactStatus.LEAD;
       case 'PROSPECT':
       case ContactStatusEnum.PROSPECT:
-        return 'prospect';
+        return ContactStatus.PROSPECT;
       case 'NEGOTIATION':
       case ContactStatusEnum.NEGOTIATION:
-        return 'negotiation';
+        return ContactStatus.NEGOTIATION;
       case 'SIGNED':
       case ContactStatusEnum.SIGNED:
-        return 'signed';
+        return ContactStatus.SIGNED;
       case 'LOST':
       case ContactStatusEnum.LOST:
-        return 'lost';
+        return ContactStatus.LOST;
       default:
-        return 'lead';
+        return ContactStatus.LEAD;
     }
   }
   
-  switch (status) {
-    case ContactStatusEnum.LEAD:
-      return 'lead';
-    case ContactStatusEnum.PROSPECT:
-      return 'prospect';
-    case ContactStatusEnum.NEGOTIATION:
-      return 'negotiation';
-    case ContactStatusEnum.SIGNED:
-      return 'signed';
-    case ContactStatusEnum.LOST:
-      return 'lost';
-    default:
-      return 'lead';
-  }
+  return status as ContactStatus;
 }
 
-export function contactStatusToEnum(status: ContactStatusUnion): ContactStatusEnum {
+export function contactStatusToEnum(status: ContactStatus): ContactStatusEnum {
   switch (status) {
-    case 'lead':
+    case ContactStatus.LEAD:
       return ContactStatusEnum.LEAD;
-    case 'prospect':
+    case ContactStatus.PROSPECT:
       return ContactStatusEnum.PROSPECT;
-    case 'negotiation':
+    case ContactStatus.NEGOTIATION:
       return ContactStatusEnum.NEGOTIATION;
-    case 'signed':
+    case ContactStatus.SIGNED:
       return ContactStatusEnum.SIGNED;
-    case 'lost':
+    case ContactStatus.LOST:
       return ContactStatusEnum.LOST;
     default:
       return ContactStatusEnum.LEAD;

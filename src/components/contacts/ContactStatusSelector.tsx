@@ -14,10 +14,10 @@ import ContactStatusBadge from "./ContactStatusBadge";
 
 interface ContactStatusSelectorProps {
   contactId?: string;
-  value?: ContactStatus | string;
-  currentStatus?: ContactStatus | string;
-  onChange?: (newStatus: ContactStatus | string) => void;
-  onStatusChange?: (newStatus: ContactStatus | string) => void;
+  value?: ContactStatus;
+  currentStatus?: ContactStatus;
+  onChange?: (newStatus: ContactStatus) => void;
+  onStatusChange?: (newStatus: ContactStatus) => void;
 }
 
 const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({ 
@@ -38,10 +38,10 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
     { value: ContactStatus.LOST, label: "Perdu" },
   ];
 
-  const handleStatusChange = async (status: ContactStatus | string) => {
+  const handleStatusChange = async (status: ContactStatus) => {
     if (contactId) {
       try {
-        await contactService.updateContact(contactId, { status: status as ContactStatus });
+        await contactService.updateContact(contactId, { status });
         if (handleChange) {
           handleChange(status);
         }
@@ -71,7 +71,7 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
             {currentValue === item.value && (
               <Check className="h-4 w-4" />
             )}
-            <ContactStatusBadge status={item.value as ContactStatus} />
+            <ContactStatusBadge status={item.value} />
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

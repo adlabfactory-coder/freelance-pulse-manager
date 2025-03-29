@@ -26,3 +26,12 @@ export enum QuoteStatus {
   PAID = "paid",
   CANCELLED = "cancelled"
 }
+
+// Ajouter cette interface pour exporter les énumérations 
+export interface DatabaseEnums {
+  Enums: {
+    contact_status: ContactStatus;
+    appointment_status: AppointmentStatus;
+    quote_status: QuoteStatus;
+  }
+}

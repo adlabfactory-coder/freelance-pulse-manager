@@ -14,16 +14,16 @@ export function useContactStatusListeners(contacts: Contact[]) {
       // Message de confirmation basé sur le statut
       let statusMessage = "";
       switch (newStatus) {
-        case "prospect":
+        case ContactStatus.PROSPECT:
           statusMessage = "Le contact est maintenant un prospect suite à un rendez-vous validé.";
           break;
-        case "negotiation":
+        case ContactStatus.NEGOTIATION:
           statusMessage = "Le contact est maintenant en négociation suite à la génération d'un devis.";
           break;
-        case "signed":
+        case ContactStatus.SIGNED:
           statusMessage = "Le contact est maintenant au statut signé suite à la validation du paiement.";
           break;
-        case "lost":
+        case ContactStatus.LOST:
           statusMessage = "Le contact a été marqué comme perdu.";
           break;
         default:
@@ -72,9 +72,9 @@ export function useContactStatusListeners(contacts: Contact[]) {
             if (contact) {
               console.log("Contact trouvé:", contact);
               // Mettre à jour le statut seulement si le contact est un lead
-              if (contact.status === 'lead') {
+              if (contact.status === ContactStatus.LEAD) {
                 console.log("Mise à jour du statut du contact de lead à prospect");
-                updateContactStatus(contactId, 'prospect');
+                updateContactStatus(contactId, ContactStatus.PROSPECT);
               }
             } else {
               console.log("Contact non trouvé dans la liste locale");
@@ -104,9 +104,9 @@ export function useContactStatusListeners(contacts: Contact[]) {
             
             if (contact) {
               console.log("Contact trouvé pour le devis:", contact);
-              if (contact.status === 'lead' || contact.status === 'prospect') {
+              if (contact.status === ContactStatus.LEAD || contact.status === ContactStatus.PROSPECT) {
                 console.log("Mise à jour du statut du contact vers négociation");
-                updateContactStatus(contactId, 'negotiation');
+                updateContactStatus(contactId, ContactStatus.NEGOTIATION);
               }
             } else {
               console.log("Contact non trouvé pour le devis créé");
@@ -140,9 +140,9 @@ export function useContactStatusListeners(contacts: Contact[]) {
             
             if (contact) {
               console.log("Contact trouvé pour le devis accepté:", contact);
-              if (contact.status === 'negotiation') {
+              if (contact.status === ContactStatus.NEGOTIATION) {
                 console.log("Mise à jour du statut du contact vers signé");
-                updateContactStatus(contactId, 'signed');
+                updateContactStatus(contactId, ContactStatus.SIGNED);
               }
             } else {
               console.log("Contact non trouvé pour le devis accepté");

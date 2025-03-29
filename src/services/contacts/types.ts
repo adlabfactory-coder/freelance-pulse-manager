@@ -1,3 +1,4 @@
+
 import { ContactStatus } from '@/types/database/enums';
 
 export interface Contact {

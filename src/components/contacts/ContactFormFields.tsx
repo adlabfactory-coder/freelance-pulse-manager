@@ -97,7 +97,7 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           <FormItem>
             <FormLabel>Statut</FormLabel>
             <div className="h-10 px-3 py-2 flex items-center bg-gray-100 rounded-md border">
-              <ContactStatusBadge status="lead" />
+              <ContactStatusBadge status={ContactStatus.LEAD} />
               <span className="ml-2 text-sm text-muted-foreground">(Automatique)</span>
             </div>
           </FormItem>
