@@ -25,9 +25,6 @@ export const useContactForm = ({
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   
-  // Utilisateur actuel
-  const currentUserId = user?.id || '';
-  
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactSchema),
     defaultValues: {
@@ -40,7 +37,6 @@ export const useContactForm = ({
       notes: initialData?.notes || "",
       status: initialData?.status || "lead" as ContactStatus,
       assignedTo: initialData?.assignedTo || "",
-      createdBy: initialData?.createdBy || currentUserId,
       folder: initialData?.folder || "general"
     },
   });
@@ -72,9 +68,6 @@ export const useContactForm = ({
         return;
       }
       
-      // Si createdBy n'est pas défini, utiliser l'ID de l'utilisateur actuel
-      const createdById = data.createdBy || currentUserId;
-      
       const contactInput = {
         name: data.name,
         email: data.email,
@@ -85,7 +78,6 @@ export const useContactForm = ({
         notes: data.notes,
         status: data.status as ContactStatus,
         assignedTo: data.assignedTo,
-        createdBy: createdById,
         folder: data.folder
       };
       

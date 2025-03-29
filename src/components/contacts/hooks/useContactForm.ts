@@ -41,7 +41,8 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
         address: data.address || "",
         notes: data.notes || "",
         status: isEditing ? data.status as ContactStatus : "lead" as ContactStatus,
-        assignedTo: data.assignedTo
+        assignedTo: data.assignedTo,
+        folder: data.folder || "general"
       };
       
       let result;

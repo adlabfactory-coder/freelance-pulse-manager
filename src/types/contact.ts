@@ -9,7 +9,6 @@ export interface Contact {
   address?: string;
   notes?: string;
   assignedTo?: string;
-  createdBy?: string;
   status: ContactStatus;
   createdAt?: Date;
   updatedAt?: Date;

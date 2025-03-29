@@ -2,20 +2,17 @@
 import { z } from "zod";
 import { ContactStatus } from "@/types/database/enums";
 
-// Schéma de validation pour le formulaire de contact
 export const contactSchema = z.object({
-  name: z.string().min(1, { message: "Le nom est requis" }),
-  email: z.string().email({ message: "Email invalide" }),
+  name: z.string().min(1, "Le nom est requis"),
+  email: z.string().email("Email invalide").min(1, "L'email est requis"),
   phone: z.string().optional(),
-  company: z.string().optional(),
-  position: z.string().optional(),
-  address: z.string().optional(),
-  status: z.enum(["lead", "prospect", "negotiation", "signed", "lost"]),
-  notes: z.string().optional(),
-  assignedTo: z.string().optional(),
-  createdBy: z.string().optional(),
-  folder: z.string().optional().default("general")
+  company: z.string().optional().nullable(),
+  position: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  status: z.nativeEnum(ContactStatus).optional(),
+  assignedTo: z.string().optional().nullable(),
+  folder: z.string().default("general").optional()
 });
 
-// Type pour les valeurs du formulaire
 export type ContactFormValues = z.infer<typeof contactSchema>;

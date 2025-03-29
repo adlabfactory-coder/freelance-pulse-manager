@@ -28,13 +28,6 @@ const ContactForm: React.FC<ContactFormProps> = ({
 }) => {
   const { user } = useAuth();
   const [useAutoAssign, setUseAutoAssign] = useState(false);
-  
-  // Si l'utilisateur crée un nouveau contact, on l'assigne automatiquement comme propriétaire
-  React.useEffect(() => {
-    if (!isEditing && user) {
-      form.setValue('createdBy', user.id);
-    }
-  }, [user, isEditing, form]);
 
   return (
     <Form {...form}>

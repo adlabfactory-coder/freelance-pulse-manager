@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase-client";
+import { toast } from "sonner";
 
 interface ContactSelectorProps {
   value: string;
@@ -31,6 +32,7 @@ const ContactSelector: React.FC<ContactSelectorProps> = ({
 
         if (error) {
           console.error("Erreur lors du chargement des contacts:", error);
+          toast.error("Erreur lors du chargement des contacts");
           throw error;
         }
 
