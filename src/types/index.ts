@@ -6,7 +6,7 @@ export type { User, UserProfile, UserAuthData } from './user';
 export { UserRole } from './roles';
 
 // Export types using explicit export type syntax for isolatedModules compatibility
-export type { DatabaseEnums } from './database';
+export type { DatabaseEnums } from './database/enums';
 
 // Re-export status enums with explicit names to avoid ambiguity
 export { AppointmentStatus } from './appointment';
