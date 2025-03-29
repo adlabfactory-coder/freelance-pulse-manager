@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase-client";
 import { toast } from "sonner";
 import { formatDateForAPI } from "@/utils/format";
 import { useAuth } from "@/hooks/use-auth";
+import { AppointmentStatus } from "@/types/database/enums";
 
 /**
  * Hook pour gérer les opérations liées aux rendez-vous
@@ -45,7 +46,7 @@ export const useAppointmentOperations = () => {
         duration: data.duration,
         contactId: data.contactId,
         freelancerId,
-        status: data.autoAssign ? "pending" : "scheduled",
+        status: data.autoAssign ? AppointmentStatus.PENDING : AppointmentStatus.SCHEDULED,
         folder: data.folder || "general",
         location: data.location || null,
         notes: data.notes || null

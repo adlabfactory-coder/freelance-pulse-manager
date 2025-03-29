@@ -1,15 +1,31 @@
 
 import { toast } from 'sonner';
-import { useAuth } from "@/hooks/use-auth";
-import { formatDateForAPI } from "@/utils/format";
-import { AppointmentStatus } from "@/types/appointment";
 import { supabase } from '@/lib/supabase-client';
+import { AppointmentStatus } from '@/types/database/enums';
 
 /**
  * Fonctions de création des rendez-vous
  */
 export const createAppointment = async (appointmentData: any) => {
   try {
+    console.log("createAppointment: Données reçues:", appointmentData);
+    
+    // Vérifier les données requises
+    if (!appointmentData.date) {
+      console.error("Date manquante");
+      throw new Error("La date est requise");
+    }
+    
+    if (!appointmentData.contactId) {
+      console.error("contactId manquant");
+      throw new Error("L'ID du contact est requis");
+    }
+    
+    if (!appointmentData.title) {
+      console.error("Titre manquant");
+      throw new Error("Le titre est requis");
+    }
+
     // Préparer les données pour l'envoi à la base de données
     const dataToSend = { 
       ...appointmentData 
@@ -22,7 +38,7 @@ export const createAppointment = async (appointmentData: any) => {
     
     console.log("Données de rendez-vous envoyées à la DB:", dataToSend);
 
-    // 1. Créer le rendez-vous
+    // 1. Créer le rendez-vous en utilisant la fonction RPC
     const { data: appointmentResult, error: appointmentError } = await supabase
       .rpc('create_appointment', {
         appointment_data: {
@@ -30,7 +46,7 @@ export const createAppointment = async (appointmentData: any) => {
           description: dataToSend.description || null,
           date: dataToSend.date,
           duration: dataToSend.duration || 30,
-          status: dataToSend.status || 'scheduled',
+          status: dataToSend.status || AppointmentStatus.SCHEDULED,
           contactId: dataToSend.contactId,
           freelancerId: dataToSend.freelancerId,
           location: dataToSend.location || null,
@@ -43,6 +59,8 @@ export const createAppointment = async (appointmentData: any) => {
       console.error('Error creating appointment via RPC:', appointmentError);
       throw appointmentError;
     }
+    
+    console.log("Rendez-vous créé avec succès:", appointmentResult);
 
     // 2. Assigner explicitement le contact au freelancer si ce n'est pas déjà fait
     if (dataToSend.freelancerId && dataToSend.contactId) {
@@ -53,7 +71,7 @@ export const createAppointment = async (appointmentData: any) => {
         .from('contacts')
         .update({ 
           assignedTo: dataToSend.freelancerId,
-          status: 'prospect'  // Mettre à jour le statut du contact en prospect
+          status: 'prospect'
         })
         .eq('id', dataToSend.contactId);
       
@@ -102,7 +120,7 @@ export const createAutoAssignAppointment = async (appointmentData: any) => {
           description: dataToSend.description || null,
           date: dataToSend.date,
           duration: dataToSend.duration || 30,
-          status: 'pending',
+          status: AppointmentStatus.PENDING,
           contactId: dataToSend.contactId,
           location: dataToSend.location || null,
           notes: dataToSend.notes || null,

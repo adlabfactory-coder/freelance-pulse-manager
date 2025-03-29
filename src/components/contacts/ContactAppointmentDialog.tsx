@@ -6,6 +6,7 @@ import { useAppointmentForm, AppointmentTitleOption } from "@/hooks/appointments
 import { toast } from "sonner";
 import ContactAppointmentSuccess from "./appointment/ContactAppointmentSuccess";
 import ContactAppointmentForm from "./appointment/ContactAppointmentForm";
+import { AppointmentStatus } from "@/types/database/enums";
 
 interface ContactAppointmentDialogProps {
   open: boolean;
@@ -90,8 +91,10 @@ const ContactAppointmentDialog: React.FC<ContactAppointmentDialogProps> = ({
       setCustomTitle('');
       setSuccess(false);
       setError(null);
+      // Définir explicitement l'ID du contact
+      setFormContactId(contactId);
     }
-  }, [open, initialType, setTitleOption, setDescription, setDate, setTime, setDuration, setCustomTitle]);
+  }, [open, initialType, contactId, setTitleOption, setDescription, setDate, setTime, setDuration, setCustomTitle, setFormContactId]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

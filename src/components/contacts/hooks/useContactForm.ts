@@ -23,7 +23,7 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
       position: initialData?.position || "",
       address: initialData?.address || "",
       notes: initialData?.notes || "",
-      status: initialData?.status || "lead",
+      status: initialData?.status || ContactStatus.LEAD,
       assignedTo: initialData?.assignedTo || ""
     },
   });
@@ -40,7 +40,7 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
         position: data.position || "",
         address: data.address || "",
         notes: data.notes || "",
-        status: isEditing ? data.status as ContactStatus : "lead" as ContactStatus,
+        status: isEditing ? data.status as ContactStatus : ContactStatus.LEAD,
         assignedTo: data.assignedTo,
         folder: data.folder || "general"
       };

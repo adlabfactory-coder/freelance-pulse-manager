@@ -14,10 +14,10 @@ import ContactStatusBadge from "./ContactStatusBadge";
 
 interface ContactStatusSelectorProps {
   contactId?: string;
-  value?: string;
-  currentStatus?: string; // For backward compatibility
-  onChange?: (newStatus: string) => void;
-  onStatusChange?: (newStatus: string) => void; // For backward compatibility
+  value?: ContactStatus | string;
+  currentStatus?: ContactStatus | string;
+  onChange?: (newStatus: ContactStatus | string) => void;
+  onStatusChange?: (newStatus: ContactStatus | string) => void;
 }
 
 const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({ 
@@ -27,24 +27,20 @@ const ContactStatusSelector: React.FC<ContactStatusSelectorProps> = ({
   onChange,
   onStatusChange
 }) => {
-  // Use value prop if provided, otherwise use currentStatus for backward compatibility
   const currentValue = value || currentStatus;
-  
-  // Use onChange if provided, otherwise use onStatusChange for backward compatibility
   const handleChange = onChange || onStatusChange;
   
   const statusItems = [
-    { value: "lead", label: "Lead" },
-    { value: "prospect", label: "Prospect" },
-    { value: "negotiation", label: "En négociation" },
-    { value: "signed", label: "Signé" },
-    { value: "lost", label: "Perdu" },
+    { value: ContactStatus.LEAD, label: "Lead" },
+    { value: ContactStatus.PROSPECT, label: "Prospect" },
+    { value: ContactStatus.NEGOTIATION, label: "En négociation" },
+    { value: ContactStatus.SIGNED, label: "Signé" },
+    { value: ContactStatus.LOST, label: "Perdu" },
   ];
 
-  const handleStatusChange = async (status: string) => {
+  const handleStatusChange = async (status: ContactStatus | string) => {
     if (contactId) {
       try {
-        // Use updateContact instead of updateContactStatus
         await contactService.updateContact(contactId, { status: status as ContactStatus });
         if (handleChange) {
           handleChange(status);

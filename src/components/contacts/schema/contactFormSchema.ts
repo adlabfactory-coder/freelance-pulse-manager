@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { ContactStatus as ContactStatusType } from "@/types/database/enums";
+import { ContactStatus } from "@/types/database/enums";
 
 export const contactSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
@@ -10,7 +10,7 @@ export const contactSchema = z.object({
   position: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
-  status: z.string().default("lead").optional(),
+  status: z.string().default(ContactStatus.LEAD).optional(),
   assignedTo: z.string().optional().nullable(),
   folder: z.string().default("general").optional()
 });
