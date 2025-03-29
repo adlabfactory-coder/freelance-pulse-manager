@@ -70,8 +70,7 @@ export const useQuoteCreate = ({
         contactId: quoteData.contactId,
         freelancerId: quoteData.freelancerId,
         totalAmount: quoteData.totalAmount,
-        // Conversion explicite du status en QuoteStatus pour garantir la compatibilité des types
-        status: (quoteData.status || QuoteStatus.DRAFT) as QuoteStatus,
+        status: quoteData.status || QuoteStatus.DRAFT,
         validUntil: quoteData.validUntil,
         notes: quoteData.notes || "",
         folder: quoteData.folder || "general"

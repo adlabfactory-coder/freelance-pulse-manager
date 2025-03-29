@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useQuoteForm } from '@/hooks/quotes/useQuoteForm';
 import QuoteFormSections from './QuoteFormSections';
-import { Quote, QuoteItem } from '@/types';
+import { Quote, QuoteItem } from '@/types/quote';
 import { Loader2 } from 'lucide-react';
 import { QuoteStatus } from '@/types/quote';
 

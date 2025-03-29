@@ -16,13 +16,15 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
     items: Omit<QuoteItem, 'id' | 'quoteId'>[]
   ): Promise<Quote | null> => {
     try {
+      console.log("Création d'un devis avec les données:", quoteData);
+      
       // Format date for database
       const validUntil = typeof quoteData.validUntil === 'string' 
         ? quoteData.validUntil 
         : quoteData.validUntil.toISOString();
       
-      // Ensure status is a valid QuoteStatus enum value
-      const status = quoteData.status as QuoteStatus;
+      // S'assurer que le status est valide
+      const status = quoteData.status || QuoteStatus.DRAFT;
       
       // Create quote
       const { data: quoteResult, error: quoteError } = await supabase
@@ -33,8 +35,8 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
             totalAmount: quoteData.totalAmount,
             validUntil: validUntil,
             status: status,
-            notes: quoteData.notes,
-            folder: quoteData.folder
+            notes: quoteData.notes || "",
+            folder: quoteData.folder || "general"
           }
         });
       
@@ -44,25 +46,18 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
         return null;
       }
       
+      console.log("Devis créé avec ID:", quoteResult.id);
+      
       // Add items if there are any
       if (items.length > 0) {
-        await addQuoteItems(supabase, quoteResult.id, items);
+        const success = await addQuoteItems(supabase, quoteResult.id, items);
+        if (!success) {
+          console.warn('Problème lors de l\'ajout des éléments du devis, mais le devis a bien été créé');
+        }
       }
       
-      // Fetch and return the complete quote
-      const { data: newQuote, error: fetchError } = await supabase
-        .from('quotes')
-        .select('*, quote_items(*)')
-        .eq('id', quoteResult.id)
-        .single();
-        
-      if (fetchError) {
-        console.error('Erreur lors de la récupération du devis créé:', fetchError);
-        // Return just the ID if we can't fetch the complete quote
-        return { id: quoteResult.id } as Quote;
-      }
-      
-      return newQuote as Quote;
+      // Return the quote with ID
+      return { id: quoteResult.id, ...quoteData } as Quote;
     } catch (error) {
       console.error('Erreur inattendue lors de la création du devis:', error);
       toast.error('Erreur inattendue lors de la création du devis');
@@ -79,6 +74,8 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
     items: Omit<QuoteItem, 'id' | 'quoteId'>[]
   ): Promise<boolean> => {
     try {
+      console.log(`Ajout de ${items.length} éléments au devis ${quoteId}`);
+      
       const formattedItems = items.map(item => ({
         quoteId: quoteId,
         description: item.description,
@@ -98,6 +95,7 @@ export const createQuotesCreateService = (supabase: SupabaseClient<Database>) =>
         return false;
       }
       
+      console.log("Éléments de devis ajoutés avec succès");
       return true;
     } catch (error) {
       console.error('Erreur inattendue lors de l\'ajout des éléments:', error);

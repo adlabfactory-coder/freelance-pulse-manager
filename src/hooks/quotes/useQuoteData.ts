@@ -1,53 +1,45 @@
 
-import { useState, useCallback } from "react";
-import { Quote, QuoteStatus } from "@/types/quote";
+import { useState } from "react";
+import { QuoteStatus } from "@/types/quote";
 
-export const useQuoteData = (initialData?: Partial<Quote>) => {
-  const [contactId, setContactId] = useState<string>(initialData?.contactId || "");
-  const [freelancerId, setFreelancerId] = useState<string>(initialData?.freelancerId || "");
-  const [validUntil, setValidUntil] = useState<Date>(
-    initialData?.validUntil 
-      ? (typeof initialData.validUntil === 'string' 
-          ? new Date(initialData.validUntil) 
-          : initialData.validUntil)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  );
-  const [status, setStatus] = useState<QuoteStatus>(initialData?.status || QuoteStatus.DRAFT);
-  const [notes, setNotes] = useState<string>(initialData?.notes || "");
-  const [folder, setFolder] = useState<string>(initialData?.folder || "general");
+export const useQuoteData = () => {
+  const [contactId, setContactId] = useState<string>('');
+  const [freelancerId, setFreelancerId] = useState<string>('');
+  const [validUntil, setValidUntil] = useState<Date>(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  const [status, setStatus] = useState<QuoteStatus>(QuoteStatus.DRAFT);
+  const [notes, setNotes] = useState<string>('');
+  const [folder, setFolder] = useState<string>('general');
 
-  // Fonction sécurisée pour convertir les dates
-  const convertToDate = useCallback((value: string | Date): Date => {
-    if (typeof value === 'string') {
-      return new Date(value);
-    }
-    return value;
-  }, []);
+  // Convertir une chaîne de date ou un objet Date en Date
+  const convertToDate = (date: Date | string | undefined): Date => {
+    if (!date) return new Date();
+    return typeof date === 'string' ? new Date(date) : date;
+  };
 
-  // Mise à jour de la date de validité avec conversion
-  const setValidUntilSafe = useCallback((value: string | Date) => {
-    setValidUntil(convertToDate(value));
-  }, [convertToDate]);
-
-  const getQuoteData = useCallback(() => {
-    return {
-      contactId,
-      freelancerId,
-      validUntil,
-      status,
-      notes,
-      folder
-    };
-  }, [contactId, freelancerId, validUntil, status, notes, folder]);
-
-  const setQuoteData = useCallback((data: Partial<Quote>) => {
-    if (data.contactId) setContactId(data.contactId);
-    if (data.freelancerId) setFreelancerId(data.freelancerId);
-    if (data.validUntil) setValidUntil(convertToDate(data.validUntil));
-    if (data.status) setStatus(data.status as QuoteStatus);
+  const setQuoteData = (data: {
+    contactId?: string;
+    freelancerId?: string;
+    validUntil?: Date | string;
+    status?: QuoteStatus;
+    notes?: string;
+    folder?: string;
+  }) => {
+    if (data.contactId !== undefined) setContactId(data.contactId);
+    if (data.freelancerId !== undefined) setFreelancerId(data.freelancerId);
+    if (data.validUntil !== undefined) setValidUntil(convertToDate(data.validUntil));
+    if (data.status !== undefined) setStatus(data.status);
     if (data.notes !== undefined) setNotes(data.notes);
-    if (data.folder) setFolder(data.folder);
-  }, [convertToDate]);
+    if (data.folder !== undefined) setFolder(data.folder);
+  };
+
+  const getQuoteData = () => ({
+    contactId,
+    freelancerId,
+    validUntil,
+    status,
+    notes,
+    folder
+  });
 
   return {
     contactId,
@@ -55,15 +47,15 @@ export const useQuoteData = (initialData?: Partial<Quote>) => {
     freelancerId,
     setFreelancerId,
     validUntil,
-    setValidUntil: setValidUntilSafe,
+    setValidUntil,
     status,
     setStatus,
     notes,
     setNotes,
     folder,
     setFolder,
-    getQuoteData,
     setQuoteData,
+    getQuoteData,
     convertToDate
   };
 };

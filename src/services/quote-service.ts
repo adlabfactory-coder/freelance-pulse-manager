@@ -46,7 +46,13 @@ export const createQuote = async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'u
       throw new Error("Données de devis incomplètes");
     }
     
-    const result = await quotesService.createQuote(quoteData, items);
+    // S'assurer que le statut est bien un QuoteStatus
+    const dataWithCorrectStatus = {
+      ...quoteData,
+      status: quoteData.status || QuoteStatus.DRAFT
+    };
+    
+    const result = await quotesService.createQuote(dataWithCorrectStatus, items);
     console.log("Devis créé avec succès:", result);
     toast.success("Devis créé avec succès");
     return result;
