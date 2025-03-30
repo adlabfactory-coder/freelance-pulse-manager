@@ -97,12 +97,20 @@ export const UserForm: React.FC<UserFormProps> = ({
       let result;
       
       if (user?.id) {
-        result = await supabase.updateUser({
+        const updateData: Partial<User> = {
           id: user.id,
           name,
           email,
           role,
-        });
+        };
+        
+        // Inclure le mot de passe seulement s'il a été modifié
+        if (password && password.trim() !== '') {
+          // @ts-ignore - Le password est géré spécialement
+          updateData.password = password;
+        }
+        
+        result = await supabase.updateUser(updateData);
         
         if (result) {
           toast.success(`L'utilisateur ${name} a été mis à jour avec succès.`);

@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { updateUserPassword } from "@/services/user-service";
+import { Loader2 } from "lucide-react";
 
 interface SecurityTabProps {
   isCurrentUser: boolean;
@@ -15,22 +18,21 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ isCurrentUser }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Les mots de passe ne correspondent pas",
+      toast.error("Les mots de passe ne correspondent pas", {
         description: "Le nouveau mot de passe et sa confirmation doivent être identiques."
       });
       return;
     }
     
     if (newPassword.length < 8) {
-      toast({
-        title: "Mot de passe trop court",
+      toast.error("Mot de passe trop court", {
         description: "Le mot de passe doit contenir au moins 8 caractères."
       });
       return;
@@ -38,24 +40,32 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ isCurrentUser }) => {
     
     setIsSubmitting(true);
     try {
-      // Simuler un appel API avec un délai
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simuler une réussite
-      toast({
-        title: "Mot de passe mis à jour",
-        description: "Votre mot de passe a été modifié avec succès."
-      });
-      
-      // Réinitialiser les champs
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      // Mise à jour du mot de passe en utilisant le nouveau service
+      if (user && user.id) {
+        const success = await updateUserPassword(user.id, newPassword);
+        
+        if (success) {
+          toast.success("Mot de passe mis à jour", {
+            description: "Votre mot de passe a été modifié avec succès."
+          });
+          
+          // Réinitialiser les champs
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+        } else {
+          toast.error("Échec de la mise à jour", {
+            description: "Impossible de modifier le mot de passe. Veuillez réessayer."
+          });
+        }
+      } else {
+        toast.error("Utilisateur non connecté", {
+          description: "Vous devez être connecté pour modifier votre mot de passe."
+        });
+      }
     } catch (error) {
       console.error("Erreur lors du changement de mot de passe:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
+      toast.error("Erreur", {
         description: "Impossible de modifier le mot de passe."
       });
     } finally {
@@ -108,7 +118,14 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ isCurrentUser }) => {
           </div>
           
           <Button type="submit" disabled={isSubmitting || !isCurrentUser}>
-            {isSubmitting ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Mise à jour...
+              </>
+            ) : (
+              "Mettre à jour le mot de passe"
+            )}
           </Button>
         </form>
       </CardContent>

@@ -336,6 +336,42 @@ export type Database = {
           },
         ]
       }
+      freelancer_contacts: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          freelancer_id: string
+          id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          freelancer_id: string
+          id?: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          freelancer_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "freelancer_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "freelancer_contacts_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modification_history: {
         Row: {
           changes: Json
@@ -621,6 +657,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          password: string | null
           role: string
         }
         Insert: {
@@ -630,6 +667,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          password?: string | null
           role: string
         }
         Update: {
@@ -639,6 +677,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          password?: string | null
           role?: string
         }
         Relationships: []
@@ -721,6 +760,10 @@ export type Database = {
         Args: {
           sql: string
         }
+        Returns: undefined
+      }
+      initialize_freelancer_contacts: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       quote_id_literal: {

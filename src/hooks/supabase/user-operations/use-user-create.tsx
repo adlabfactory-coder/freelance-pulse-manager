@@ -20,38 +20,7 @@ export const useCreateUser = () => {
     try {
       setIsLoading(true);
       
-      // Si un mot de passe est fourni, créer un compte d'authentification
-      if (userData.password) {
-        // Créer un utilisateur dans l'authentification Supabase
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: userData.email,
-          password: userData.password,
-          options: {
-            data: {
-              name: userData.name,
-              role: userData.role
-            }
-          }
-        });
-        
-        if (authError) {
-          console.error(`Erreur lors de la création du compte d'authentification:`, authError);
-          showErrorToast(`La création de l'utilisateur a échoué: ${authError.message}`);
-          return { success: false };
-        }
-        
-        if (!authData.user) {
-          console.error(`Aucun utilisateur créé dans l'authentification`);
-          showErrorToast(`La création de l'utilisateur a échoué`);
-          return { success: false };
-        }
-        
-        // Le trigger on_auth_user_created devrait automatiquement créer l'entrée dans la table users
-        showSuccessToast('Utilisateur créé avec succès');
-        return { success: true, id: authData.user.id };
-      }
-      
-      // Sinon, créer simplement une entrée dans la table users
+      // Créer l'utilisateur dans la base de données
       const { data, error } = await supabase
         .from('users')
         .insert({
@@ -63,6 +32,7 @@ export const useCreateUser = () => {
           schedule_enabled: userData.schedule_enabled,
           daily_availability: userData.daily_availability,
           weekly_availability: userData.weekly_availability,
+          password: userData.password || null // Enregistrer le mot de passe
         })
         .select('id')
         .single();
