@@ -21,7 +21,6 @@ export const useContacts = () => {
       
       // Si l'utilisateur est admin, récupérer tous les contacts
       if (isAdmin) {
-        // Utiliser getContacts au lieu de getAllContacts (qui n'existe pas)
         const allContacts = await contactService.getContacts();
         setContacts(allContacts);
       } 
@@ -66,17 +65,7 @@ export const useContacts = () => {
       
       const newContact = await contactService.createContact(contact);
       
-      // Vérifier que newContact n'est pas une chaîne de caractères mais bien un objet Contact
-      if (typeof newContact === 'string') {
-        // Si c'est juste l'ID qui est retourné, récupérer le contact complet
-        const fullContact = await contactService.getContactById(newContact);
-        if (fullContact) {
-          setContacts(prev => [...prev, fullContact]);
-          toast.success('Contact ajouté avec succès');
-          return fullContact;
-        }
-      } else if (newContact) {
-        // Si c'est déjà un objet Contact complet
+      if (newContact) {
         setContacts(prev => [...prev, newContact]);
         toast.success('Contact ajouté avec succès');
         return newContact;

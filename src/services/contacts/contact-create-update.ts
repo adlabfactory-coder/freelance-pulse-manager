@@ -2,6 +2,7 @@
 import { supabase } from "@/lib/supabase-client";
 import { ContactStatus } from "@/types/database/enums";
 import { toast } from "sonner";
+import { Contact } from "./types";
 
 export interface ContactFormInput {
   name: string;
@@ -17,7 +18,7 @@ export interface ContactFormInput {
 }
 
 export const contactCreateUpdateService = {
-  async createContact(contactData: ContactFormInput): Promise<string | null> {
+  async createContact(contactData: ContactFormInput): Promise<Contact | null> {
     try {
       const now = new Date().toISOString();
       
@@ -48,7 +49,7 @@ export const contactCreateUpdateService = {
           updatedAt: now,
           folder: folder
         })
-        .select('id')
+        .select('*')  // Sélectionner tous les champs pour retourner le contact complet
         .single();
 
       if (error) {
@@ -56,7 +57,7 @@ export const contactCreateUpdateService = {
         throw error;
       }
 
-      return data?.id || null;
+      return data as Contact;
     } catch (error: any) {
       console.error("Error in createContact:", error);
       toast.error("Erreur lors de la création du contact: " + error.message);
@@ -64,7 +65,7 @@ export const contactCreateUpdateService = {
     }
   },
 
-  async addContact(contactData: ContactFormInput): Promise<string | null> {
+  async addContact(contactData: ContactFormInput): Promise<Contact | null> {
     return this.createContact(contactData);
   },
 
