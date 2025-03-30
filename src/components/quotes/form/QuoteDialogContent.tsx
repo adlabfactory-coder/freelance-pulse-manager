@@ -49,13 +49,24 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     ? (quoteData.status as QuoteStatus || QuoteStatus.DRAFT)
     : (quoteData.status || QuoteStatus.DRAFT);
   
+  // Ensure validUntil is always a Date object
+  const ensureDate = (dateValue: Date | string | undefined): Date => {
+    if (!dateValue) {
+      return new Date();
+    }
+    
+    return dateValue instanceof Date ? dateValue : new Date(dateValue);
+  };
+  
+  const validUntilDate = ensureDate(quoteData.validUntil);
+  
   // Composant de formulaire personnalisé avec la conversion de status en QuoteStatus
   const mockForm = {
     loading,
     isSubmitting,
     contactId: quoteData.contactId || "",
     freelancerId: quoteData.freelancerId || "",
-    validUntil: quoteData.validUntil || new Date(),
+    validUntil: validUntilDate,
     status: quoteStatus,
     notes: quoteData.notes || "",
     folder: quoteData.folder || "general",
