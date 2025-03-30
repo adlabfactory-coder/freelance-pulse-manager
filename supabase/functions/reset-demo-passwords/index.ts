@@ -26,48 +26,111 @@ serve(async (req) => {
     // Créer un client Supabase avec la clé de service pour avoir des droits d'admin
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Récupérer tous les utilisateurs de démo
-    const demoEmails = [
-      "admin@example.com",
-      "commercial@example.com",
-      "client@example.com",
-      "freelance@example.com",
-    ];
+    // Option pour traiter tous les utilisateurs ou seulement les démos
+    const requestBody = await req.json().catch(() => ({}));
+    const allUsers = requestBody.allUsers === true;
+
+    // Récupérer les utilisateurs
+    let userQuery;
+    
+    if (allUsers) {
+      console.log("Réinitialisation des mots de passe pour TOUS les utilisateurs");
+      // Récupérer tous les utilisateurs de la table users
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select("id, email");
+
+      if (usersError) {
+        throw new Error(`Erreur lors de la récupération des utilisateurs: ${usersError.message}`);
+      }
+      
+      userQuery = usersData;
+    } else {
+      console.log("Réinitialisation des mots de passe pour les utilisateurs de DÉMO uniquement");
+      // Récupérer uniquement les utilisateurs de démo
+      const demoEmails = [
+        "admin@example.com",
+        "commercial@example.com",
+        "client@example.com",
+        "freelance@example.com",
+      ];
+      
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select("id, email")
+        .in("email", demoEmails);
+        
+      if (usersError) {
+        throw new Error(`Erreur lors de la récupération des utilisateurs de démo: ${usersError.message}`);
+      }
+      
+      userQuery = usersData;
+    }
 
     const results = [];
 
-    // Mettre à jour le mot de passe pour chaque utilisateur de démo
-    for (const email of demoEmails) {
+    // Mettre à jour le mot de passe pour chaque utilisateur
+    for (const user of userQuery) {
       try {
-        // Rechercher l'utilisateur par email
-        const { data: users, error: searchError } = await supabase
-          .from("users")
-          .select("email")
-          .eq("email", email)
-          .single();
-
-        if (searchError) {
-          results.push({ email, status: "error", message: `Utilisateur non trouvé: ${searchError.message}` });
+        console.log(`Mise à jour du mot de passe pour l'utilisateur: ${user.email}`);
+        
+        // Vérifier si l'utilisateur existe dans auth.users
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(user.id);
+        
+        if (authError) {
+          results.push({ 
+            email: user.email, 
+            status: "error", 
+            message: `Utilisateur non trouvé dans auth: ${authError.message}` 
+          });
           continue;
         }
-
-        // Utiliser la fonction d'admin pour mettre à jour le mot de passe
+        
+        // Mettre à jour le mot de passe
         const { error: updateError } = await supabase.auth.admin.updateUserById(
-          users.id,
+          user.id,
           { password: "123456" }
         );
 
         if (updateError) {
-          results.push({ email, status: "error", message: updateError.message });
+          results.push({ 
+            email: user.email, 
+            status: "error", 
+            message: `Erreur de mise à jour: ${updateError.message}` 
+          });
         } else {
-          results.push({ email, status: "success", message: "Mot de passe mis à jour avec succès" });
+          // Mettre à jour le champ password dans la table users (si non défini)
+          const { error: updateUserError } = await supabase
+            .from("users")
+            .update({ password: "123456" })
+            .eq("id", user.id);
+          
+          if (updateUserError) {
+            console.warn(`Erreur lors de la mise à jour du champ password dans users: ${updateUserError.message}`);
+          }
+          
+          results.push({ 
+            email: user.email, 
+            status: "success", 
+            message: "Mot de passe mis à jour avec succès à '123456'" 
+          });
         }
       } catch (error) {
-        results.push({ email, status: "error", message: error.message });
+        results.push({ 
+          email: user.email, 
+          status: "error", 
+          message: error.message 
+        });
       }
     }
 
-    return new Response(JSON.stringify({ results }), {
+    const successCount = results.filter(r => r.status === "success").length;
+    const totalCount = results.length;
+
+    return new Response(JSON.stringify({ 
+      results,
+      summary: `${successCount}/${totalCount} mots de passe réinitialisés avec succès` 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
