@@ -41,7 +41,7 @@ export const contactService = {
   },
 
   // Création d'un contact
-  async createContact(contactData: ContactFormInput): Promise<string | null> {
+  async createContact(contactData: ContactFormInput): Promise<Contact | null> {
     return contactCreateUpdateService.createContact(contactData);
   },
 
