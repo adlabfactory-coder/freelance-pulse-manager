@@ -21,7 +21,8 @@ export const useContacts = () => {
       
       // Si l'utilisateur est admin, récupérer tous les contacts
       if (isAdmin) {
-        const allContacts = await contactService.getAllContacts();
+        // Utiliser getContacts au lieu de getAllContacts (qui n'existe pas)
+        const allContacts = await contactService.getContacts();
         setContacts(allContacts);
       } 
       // Sinon, récupérer les contacts associés au freelance
@@ -33,7 +34,9 @@ export const useContacts = () => {
           const contactsData = await Promise.all(
             contactIds.map(id => contactService.getContactById(id))
           );
-          setContacts(contactsData.filter((contact): contact is Contact => contact !== null));
+          // S'assurer que tous les éléments sont bien du type Contact
+          const validContacts = contactsData.filter((contact): contact is Contact => contact !== null);
+          setContacts(validContacts);
         } else {
           // Fallback sur l'ancienne méthode pour compatibilité
           const fallbackContacts = await contactService.getContactsByFreelancer(user.id);
@@ -62,9 +65,13 @@ export const useContacts = () => {
       }
       
       const newContact = await contactService.createContact(contact);
-      setContacts(prev => [...prev, newContact]);
-      toast.success('Contact ajouté avec succès');
-      return newContact;
+      // S'assurer que newContact est du type Contact avant de l'ajouter
+      if (newContact) {
+        setContacts(prev => [...prev, newContact]);
+        toast.success('Contact ajouté avec succès');
+        return newContact;
+      }
+      return null;
     } catch (err) {
       console.error('Error adding contact:', err);
       toast.error('Erreur lors de l\'ajout du contact');
@@ -75,9 +82,12 @@ export const useContacts = () => {
   const updateContact = useCallback(async (id: string, contact: Partial<Contact>) => {
     try {
       const updatedContact = await contactService.updateContact(id, contact);
-      setContacts(prev => prev.map(c => c.id === id ? updatedContact : c));
-      toast.success('Contact mis à jour avec succès');
-      return updatedContact;
+      if (updatedContact) {
+        setContacts(prev => prev.map(c => c.id === id ? updatedContact : c));
+        toast.success('Contact mis à jour avec succès');
+        return updatedContact;
+      }
+      return null;
     } catch (err) {
       console.error('Error updating contact:', err);
       toast.error('Erreur lors de la mise à jour du contact');
