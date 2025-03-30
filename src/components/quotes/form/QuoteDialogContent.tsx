@@ -89,7 +89,12 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     // Action handlers
     handleAddItem: onAddItem,
     handleRemoveItem: onRemoveItem,
-    handleSubmit: onSubmit,
+    
+    // Modified handleSubmit to return Promise<string>
+    handleSubmit: async () => {
+      onSubmit();
+      return Promise.resolve("");  // Return a Promise<string> to match expected type
+    },
     
     // Additional required properties
     addItem: onAddItem,
@@ -103,7 +108,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     // Additional required properties from useQuoteForm
     loadData: async () => Promise.resolve(),
     loadQuoteData: async () => Promise.resolve(null),
-    handleSubmitEdit: () => {},
+    handleSubmitEdit: async () => Promise.resolve(""),
     quoteData: quoteData,
     setQuoteData: onQuoteDataChange
   };
