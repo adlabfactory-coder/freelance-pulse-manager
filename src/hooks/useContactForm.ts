@@ -8,6 +8,7 @@ import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
 import { accountManagerService } from '@/services/account-manager/account-manager-service';
+import { Contact } from '@/services/contacts/types';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -88,11 +89,11 @@ export const useContactForm = ({
           if (onSuccess) onSuccess({id: initialData.id, name: data.name});
         }
       } else {
-        const contactId = await contactService.createContact(contactInput);
-        if (contactId) {
+        const createdContact = await contactService.createContact(contactInput);
+        if (createdContact) {
           toast.success("Contact ajouté avec succès");
           form.reset();
-          if (onSuccess) onSuccess({id: contactId, name: data.name});
+          if (onSuccess) onSuccess({id: createdContact.id, name: data.name});
         }
       }
     } catch (error: any) {
