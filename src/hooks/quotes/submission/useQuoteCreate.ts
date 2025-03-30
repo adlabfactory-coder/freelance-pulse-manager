@@ -30,26 +30,32 @@ export const useQuoteCreate = ({
     items: QuoteItem[]
   ) => {
     console.log("handleSubmit called with data:", quoteData);
+    console.log("Items:", items);
     
     try {
       // Valider les données requises
       if (!quoteData.contactId) {
+        toast.error("Veuillez sélectionner un contact");
         throw new Error("Veuillez sélectionner un contact");
       }
       
       if (!quoteData.freelancerId) {
+        toast.error("Un freelancer doit être assigné à ce devis");
         throw new Error("Un freelancer doit être assigné à ce devis");
       }
       
       if (!quoteData.validUntil) {
+        toast.error("Veuillez spécifier une date de validité");
         throw new Error("Veuillez spécifier une date de validité");
       }
       
       if (!quoteData.totalAmount && quoteData.totalAmount !== 0) {
+        toast.error("Le montant total est requis");
         throw new Error("Le montant total est requis");
       }
       
       if (!items || items.length === 0) {
+        toast.error("Veuillez ajouter au moins un service au devis");
         throw new Error("Veuillez ajouter au moins un service au devis");
       }
       
@@ -72,7 +78,9 @@ export const useQuoteCreate = ({
         freelancerId: quoteData.freelancerId,
         totalAmount: quoteData.totalAmount,
         status: quoteData.status || QuoteStatus.DRAFT,
-        validUntil: quoteData.validUntil,
+        validUntil: typeof quoteData.validUntil === 'string' 
+          ? new Date(quoteData.validUntil) 
+          : quoteData.validUntil,
         notes: quoteData.notes || "",
         folder: quoteData.folder || "general"
       };

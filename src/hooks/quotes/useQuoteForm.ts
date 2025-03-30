@@ -5,14 +5,11 @@ import { useQuoteDataLoader } from "./useQuoteDataLoader";
 import { useQuoteItems } from "./useQuoteItems";
 import { useQuoteData } from "./useQuoteData";
 import { useQuoteSubmission } from "./useQuoteSubmission";
-import { createQuotesService } from "@/services/supabase/quotes";
-import { supabase } from "@/lib/supabase-client";
-
-// Create a quotes service instance
-const quotesService = createQuotesService(supabase);
+import { toast } from "sonner";
 
 export interface UseQuoteFormProps {
   onSuccess?: (id?: string) => void;
+  onError?: (error: any) => void;
   onCloseDialog?: (open: boolean) => void;
   onQuoteCreated?: (id?: string) => void;
   isEditing?: boolean;
@@ -21,6 +18,7 @@ export interface UseQuoteFormProps {
 
 export const useQuoteForm = ({
   onSuccess,
+  onError,
   onCloseDialog,
   onQuoteCreated,
   isEditing = false,
@@ -58,7 +56,11 @@ export const useQuoteForm = ({
     handleSubmitEdit
   } = useQuoteSubmission({ 
     onSuccess, 
-    onError: (error) => console.error("Error in quote submission:", error)
+    onError: (error) => {
+      console.error("Error in quote submission:", error);
+      if (onError) onError(error);
+      else toast.error("Erreur lors de la soumission: " + (error?.message || "Erreur inconnue"));
+    }
   });
 
   // Chargement d'un devis spécifique
@@ -80,6 +82,7 @@ export const useQuoteForm = ({
       }
     } catch (error) {
       console.error('Error loading quote data:', error);
+      toast.error("Erreur lors du chargement du devis");
     }
   }, [quoteData, loadQuoteData, resetItems]);
 
@@ -140,6 +143,24 @@ export const useQuoteForm = ({
     return handleSubmitEdit(id, data, validQuoteItems);
   }, [getQuoteData, handleSubmitEdit, allItems]);
 
+  // Fonction simplifiée pour mettre à jour les données du devis
+  const setQuoteData = useCallback((data: Partial<Quote>) => {
+    console.log("setQuoteData called with:", data);
+    
+    if (data.contactId !== undefined) quoteData.setContactId(data.contactId);
+    if (data.freelancerId !== undefined) quoteData.setFreelancerId(data.freelancerId);
+    if (data.validUntil !== undefined) {
+      if (typeof data.validUntil === 'string') {
+        quoteData.setValidUntil(new Date(data.validUntil));
+      } else {
+        quoteData.setValidUntil(data.validUntil);
+      }
+    }
+    if (data.status !== undefined) quoteData.setStatus(data.status as QuoteStatus);
+    if (data.notes !== undefined) quoteData.setNotes(data.notes);
+    if (data.folder !== undefined) quoteData.setFolder(data.folder);
+  }, [quoteData]);
+
   return {
     // Basic quote data from useQuoteData
     contactId: quoteData.contactId,
@@ -184,7 +205,7 @@ export const useQuoteForm = ({
     
     // Helper functions
     quoteData: quoteDataForDisplay,
-    setQuoteData: quoteData.setQuoteData,
+    setQuoteData,
     
     // Ajout explicite de la propriété error pour corriger l'erreur TypeScript
     error

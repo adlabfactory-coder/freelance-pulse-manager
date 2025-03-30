@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Quote, QuoteStatus } from "@/types/quote";
 import { fetchQuotes } from "@/services/quote-service";

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle } from "lucide-react";
 import { useQuoteForm } from "@/hooks/quotes/useQuoteForm";
-import { Quote, QuoteItem } from "@/types/quote";
+import { Quote, QuoteItem, QuoteStatus } from "@/types/quote";
+import { toast } from "sonner";
 
 interface AddQuoteDialogProps {
   open: boolean;
@@ -25,6 +26,8 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
   const [createdQuoteId, setCreatedQuoteId] = useState<string | null>(null);
   const navigate = useNavigate();
   
+  console.log("AddQuoteDialog rendered with open state:", open);
+  
   // Utiliser le hook useQuoteForm pour gérer le formulaire
   const quoteForm = useQuoteForm({
     onSuccess: (id) => {
@@ -41,21 +44,38 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
         setTimeout(() => {
           onOpenChange(false);
         }, 2000);
+      } else {
+        toast.error("Erreur: Aucun ID de devis n'a été retourné après la création");
       }
+    },
+    onError: (error) => {
+      console.error("Erreur lors de la création du devis:", error);
+      toast.error("Erreur lors de la création du devis: " + (error?.message || "Erreur inconnue"));
     },
     onCloseDialog: onOpenChange
   });
 
   useEffect(() => {
-    if (!open) {
-      // Réinitialiser l'état lorsque le dialogue se ferme
+    if (open) {
+      console.log("Dialog opened, loading data");
+      // Charger les données de référence quand la boite de dialogue s'ouvre
+      quoteForm.loadData()
+        .catch(err => {
+          console.error("Erreur lors du chargement des données:", err);
+          toast.error("Erreur lors du chargement des données de référence");
+        });
+      
+      // Réinitialiser l'état lorsque le dialogue s'ouvre
       setShowSuccess(false);
       setCreatedQuoteId(null);
-    } else if (initialContactId) {
-      // Si un ID de contact est fourni, initialiser la valeur
-      quoteForm.setContactId(initialContactId);
+      
+      if (initialContactId) {
+        // Si un ID de contact est fourni, initialiser la valeur
+        console.log("Setting initial contact ID:", initialContactId);
+        quoteForm.setContactId(initialContactId);
+      }
     }
-  }, [open, initialContactId]);
+  }, [open, initialContactId, quoteForm]);
 
   const handleViewQuote = () => {
     if (createdQuoteId) {
@@ -79,15 +99,42 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     : [];
 
   // Préparer les données du devis pour submission
-  const quoteData: Omit<Quote, "id" | "createdAt" | "updatedAt"> = {
+  const quoteData: Partial<Quote> = {
     contactId: quoteForm.contactId,
     freelancerId: quoteForm.freelancerId,
     validUntil: quoteForm.validUntil,
-    status: quoteForm.status,
+    status: quoteForm.status || QuoteStatus.DRAFT,
     notes: quoteForm.notes,
     folder: quoteForm.folder,
     totalAmount: quoteForm.totalAmount || 0,
-    items: [] // Initialiser sans les items qui sont passés séparément
+    items: safeItems // Inclure les items pour l'affichage
+  };
+
+  const handleSubmit = () => {
+    console.log("Submitting quote with data:", quoteData);
+    console.log("Items:", safeItems);
+    
+    if (!quoteData.contactId) {
+      toast.error("Veuillez sélectionner un contact");
+      return;
+    }
+    
+    if (!quoteData.freelancerId) {
+      toast.error("Veuillez sélectionner un freelancer");
+      return;
+    }
+    
+    if (!quoteData.validUntil) {
+      toast.error("Veuillez spécifier une date de validité");
+      return;
+    }
+    
+    if (!safeItems || safeItems.length === 0) {
+      toast.error("Veuillez ajouter au moins un article au devis");
+      return;
+    }
+    
+    quoteForm.handleSubmit(quoteData, safeItems);
   };
 
   return (
@@ -103,7 +150,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
               </div>
               <h3 className="text-lg font-medium">Devis créé avec succès</h3>
               <p className="text-sm text-muted-foreground">
-                Le devis a été créé avec succès et envoyé au contact.
+                Le devis a été créé avec succès.
               </p>
               <div className="mt-4">
                 <Button onClick={handleViewQuote} className="mr-2">
@@ -117,16 +164,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
           <QuoteDialogContent 
             loading={quoteForm.loading}
             isSubmitting={quoteForm.isSubmitting}
-            quoteData={{
-              contactId: quoteForm.contactId,
-              freelancerId: quoteForm.freelancerId,
-              validUntil: quoteForm.validUntil,
-              status: quoteForm.status,
-              notes: quoteForm.notes,
-              folder: quoteForm.folder,
-              totalAmount: quoteForm.totalAmount || 0,
-              items: safeItems
-            }}
+            quoteData={quoteData}
             currentItem={quoteForm.currentItem}
             contacts={quoteForm.contacts || []}
             freelancers={quoteForm.freelancers || []}
@@ -135,7 +173,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
             onCurrentItemChange={quoteForm.setCurrentItem}
             onAddItem={quoteForm.handleAddItem}
             onRemoveItem={quoteForm.handleRemoveItem}
-            onSubmit={() => quoteForm.handleSubmit(quoteData, safeItems)}
+            onSubmit={handleSubmit}
             onCancel={() => onOpenChange(false)}
           />
         )}

@@ -12,6 +12,7 @@ export const createQuote = async (
 ): Promise<Quote | null> => {
   try {
     console.log("Service de création de devis appelé avec:", quoteData);
+    console.log("Items:", items);
     
     // Format date for database
     const validUntil = typeof quoteData.validUntil === 'string' 
@@ -75,8 +76,17 @@ export const createQuote = async (
       }
     }
     
-    // Return the complete quote or just the ID
-    return { id: quoteResult.id } as Quote;
+    // Return the complete quote with ID
+    return { 
+      id: quoteResult.id,
+      contactId: quoteData.contactId,
+      freelancerId: quoteData.freelancerId,
+      totalAmount: quoteData.totalAmount,
+      status: status,
+      validUntil: quoteData.validUntil,
+      notes: quoteData.notes,
+      folder: quoteData.folder
+    } as Quote;
   } catch (error: any) {
     console.error('Erreur inattendue lors de la création du devis:', error);
     toast.error(`Erreur lors de la création du devis: ${error.message || 'Erreur inconnue'}`);

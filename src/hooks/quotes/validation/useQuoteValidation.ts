@@ -1,4 +1,5 @@
 
+import { toast } from "sonner";
 import { Quote, QuoteItem } from "@/types";
 
 /**
@@ -10,6 +11,9 @@ export const useQuoteValidation = () => {
    */
   const validateQuoteData = (quoteData: Partial<Quote>, items: QuoteItem[]) => {
     const errors: string[] = [];
+    
+    console.log("Validating quote data:", quoteData);
+    console.log("Validating quote items:", items);
     
     if (!quoteData.contactId) {
       errors.push("Un contact doit être sélectionné");
@@ -27,8 +31,14 @@ export const useQuoteValidation = () => {
       errors.push("Au moins un article doit être ajouté au devis");
     }
     
+    const isValid = errors.length === 0;
+    
+    if (!isValid) {
+      errors.forEach(error => toast.error(error));
+    }
+    
     return {
-      isValid: errors.length === 0,
+      isValid,
       errors
     };
   };

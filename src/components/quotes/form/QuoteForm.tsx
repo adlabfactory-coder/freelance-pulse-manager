@@ -37,9 +37,21 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Form submitted, calling handleSubmit");
+    
     if (onSubmit) {
       onSubmit();
     } else {
+      console.log("Form data before submission:", {
+        contactId: form.contactId,
+        freelancerId: form.freelancerId,
+        validUntil: form.validUntil,
+        status: form.status,
+        notes: form.notes,
+        folder: form.folder,
+        totalAmount: form.totalAmount,
+        items: safeItems
+      });
+      
       // Correction: transformer les items partiels en items complets pour le formulaire
       const validItems = safeItems.map(item => {
         // Assurez-vous que tous les champs requis sont présents
@@ -73,7 +85,11 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
   // Ensure validUntil is a Date object
   const handleDateChange = (date: Date | string) => {
     if (typeof date === 'string') {
-      form.setValidUntil(new Date(date));
+      try {
+        form.setValidUntil(new Date(date));
+      } catch (error) {
+        console.error("Erreur lors de la conversion de la date:", error);
+      }
     } else {
       form.setValidUntil(date);
     }
