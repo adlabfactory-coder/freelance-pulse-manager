@@ -7,6 +7,7 @@ import { Quote, QuoteItem } from "@/types";
 import { Contact } from "@/services/contacts/types";
 import { Service } from "@/types/service";
 import { User } from "@/types/user";
+import { QuoteStatus } from "@/types/quote";
 
 interface QuoteDialogContentProps {
   loading: boolean;
@@ -43,14 +44,14 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
 }) => {
   console.log("QuoteDialogContent rendered with data:", { quoteData, loading, isSubmitting });
   
-  // Composant de formulaire personnalisé
+  // Composant de formulaire personnalisé avec la conversion de status en QuoteStatus
   const mockForm = {
     loading,
     isSubmitting,
     contactId: quoteData.contactId || "",
     freelancerId: quoteData.freelancerId || "",
     validUntil: quoteData.validUntil || new Date(),
-    status: quoteData.status || "draft",
+    status: quoteData.status as QuoteStatus || QuoteStatus.DRAFT,  // Conversion de string à QuoteStatus
     notes: quoteData.notes || "",
     folder: quoteData.folder || "general",
     items: quoteData.items || [],
@@ -59,6 +60,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     contacts,
     freelancers,
     services,
+    // Ajout des méthodes manquantes
     setContactId: (contactId: string) => onQuoteDataChange({ ...quoteData, contactId }),
     setFreelancerId: (freelancerId: string) => onQuoteDataChange({ ...quoteData, freelancerId }),
     setValidUntil: (validUntil: Date) => onQuoteDataChange({ ...quoteData, validUntil }),
@@ -68,7 +70,13 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     setCurrentItem: onCurrentItemChange,
     handleAddItem: onAddItem,
     handleRemoveItem: onRemoveItem,
-    handleSubmit: onSubmit
+    handleSubmit: onSubmit,
+    // Ajout des propriétés nécessaires pour compléter le type
+    addItem: onAddItem,
+    removeItem: onRemoveItem,
+    updateItem: () => {}, // Implémentation vide car non utilisée ici
+    isQuoteSaved: false,
+    error: ""
   };
 
   if (loading) {

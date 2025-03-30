@@ -83,11 +83,8 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
   }, [open, quoteId, initialQuote, loadData, loadQuoteData, setQuoteData]);
 
   // Nous nous assurons que les items sont complets et valides ici
-  const safeQuoteData: Partial<Quote> = {
-    ...quoteData,
-    // Ne gardons que les éléments non marqués pour suppression qui ont toutes les propriétés requises
-    items: quoteData.items
-      ? quoteData.items
+  const safeItems: QuoteItem[] = quoteData.items
+    ? quoteData.items
         .filter((item): item is QuoteItem => {
           return Boolean(
             item && 
@@ -96,7 +93,12 @@ const EditQuoteDialog: React.FC<EditQuoteDialogProps> = ({
             item.unitPrice !== undefined
           );
         })
-      : []
+    : [];
+
+  // Créer un objet qui satisfait le type attendu par QuoteDialogContent
+  const safeQuoteData: Partial<Quote> & { items: QuoteItem[] } = {
+    ...quoteData,
+    items: safeItems
   };
 
   if (error) {

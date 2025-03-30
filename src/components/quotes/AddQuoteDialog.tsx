@@ -89,8 +89,6 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     ? quoteForm.items.filter((item): item is QuoteItem => {
         return Boolean(
           item && 
-          typeof item.id !== 'undefined' && 
-          typeof item.quoteId !== 'undefined' &&
           typeof item.description !== 'undefined' && 
           typeof item.quantity !== 'undefined' && 
           typeof item.unitPrice !== 'undefined'
@@ -99,7 +97,7 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
     : [];
 
   // Préparer les données du devis pour submission
-  const quoteData: Partial<Quote> = {
+  const quoteData: Partial<Quote> & { items: QuoteItem[] } = {
     contactId: quoteForm.contactId,
     freelancerId: quoteForm.freelancerId,
     validUntil: quoteForm.validUntil,
