@@ -60,6 +60,9 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
   
   const validUntilDate = ensureDate(quoteData.validUntil);
   
+  // Always ensure totalAmount is a number
+  const totalAmount = quoteData.totalAmount || 0;
+  
   // Composant de formulaire personnalisé avec la conversion de status en QuoteStatus
   const mockForm = {
     loading,
@@ -72,7 +75,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     folder: quoteData.folder || "general",
     items: quoteData.items || [],
     currentItem: currentItem || {},
-    totalAmount: quoteData.totalAmount || 0,
+    totalAmount: totalAmount,
     contacts,
     freelancers,
     services,
@@ -109,7 +112,16 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     loadData: async () => Promise.resolve(),
     loadQuoteData: async () => Promise.resolve(null),
     handleSubmitEdit: async () => Promise.resolve(""),
-    quoteData: quoteData,
+    quoteData: {
+      contactId: quoteData.contactId || "",
+      freelancerId: quoteData.freelancerId || "",
+      validUntil: validUntilDate,
+      status: quoteStatus,
+      notes: quoteData.notes || "",
+      folder: quoteData.folder || "general",
+      items: quoteData.items || [],
+      totalAmount: totalAmount  // Ensuring totalAmount is always defined
+    },
     setQuoteData: onQuoteDataChange
   };
 
