@@ -44,6 +44,11 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
 }) => {
   console.log("QuoteDialogContent rendered with data:", { quoteData, loading, isSubmitting });
   
+  // Ensure status is a valid QuoteStatus enum value
+  const quoteStatus = (typeof quoteData.status === 'string') 
+    ? (quoteData.status as QuoteStatus || QuoteStatus.DRAFT)
+    : (quoteData.status || QuoteStatus.DRAFT);
+  
   // Composant de formulaire personnalisé avec la conversion de status en QuoteStatus
   const mockForm = {
     loading,
@@ -51,7 +56,7 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     contactId: quoteData.contactId || "",
     freelancerId: quoteData.freelancerId || "",
     validUntil: quoteData.validUntil || new Date(),
-    status: quoteData.status as QuoteStatus || QuoteStatus.DRAFT,  // Conversion de string à QuoteStatus
+    status: quoteStatus,
     notes: quoteData.notes || "",
     folder: quoteData.folder || "general",
     items: quoteData.items || [],
@@ -60,23 +65,36 @@ const QuoteDialogContent: React.FC<QuoteDialogContentProps> = ({
     contacts,
     freelancers,
     services,
-    // Ajout des méthodes manquantes
+    
+    // Methods required by QuoteForm
     setContactId: (contactId: string) => onQuoteDataChange({ ...quoteData, contactId }),
     setFreelancerId: (freelancerId: string) => onQuoteDataChange({ ...quoteData, freelancerId }),
     setValidUntil: (validUntil: Date) => onQuoteDataChange({ ...quoteData, validUntil }),
-    setStatus: (status: string) => onQuoteDataChange({ ...quoteData, status }),
+    setStatus: (status: QuoteStatus) => onQuoteDataChange({ ...quoteData, status }),
     setNotes: (notes: string) => onQuoteDataChange({ ...quoteData, notes }),
     setFolder: (folder: string) => onQuoteDataChange({ ...quoteData, folder }),
     setCurrentItem: onCurrentItemChange,
+    
+    // Action handlers
     handleAddItem: onAddItem,
     handleRemoveItem: onRemoveItem,
     handleSubmit: onSubmit,
-    // Ajout des propriétés nécessaires pour compléter le type
+    
+    // Additional required properties
     addItem: onAddItem,
     removeItem: onRemoveItem,
     updateItem: () => {}, // Implémentation vide car non utilisée ici
+    
+    // Form state
     isQuoteSaved: false,
-    error: ""
+    error: "",
+    
+    // Additional required properties from useQuoteForm
+    loadData: async () => Promise.resolve(),
+    loadQuoteData: async () => Promise.resolve(null),
+    handleSubmitEdit: () => {},
+    quoteData: quoteData,
+    setQuoteData: onQuoteDataChange
   };
 
   if (loading) {
