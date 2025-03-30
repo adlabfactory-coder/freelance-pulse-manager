@@ -65,8 +65,18 @@ export const useContacts = () => {
       }
       
       const newContact = await contactService.createContact(contact);
-      // S'assurer que newContact est du type Contact avant de l'ajouter
-      if (newContact) {
+      
+      // Vérifier que newContact n'est pas une chaîne de caractères mais bien un objet Contact
+      if (typeof newContact === 'string') {
+        // Si c'est juste l'ID qui est retourné, récupérer le contact complet
+        const fullContact = await contactService.getContactById(newContact);
+        if (fullContact) {
+          setContacts(prev => [...prev, fullContact]);
+          toast.success('Contact ajouté avec succès');
+          return fullContact;
+        }
+      } else if (newContact) {
+        // Si c'est déjà un objet Contact complet
         setContacts(prev => [...prev, newContact]);
         toast.success('Contact ajouté avec succès');
         return newContact;
