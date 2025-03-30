@@ -89,7 +89,7 @@ const ResetAllPasswords: React.FC = () => {
                 <li>admin@example.com (Administrateur)</li>
                 <li>commercial@example.com (Chargé(e) d'affaires)</li>
                 <li>client@example.com (Client)</li>
-                <li>freelance@example.com (Chargé(e) d'affaires)</li>
+                <li>freelance@example.com (Freelance)</li>
               </ul>
             )}
             

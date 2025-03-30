@@ -10,11 +10,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
-import { BookOpen, HelpCircle, LogOut, Settings, User } from 'lucide-react';
+import { BookOpen, HelpCircle, LogOut, Settings, User, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { UserRole } from '@/types/roles';
 
 const UserProfileMenu: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
   const navigate = useNavigate();
   
   if (!user) return null;
@@ -35,6 +37,36 @@ const UserProfileMenu: React.FC = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const getRoleBadgeStyle = () => {
+    switch(role) {
+      case UserRole.SUPER_ADMIN:
+        return "bg-red-500 hover:bg-red-600";
+      case UserRole.ADMIN:
+        return "bg-purple-500 hover:bg-purple-600";
+      case UserRole.ACCOUNT_MANAGER:
+        return "bg-blue-500 hover:bg-blue-600";
+      case UserRole.FREELANCER:
+        return "bg-green-500 hover:bg-green-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
+    }
+  };
+
+  const getRoleName = () => {
+    switch(role) {
+      case UserRole.SUPER_ADMIN:
+        return "Super Admin";
+      case UserRole.ADMIN:
+        return "Administrateur";
+      case UserRole.ACCOUNT_MANAGER:
+        return "Chargé d'affaires";
+      case UserRole.FREELANCER:
+        return "Freelance";
+      default:
+        return "Utilisateur";
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,6 +80,12 @@ const UserProfileMenu: React.FC = () => {
           <div className="flex flex-col">
             <span className="font-semibold">{user.name}</span>
             <span className="text-xs text-muted-foreground">{user.email}</span>
+            <div className="mt-1">
+              <Badge className={`${getRoleBadgeStyle()} flex items-center gap-1 text-xs py-0 px-2`}>
+                <UserCheck className="h-3 w-3" /> 
+                {getRoleName()}
+              </Badge>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

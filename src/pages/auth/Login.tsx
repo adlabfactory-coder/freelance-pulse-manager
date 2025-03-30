@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import LoginForm, { LoginFormData } from "@/components/auth/LoginForm";
 import DemoLoginOptions, { mockData } from "@/components/auth/DemoLoginOptions";
+import { Button } from "@/components/ui/button";
+import { Lock, UserCog, Sync, RefreshCw } from "lucide-react";
 
 const LoginPage: React.FC = () => {
   const { signIn, isAuthenticated, isLoading } = useAuth();
@@ -88,8 +90,44 @@ const LoginPage: React.FC = () => {
             isLoading={isFormLoading}
           />
         </CardContent>
-        <CardFooter className="flex flex-col">
+        <CardFooter className="flex flex-col gap-4">
           <DemoLoginOptions onSelectRole={autofillForm} />
+          
+          <div className="w-full border-t my-2"></div>
+          
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <Button 
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to="/auth/reset-all-passwords">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Réinitialiser mots de passe
+              </Link>
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <Link to="/auth/sync-users">
+                <Sync className="mr-2 h-4 w-4" />
+                Synchroniser utilisateurs
+              </Link>
+            </Button>
+            <Button 
+              variant="outline"
+              size="sm"
+              asChild
+              className="col-span-2"
+            >
+              <Link to="/auth/users-sync-status">
+                <UserCog className="mr-2 h-4 w-4" />
+                État de synchronisation
+              </Link>
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>

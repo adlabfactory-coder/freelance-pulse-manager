@@ -26,7 +26,8 @@ import { Toaster as SonnerToaster } from "./components/ui/sonner";
 import { SupabaseProvider } from "./hooks/use-supabase";
 import UserManager from "@/pages/admin/UserManager";
 import AccountManagersDistributionPage from "@/pages/admin/AccountManagersDistributionPage";
-import { UserRole } from "./types/roles";
+import ResetAllPasswords from "./pages/auth/ResetAllPasswords";
+import UsersSyncStatus from "./pages/auth/UsersSyncStatus";
 
 function App() {
   return (
@@ -34,10 +35,17 @@ function App() {
       <AuthProvider>
         <SupabaseProvider>
           <Routes>
+            {/* Routes publiques */}
             <Route path="/" element={<Index />} />
             <Route path="/auth/login" element={<Login />} />
+            
+            {/* Routes d'administration/utilitaires - accessibles uniquement via URL directe */}
             <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
+            <Route path="/auth/reset-all-passwords" element={<ResetAllPasswords />} />
             <Route path="/auth/sync-users" element={<SyncUsers />} />
+            <Route path="/auth/users-sync-status" element={<UsersSyncStatus />} />
+            
+            {/* Routes protégées - nécessitent une authentification */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />

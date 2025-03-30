@@ -2,49 +2,78 @@
 import { User } from "@/types";
 import { UserRole } from "@/types/roles";
 
-// Utilisateurs de démonstration pour le développement
+/**
+ * Génère des utilisateurs fictifs pour le mode démo
+ */
 export const getMockUsers = (): User[] => {
   return [
     {
-      id: '7cbd0c03-de0b-435f-a84d-b14e0dfdc4dc',
-      name: 'Super Admin Démo',
-      email: 'superadmin@example.com',
-      role: UserRole.SUPER_ADMIN,
-      avatar: null
-    },
-    {
-      id: '6a94bd3d-7f5c-49ae-b09e-e570cb01a978',
-      name: 'Admin Démo',
-      email: 'admin@example.com',
+      id: "admin-uuid",
+      email: "admin@example.com",
+      name: "Admin Demo",
       role: UserRole.ADMIN,
       avatar: null
     },
     {
-      id: '487fb1af-4396-49d1-ba36-8711facbb03c',
-      name: 'Freelancer Démo',
-      email: 'freelancer@example.com',
-      role: UserRole.FREELANCER,
+      id: "super-admin-uuid",
+      email: "super@example.com",
+      name: "Super Admin Demo",
+      role: UserRole.SUPER_ADMIN,
       avatar: null
     },
     {
-      id: '3f8e3f1c-c6f9-4c04-a0b9-88d7f6d8e05c',
-      name: 'Chargé de Compte Démo',
-      email: 'account@example.com',
+      id: "account-manager-uuid",
+      email: "commercial@example.com",
+      name: "Commercial Demo",
       role: UserRole.ACCOUNT_MANAGER,
+      avatar: null
+    },
+    {
+      id: "freelancer-uuid",
+      email: "freelance@example.com",
+      name: "Freelance Demo",
+      role: UserRole.FREELANCER,
       avatar: null
     }
   ];
 };
 
-// Utilisateurs avec accès privilégié
-export const isPrivilegedUser = (role: UserRole | null | undefined): boolean => {
-  if (!role) return false;
-  return [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.ACCOUNT_MANAGER].includes(role);
-};
+/**
+ * Vérifie la synchronisation entre les utilisateurs démo et Supabase
+ */
+export const checkUserSyncStatus = async (supabaseClient: any): Promise<{
+  syncedUsers: number,
+  totalUsers: number,
+  users: Array<{email: string, synced: boolean}>
+}> => {
+  const mockUsers = getMockUsers();
+  const results = {
+    syncedUsers: 0,
+    totalUsers: mockUsers.length,
+    users: [] as Array<{email: string, synced: boolean}>
+  };
 
-// Récupère un utilisateur approprié selon le rôle
-export const getAppropriateUserByRole = (role: UserRole): User => {
-  const users = getMockUsers();
-  const found = users.find(u => u.role === role);
-  return found || users[1]; // Default to Admin if not found
+  try {
+    for (const user of mockUsers) {
+      const { data, error } = await supabaseClient
+        .from('auth.users')
+        .select('email')
+        .eq('email', user.email)
+        .single();
+      
+      const synced = !error && data;
+      results.users.push({
+        email: user.email,
+        synced
+      });
+      
+      if (synced) {
+        results.syncedUsers++;
+      }
+    }
+  } catch (err) {
+    console.error("Erreur lors de la vérification de la synchronisation:", err);
+  }
+  
+  return results;
 };
