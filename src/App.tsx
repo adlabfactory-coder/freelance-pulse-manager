@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import ResetDemoPasswords from "./pages/auth/ResetDemoPasswords";
+import SyncUsers from "./pages/auth/SyncUsers";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -36,6 +37,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
+            <Route path="/auth/sync-users" element={<SyncUsers />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
