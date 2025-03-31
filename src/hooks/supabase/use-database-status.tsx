@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { tableNames } from "@/services/supabase/setup/database-status";
 import { toast } from "@/components/ui/use-toast";
+import { checkDatabaseStatus as checkDbStatus, initializeDatabase as initDb } from "@/services/supabase/setup";
 
 export type TableStatus = {
   table: string;
@@ -62,10 +63,24 @@ export function useDatabaseStatus() {
       }
       
       setConnectionError(null);
+
+      // Return status information for external use
+      return {
+        success: missingTables.length === 0,
+        tables: missingTables.map(t => t.table),
+        message: missingTables.length === 0 
+          ? 'Toutes les tables sont configurées' 
+          : `Tables manquantes: ${missingTables.map(t => t.table).join(', ')}`
+      };
     } catch (err: any) {
       console.error("Error checking database status:", err);
       setConnectionError(err.message || "Une erreur est survenue lors de la vérification des tables");
       setStatus("unknown");
+      
+      return {
+        success: false,
+        message: err.message || "Une erreur est survenue lors de la vérification des tables"
+      };
     }
   }, [checkTableExists]);
 
@@ -74,6 +89,7 @@ export function useDatabaseStatus() {
     
     // Check Supabase connection first
     try {
+      // Try to access the users table to verify connection
       const { data, error } = await supabase.from('users').select('count').single();
       
       if (error) {
@@ -81,19 +97,57 @@ export function useDatabaseStatus() {
         setStatus("connection_error");
         setTablesStatus([]);
         setRefreshing(false);
-        return;
+        return {
+          success: false,
+          message: "Impossible de se connecter à Supabase"
+        };
       }
       
       // If connection is successful, check database status
-      await checkDatabaseStatus();
+      const statusResult = await checkDatabaseStatus();
+      return statusResult;
     } catch (error: any) {
       console.error("Error during refresh:", error);
       setConnectionError(error.message || "Erreur lors de la vérification de la connexion");
       setStatus("connection_error");
+      
+      return {
+        success: false,
+        message: error.message || "Erreur lors de la vérification de la connexion"
+      };
     } finally {
       setRefreshing(false);
     }
   }, [checkDatabaseStatus]);
+
+  // Add these methods to expose them for the provider
+  const checkSupabaseStatus = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true });
+      
+      if (error) {
+        console.warn('Erreur lors de la vérification de la connexion à Supabase:', error.message);
+        return { success: false, message: error.message };
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
+      return { success: false, message: 'Impossible de se connecter à Supabase' };
+    }
+  }, []);
+
+  const initializeDatabase = useCallback(async (options: any = {}) => {
+    try {
+      return await initDb(options);
+    } catch (error: any) {
+      console.error("Error initializing database:", error);
+      return { 
+        success: false, 
+        message: `Erreur lors de l'initialisation de la base de données: ${error.message || "Erreur inconnue"}` 
+      };
+    }
+  }, []);
 
   // Initial check
   useEffect(() => {
@@ -112,7 +166,11 @@ export function useDatabaseStatus() {
     refreshing,
     connectionError,
     tablesStatus,
-    handleRefresh
+    handleRefresh,
+    // Add these methods to be exposed to the provider
+    checkSupabaseStatus,
+    checkDatabaseStatus,
+    initializeDatabase
   };
 }
 
