@@ -1,178 +1,122 @@
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { User, UserRole } from "@/types";
 import { AuthContextType } from "@/types/auth";
-import { Session } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
+import { getUserByEmail } from "@/utils/user-list";
 import { useAuthOperations } from "./useAuthOperations";
 import { useLogout } from "./useLogout";
-import { supabase } from "@/lib/supabase-client";
-import { getMockUsers } from "@/utils/supabase-mock-data";
+import { toast } from "sonner";
 
-const defaultContext: AuthContextType = {
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  role: null,
-  isAdmin: false,
-  isFreelancer: false,
-  isSuperAdmin: false,
-  isAccountManager: false,
-  isAdminOrSuperAdmin: false,
-  error: null,
-  loading: true,
-  signIn: async () => ({ success: false }),
-  signUp: async () => ({ success: false }),
-  logout: async () => {},
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthContext = createContext<AuthContextType>(defaultContext);
-
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
   
-  // Use authentication operations hooks
   const { handleLogin, handleSignUp } = useAuthOperations(setUser);
-  const logoutFn = useLogout();
-
-  const DEMO_MODE = true;
-
+  const logout = useLogout();
+  
+  // Vérifier s'il y a un utilisateur stocké dans localStorage au chargement
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       try {
-        if (DEMO_MODE) {
-          // Demo mode authentication
-          const shouldBeLoggedIn = localStorage.getItem('currentUser');
-          
-          if (!shouldBeLoggedIn) {
-            console.log("Mode démo: aucun utilisateur actif trouvé dans localStorage");
-            setUser(null);
-            setIsLoading(false);
-            return;
-          }
-          
-          const mockUsers = getMockUsers();
-          const defaultUser = mockUsers[0];
-          
-          console.log("Mode démonstration activé, utilisation d'un utilisateur par défaut:", defaultUser.email);
-          setUser(defaultUser);
-          localStorage.setItem('currentUser', JSON.stringify(defaultUser));
-          setIsLoading(false);
-          
-          try {
-            const { data, error } = await supabase.from('contacts').select('id').limit(1);
-            if (error) {
-              console.warn("La connexion à Supabase semble avoir un problème:", error.message);
-            } else {
-              console.log("Connexion à Supabase réussie, contacts accessibles");
-            }
-          } catch (err) {
-            console.warn("Erreur lors du test de connexion à Supabase:", err);
-          }
-          
-          return;
-        }
+        // Vérifier si un utilisateur est stocké dans localStorage
+        const storedUser = localStorage.getItem('currentUser');
         
-        // Supabase authentication
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, newSession) => {
-            console.log("Auth state changed:", event, newSession?.user?.email);
-            setSession(newSession);
-            setUser(newSession?.user ? mapSupabaseUser(newSession.user) : null);
-            setIsLoading(false);
-            
-            if (newSession?.user && event === 'SIGNED_IN') {
-              setTimeout(() => {
-                console.log("Session utilisateur mise à jour");
-              }, 0);
-            }
-          }
-        );
-
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        if (existingSession) {
-          console.log("Session existante trouvée:", existingSession.user.email);
-          setSession(existingSession);
-          setUser(mapSupabaseUser(existingSession.user));
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          console.log("Utilisateur trouvé dans localStorage:", parsedUser.name);
         } else {
-          console.log("Aucune session existante trouvée");
           setUser(null);
-          setSession(null);
+          console.log("Aucun utilisateur trouvé dans localStorage");
         }
-        setIsLoading(false);
-        
-        return () => {
-          subscription.unsubscribe();
-        };
       } catch (err) {
         console.error("Erreur lors de la vérification de l'authentification:", err);
+        setUser(null);
+        setError("Erreur lors de la vérification de l'authentification");
+      } finally {
         setIsLoading(false);
       }
     };
     
     checkAuth();
-  }, [navigate]);
-
-  const mapSupabaseUser = (supabaseUser: any): User => {
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email,
-      name: supabaseUser.user_metadata?.name || supabaseUser.email.split('@')[0],
-      role: (supabaseUser.user_metadata?.role || 'admin') as UserRole,
-      avatar: supabaseUser.user_metadata?.avatar || null
-    };
-  };
-
-  // Calculate role-based flags
-  const isAdmin = !!user && (user.role === UserRole.ADMIN);
-  const isSuperAdmin = !!user && (user.role === UserRole.SUPER_ADMIN);
-  const isAccountManager = !!user && (user.role === UserRole.ACCOUNT_MANAGER);
-  const isFreelancer = !!user && (user.role === UserRole.FREELANCER);
-  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
-
-  const logout = async () => {
-    console.log("Appel à la fonction de déconnexion depuis useAuthContext");
-    // Nettoyer immédiatement l'état d'authentification
-    setUser(null);
-    setSession(null);
-    
-    // En mode démo, on supprime l'utilisateur du localStorage
-    if (DEMO_MODE) {
-      localStorage.removeItem('currentUser');
+  }, []);
+  
+  const signIn = async (email: string, password: string) => {
+    try {
+      // Vérifier les informations d'identification
+      const demoUser = getUserByEmail(email);
+      
+      if (demoUser && demoUser.password === password) {
+        return handleLogin(email, password);
+      }
+      
+      return {
+        success: false,
+        error: "Identifiants incorrects"
+      };
+    } catch (err: any) {
+      console.error("Erreur lors de la connexion:", err);
+      return {
+        success: false,
+        error: err.message || "Une erreur est survenue lors de la connexion"
+      };
     }
-    
-    // Appeler le hook de déconnexion pour gérer la déconnexion Supabase et la navigation
-    await logoutFn();
   };
-
-  const value: AuthContextType = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    role: user?.role as UserRole | null,
-    isAdmin,
-    isFreelancer,
-    isSuperAdmin,
-    isAccountManager,
-    isAdminOrSuperAdmin,
-    loading: isLoading,
-    error,
-    signIn: handleLogin,
-    signUp: handleSignUp,
-    logout,
+  
+  const signUp = async (email: string, password: string, name: string, role: UserRole) => {
+    try {
+      return handleSignUp(email, password, name, role);
+    } catch (err: any) {
+      console.error("Erreur lors de l'inscription:", err);
+      return {
+        success: false,
+        error: err.message || "Une erreur est survenue lors de l'inscription"
+      };
+    }
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  
+  const role = user?.role || null;
+  const isAuthenticated = !!user;
+  const isAdmin = role === UserRole.ADMIN;
+  const isSuperAdmin = role === UserRole.SUPER_ADMIN;
+  const isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
+  const isFreelancer = role === UserRole.FREELANCER;
+  const isAccountManager = role === UserRole.ACCOUNT_MANAGER;
+  
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        role,
+        isAdmin,
+        isSuperAdmin,
+        isAdminOrSuperAdmin,
+        isFreelancer,
+        isAccountManager,
+        error,
+        loading: isLoading,
+        signIn,
+        signUp,
+        logout
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error("useAuthContext doit être utilisé à l'intérieur d'un AuthProvider");
   }
+  
   return context;
 };

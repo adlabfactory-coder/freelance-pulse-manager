@@ -28,6 +28,7 @@ import UserManager from "@/pages/admin/UserManager";
 import AccountManagersDistributionPage from "@/pages/admin/AccountManagersDistributionPage";
 import ResetAllPasswords from "./pages/auth/ResetAllPasswords";
 import UsersSyncStatus from "./pages/auth/UsersSyncStatus";
+import RestrictedRoute from "@/components/layout/RestrictedRoute";
 
 function App() {
   return (
@@ -35,40 +36,42 @@ function App() {
       <AuthProvider>
         <SupabaseProvider>
           <Routes>
-            {/* Routes publiques */}
-            <Route path="/" element={<Index />} />
+            {/* Routes d'authentification */}
             <Route path="/auth/login" element={<Login />} />
-            
-            {/* Routes d'administration/utilitaires - accessibles uniquement via URL directe */}
             <Route path="/auth/reset-demo-passwords" element={<ResetDemoPasswords />} />
             <Route path="/auth/reset-all-passwords" element={<ResetAllPasswords />} />
             <Route path="/auth/sync-users" element={<SyncUsers />} />
             <Route path="/auth/users-sync-status" element={<UsersSyncStatus />} />
             
+            {/* Page d'accueil (non protégée, mais avec redirection si connecté) */}
+            <Route path="/" element={<Index />} />
+            
             {/* Routes protégées - nécessitent une authentification */}
-            <Route element={<ProtectedRoute />}>
+            <Route element={<RestrictedRoute />}>
               <Route element={<Layout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/contacts" element={<Contacts />} />
-                <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
-                <Route path="/appointments" element={<Appointments />} />
-                <Route path="/quotes" element={<Quotes />} />
-                <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/commissions" element={<Commissions />} />
-                <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
-                
-                {/* Settings routes - accessible only to admins and super admins */}
-                <Route path="/settings/*" element={<SettingsRoutes />} />
-                
-                {/* Admin routes - accessible to admins and super admins */}
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin/users" element={<UserManager />} />
-                <Route path="/admin/account-managers" element={<AccountManagersDistributionPage />} />
-                
-                {/* Audit route - accessible only to super admins */}
-                <Route path="/audit" element={<AuditPage />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/contacts" element={<Contacts />} />
+                  <Route path="/contacts/:contactId" element={<ContactDetailPage />} />
+                  <Route path="/appointments" element={<Appointments />} />
+                  <Route path="/quotes" element={<Quotes />} />
+                  <Route path="/quotes/:quoteId" element={<QuoteDetailPage />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/commissions" element={<Commissions />} />
+                  <Route path="/commissions/:commissionId" element={<CommissionDetailPage />} />
+                  
+                  {/* Settings routes - accessible only to admins and super admins */}
+                  <Route path="/settings/*" element={<SettingsRoutes />} />
+                  
+                  {/* Admin routes - accessible to admins and super admins */}
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin/users" element={<UserManager />} />
+                  <Route path="/admin/account-managers" element={<AccountManagersDistributionPage />} />
+                  
+                  {/* Audit route - accessible only to super admins */}
+                  <Route path="/audit" element={<AuditPage />} />
+                </Route>
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

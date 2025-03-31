@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import LoginForm, { LoginFormData } from "@/components/auth/LoginForm";
 import DemoLoginOptions, { mockData } from "@/components/auth/DemoLoginOptions";
 import { Button } from "@/components/ui/button";
-import { Lock, UserCog, Sync, RefreshCw } from "lucide-react";
+import { Lock, UserCog, RefreshCw } from "lucide-react";
 
 const LoginPage: React.FC = () => {
   const { signIn, isAuthenticated, isLoading } = useAuth();
@@ -112,7 +112,7 @@ const LoginPage: React.FC = () => {
               asChild
             >
               <Link to="/auth/sync-users">
-                <Sync className="mr-2 h-4 w-4" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Synchroniser utilisateurs
               </Link>
             </Button>
