@@ -38,7 +38,6 @@ export function useUsersSync() {
           // Vérifier si l'utilisateur existe dans auth.users
           const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(user.id);
           
-          // Correction: S'assurer que isInAuth est un boolean
           const isInAuth = !authError && authUser?.user !== undefined;
           const isSynced = isInAuth;
           

@@ -90,7 +90,6 @@ export function useDatabaseStatus() {
     // Check Supabase connection first
     try {
       // Try to access the users table to verify connection
-      // Correction: Ne pas utiliser .single() ici, car cela cause l'erreur TS2339
       const { data, error } = await supabase.from('users').select('id').limit(1);
       
       if (error) {
@@ -124,7 +123,6 @@ export function useDatabaseStatus() {
   // Add these methods to expose them for the provider
   const checkSupabaseStatus = useCallback(async () => {
     try {
-      // Correction: Utiliser .maybeSingle() ou simplement .limit(1) au lieu de count
       const { data, error } = await supabase.from('users').select('id').limit(1);
       
       if (error) {

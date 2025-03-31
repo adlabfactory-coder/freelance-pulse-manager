@@ -1,3 +1,4 @@
+
 // Liste des tables nécessaires pour l'application
 export const tableNames = [
   'users', 
@@ -7,7 +8,8 @@ export const tableNames = [
   'subscriptions', 
   'commissions', 
   'commission_rules', 
-  'quote_items'
+  'quote_items',
+  'payments'
 ] as const;
 
 /**
@@ -17,8 +19,6 @@ export const tableNames = [
  */
 export const getCreateTableSql = (tableName: string): string | null => {
   // Définir les requêtes SQL pour chaque table
-  // Ceci est un placeholder - dans une vraie application, ces définitions
-  // seraient plus complètes et correspondraient à la structure exacte des tables
   const tableSql: Record<string, string> = {
     users: `
       CREATE TABLE IF NOT EXISTS public.users (
@@ -51,6 +51,7 @@ export const getCreateTableSql = (tableName: string): string | null => {
         description TEXT,
         "contactId" UUID NOT NULL,
         "freelancerId" UUID NOT NULL,
+        "accountManagerId" UUID,
         date TIMESTAMP WITH TIME ZONE NOT NULL,
         duration INTEGER NOT NULL,
         status TEXT NOT NULL,
@@ -65,13 +66,14 @@ export const getCreateTableSql = (tableName: string): string | null => {
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "contactId" UUID NOT NULL,
         "freelancerId" UUID NOT NULL,
+        "subscriptionId" UUID,
         "totalAmount" NUMERIC NOT NULL,
         status TEXT NOT NULL,
         "validUntil" TIMESTAMP WITH TIME ZONE NOT NULL,
         notes TEXT,
         "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        folder TEXT DEFAULT 'general'
+        folder TEXT DEFAULT 'general'::text
       )
     `,
     quote_items: `
@@ -107,6 +109,7 @@ export const getCreateTableSql = (tableName: string): string | null => {
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         "freelancerId" UUID NOT NULL,
         amount NUMERIC NOT NULL,
+        commission_amount NUMERIC,
         tier TEXT NOT NULL,
         "subscriptionId" UUID,
         "quoteId" UUID,
@@ -114,7 +117,8 @@ export const getCreateTableSql = (tableName: string): string | null => {
         "periodEnd" TIMESTAMP WITH TIME ZONE NOT NULL,
         status TEXT NOT NULL,
         "paidDate" TIMESTAMP WITH TIME ZONE,
-        "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        payment_requested BOOLEAN DEFAULT FALSE
       )
     `,
     commission_rules: `
@@ -122,7 +126,20 @@ export const getCreateTableSql = (tableName: string): string | null => {
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         tier TEXT NOT NULL,
         "minContracts" INTEGER NOT NULL,
-        percentage NUMERIC NOT NULL
+        "maxContracts" INTEGER,
+        percentage NUMERIC NOT NULL,
+        unit_amount NUMERIC DEFAULT 0
+      )
+    `,
+    payments: `
+      CREATE TABLE IF NOT EXISTS public.payments (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        quote_id UUID NOT NULL REFERENCES public.quotes(id),
+        amount NUMERIC NOT NULL,
+        payment_method TEXT NOT NULL CHECK (payment_method IN ('bank_transfer', 'cash')),
+        validated_by UUID REFERENCES public.users(id),
+        validated_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `
   };
