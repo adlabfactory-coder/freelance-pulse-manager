@@ -9,7 +9,8 @@ export const tableNames = [
   'commissions', 
   'commission_rules', 
   'quote_items',
-  'payments'
+  'payments',
+  'freelancer_contacts'
 ] as const;
 
 /**
@@ -79,7 +80,7 @@ export const getCreateTableSql = (tableName: string): string | null => {
     quote_items: `
       CREATE TABLE IF NOT EXISTS public.quote_items (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        "quoteId" UUID NOT NULL,
+        "quoteId" UUID NOT NULL REFERENCES public.quotes(id),
         description TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         "unitPrice" NUMERIC NOT NULL,
@@ -140,6 +141,15 @@ export const getCreateTableSql = (tableName: string): string | null => {
         validated_by UUID REFERENCES public.users(id),
         validated_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `,
+    freelancer_contacts: `
+      CREATE TABLE IF NOT EXISTS public.freelancer_contacts (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        freelancer_id UUID NOT NULL REFERENCES public.users(id),
+        contact_id UUID NOT NULL REFERENCES public.contacts(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(freelancer_id, contact_id)
       )
     `
   };

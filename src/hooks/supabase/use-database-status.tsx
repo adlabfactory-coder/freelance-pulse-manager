@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { tableNames } from "@/services/supabase/setup/database-status";
+import { tableNames } from "@/lib/supabase/table-definitions";
 import { toast } from "@/components/ui/use-toast";
 import { checkDatabaseStatus as checkDbStatus, initializeDatabase as initDb } from "@/services/supabase/setup";
 
@@ -29,11 +29,18 @@ export function useDatabaseStatus() {
         }
       } catch (rpcError) {
         // Fall back to direct query if RPC not available
+        console.warn("RPC check_table_exists failed, falling back to direct query", rpcError);
       }
       
-      // Try direct query as fallback
-      const { error } = await supabase.from(tableName).select('id').limit(1);
-      return !error || error.code !== '42P01'; // 42P01 is 'relation does not exist'
+      // Try direct query as fallback - cette requête est plus spécifique pour éviter l'ambiguïté
+      const { data, error } = await supabase
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_schema', 'public')
+        .eq('table_name', tableName)
+        .limit(1);
+      
+      return !error && data && data.length > 0;
     } catch (err) {
       console.error(`Error checking if table ${tableName} exists:`, err);
       return false;

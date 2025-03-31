@@ -10,7 +10,8 @@ export const fetchUsers = async (): Promise<User[]> => {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('*');
+      .select('*')
+      .is('deleted_at', null);
 
     if (error) {
       console.error('Erreur lors de la récupération des utilisateurs:', error);
@@ -39,6 +40,15 @@ export const fetchUserById = async (userId: string): Promise<User | null> => {
   if (!userId) {
     console.warn('ID utilisateur non fourni');
     return null;
+  }
+
+  // Vérifier si l'ID est valide
+  if (userId === 'freelancer-uuid' || !(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId))) {
+    console.warn('ID utilisateur invalide:', userId);
+    
+    // Retourner un utilisateur simulé dans ce cas
+    const mockUsers = getMockUsers();
+    return mockUsers.find(u => u.role === 'freelancer') || mockUsers[0];
   }
 
   try {

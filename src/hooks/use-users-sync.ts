@@ -33,9 +33,22 @@ export function useUsersSync() {
       let notSynced = 0;
       
       // Vérifier chaque utilisateur
-      for (const user of usersData) {
+      for (const user of usersData || []) {
         try {
           // Vérifier si l'utilisateur existe dans auth.users
+          // Note: Nous utilisons maintenant une vérification conditionnelle pour éviter les erreurs avec les IDs non valides
+          if (!user.id || typeof user.id !== 'string' || user.id === 'freelancer-uuid') {
+            statuses.push({
+              email: user.email,
+              inUsers: true,
+              inAuth: false,
+              synced: false,
+              error: 'ID utilisateur invalide'
+            });
+            notSynced++;
+            continue;
+          }
+          
           const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(user.id);
           
           const isInAuth = !authError && authUser?.user !== undefined;
@@ -65,7 +78,7 @@ export function useUsersSync() {
       
       setSyncStatus(statuses);
       setSummary({
-        total: usersData.length,
+        total: usersData?.length || 0,
         synced,
         notSynced
       });

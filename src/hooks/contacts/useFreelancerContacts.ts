@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Contact } from '@/services/contacts/types';
 import { contactService } from '@/services/contacts';
-import { fetchContactsByFreelancer } from '@/services/user-service';
+import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
@@ -23,23 +23,52 @@ export const useFreelancerContacts = () => {
       setLoading(true);
       setError(null);
       
-      // Récupérer les IDs des contacts associés au freelance
-      const contactIds = await fetchContactsByFreelancer(user.id);
+      // Utilisation de l'ID réel de l'utilisateur, pas une chaîne statique
+      console.log("Tentative de récupération des contacts pour le freelance:", user.id);
       
-      if (contactIds.length === 0) {
-        // Si aucun contact associé, utiliser la méthode legacy pour compatibilité
-        const allContacts = await contactService.getContactsByFreelancer(user.id);
-        setContacts(allContacts);
-      } else {
-        // Récupérer les détails des contacts associés
-        const contactsDetails = await Promise.all(
-          contactIds.map(id => contactService.getContactById(id))
-        );
-        
-        // Filtrer les contacts null (qui n'ont pas été trouvés)
-        setContacts(contactsDetails.filter((contact): contact is Contact => contact !== null));
+      // Vérifier si l'utilisateur a des contacts via la table de liaison
+      const { data: contactRelations, error: relationsError } = await supabase
+        .from('freelancer_contacts')
+        .select('contact_id')
+        .eq('freelancer_id', user.id);
+      
+      if (relationsError) {
+        console.error("Erreur lors de la récupération des relations freelancer-contacts:", relationsError);
+        // En cas d'erreur, on essaie la méthode alternative
       }
-    } catch (err) {
+      
+      if (contactRelations && contactRelations.length > 0) {
+        // Récupérer les détails des contacts associés
+        const contactIds = contactRelations.map(relation => relation.contact_id);
+        console.log(`${contactIds.length} relations de contacts trouvées pour le freelance`);
+        
+        const { data: contactsData, error: contactsError } = await supabase
+          .from('contacts')
+          .select('*')
+          .in('id', contactIds)
+          .is('deleted_at', null);
+        
+        if (contactsError) {
+          throw contactsError;
+        }
+        
+        setContacts(contactsData || []);
+      } else {
+        // Méthode alternative: rechercher les contacts avec assignedTo
+        console.log("Aucune relation trouvée, utilisation de la méthode assignedTo");
+        const { data: assignedContacts, error: assignedError } = await supabase
+          .from('contacts')
+          .select('*')
+          .eq('assignedTo', user.id)
+          .is('deleted_at', null);
+        
+        if (assignedError) {
+          throw assignedError;
+        }
+        
+        setContacts(assignedContacts || []);
+      }
+    } catch (err: any) {
       console.error('Erreur lors de la récupération des contacts du freelance:', err);
       setError("Impossible de charger les contacts");
       toast.error("Impossible de charger vos contacts");
