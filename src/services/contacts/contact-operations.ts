@@ -1,13 +1,50 @@
-
 import { supabase } from '@/lib/supabase-client';
 import { Contact } from './types';
 import { toast } from 'sonner';
 import { UserRole } from '@/types';
+import { getMockUsers } from '@/utils/supabase-mock-data';
 
 export const contactOperationsService = {
   async getContacts(userId?: string, userRole?: string, includeDeleted: boolean = false): Promise<Contact[]> {
     try {
       console.log("🔄 Récupération des contacts...", { userId, userRole, includeDeleted });
+      
+      // Vérification de l'ID utilisateur pour éviter les erreurs SQL
+      const isValidUUID = userId ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId) : false;
+      
+      // Si l'ID n'est pas valide et que c'est un freelance démo, retourner des données fictives
+      if (userId === 'freelancer-uuid' || (userId && !isValidUUID && userRole === 'freelancer')) {
+        console.log("🔵 Utilisation de données de contacts simulées pour l'utilisateur démo", userId);
+        // Retourner quelques contacts fictifs pour la démo
+        return [
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            name: 'Contact Demo 1',
+            email: 'contact1@example.com',
+            status: 'lead',
+            assignedTo: userId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            folder: 'general'
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            name: 'Contact Demo 2',
+            email: 'contact2@example.com',
+            status: 'prospect',
+            assignedTo: userId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            folder: 'general'
+          }
+        ];
+      }
+      
+      // Si l'ID n'est pas un UUID valide, mais on a besoin de faire une requête à la BD
+      if (userId && !isValidUUID) {
+        console.warn("❌ ID utilisateur non valide pour UUID:", userId);
+        throw new Error("ID utilisateur non valide");
+      }
       
       let query = supabase
         .from('contacts')
@@ -78,6 +115,80 @@ export const contactOperationsService = {
     }
   },
 
+  async getContactsByFreelancer(freelancerId: string): Promise<Contact[]> {
+    try {
+      // Validation d'UUID pour éviter les erreurs SQL
+      const isValidUUID = freelancerId ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(freelancerId) : false;
+      
+      // Cas spécial pour "freelancer-uuid" et autres ID non valides
+      if (freelancerId === 'freelancer-uuid' || !isValidUUID) {
+        console.log("Utilisation de données simulées pour le freelancer démo:", freelancerId);
+        // Retourner des contacts fictifs pour la démo
+        return [
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            name: 'Contact Démo 1',
+            email: 'contact1@example.com',
+            status: 'lead',
+            assignedTo: 'freelancer-uuid',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            name: 'Contact Démo 2',
+            email: 'contact2@example.com',
+            status: 'prospect',
+            assignedTo: 'freelancer-uuid',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        ];
+      }
+      
+      // D'abord, essayer de récupérer via la table freelancer_contacts
+      const { data: contactRelations, error: relationsError } = await supabase
+        .from('freelancer_contacts')
+        .select('contact_id')
+        .eq('freelancer_id', freelancerId);
+      
+      if (relationsError) {
+        console.warn("Erreur lors de la récupération des relations freelancer-contacts:", relationsError);
+      } else if (contactRelations && contactRelations.length > 0) {
+        // Récupérer les contacts associés
+        const contactIds = contactRelations.map(r => r.contact_id);
+        const { data: contacts, error: contactsError } = await supabase
+          .from('contacts')
+          .select('*')
+          .in('id', contactIds)
+          .not('folder', 'eq', 'trash');
+          
+        if (contactsError) {
+          console.error("Erreur lors de la récupération des contacts:", contactsError);
+        } else {
+          return contacts || [];
+        }
+      }
+      
+      // Méthode alternative: rechercher par assignedTo
+      const { data: assignedContacts, error: assignedError } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('assignedTo', freelancerId)
+        .not('folder', 'eq', 'trash');
+      
+      if (assignedError) {
+        console.error("Erreur lors de la récupération des contacts assignés:", assignedError);
+        throw assignedError;
+      }
+      
+      return assignedContacts || [];
+    } catch (error) {
+      console.error(`Erreur lors de la récupération des contacts du freelancer ${freelancerId}:`, error);
+      return [];
+    }
+  },
+
   async getContactById(contactId: string): Promise<Contact | null> {
     try {
       const { data, error } = await supabase
@@ -94,26 +205,6 @@ export const contactOperationsService = {
     } catch (error) {
       console.error(`Erreur lors de la récupération du contact ${contactId}:`, error);
       return null;
-    }
-  },
-
-  async getContactsByFreelancer(freelancerId: string): Promise<Contact[]> {
-    try {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('assignedTo', freelancerId)
-        .not('folder', 'eq', 'trash')
-        .order('createdAt', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data || [];
-    } catch (error) {
-      console.error(`Erreur lors de la récupération des contacts du freelancer ${freelancerId}:`, error);
-      return [];
     }
   },
 

@@ -36,8 +36,11 @@ export function useUsersSync() {
       for (const user of usersData || []) {
         try {
           // Vérifier si l'utilisateur existe dans auth.users
-          // Note: Nous utilisons maintenant une vérification conditionnelle pour éviter les erreurs avec les IDs non valides
-          if (!user.id || typeof user.id !== 'string' || user.id === 'freelancer-uuid') {
+          // Valider l'ID utilisateur avant de faire la requête pour éviter les erreurs
+          const isValidUserId = user.id && typeof user.id === 'string' && 
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+          
+          if (!isValidUserId) {
             statuses.push({
               email: user.email,
               inUsers: true,

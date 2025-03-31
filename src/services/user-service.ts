@@ -42,9 +42,21 @@ export const fetchUserById = async (userId: string): Promise<User | null> => {
     return null;
   }
 
-  // Vérifier si l'ID est valide
-  if (userId === 'freelancer-uuid' || !(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId))) {
-    console.warn('ID utilisateur invalide:', userId);
+  // Vérifier si l'ID est un UUID valide
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  
+  if (!isValidUUID) {
+    console.warn('ID utilisateur non valide pour UUID:', userId);
+    
+    // Si c'est l'ID de démonstration freelancer-uuid, retourner un utilisateur fictif adapté
+    if (userId === 'freelancer-uuid') {
+      return {
+        id: 'freelancer-uuid',
+        name: 'Freelance Demo',
+        email: 'freelance@example.com',
+        role: 'freelancer' as UserRole
+      };
+    }
     
     // Retourner un utilisateur simulé dans ce cas
     const mockUsers = getMockUsers();

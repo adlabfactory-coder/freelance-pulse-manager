@@ -23,50 +23,44 @@ export const useFreelancerContacts = () => {
       setLoading(true);
       setError(null);
       
-      // Utilisation de l'ID réel de l'utilisateur, pas une chaîne statique
-      console.log("Tentative de récupération des contacts pour le freelance:", user.id);
+      // Validation de l'UUID pour éviter les erreurs SQL
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
       
-      // Vérifier si l'utilisateur a des contacts via la table de liaison
-      const { data: contactRelations, error: relationsError } = await supabase
-        .from('freelancer_contacts')
-        .select('contact_id')
-        .eq('freelancer_id', user.id);
-      
-      if (relationsError) {
-        console.error("Erreur lors de la récupération des relations freelancer-contacts:", relationsError);
-        // En cas d'erreur, on essaie la méthode alternative
+      if (!isValidUUID) {
+        console.log("ID utilisateur non valide pour UUID, utilisation des données simulées:", user.id);
+        // Pour les démonstrations avec des ID non valides, utiliser des données simulées
+        setContacts([
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            name: 'Contact Demo 1',
+            email: 'contact1@example.com',
+            status: 'lead',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            name: 'Contact Demo 2',
+            email: 'contact2@example.com',
+            status: 'prospect',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        ]);
+        setLoading(false);
+        return;
       }
       
-      if (contactRelations && contactRelations.length > 0) {
-        // Récupérer les détails des contacts associés
-        const contactIds = contactRelations.map(relation => relation.contact_id);
-        console.log(`${contactIds.length} relations de contacts trouvées pour le freelance`);
-        
-        const { data: contactsData, error: contactsError } = await supabase
-          .from('contacts')
-          .select('*')
-          .in('id', contactIds)
-          .is('deleted_at', null);
-        
-        if (contactsError) {
-          throw contactsError;
-        }
-        
-        setContacts(contactsData || []);
+      // Récupération des contacts à partir du service
+      console.log("Tentative de récupération des contacts pour le freelance:", user.id);
+      const contactsData = await contactService.getContactsByFreelancer(user.id);
+      
+      if (contactsData && contactsData.length > 0) {
+        console.log(`${contactsData.length} contacts récupérés avec succès`);
+        setContacts(contactsData);
       } else {
-        // Méthode alternative: rechercher les contacts avec assignedTo
-        console.log("Aucune relation trouvée, utilisation de la méthode assignedTo");
-        const { data: assignedContacts, error: assignedError } = await supabase
-          .from('contacts')
-          .select('*')
-          .eq('assignedTo', user.id)
-          .is('deleted_at', null);
-        
-        if (assignedError) {
-          throw assignedError;
-        }
-        
-        setContacts(assignedContacts || []);
+        console.log("Aucun contact trouvé pour ce freelance");
+        setContacts([]);
       }
     } catch (err: any) {
       console.error('Erreur lors de la récupération des contacts du freelance:', err);

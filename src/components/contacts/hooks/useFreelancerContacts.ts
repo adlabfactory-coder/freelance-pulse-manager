@@ -27,6 +27,34 @@ export function useFreelancerContacts(
     try {
       console.log("Récupération des contacts pour le freelance:", user.id);
       
+      // Vérifier si l'ID utilisateur est un UUID valide
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+      
+      if (!isValidUUID) {
+        console.log("ID utilisateur non valide pour UUID, utilisation des données simulées:", user.id);
+        // Pour les utilisateurs de démo avec des ID non UUID, retourner des données simulées
+        setContacts([
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            name: 'Contact Demo 1',
+            email: 'contact1@example.com',
+            status: 'lead',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            name: 'Contact Demo 2',
+            email: 'contact2@example.com',
+            status: 'prospect',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }
+        ]);
+        setLoading(false);
+        return;
+      }
+      
       // Vérifier si l'utilisateur a des contacts via la table de liaison
       const { data: contactRelations, error: relationsError } = await supabase
         .from('freelancer_contacts')
