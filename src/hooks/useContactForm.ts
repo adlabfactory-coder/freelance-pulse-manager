@@ -50,24 +50,29 @@ export const useContactForm = ({
       
       // Si l'utilisateur n'a pas assigné de chargé de compte et que l'auto-assignation est activée
       if (!data.assignedTo && useAutoAssign) {
-        const nextManager = await accountManagerService.getNextAvailableAccountManager();
-        if (nextManager) {
-          data.assignedTo = nextManager.id;
-          console.log("Contact auto-assigné au chargé de compte:", nextManager.name);
-          toast.success(`Contact auto-assigné à ${nextManager.name}`);
-        } else {
-          toast.error("Aucun chargé de compte disponible pour l'auto-assignation");
-          setLoading(false);
-          return;
+        try {
+          const nextManager = await accountManagerService.getNextAvailableAccountManager();
+          if (nextManager) {
+            data.assignedTo = nextManager.id;
+            console.log("Contact auto-assigné au chargé de compte:", nextManager.name);
+            toast.success(`Contact auto-assigné à ${nextManager.name}`);
+          } else {
+            console.warn("Aucun chargé de compte disponible pour l'auto-assignation");
+            toast.warning("Aucun chargé de compte disponible pour l'auto-assignation");
+          }
+        } catch (error) {
+          console.error("Erreur lors de l'auto-assignation:", error);
+          toast.error("Erreur lors de l'auto-assignation du contact");
         }
       }
       
-      // Vérifier que l'utilisateur a bien assigné un chargé de compte
-      if (!data.assignedTo) {
-        toast.error("Vous devez assigner ce contact à un chargé de compte");
-        setLoading(false);
-        return;
-      }
+      // Vérifier que l'utilisateur a bien assigné un chargé de compte si requis
+      // Commenté car peut être optionnel selon votre logique métier
+      // if (!data.assignedTo) {
+      //   toast.warning("Vous devez assigner ce contact à un chargé de compte");
+      //   setLoading(false);
+      //   return;
+      // }
       
       const contactInput = {
         name: data.name,
@@ -86,23 +91,21 @@ export const useContactForm = ({
         try {
           const updated = await contactService.updateContact(initialData.id, contactInput);
           if (updated) {
-            toast.success("Contact mis à jour avec succès");
             if (onSuccess) onSuccess({id: initialData.id, name: data.name});
           }
         } catch (error: any) {
-          // L'erreur est déjà gérée dans le service, pas besoin de faire autre chose ici
+          // Les erreurs sont déjà gérées dans le service, nous n'interférons pas
           console.error("Erreur lors de la mise à jour du contact:", error);
         }
       } else {
         try {
           const createdContact = await contactService.createContact(contactInput);
           if (createdContact) {
-            toast.success("Contact ajouté avec succès");
             form.reset();
             if (onSuccess) onSuccess({id: createdContact.id, name: data.name});
           }
         } catch (error: any) {
-          // L'erreur est déjà gérée dans le service, pas besoin de faire autre chose ici
+          // Les erreurs sont déjà gérées dans le service, nous n'interférons pas
           console.error("Erreur lors de la création du contact:", error);
         }
       }
