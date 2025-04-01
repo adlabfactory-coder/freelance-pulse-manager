@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Contact } from '@/services/contacts/types';
+import { Contact, ContactStatus } from '@/services/contacts/types';
 import { contactService } from '@/services/contacts';
 import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
@@ -34,17 +34,17 @@ export const useFreelancerContacts = () => {
             id: '00000000-0000-0000-0000-000000000001',
             name: 'Contact Demo 1',
             email: 'contact1@example.com',
-            status: 'lead',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            status: ContactStatus.LEAD,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           },
           {
             id: '00000000-0000-0000-0000-000000000002',
             name: 'Contact Demo 2',
             email: 'contact2@example.com',
-            status: 'prospect',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            status: ContactStatus.PROSPECT,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           }
         ]);
         setLoading(false);

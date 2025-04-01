@@ -1,6 +1,6 @@
 
 import { useQuoteSubmission as useBaseQuoteSubmission, UseQuoteSubmissionProps } from '@/hooks/quotes/useQuoteSubmission';
-import { Quote, QuoteItem } from '@/types';
+import { Quote, QuoteItem, QuoteStatus } from '@/types';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { createQuote } from '@/services/quote-service';
@@ -49,7 +49,7 @@ export const useQuoteSubmission = (props?: UseQuoteSubmissionProps) => {
         contactId: quoteData.contactId,
         freelancerId: quoteData.freelancerId || 'freelancer-uuid',
         totalAmount: quoteData.totalAmount || 0,
-        status: quoteData.status || 'draft',
+        status: quoteData.status as QuoteStatus || QuoteStatus.DRAFT,
         validUntil: quoteData.validUntil || new Date(),
         notes: quoteData.notes,
         folder: quoteData.folder || 'general',
