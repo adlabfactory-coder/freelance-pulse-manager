@@ -62,10 +62,10 @@ export const contactCrudService = {
 };
 
 // Export des fonctions pour rétrocompatibilité
-export const getContacts = contactCrudService.getContacts;
+export const getContacts = contactOperationsService.getContacts;
+export const getContactById = contactOperationsService.getContactById;
 export const addContact = contactCreateUpdateService.addContact;
-export const getContactById = contactCrudService.getContactById;
-export const deleteContact = contactCrudService.deleteContact;
-export const updateContact = contactCrudService.updateContact;
+export const deleteContact = contactOperationsService.deleteContact;
+export const updateContact = contactOperationsService.updateContact;
 export const linkSubscriptionPlan = contactCrudService.linkSubscriptionPlan;
 export const validateContactWebsite = contactCrudService.validateContactWebsite;

@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Contact, ContactStatus } from '@/services/contacts/types';
+import { Contact } from '@/services/contacts/types';
+import { ContactStatus } from '@/types/database/enums';
 import { contactService } from '@/services/contacts';
 import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/use-auth';
