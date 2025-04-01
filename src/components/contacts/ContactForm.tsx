@@ -5,6 +5,7 @@ import { UseFormReturn } from "react-hook-form";
 import { ContactFormValues } from "./schema/contactFormSchema";
 import { useAuth } from "@/hooks/use-auth";
 import ContactFormFields from "./form/ContactFormFields";
+import DuplicateCheckFields from "./form/DuplicateCheckFields";
 import AccountManagerSelector from "./form/AccountManagerSelector";
 import StatusSelector from "./form/StatusSelector";
 import FormActions from "./form/FormActions";
@@ -35,11 +36,12 @@ const ContactForm: React.FC<ContactFormProps> = ({
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="space-y-4">
-          <ContactFormFields 
-            form={form} 
-            contactId={contactId}  
-          />
-
+          {/* Champ Nom */}
+          <ContactFormFields form={form} />
+          
+          {/* Champs avec vérification de doublons */}
+          <DuplicateCheckFields form={form} contactId={contactId} />
+          
           <AccountManagerSelector 
             form={form} 
             isEditing={isEditing} 

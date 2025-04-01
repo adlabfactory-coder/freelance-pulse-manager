@@ -8,7 +8,6 @@ import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
 import { accountManagerService } from '@/services/account-manager/account-manager-service';
-import { Contact } from '@/services/contacts/types';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -44,36 +43,32 @@ export const useContactForm = ({
 
   const isSubmitting = form.formState.isSubmitting;
 
-  const onSubmit = async (data: ContactFormValues) => {
-    try {
-      setLoading(true);
-      
-      // Si l'utilisateur n'a pas assigné de chargé de compte et que l'auto-assignation est activée
-      if (!data.assignedTo && useAutoAssign) {
-        try {
-          const nextManager = await accountManagerService.getNextAvailableAccountManager();
-          if (nextManager) {
-            data.assignedTo = nextManager.id;
-            console.log("Contact auto-assigné au chargé de compte:", nextManager.name);
-            toast.success(`Contact auto-assigné à ${nextManager.name}`);
-          } else {
-            console.warn("Aucun chargé de compte disponible pour l'auto-assignation");
-            toast.warning("Aucun chargé de compte disponible pour l'auto-assignation");
-          }
-        } catch (error) {
-          console.error("Erreur lors de l'auto-assignation:", error);
-          toast.error("Erreur lors de l'auto-assignation du contact");
+  // Fonction pour gérer l'assignation automatique d'un chargé de compte
+  const handleAutoAssign = async (data: ContactFormValues) => {
+    if (!data.assignedTo && useAutoAssign) {
+      try {
+        const nextManager = await accountManagerService.getNextAvailableAccountManager();
+        if (nextManager) {
+          data.assignedTo = nextManager.id;
+          console.log("Contact auto-assigné au chargé de compte:", nextManager.name);
+          toast.success(`Contact auto-assigné à ${nextManager.name}`);
+          return data;
+        } else {
+          console.warn("Aucun chargé de compte disponible pour l'auto-assignation");
+          toast.warning("Aucun chargé de compte disponible pour l'auto-assignation");
         }
+      } catch (error) {
+        console.error("Erreur lors de l'auto-assignation:", error);
+        toast.error("Erreur lors de l'auto-assignation du contact");
       }
-      
-      // Vérifier que l'utilisateur a bien assigné un chargé de compte si requis
-      // Commenté car peut être optionnel selon votre logique métier
-      // if (!data.assignedTo) {
-      //   toast.warning("Vous devez assigner ce contact à un chargé de compte");
-      //   setLoading(false);
-      //   return;
-      // }
-      
+    }
+    return data;
+  };
+
+  // Fonction pour créer un contact
+  const createContact = async (data: ContactFormValues) => {
+    try {
+      // Préparer les données du contact
       const contactInput = {
         name: data.name,
         email: data.email,
@@ -87,29 +82,72 @@ export const useContactForm = ({
         folder: data.folder
       };
       
-      if (isEditing && initialData?.id) {
-        try {
-          const updated = await contactService.updateContact(initialData.id, contactInput);
-          if (updated) {
-            if (onSuccess) onSuccess({id: initialData.id, name: data.name});
-          }
-        } catch (error: any) {
-          // Les erreurs sont déjà gérées dans le service, nous n'interférons pas
-          console.error("Erreur lors de la mise à jour du contact:", error);
-        }
-      } else {
-        try {
-          const createdContact = await contactService.createContact(contactInput);
-          if (createdContact) {
-            form.reset();
-            if (onSuccess) onSuccess({id: createdContact.id, name: data.name});
-          }
-        } catch (error: any) {
-          // Les erreurs sont déjà gérées dans le service, nous n'interférons pas
-          console.error("Erreur lors de la création du contact:", error);
-        }
+      // Créer le contact
+      const createdContact = await contactService.createContact(contactInput);
+      
+      if (createdContact) {
+        form.reset();
+        if (onSuccess) onSuccess({id: createdContact.id, name: data.name});
+        return true;
       }
-    } catch (error: any) {
+      
+      return false;
+    } catch (error) {
+      console.error("Erreur lors de la création du contact:", error);
+      return false;
+    }
+  };
+
+  // Fonction pour mettre à jour un contact
+  const updateContact = async (data: ContactFormValues) => {
+    if (!initialData?.id) return false;
+    
+    try {
+      const contactInput = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        company: data.company,
+        position: data.position,
+        address: data.address,
+        notes: data.notes,
+        status: data.status as ContactStatus,
+        assignedTo: data.assignedTo,
+        folder: data.folder
+      };
+      
+      const updated = await contactService.updateContact(initialData.id, contactInput);
+      if (updated) {
+        if (onSuccess) onSuccess({id: initialData.id, name: data.name});
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du contact:", error);
+      return false;
+    }
+  };
+
+  const onSubmit = async (data: ContactFormValues) => {
+    try {
+      setLoading(true);
+      
+      // Gérer l'auto-assignation
+      data = await handleAutoAssign(data);
+      
+      let success = false;
+      
+      if (isEditing && initialData?.id) {
+        success = await updateContact(data);
+      } else {
+        success = await createContact(data);
+      }
+      
+      if (!success) {
+        console.warn("Opération contact terminée sans erreur mais sans succès");
+      }
+    } catch (error) {
       console.error("Erreur lors de l'ajout/mise à jour du contact:", error);
     } finally {
       setLoading(false);
