@@ -83,22 +83,31 @@ export const useContactForm = ({
       };
       
       if (isEditing && initialData?.id) {
-        const updatedContact = await contactService.updateContact(initialData.id, contactInput);
-        if (updatedContact) {
-          toast.success("Contact mis à jour avec succès");
-          if (onSuccess) onSuccess({id: initialData.id, name: data.name});
+        try {
+          const updated = await contactService.updateContact(initialData.id, contactInput);
+          if (updated) {
+            toast.success("Contact mis à jour avec succès");
+            if (onSuccess) onSuccess({id: initialData.id, name: data.name});
+          }
+        } catch (error: any) {
+          // L'erreur est déjà gérée dans le service, pas besoin de faire autre chose ici
+          console.error("Erreur lors de la mise à jour du contact:", error);
         }
       } else {
-        const createdContact = await contactService.createContact(contactInput);
-        if (createdContact) {
-          toast.success("Contact ajouté avec succès");
-          form.reset();
-          if (onSuccess) onSuccess({id: createdContact.id, name: data.name});
+        try {
+          const createdContact = await contactService.createContact(contactInput);
+          if (createdContact) {
+            toast.success("Contact ajouté avec succès");
+            form.reset();
+            if (onSuccess) onSuccess({id: createdContact.id, name: data.name});
+          }
+        } catch (error: any) {
+          // L'erreur est déjà gérée dans le service, pas besoin de faire autre chose ici
+          console.error("Erreur lors de la création du contact:", error);
         }
       }
     } catch (error: any) {
       console.error("Erreur lors de l'ajout/mise à jour du contact:", error);
-      toast.error(`Erreur: ${error.message || "Une erreur est survenue"}`);
     } finally {
       setLoading(false);
     }

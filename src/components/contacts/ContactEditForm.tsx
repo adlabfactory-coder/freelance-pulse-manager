@@ -37,6 +37,7 @@ const ContactEditForm: React.FC<ContactEditFormProps> = ({
       isEditing={true}
       submitLabel="Mettre à jour le contact"
       onCancel={onCancel}
+      contactId={contact.id}
     />
   );
 };

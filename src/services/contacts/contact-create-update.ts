@@ -18,8 +18,66 @@ export interface ContactFormInput {
 }
 
 export const contactCreateUpdateService = {
+  async checkContactDuplicate(email: string, phone?: string, excludeContactId?: string): Promise<{isDuplicate: boolean; field?: string; value?: string}> {
+    try {
+      // Construire la requête de base
+      let query = supabase
+        .from('contacts')
+        .select('id, email, phone')
+        .is('deleted_at', null);
+      
+      // Si on vérifie lors d'une mise à jour, exclure l'ID du contact actuel
+      if (excludeContactId) {
+        query = query.neq('id', excludeContactId);
+      }
+      
+      // Vérifier d'abord l'email car c'est le plus important
+      const { data: emailData, error: emailError } = await query
+        .eq('email', email)
+        .single();
+      
+      if (emailError && emailError.code !== 'PGRST116') {
+        console.error("Erreur lors de la vérification d'email dupliqué:", emailError);
+      }
+      
+      if (emailData) {
+        return { isDuplicate: true, field: 'email', value: email };
+      }
+      
+      // Ensuite, vérifier le téléphone si fourni
+      if (phone && phone.trim() !== '') {
+        const { data: phoneData, error: phoneError } = await query
+          .eq('phone', phone)
+          .single();
+        
+        if (phoneError && phoneError.code !== 'PGRST116') {
+          console.error("Erreur lors de la vérification de téléphone dupliqué:", phoneError);
+        }
+        
+        if (phoneData) {
+          return { isDuplicate: true, field: 'phone', value: phone };
+        }
+      }
+      
+      // Si on arrive ici, aucun doublon n'a été trouvé
+      return { isDuplicate: false };
+    } catch (error) {
+      console.error("Erreur lors de la vérification de contact dupliqué:", error);
+      return { isDuplicate: false }; // En cas d'erreur, on permet l'opération
+    }
+  },
+
   async createContact(contactData: ContactFormInput): Promise<Contact | null> {
     try {
+      // Vérifier si un contact avec le même email ou téléphone existe déjà
+      const duplicateCheck = await this.checkContactDuplicate(contactData.email, contactData.phone);
+      
+      if (duplicateCheck.isDuplicate) {
+        const message = `Un contact avec ${duplicateCheck.field === 'email' ? 'cette adresse email' : 'ce numéro de téléphone'} existe déjà.`;
+        toast.error("Doublon détecté", { description: message });
+        throw new Error(message);
+      }
+      
       const now = new Date().toISOString();
       
       const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -53,6 +111,26 @@ export const contactCreateUpdateService = {
         .single();
 
       if (error) {
+        // Gestion spécifique pour les erreurs de contrainte d'unicité
+        if (error.code === '23505') { // Code PostgreSQL pour violation de contrainte unique
+          if (error.message.includes('email')) {
+            toast.error("Doublon détecté", { 
+              description: "Un contact avec cette adresse email existe déjà." 
+            });
+          } else if (error.message.includes('phone')) {
+            toast.error("Doublon détecté", { 
+              description: "Un contact avec ce numéro de téléphone existe déjà." 
+            });
+          } else {
+            toast.error("Doublon détecté", { 
+              description: "Ce contact semble déjà exister dans la base de données." 
+            });
+          }
+        } else {
+          toast.error("Erreur lors de la création du contact", { 
+            description: error.message 
+          });
+        }
         console.error("Erreur lors de la création du contact:", error);
         throw error;
       }
@@ -60,7 +138,6 @@ export const contactCreateUpdateService = {
       return data as Contact;
     } catch (error: any) {
       console.error("Error in createContact:", error);
-      toast.error("Erreur lors de la création du contact: " + error.message);
       throw error;
     }
   },
@@ -71,6 +148,30 @@ export const contactCreateUpdateService = {
 
   async updateContact(id: string, contactData: Partial<ContactFormInput>): Promise<boolean> {
     try {
+      // Vérifier les doublons seulement si l'email ou le téléphone sont modifiés
+      if (contactData.email !== undefined || contactData.phone !== undefined) {
+        // Récupérer d'abord les données actuelles du contact
+        const { data: existingContact } = await supabase
+          .from("contacts")
+          .select("email, phone")
+          .eq("id", id)
+          .single();
+        
+        if (existingContact) {
+          const emailToCheck = contactData.email || existingContact.email;
+          const phoneToCheck = contactData.phone !== undefined ? contactData.phone : existingContact.phone;
+          
+          // Vérifier les doublons, en excluant le contact actuel
+          const duplicateCheck = await this.checkContactDuplicate(emailToCheck, phoneToCheck, id);
+          
+          if (duplicateCheck.isDuplicate) {
+            const message = `Un contact avec ${duplicateCheck.field === 'email' ? 'cette adresse email' : 'ce numéro de téléphone'} existe déjà.`;
+            toast.error("Doublon détecté", { description: message });
+            throw new Error(message);
+          }
+        }
+      }
+      
       const now = new Date().toISOString();
       
       const updateData: any = {
@@ -95,7 +196,27 @@ export const contactCreateUpdateService = {
         .eq("id", id);
 
       if (error) {
+        // Gestion spécifique pour les erreurs de contrainte d'unicité
+        if (error.code === '23505') { // Code PostgreSQL pour violation de contrainte unique
+          if (error.message.includes('email')) {
+            toast.error("Doublon détecté", { 
+              description: "Un contact avec cette adresse email existe déjà." 
+            });
+          } else if (error.message.includes('phone')) {
+            toast.error("Doublon détecté", { 
+              description: "Un contact avec ce numéro de téléphone existe déjà." 
+            });
+          } else {
+            toast.error("Doublon détecté", { 
+              description: "Ce contact semble déjà exister dans la base de données." 
+            });
+          }
+          return false;
+        }
         console.error("Erreur lors de la mise à jour du contact:", error);
+        toast.error("Erreur lors de la mise à jour du contact", {
+          description: error.message
+        });
         throw error;
       }
 
@@ -103,7 +224,7 @@ export const contactCreateUpdateService = {
     } catch (error: any) {
       console.error("Error in updateContact:", error);
       toast.error("Erreur lors de la mise à jour du contact: " + error.message);
-      throw error;
+      return false;
     }
   }
 };

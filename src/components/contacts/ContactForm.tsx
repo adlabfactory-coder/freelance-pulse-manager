@@ -16,6 +16,7 @@ interface ContactFormProps {
   onCancel?: () => void;
   isEditing?: boolean;
   submitLabel?: string;
+  contactId?: string;
 }
 
 const ContactForm: React.FC<ContactFormProps> = ({
@@ -24,7 +25,8 @@ const ContactForm: React.FC<ContactFormProps> = ({
   onSubmit,
   onCancel,
   isEditing = false,
-  submitLabel = "Soumettre"
+  submitLabel = "Soumettre",
+  contactId
 }) => {
   const { user } = useAuth();
   const [useAutoAssign, setUseAutoAssign] = useState(false);
@@ -33,7 +35,10 @@ const ContactForm: React.FC<ContactFormProps> = ({
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="space-y-4">
-          <ContactFormFields form={form} />
+          <ContactFormFields 
+            form={form} 
+            contactId={contactId}  
+          />
 
           <AccountManagerSelector 
             form={form} 
