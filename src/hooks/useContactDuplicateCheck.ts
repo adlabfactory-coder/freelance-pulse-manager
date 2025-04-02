@@ -19,6 +19,7 @@ export const useContactDuplicateCheck = (
   const [phoneChecking, setPhoneChecking] = useState(false);
   const [emailDuplicateInfo, setEmailDuplicateInfo] = useState<DuplicateInfo | null>(null);
   const [phoneDuplicateInfo, setPhoneDuplicateInfo] = useState<DuplicateInfo | null>(null);
+  const [checkingCompleted, setCheckingCompleted] = useState(true);
   
   // Récupérer les valeurs actuelles des champs
   const watchEmail = form.watch('email');
@@ -37,6 +38,8 @@ export const useContactDuplicateCheck = (
     
     const checkEmailDuplicate = async () => {
       setEmailChecking(true);
+      setCheckingCompleted(false);
+      
       try {
         const result = await contactCreateUpdateService.checkContactDuplicate(debouncedEmail, undefined, contactId);
         if (result.isDuplicate && result.field === 'email') {
@@ -60,6 +63,7 @@ export const useContactDuplicateCheck = (
         console.error("Erreur lors de la vérification de l'unicité de l'email:", error);
       } finally {
         setEmailChecking(false);
+        setCheckingCompleted(true);
       }
     };
     
@@ -75,6 +79,8 @@ export const useContactDuplicateCheck = (
     
     const checkPhoneDuplicate = async () => {
       setPhoneChecking(true);
+      setCheckingCompleted(false);
+      
       try {
         // Utiliser une adresse email factice pour la vérification du téléphone uniquement
         const result = await contactCreateUpdateService.checkContactDuplicate('dummy@example.com', debouncedPhone, contactId);
@@ -99,17 +105,92 @@ export const useContactDuplicateCheck = (
         console.error("Erreur lors de la vérification de l'unicité du téléphone:", error);
       } finally {
         setPhoneChecking(false);
+        setCheckingCompleted(true);
       }
     };
     
     checkPhoneDuplicate();
   }, [debouncedPhone, form, contactId]);
 
+  // Vérifier si les deux champs actuellement ont des erreurs
+  const hasDuplicateErrors = !!emailDuplicateInfo || !!phoneDuplicateInfo;
+  
+  // Fonction pour vérifier à la demande (par exemple avant soumission)
+  const validateUniqueness = async (): Promise<boolean> => {
+    // Si les champs sont vides, pas besoin de vérifier
+    if ((!watchEmail || watchEmail.trim() === '') && (!watchPhone || watchPhone.trim() === '')) {
+      return true;
+    }
+    
+    setCheckingCompleted(false);
+    let isValid = true;
+    
+    // Vérifier l'email
+    if (watchEmail && watchEmail.trim() !== '') {
+      setEmailChecking(true);
+      try {
+        const result = await contactCreateUpdateService.checkContactDuplicate(watchEmail, undefined, contactId);
+        if (result.isDuplicate && result.field === 'email') {
+          form.setError('email', {
+            type: 'manual',
+            message: 'Cette adresse email est déjà utilisée par un autre contact.'
+          });
+          
+          if (result.existingContact) {
+            setEmailDuplicateInfo({
+              name: result.existingContact.name,
+              email: result.existingContact.email
+            });
+          }
+          
+          isValid = false;
+        }
+      } catch (error) {
+        console.error("Erreur lors de la validation de l'unicité de l'email:", error);
+      } finally {
+        setEmailChecking(false);
+      }
+    }
+    
+    // Vérifier le téléphone
+    if (watchPhone && watchPhone.trim() !== '') {
+      setPhoneChecking(true);
+      try {
+        const result = await contactCreateUpdateService.checkContactDuplicate('dummy@example.com', watchPhone, contactId);
+        if (result.isDuplicate && result.field === 'phone') {
+          form.setError('phone', {
+            type: 'manual',
+            message: 'Ce numéro de téléphone est déjà utilisé par un autre contact.'
+          });
+          
+          if (result.existingContact) {
+            setPhoneDuplicateInfo({
+              name: result.existingContact.name,
+              phone: result.existingContact.phone
+            });
+          }
+          
+          isValid = false;
+        }
+      } catch (error) {
+        console.error("Erreur lors de la validation de l'unicité du téléphone:", error);
+      } finally {
+        setPhoneChecking(false);
+      }
+    }
+    
+    setCheckingCompleted(true);
+    return isValid;
+  };
+
   return {
     emailChecking,
     phoneChecking,
     emailDuplicateInfo,
-    phoneDuplicateInfo
+    phoneDuplicateInfo,
+    hasDuplicateErrors,
+    checkingCompleted,
+    validateUniqueness
   };
 };
 

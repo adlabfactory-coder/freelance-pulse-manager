@@ -33,9 +33,12 @@ export const contactCreateUpdateService = {
         query = query.neq('id', excludeContactId);
       }
       
+      // Normaliser l'email (convertir en minuscules pour la comparaison)
+      const normalizedEmail = email.toLowerCase().trim();
+      
       // Vérifier d'abord l'email car c'est le plus important
       const { data: emailData, error: emailError } = await query
-        .eq('email', email)
+        .ilike('email', normalizedEmail)
         .single();
       
       if (emailError && emailError.code !== 'PGRST116') {
@@ -49,17 +52,22 @@ export const contactCreateUpdateService = {
       
       // Ensuite, vérifier le téléphone si fourni et non-vide
       if (phone && phone.trim() !== '') {
-        const { data: phoneData, error: phoneError } = await query
-          .eq('phone', phone)
-          .single();
+        // Normaliser le téléphone (supprimer les espaces, tirets, etc.)
+        const normalizedPhone = phone.replace(/[\s\-\(\)\.]/g, '').trim();
         
-        if (phoneError && phoneError.code !== 'PGRST116') {
-          console.error("Erreur lors de la vérification de téléphone dupliqué:", phoneError);
-        }
-        
-        if (phoneData) {
-          console.log(`Contact en doublon trouvé par téléphone: ${phoneData.name} (${phoneData.phone})`);
-          return { isDuplicate: true, field: 'phone', value: phone, existingContact: phoneData };
+        if (normalizedPhone) {
+          const { data: phoneData, error: phoneError } = await query
+            .or(`phone.ilike.%${normalizedPhone}%,phone.ilike.%${phone}%`)
+            .single();
+          
+          if (phoneError && phoneError.code !== 'PGRST116') {
+            console.error("Erreur lors de la vérification de téléphone dupliqué:", phoneError);
+          }
+          
+          if (phoneData) {
+            console.log(`Contact en doublon trouvé par téléphone: ${phoneData.name} (${phoneData.phone})`);
+            return { isDuplicate: true, field: 'phone', value: phone, existingContact: phoneData };
+          }
         }
       }
       
@@ -98,12 +106,15 @@ export const contactCreateUpdateService = {
       const assignedTo = contactData.assignedTo;
       const folder = contactData.folder || 'general';
       
+      // Normaliser l'email avant insertion
+      const normalizedEmail = contactData.email.toLowerCase().trim();
+      
       // Insérer dans la table contacts
       const { data, error } = await supabase
         .from('contacts')
         .insert({
           name: contactData.name,
-          email: contactData.email,
+          email: normalizedEmail,
           phone: contactData.phone || null,
           company: contactData.company || null,
           position: contactData.position || null,
@@ -190,7 +201,7 @@ export const contactCreateUpdateService = {
       
       // Ajouter uniquement les champs définis
       if (contactData.name !== undefined) updateData.name = contactData.name;
-      if (contactData.email !== undefined) updateData.email = contactData.email;
+      if (contactData.email !== undefined) updateData.email = contactData.email.toLowerCase().trim();
       if (contactData.phone !== undefined) updateData.phone = contactData.phone;
       if (contactData.company !== undefined) updateData.company = contactData.company;
       if (contactData.position !== undefined) updateData.position = contactData.position;

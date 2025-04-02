@@ -9,6 +9,8 @@ import DuplicateCheckFields from "./form/DuplicateCheckFields";
 import AccountManagerSelector from "./form/AccountManagerSelector";
 import StatusSelector from "./form/StatusSelector";
 import FormActions from "./form/FormActions";
+import { useContactDuplicateCheck } from "@/hooks/useContactDuplicateCheck";
+import { toast } from "sonner";
 
 interface ContactFormProps {
   form: UseFormReturn<ContactFormValues>;
@@ -31,10 +33,37 @@ const ContactForm: React.FC<ContactFormProps> = ({
 }) => {
   const { user } = useAuth();
   const [useAutoAssign, setUseAutoAssign] = useState(false);
+  const { validateUniqueness, checkingCompleted, hasDuplicateErrors } = useContactDuplicateCheck(form, contactId);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Vérifier s'il y a des erreurs dans le formulaire
+    const hasFormErrors = Object.keys(form.formState.errors).length > 0;
+    if (hasFormErrors) {
+      toast.error("Le formulaire contient des erreurs", {
+        description: "Veuillez corriger les erreurs avant de soumettre le formulaire."
+      });
+      return;
+    }
+    
+    // Vérifier l'unicité avant soumission
+    const isUnique = await validateUniqueness();
+    
+    if (!isUnique) {
+      toast.error("Doublon détecté", {
+        description: "Cette adresse email ou ce numéro de téléphone est déjà utilisé par un autre contact."
+      });
+      return;
+    }
+    
+    // Si tout est valide, soumettre le formulaire
+    onSubmit(e);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           {/* Champ Nom */}
           <ContactFormFields form={form} />
@@ -57,8 +86,9 @@ const ContactForm: React.FC<ContactFormProps> = ({
 
         <FormActions 
           onCancel={onCancel} 
-          isSubmitting={isSubmitting} 
-          submitLabel={submitLabel} 
+          isSubmitting={isSubmitting || !checkingCompleted}
+          submitLabel={submitLabel}
+          disabled={hasDuplicateErrors || !checkingCompleted}
         />
       </form>
     </Form>

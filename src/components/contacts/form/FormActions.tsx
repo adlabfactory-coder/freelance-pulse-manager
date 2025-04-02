@@ -7,12 +7,14 @@ interface FormActionsProps {
   onCancel?: () => void;
   isSubmitting: boolean;
   submitLabel: string;
+  disabled?: boolean;
 }
 
 const FormActions: React.FC<FormActionsProps> = ({ 
   onCancel, 
   isSubmitting, 
-  submitLabel 
+  submitLabel,
+  disabled = false
 }) => {
   return (
     <div className="flex justify-end space-x-2">
@@ -26,11 +28,14 @@ const FormActions: React.FC<FormActionsProps> = ({
           Annuler
         </Button>
       )}
-      <Button type="submit" disabled={isSubmitting}>
+      <Button 
+        type="submit"
+        disabled={isSubmitting || disabled}
+      >
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            En cours...
+            Traitement en cours
           </>
         ) : (
           submitLabel

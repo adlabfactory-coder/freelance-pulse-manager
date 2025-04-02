@@ -5,6 +5,8 @@ import { contactService } from "@/services/contacts";
 import { toast } from "sonner";
 import { contactSchema, ContactFormValues } from "../schema/contactFormSchema";
 import { ContactStatus } from "@/types/database/enums";
+import { useContactDuplicateCheck } from "@/hooks/useContactDuplicateCheck";
+import { useState, useEffect } from "react";
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -28,10 +30,25 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
     },
   });
 
-  const isSubmitting = form.formState.isSubmitting;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Intégration avec le hook de vérification des doublons
+  const { validateUniqueness, hasDuplicateErrors } = useContactDuplicateCheck(form, initialData?.id);
 
   async function onSubmit(data: ContactFormValues) {
     try {
+      setIsSubmitting(true);
+      
+      // Vérifier l'unicité avant de soumettre
+      const isUnique = await validateUniqueness();
+      
+      if (!isUnique) {
+        toast.error("Doublon détecté", {
+          description: "Cette adresse email ou ce numéro de téléphone est déjà utilisé par un autre contact."
+        });
+        return;
+      }
+      
       const contactData = {
         name: data.name,
         email: data.email,
@@ -66,11 +83,23 @@ export function useContactForm({ onSuccess, initialData, isEditing = false }: Us
         };
         onSuccess(contactInfo);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de l'ajout/mise à jour du contact:", error);
-      toast.error("Erreur lors de l'opération sur le contact");
+      toast.error(`Erreur lors de l'opération sur le contact: ${error.message || 'Une erreur est survenue'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   }
+
+  // Désactiver le bouton de soumission si des doublons sont détectés
+  useEffect(() => {
+    if (hasDuplicateErrors) {
+      form.setError('email', { 
+        type: 'manual', 
+        message: 'Cette adresse email est déjà utilisée par un autre contact.'
+      });
+    }
+  }, [hasDuplicateErrors, form]);
 
   return {
     form,
