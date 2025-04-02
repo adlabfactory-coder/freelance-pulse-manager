@@ -57,8 +57,24 @@ const ContactForm: React.FC<ContactFormProps> = ({
       return;
     }
     
-    // Si tout est valide, soumettre le formulaire
-    onSubmit(e);
+    try {
+      // Si tout est valide, soumettre le formulaire
+      await onSubmit(e);
+    } catch (error: any) {
+      console.error("Erreur lors de la soumission du formulaire:", error);
+      const errorMessage = error?.message || "Une erreur est survenue lors de la création du contact";
+      
+      // Vérifier si c'est une erreur de Row Level Security
+      if (errorMessage.includes("row-level security") || errorMessage.includes("RLS")) {
+        toast.error("Erreur de permission", {
+          description: "Vous n'avez pas les droits nécessaires pour effectuer cette action. Contactez votre administrateur."
+        });
+      } else {
+        toast.error("Erreur", {
+          description: errorMessage
+        });
+      }
+    }
   };
 
   return (

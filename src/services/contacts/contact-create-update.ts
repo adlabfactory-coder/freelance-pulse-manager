@@ -109,6 +109,12 @@ export const contactCreateUpdateService = {
       // Normaliser l'email avant insertion
       const normalizedEmail = contactData.email.toLowerCase().trim();
       
+      console.log("Création du contact avec les données:", {
+        ...contactData,
+        email: normalizedEmail,
+        assignedTo
+      });
+      
       // Insérer dans la table contacts
       const { data, error } = await supabase
         .from('contacts')
@@ -141,12 +147,39 @@ export const contactCreateUpdateService = {
           }
           
           toast.error("Doublon détecté", { description: errorMessage });
+        } else if (error.message.includes('row-level security') || error.code === 'PGRST301') {
+          toast.error("Erreur de permission", {
+            description: "Vous n'avez pas les droits nécessaires pour créer un contact. Vérifiez vos permissions."
+          });
+          console.error("Erreur RLS lors de la création du contact:", error);
         } else {
           toast.error("Erreur lors de la création du contact", { description: error.message });
         }
         
         console.error("Erreur lors de la création du contact:", error);
         throw error;
+      }
+
+      // Si l'assignation est à un freelance, créer également l'entrée dans freelancer_contacts
+      if (assignedTo && data) {
+        try {
+          const { error: linkError } = await supabase
+            .from('freelancer_contacts')
+            .insert({
+              freelancer_id: assignedTo,
+              contact_id: data.id
+            })
+            .select();
+          
+          if (linkError) {
+            console.warn("Erreur lors de la liaison freelancer-contact:", linkError);
+            // Ne pas faire échouer toute la création à cause de cette erreur
+          } else {
+            console.log("Liaison freelancer-contact créée avec succès");
+          }
+        } catch (linkErr) {
+          console.warn("Exception lors de la liaison freelancer-contact:", linkErr);
+        }
       }
 
       toast.success("Contact créé avec succès", { 

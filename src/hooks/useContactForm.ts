@@ -36,7 +36,7 @@ export const useContactForm = ({
       address: initialData?.address || "",
       notes: initialData?.notes || "",
       status: initialData?.status || ContactStatus.LEAD,
-      assignedTo: initialData?.assignedTo || "",
+      assignedTo: initialData?.assignedTo || (user?.role === "freelancer" ? user?.id : ""),
       folder: initialData?.folder || "general"
     },
   });
@@ -78,7 +78,7 @@ export const useContactForm = ({
         address: data.address,
         notes: data.notes,
         status: data.status as ContactStatus,
-        assignedTo: data.assignedTo,
+        assignedTo: data.assignedTo || (user?.role === "freelancer" ? user?.id : ""),
         folder: data.folder
       };
       
@@ -92,9 +92,9 @@ export const useContactForm = ({
       }
       
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la création du contact:", error);
-      return false;
+      throw error; // Propager l'erreur pour gestion au niveau supérieur
     }
   };
 
@@ -112,7 +112,7 @@ export const useContactForm = ({
         address: data.address,
         notes: data.notes,
         status: data.status as ContactStatus,
-        assignedTo: data.assignedTo,
+        assignedTo: data.assignedTo || (user?.role === "freelancer" ? user?.id : ""),
         folder: data.folder
       };
       
@@ -123,15 +123,20 @@ export const useContactForm = ({
       }
       
       return false;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la mise à jour du contact:", error);
-      return false;
+      throw error; // Propager l'erreur pour gestion au niveau supérieur
     }
   };
 
   const onSubmit = async (data: ContactFormValues) => {
     try {
       setLoading(true);
+      
+      // S'assurer que assignedTo est défini pour les freelancers
+      if (user?.role === "freelancer" && !data.assignedTo) {
+        data.assignedTo = user.id;
+      }
       
       // Gérer l'auto-assignation
       data = await handleAutoAssign(data);
@@ -147,8 +152,9 @@ export const useContactForm = ({
       if (!success) {
         console.warn("Opération contact terminée sans erreur mais sans succès");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de l'ajout/mise à jour du contact:", error);
+      throw error; // Propager l'erreur
     } finally {
       setLoading(false);
     }
