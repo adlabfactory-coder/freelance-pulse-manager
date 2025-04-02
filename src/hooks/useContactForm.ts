@@ -8,6 +8,7 @@ import { ContactStatus } from '@/types/database/enums';
 import { contactSchema, ContactFormValues } from '@/components/contacts/schema/contactFormSchema';
 import { useAuth } from '@/hooks/use-auth';
 import { accountManagerService } from '@/services/account-manager/account-manager-service';
+import { supabase } from '@/lib/supabase-client';
 
 interface UseContactFormProps {
   onSuccess?: (contactData?: {id: string, name: string}) => void;
@@ -65,9 +66,37 @@ export const useContactForm = ({
     return data;
   };
 
+  // Vérifier la session actuelle avant de soumettre
+  const checkSession = async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error || !data.session) {
+        console.error("Erreur de session:", error || "Session expirée");
+        toast.error("Votre session a expiré", {
+          description: "Veuillez vous reconnecter pour continuer."
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Erreur lors de la vérification de session:", error);
+      return false;
+    }
+  };
+
   // Fonction pour créer un contact
   const createContact = async (data: ContactFormValues) => {
     try {
+      // Vérifier la session avant de continuer
+      const sessionValid = await checkSession();
+      if (!sessionValid) return false;
+      
+      // S'assurer que le contact est attribué au freelance actuel si l'utilisateur est un freelance
+      if (user?.role === "freelancer" && !data.assignedTo) {
+        data.assignedTo = user.id;
+      }
+      
       // Préparer les données du contact
       const contactInput = {
         name: data.name,
@@ -103,6 +132,10 @@ export const useContactForm = ({
     if (!initialData?.id) return false;
     
     try {
+      // Vérifier la session avant de continuer
+      const sessionValid = await checkSession();
+      if (!sessionValid) return false;
+      
       const contactInput = {
         name: data.name,
         email: data.email,

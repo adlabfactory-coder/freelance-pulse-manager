@@ -58,6 +58,11 @@ const ContactForm: React.FC<ContactFormProps> = ({
     }
     
     try {
+      // S'assurer que le contact est assigné au freelance si l'utilisateur est un freelance
+      if (user?.role === 'freelancer' && !form.getValues('assignedTo')) {
+        form.setValue('assignedTo', user.id);
+      }
+      
       // Si tout est valide, soumettre le formulaire
       await onSubmit(e);
     } catch (error: any) {
@@ -67,7 +72,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
       // Vérifier si c'est une erreur de Row Level Security
       if (errorMessage.includes("row-level security") || errorMessage.includes("RLS")) {
         toast.error("Erreur de permission", {
-          description: "Vous n'avez pas les droits nécessaires pour effectuer cette action. Contactez votre administrateur."
+          description: "Vous n'avez pas les droits nécessaires pour effectuer cette action. Vérifiez que votre session est toujours active."
         });
       } else {
         toast.error("Erreur", {

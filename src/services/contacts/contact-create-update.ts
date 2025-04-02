@@ -96,11 +96,12 @@ export const contactCreateUpdateService = {
       
       const now = new Date().toISOString();
       
-      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const { data: authData, error: authError } = await supabase.auth.getSession();
       
-      if (authError) {
-        console.warn("Problème d'authentification (mode démo):", authError.message);
-        // En mode démo, continuer malgré l'erreur d'authentification
+      if (authError || !authData.session) {
+        console.warn("Problème d'authentification:", authError?.message || "Session expirée");
+        toast.error("Session expirée", { description: "Veuillez vous reconnecter pour continuer." });
+        throw new Error("Session d'authentification invalide");
       }
       
       const assignedTo = contactData.assignedTo;
@@ -149,7 +150,7 @@ export const contactCreateUpdateService = {
           toast.error("Doublon détecté", { description: errorMessage });
         } else if (error.message.includes('row-level security') || error.code === 'PGRST301') {
           toast.error("Erreur de permission", {
-            description: "Vous n'avez pas les droits nécessaires pour créer un contact. Vérifiez vos permissions."
+            description: "Vous n'avez pas les droits nécessaires pour créer un contact. Vérifiez que votre session est active."
           });
           console.error("Erreur RLS lors de la création du contact:", error);
         } else {
@@ -168,11 +169,17 @@ export const contactCreateUpdateService = {
             .insert({
               freelancer_id: assignedTo,
               contact_id: data.id
-            })
-            .select();
+            });
           
           if (linkError) {
             console.warn("Erreur lors de la liaison freelancer-contact:", linkError);
+            
+            if (linkError.message.includes('row-level security')) {
+              toast.warning("La liaison freelancer-contact n'a pas pu être établie en raison de restrictions de sécurité");
+            } else {
+              console.warn("Détails de l'erreur:", linkError);
+            }
+            
             // Ne pas faire échouer toute la création à cause de cette erreur
           } else {
             console.log("Liaison freelancer-contact créée avec succès");
@@ -199,6 +206,16 @@ export const contactCreateUpdateService = {
 
   async updateContact(id: string, contactData: Partial<ContactFormInput>): Promise<boolean> {
     try {
+      // Vérifier que la session est valide
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        toast.error("Session expirée", {
+          description: "Veuillez vous reconnecter pour continuer."
+        });
+        return false;
+      }
+      
       // Vérifier les doublons seulement si l'email ou le téléphone sont modifiés
       if (contactData.email !== undefined || contactData.phone !== undefined) {
         // Récupérer d'abord les données actuelles du contact
@@ -240,11 +257,38 @@ export const contactCreateUpdateService = {
       if (contactData.position !== undefined) updateData.position = contactData.position;
       if (contactData.address !== undefined) updateData.address = contactData.address;
       if (contactData.notes !== undefined) updateData.notes = contactData.notes;
-      if (contactData.assignedTo !== undefined) updateData.assignedTo = contactData.assignedTo;
       if (contactData.status !== undefined) updateData.status = contactData.status;
       if (contactData.folder !== undefined) updateData.folder = contactData.folder;
       
-      // Utiliser une transaction pour garantir l'atomicité de l'opération
+      // Gérer spécifiquement l'assignation à un freelance
+      if (contactData.assignedTo !== undefined) {
+        const newAssignedTo = contactData.assignedTo;
+        updateData.assignedTo = newAssignedTo;
+        
+        // Si un nouveau freelance est assigné, mettre à jour également la table freelancer_contacts
+        if (newAssignedTo) {
+          try {
+            // D'abord, insérer la nouvelle relation
+            const { error: insertError } = await supabase
+              .from('freelancer_contacts')
+              .insert({
+                freelancer_id: newAssignedTo,
+                contact_id: id
+              })
+              .on_conflict(['freelancer_id', 'contact_id'])
+              .ignore(); // Si elle existe déjà, on ignore
+
+            if (insertError && !insertError.message.includes('uniqueness violation')) {
+              console.warn("Erreur lors de la création de la relation freelancer-contact:", insertError);
+            }
+          } catch (relErr) {
+            console.warn("Exception lors de la mise à jour des relations freelancer-contact:", relErr);
+            // Ne pas faire échouer la mise à jour du contact pour ça
+          }
+        }
+      }
+      
+      // Mettre à jour le contact
       const { error } = await supabase
         .from("contacts")
         .update(updateData)
