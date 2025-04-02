@@ -164,25 +164,39 @@ export const contactCreateUpdateService = {
       // Si l'assignation est à un freelance, créer également l'entrée dans freelancer_contacts
       if (assignedTo && data) {
         try {
-          const { error: linkError } = await supabase
+          // Fix: Remplacer on_conflict par une approche en deux étapes
+          // Vérifier si l'association existe déjà
+          const { data: existingLink } = await supabase
             .from('freelancer_contacts')
-            .insert({
-              freelancer_id: assignedTo,
-              contact_id: data.id
-            });
-          
-          if (linkError) {
-            console.warn("Erreur lors de la liaison freelancer-contact:", linkError);
+            .select('*')
+            .eq('freelancer_id', assignedTo)
+            .eq('contact_id', data.id)
+            .maybeSingle();
             
-            if (linkError.message.includes('row-level security')) {
-              toast.warning("La liaison freelancer-contact n'a pas pu être établie en raison de restrictions de sécurité");
+          // N'insérer que si l'association n'existe pas déjà
+          if (!existingLink) {
+            const { error: linkError } = await supabase
+              .from('freelancer_contacts')
+              .insert({
+                freelancer_id: assignedTo,
+                contact_id: data.id
+              });
+            
+            if (linkError) {
+              console.warn("Erreur lors de la liaison freelancer-contact:", linkError);
+              
+              if (linkError.message.includes('row-level security')) {
+                toast.warning("La liaison freelancer-contact n'a pas pu être établie en raison de restrictions de sécurité");
+              } else {
+                console.warn("Détails de l'erreur:", linkError);
+              }
+              
+              // Ne pas faire échouer toute la création à cause de cette erreur
             } else {
-              console.warn("Détails de l'erreur:", linkError);
+              console.log("Liaison freelancer-contact créée avec succès");
             }
-            
-            // Ne pas faire échouer toute la création à cause de cette erreur
           } else {
-            console.log("Liaison freelancer-contact créée avec succès");
+            console.log("Liaison freelancer-contact existe déjà, pas besoin de la créer");
           }
         } catch (linkErr) {
           console.warn("Exception lors de la liaison freelancer-contact:", linkErr);
@@ -268,18 +282,31 @@ export const contactCreateUpdateService = {
         // Si un nouveau freelance est assigné, mettre à jour également la table freelancer_contacts
         if (newAssignedTo) {
           try {
-            // D'abord, insérer la nouvelle relation
-            const { error: insertError } = await supabase
+            // Fix: Remplacer la partie on_conflict par une approche en deux étapes
+            // Vérifier si l'association existe déjà
+            const { data: existingLink } = await supabase
               .from('freelancer_contacts')
-              .insert({
-                freelancer_id: newAssignedTo,
-                contact_id: id
-              })
-              .on_conflict(['freelancer_id', 'contact_id'])
-              .ignore(); // Si elle existe déjà, on ignore
+              .select('*')
+              .eq('freelancer_id', newAssignedTo)
+              .eq('contact_id', id)
+              .maybeSingle();
+              
+            // N'insérer que si l'association n'existe pas déjà
+            if (!existingLink) {
+              const { error: insertError } = await supabase
+                .from('freelancer_contacts')
+                .insert({
+                  freelancer_id: newAssignedTo,
+                  contact_id: id
+                });
 
-            if (insertError && !insertError.message.includes('uniqueness violation')) {
-              console.warn("Erreur lors de la création de la relation freelancer-contact:", insertError);
+              if (insertError) {
+                console.warn("Erreur lors de la création de la relation freelancer-contact:", insertError);
+              } else {
+                console.log("Relation freelancer-contact créée avec succès");
+              }
+            } else {
+              console.log("Relation freelancer-contact existe déjà, pas besoin de la créer");
             }
           } catch (relErr) {
             console.warn("Exception lors de la mise à jour des relations freelancer-contact:", relErr);
