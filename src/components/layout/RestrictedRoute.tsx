@@ -26,6 +26,7 @@ const RestrictedRoute: React.FC = () => {
 
   // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
+    // Utiliser replace: true pour empêcher le retour arrière à des pages protégées
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 

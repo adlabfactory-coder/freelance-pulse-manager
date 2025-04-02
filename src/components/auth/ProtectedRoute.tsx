@@ -40,8 +40,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
   // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
     console.log("Non authentifié, redirection vers la page de connexion");
-    // Utiliser replace: true pour éviter les boucles de navigation
-    // Conserver la location actuelle pour pouvoir y revenir après connexion
+    // Utiliser replace: true pour éviter les boucles de navigation et empêcher le retour arrière
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 

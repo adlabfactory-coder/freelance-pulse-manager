@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +17,13 @@ const LoginPage: React.FC = () => {
 
   // État pour stocker la page d'origine
   const from = location.state?.from?.pathname || "/dashboard";
+
+  // Nettoyer toute donnée temporaire lorsqu'on arrive sur la page de connexion
+  useEffect(() => {
+    // Nettoyer les données temporaires pour assurer une session propre
+    sessionStorage.clear();
+    // Ne pas supprimer le thème et d'autres préférences utilisateur non liées à l'authentification
+  }, []);
 
   // Rediriger si déjà authentifié - avec une vérification supplémentaire pour s'assurer que le chargement est terminé
   useEffect(() => {
