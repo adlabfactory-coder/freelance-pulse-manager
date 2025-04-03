@@ -1,5 +1,5 @@
 // Export the refactored authentication hooks from the new structure
-export { AuthProvider, useAuthContext as useAuth } from './auth/useAuthContext';
+export { AuthProvider, useAuthContext as useAuth } from './auth/AuthContext';
 // We don't re-export useAuthOperations and useLogout here to avoid naming conflicts
 // Instead, we keep only the renamed useAuth export for backward compatibility
 

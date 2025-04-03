@@ -1,7 +1,7 @@
 
-// Export all auth-related hooks from this index file
-export { AuthProvider, useAuthContext } from './useAuthContext';
+// Export the refactored authentication hooks
+export { AuthProvider, useAuthContext } from './AuthContext';
 export { useAuthOperations } from './useAuthOperations';
 export { useLogout } from './useLogout';
-
-// This simplifies imports from other parts of the application
+export { useAuthState } from './useAuthState';
+export { useSession } from './useSession';
