@@ -29,8 +29,8 @@ export function useDashboardTasks() {
         .limit(5);
 
       if (isFreelancer && user?.id) {
-        // Important: utiliser 'assignedto' en minuscules pour correspondre à la colonne dans la base de données
-        tasksQuery = tasksQuery.eq('assignedto', user.id);
+        // Utilisation du nouveau nom de colonne standardisé
+        tasksQuery = tasksQuery.eq('assigned_to', user.id);
       }
 
       const { data: tasksData, error: tasksError } = await tasksQuery;

@@ -103,74 +103,74 @@ export type Database = {
       }
       appointments: {
         Row: {
-          accountManagerId: string | null
-          contactId: string
-          createdAt: string | null
+          account_manager_id: string | null
+          contact_id: string
+          created_at: string | null
           date: string
           deleted_at: string | null
           description: string | null
           duration: number
           folder: string | null
-          freelancerId: string
+          freelancer_id: string
           id: string
           location: string | null
           notes: string | null
           status: string
           title: string
-          updatedAt: string | null
+          updated_at: string | null
         }
         Insert: {
-          accountManagerId?: string | null
-          contactId: string
-          createdAt?: string | null
+          account_manager_id?: string | null
+          contact_id: string
+          created_at?: string | null
           date: string
           deleted_at?: string | null
           description?: string | null
           duration: number
           folder?: string | null
-          freelancerId: string
+          freelancer_id: string
           id?: string
           location?: string | null
           notes?: string | null
           status: string
           title: string
-          updatedAt?: string | null
+          updated_at?: string | null
         }
         Update: {
-          accountManagerId?: string | null
-          contactId?: string
-          createdAt?: string | null
+          account_manager_id?: string | null
+          contact_id?: string
+          created_at?: string | null
           date?: string
           deleted_at?: string | null
           description?: string | null
           duration?: number
           folder?: string | null
-          freelancerId?: string
+          freelancer_id?: string
           id?: string
           location?: string | null
           notes?: string | null
           status?: string
           title?: string
-          updatedAt?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "appointments_accountManagerId_fkey"
-            columns: ["accountManagerId"]
+            columns: ["account_manager_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_contactId_fkey"
-            columns: ["contactId"]
+            columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "appointments_freelancerId_fkey"
-            columns: ["freelancerId"]
+            columns: ["freelancer_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -209,71 +209,71 @@ export type Database = {
           amount: number
           commission_amount: number | null
           contracts_count: number | null
-          createdAt: string | null
+          created_at: string | null
           deleted_at: string | null
-          freelancerId: string
+          freelancer_id: string
           id: string
-          paidDate: string | null
+          paid_date: string | null
           payment_requested: boolean | null
-          periodEnd: string
-          periodStart: string
-          quoteId: string | null
+          period_end: string
+          period_start: string
+          quote_id: string | null
           status: string
-          subscriptionId: string | null
+          subscription_id: string | null
           tier: string
         }
         Insert: {
           amount: number
           commission_amount?: number | null
           contracts_count?: number | null
-          createdAt?: string | null
+          created_at?: string | null
           deleted_at?: string | null
-          freelancerId: string
+          freelancer_id: string
           id?: string
-          paidDate?: string | null
+          paid_date?: string | null
           payment_requested?: boolean | null
-          periodEnd: string
-          periodStart: string
-          quoteId?: string | null
+          period_end: string
+          period_start: string
+          quote_id?: string | null
           status: string
-          subscriptionId?: string | null
+          subscription_id?: string | null
           tier: string
         }
         Update: {
           amount?: number
           commission_amount?: number | null
           contracts_count?: number | null
-          createdAt?: string | null
+          created_at?: string | null
           deleted_at?: string | null
-          freelancerId?: string
+          freelancer_id?: string
           id?: string
-          paidDate?: string | null
+          paid_date?: string | null
           payment_requested?: boolean | null
-          periodEnd?: string
-          periodStart?: string
-          quoteId?: string | null
+          period_end?: string
+          period_start?: string
+          quote_id?: string | null
           status?: string
-          subscriptionId?: string | null
+          subscription_id?: string | null
           tier?: string
         }
         Relationships: [
           {
             foreignKeyName: "commissions_freelancerId_fkey"
-            columns: ["freelancerId"]
+            columns: ["freelancer_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "commissions_quoteId_fkey"
-            columns: ["quoteId"]
+            columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "commissions_subscriptionId_fkey"
-            columns: ["subscriptionId"]
+            columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
             referencedColumns: ["id"]
@@ -283,9 +283,9 @@ export type Database = {
       contacts: {
         Row: {
           address: string | null
-          assignedTo: string | null
+          assigned_to: string | null
           company: string | null
-          createdAt: string | null
+          created_at: string | null
           deleted_at: string | null
           email: string
           folder: string | null
@@ -296,13 +296,13 @@ export type Database = {
           position: string | null
           status: Database["public"]["Enums"]["contact_status"]
           subscription_plan_id: string | null
-          updatedAt: string | null
+          updated_at: string | null
         }
         Insert: {
           address?: string | null
-          assignedTo?: string | null
+          assigned_to?: string | null
           company?: string | null
-          createdAt?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           email: string
           folder?: string | null
@@ -313,13 +313,13 @@ export type Database = {
           position?: string | null
           status?: Database["public"]["Enums"]["contact_status"]
           subscription_plan_id?: string | null
-          updatedAt?: string | null
+          updated_at?: string | null
         }
         Update: {
           address?: string | null
-          assignedTo?: string | null
+          assigned_to?: string | null
           company?: string | null
-          createdAt?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           email?: string
           folder?: string | null
@@ -330,12 +330,19 @@ export type Database = {
           position?: string | null
           status?: Database["public"]["Enums"]["contact_status"]
           subscription_plan_id?: string | null
-          updatedAt?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "contacts_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contacts_assignedTo_fkey"
-            columns: ["assignedTo"]
+            columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -477,32 +484,32 @@ export type Database = {
           discount: number | null
           id: string
           quantity: number
-          quoteId: string
+          quote_id: string
           tax: number | null
-          unitPrice: number
+          unit_price: number
         }
         Insert: {
           description: string
           discount?: number | null
           id?: string
           quantity: number
-          quoteId: string
+          quote_id: string
           tax?: number | null
-          unitPrice: number
+          unit_price: number
         }
         Update: {
           description?: string
           discount?: number | null
           id?: string
           quantity?: number
-          quoteId?: string
+          quote_id?: string
           tax?: number | null
-          unitPrice?: number
+          unit_price?: number
         }
         Relationships: [
           {
             foreignKeyName: "quote_items_quoteId_fkey"
-            columns: ["quoteId"]
+            columns: ["quote_id"]
             isOneToOne: false
             referencedRelation: "quotes"
             referencedColumns: ["id"]
@@ -511,65 +518,79 @@ export type Database = {
       }
       quotes: {
         Row: {
-          contactId: string
-          createdAt: string | null
+          contact_id: string
+          created_at: string | null
           deleted_at: string | null
           folder: string | null
-          freelancerId: string
+          freelancer_id: string
           id: string
           notes: string | null
           status: string
-          subscriptionId: string | null
-          totalAmount: number
-          updatedAt: string | null
-          validUntil: string
+          subscription_id: string | null
+          total_amount: number
+          updated_at: string | null
+          valid_until: string
         }
         Insert: {
-          contactId: string
-          createdAt?: string | null
+          contact_id: string
+          created_at?: string | null
           deleted_at?: string | null
           folder?: string | null
-          freelancerId: string
+          freelancer_id: string
           id?: string
           notes?: string | null
           status: string
-          subscriptionId?: string | null
-          totalAmount: number
-          updatedAt?: string | null
-          validUntil: string
+          subscription_id?: string | null
+          total_amount: number
+          updated_at?: string | null
+          valid_until: string
         }
         Update: {
-          contactId?: string
-          createdAt?: string | null
+          contact_id?: string
+          created_at?: string | null
           deleted_at?: string | null
           folder?: string | null
-          freelancerId?: string
+          freelancer_id?: string
           id?: string
           notes?: string | null
           status?: string
-          subscriptionId?: string | null
-          totalAmount?: number
-          updatedAt?: string | null
-          validUntil?: string
+          subscription_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          valid_until?: string
         }
         Relationships: [
           {
-            foreignKeyName: "quotes_contactId_fkey"
-            columns: ["contactId"]
+            foreignKeyName: "quotes_contact_id_fkey"
+            columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "quotes_contactId_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_freelancer_id_fkey"
+            columns: ["freelancer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quotes_freelancerId_fkey"
-            columns: ["freelancerId"]
+            columns: ["freelancer_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "quotes_subscriptionId_fkey"
-            columns: ["subscriptionId"]
+            columns: ["subscription_id"]
             isOneToOne: false
             referencedRelation: "subscriptions"
             referencedColumns: ["id"]
@@ -653,64 +674,64 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          clientId: string
-          createdAt: string | null
+          client_id: string
+          created_at: string | null
           deleted_at: string | null
           description: string | null
-          endDate: string | null
-          freelancerId: string
+          end_date: string | null
+          freelancer_id: string
           id: string
           interval: string
           name: string
           price: number
-          renewalDate: string | null
-          startDate: string
+          renewal_date: string | null
+          start_date: string
           status: string
-          updatedAt: string | null
+          updated_at: string | null
         }
         Insert: {
-          clientId: string
-          createdAt?: string | null
+          client_id: string
+          created_at?: string | null
           deleted_at?: string | null
           description?: string | null
-          endDate?: string | null
-          freelancerId: string
+          end_date?: string | null
+          freelancer_id: string
           id?: string
           interval: string
           name: string
           price: number
-          renewalDate?: string | null
-          startDate: string
+          renewal_date?: string | null
+          start_date: string
           status: string
-          updatedAt?: string | null
+          updated_at?: string | null
         }
         Update: {
-          clientId?: string
-          createdAt?: string | null
+          client_id?: string
+          created_at?: string | null
           deleted_at?: string | null
           description?: string | null
-          endDate?: string | null
-          freelancerId?: string
+          end_date?: string | null
+          freelancer_id?: string
           id?: string
           interval?: string
           name?: string
           price?: number
-          renewalDate?: string | null
-          startDate?: string
+          renewal_date?: string | null
+          start_date?: string
           status?: string
-          updatedAt?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "subscriptions_clientId_fkey"
-            columns: ["clientId"]
+            columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "subscriptions_freelancerId_fkey"
-            columns: ["freelancerId"]
+            columns: ["freelancer_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -719,7 +740,7 @@ export type Database = {
       }
       tasks: {
         Row: {
-          assignedto: string | null
+          assigned_to: string | null
           completed_at: string | null
           created_at: string | null
           description: string | null
@@ -731,7 +752,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          assignedto?: string | null
+          assigned_to?: string | null
           completed_at?: string | null
           created_at?: string | null
           description?: string | null
@@ -743,7 +764,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          assignedto?: string | null
+          assigned_to?: string | null
           completed_at?: string | null
           created_at?: string | null
           description?: string | null
@@ -756,8 +777,15 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tasks_assignedto_fkey"
-            columns: ["assignedto"]
+            columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
