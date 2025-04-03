@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Vérifier la session au chargement et s'abonner aux changements d'état d'authentification
   useEffect(() => {
     // Définir un délai de sécurité pour éviter les problèmes de déconnexion infinie
-    let timeoutId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     const checkAuth = async () => {
       setIsLoading(true);

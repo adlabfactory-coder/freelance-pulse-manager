@@ -12,7 +12,7 @@ const RestrictedRoute: React.FC = () => {
   
   // Amélioration de la vérification d'authentification avec délai
   useEffect(() => {
-    let timeoutId: number;
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     // Attendre un court délai avant de vérifier l'authentification
     // Ce délai permet de s'assurer que l'état d'authentification est stabilisé
