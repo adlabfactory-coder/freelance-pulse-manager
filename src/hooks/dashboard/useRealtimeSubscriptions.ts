@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from "react";
-import { enableDashboardRealtime, disableDashboardRealtime } from "@/services/dashboard/enable-realtime";
+import { supabase } from "@/lib/supabase"; // Import standardisé
 
 export function useRealtimeSubscriptions(
   fetchDashboardData: () => Promise<void>
@@ -13,29 +13,70 @@ export function useRealtimeSubscriptions(
     fetchDataRef.current = fetchDashboardData;
   }, [fetchDashboardData]);
 
-  // Configurer les écouteurs pour les mises à jour en temps réel, mais sans actualisation automatique
+  // Configurer les écouteurs pour les mises à jour en temps réel
   useEffect(() => {
     const setupRealtime = async () => {
       try {
-        // Activer la fonctionnalité Realtime pour le tableau de bord
-        const result = await enableDashboardRealtime();
+        // Créer un canal unique avec un ID aléatoire pour éviter les conflits
+        const channelId = `dashboard-${Math.random().toString(36).substring(2, 10)}`;
         
-        if (!result.success) {
-          console.error("Échec de l'activation du Realtime:", result.error);
-        } else {
-          console.log("Canaux Realtime activés avec succès, actualisation manuelle uniquement");
-        }
+        // Créer les canaux pour les tables principales
+        const channel = supabase.channel(channelId)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'appointments' },
+            () => {
+              console.log('Changements détectés sur appointments');
+              fetchDataRef.current();
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'quotes' },
+            () => {
+              console.log('Changements détectés sur quotes');
+              fetchDataRef.current();
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'commissions' },
+            () => {
+              console.log('Changements détectés sur commissions');
+              fetchDataRef.current();
+            }
+          )
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'contacts' },
+            () => {
+              console.log('Changements détectés sur contacts');
+              fetchDataRef.current();
+            }
+          )
+          .subscribe((status) => {
+            console.log(`Canal Realtime status: ${status}`);
+          });
+          
+        return channel;
       } catch (error) {
         console.error("Erreur lors de l'initialisation du Realtime:", error);
+        return null;
       }
     };
 
-    // Appeler la fonction de configuration
-    setupRealtime();
+    // Appeler la fonction de configuration et stocker le canal
+    let channel: any;
+    setupRealtime().then(ch => {
+      channel = ch;
+    });
 
-    // Nettoyer les canaux à la suppression du composant
+    // Nettoyer le canal à la suppression du composant
     return () => {
-      disableDashboardRealtime();
+      if (channel) {
+        console.log("Suppression du canal Realtime");
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 }

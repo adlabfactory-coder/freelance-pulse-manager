@@ -5,6 +5,7 @@ import { AuthContextType } from "@/types/auth";
 import { getUserByEmail } from "@/utils/user-list";
 import { useAuthOperations } from "./useAuthOperations";
 import { useLogout } from "./useLogout";
+import { supabase } from "@/lib/supabase"; // Import standardisé
 import { toast } from "sonner";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,34 +16,127 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   
   const { handleLogin, handleSignUp } = useAuthOperations(setUser);
-  const logout = useLogout();
+  const { logout } = useLogout();
   
-  // Vérifier s'il y a un utilisateur stocké dans localStorage au chargement
+  // Vérifier la session au chargement et s'abonner aux changements d'état d'authentification
   useEffect(() => {
+    // Définir un délai de sécurité pour éviter les problèmes de déconnexion infinie
+    let timeoutId: number | undefined;
+    
     const checkAuth = async () => {
       setIsLoading(true);
       try {
-        // Vérifier si un utilisateur est stocké dans localStorage
-        const storedUser = localStorage.getItem('currentUser');
+        // Mode de production
+        const DEMO_MODE = false;
         
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          console.log("Utilisateur trouvé dans localStorage:", parsedUser.name);
+        if (!DEMO_MODE) {
+          // Récupérer la session actuelle
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error("Erreur lors de la récupération de la session:", sessionError);
+            setUser(null);
+            setError(sessionError.message);
+            return;
+          }
+          
+          const session = sessionData?.session;
+          
+          if (session && session.user) {
+            // Récupérer les détails utilisateur supplémentaires depuis la table users
+            const { data: userData, error: userError } = await supabase
+              .from('users')
+              .select('id, name, email, role, avatar')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (userError || !userData) {
+              console.error("Erreur lors de la récupération des détails utilisateur:", userError);
+              setUser(null);
+            } else {
+              setUser({
+                id: userData.id,
+                name: userData.name,
+                email: userData.email,
+                role: userData.role as UserRole,
+                avatar: userData.avatar
+              });
+            }
+          } else {
+            setUser(null);
+            console.log("Aucune session active trouvée");
+          }
         } else {
-          setUser(null);
-          console.log("Aucun utilisateur trouvé dans localStorage");
+          // Mode démo (utilisant localStorage)
+          const storedUser = localStorage.getItem('currentUser');
+          
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            console.log("Utilisateur trouvé dans localStorage:", parsedUser.name);
+          } else {
+            setUser(null);
+            console.log("Aucun utilisateur trouvé dans localStorage");
+          }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erreur lors de la vérification de l'authentification:", err);
         setUser(null);
-        setError("Erreur lors de la vérification de l'authentification");
+        setError("Erreur lors de la vérification de l'authentification: " + err.message);
       } finally {
         setIsLoading(false);
       }
     };
     
     checkAuth();
+    
+    // Configuration d'un écouteur pour les changements d'état d'authentification
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("Événement d'authentification détecté:", event);
+        
+        if (event === 'SIGNED_IN' && session) {
+          // Nettoyer le délai si l'utilisateur se reconnecte
+          if (timeoutId) clearTimeout(timeoutId);
+          
+          // Mettre à jour les détails utilisateur avec une opération asynchrone différée
+          setTimeout(async () => {
+            try {
+              const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('id, name, email, role, avatar')
+                .eq('id', session.user.id)
+                .single();
+                
+              if (!userError && userData) {
+                setUser({
+                  id: userData.id,
+                  name: userData.name,
+                  email: userData.email,
+                  role: userData.role as UserRole,
+                  avatar: userData.avatar
+                });
+              }
+            } catch (err) {
+              console.error("Erreur lors de la récupération des détails utilisateur:", err);
+            }
+          }, 0);
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          // Délai avant la déconnexion complète pour éviter les boucles infinies
+          timeoutId = setTimeout(() => {
+            setUser(null);
+          }, 200);
+        }
+      }
+    );
+    
+    // Nettoyage de l'écouteur au démontage du composant
+    return () => {
+      authListener.subscription.unsubscribe();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
   
   const signIn = async (email: string, password: string) => {
