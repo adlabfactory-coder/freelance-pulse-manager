@@ -25,7 +25,7 @@ export function useDashboard(): UseDashboardDataReturn {
     console.log("Début de la récupération des données du tableau de bord");
     setRefreshing(true);
     try {
-      // Récupérer toutes les données du tableau de bord
+      // Récupérer toutes les données du tableau de bord en parallèle
       const results = await Promise.allSettled([
         fetchStats(),
         fetchActivities(),
@@ -45,8 +45,8 @@ export function useDashboard(): UseDashboardDataReturn {
         setIsConnected(false);
         setRetryCount(prev => prev + 1);
         
-        // Notification d'erreur après échec
-        if (retryCount >= 3) {
+        // Notification d'erreur après plusieurs échecs
+        if (retryCount >= 2) {
           toast.error("Impossible de se connecter au serveur après plusieurs tentatives.", {
             description: "Veuillez vérifier votre connexion et actualiser manuellement."
           });
@@ -54,7 +54,6 @@ export function useDashboard(): UseDashboardDataReturn {
       }
     } catch (error) {
       console.error("Erreur lors du chargement des données du tableau de bord:", error);
-      toast.error("Impossible de charger les données du tableau de bord.");
       setIsConnected(false);
     } finally {
       console.log("Fin de la récupération des données du tableau de bord");
@@ -63,14 +62,14 @@ export function useDashboard(): UseDashboardDataReturn {
     }
   }, [fetchStats, fetchActivities, fetchTasks, refreshing, retryCount]);
 
-  // S'abonner aux mises à jour en temps réel mais ne pas les utiliser pour actualiser automatiquement
+  // S'abonner aux mises à jour en temps réel
   useRealtimeSubscriptions(fetchDashboardData);
 
-  // Charger les données au montage du composant, mais pas d'actualisation automatique périodique
+  // Charger les données au montage du composant, mais une seule fois
   useEffect(() => {
     fetchDashboardData();
-    // Pas de setInterval ici pour l'actualisation automatique
-  }, [fetchDashboardData]);
+    // Pas de dépendance à fetchDashboardData pour éviter les boucles infinies
+  }, []);
 
   return {
     stats,

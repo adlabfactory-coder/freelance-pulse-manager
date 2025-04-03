@@ -15,7 +15,6 @@ export function useDashboardTasks() {
       const { data: existsData, error: existsError } = await supabase.rpc('check_table_exists', { table_name: 'tasks' });
       
       if (existsError || !existsData) {
-        // La table n'existe pas, on utilise un tableau vide au lieu de continuer à essayer
         console.log("La table 'tasks' n'existe pas encore dans la base de données");
         setTasks([]);
         return [];
@@ -30,7 +29,8 @@ export function useDashboardTasks() {
         .limit(5);
 
       if (isFreelancer && user?.id) {
-        tasksQuery = tasksQuery.eq('assignedTo', user.id);
+        // Important: utiliser 'assignedto' en minuscules pour correspondre à la colonne dans la base de données
+        tasksQuery = tasksQuery.eq('assignedto', user.id);
       }
 
       const { data: tasksData, error: tasksError } = await tasksQuery;
